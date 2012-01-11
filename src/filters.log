@@ -1,0 +1,279 @@
+   1 Koo-Kron U+ filter (Koo's thesis)                                   13
+   2 Koo-Kron J+ filter (Koo's thesis)                                   23
+   3 Koo-Kron F+ filter (Koo's thesis)                                   25
+   4 Koo-Kron N+ filter (Koo's thesis)                                   28
+   5 Koo-Kron R band (=127+RG610, data from Koo, Durham).                15
+   6 Couch and Newell (1980, PASP, 92, 746) BJ (photographic) filter.    43
+   7 Couch and Newell (1980, PASP, 92, 746) RF (photographic) filter.    23
+   8 Koo-Kron U+ filter (Bruzual's thesis)                               13
+   9 Koo-Kron J+ filter (Bruzual's thesis)                               25
+  10 Koo-Kron F+ filter (Bruzual's thesis)                               25
+  11 Koo-Kron N+ filter (Bruzual's thesis)                               23
+  12 Buser's U filter (R. Buser)                                         24
+  13 Buser's B2 filter (R. Buser)                                        40
+  14 Buser's B3 filter (R. Buser)                                        40
+  15 Buser's V filter (R. Buser)                                         54
+  16 Matthews and Sandage U filter                                       13
+  17 Matthews and Sandage B filter                                       22
+  18 Matthews and Sandage V filter                                       25
+  19 Sandage and Smith B filter                                          43
+  20 Sandage and Smith V filter                                          38
+  21 Sandage and Smith R filter                                          43
+  22 ST-UV14 filter (STFOC)                                              33
+  23 ST-UV17 filter (STFOC)                                              42
+  24 ST-UV22 filter (STFOC)                                              53
+  25 ST-UV27 filter (STFOC)                                              64
+  26 OAO-UV1 filter (OAO-2 Observatory)                                  33
+  27 OAO-UV2 filter (OAO-2 Observatory)                                  47
+  28 OAO-UV3 filter (OAO-2 Observatory)                                  59
+  29 OAO-UV4 filter (OAO-2 Observatory)                                  68
+  30 OAO-UV5 filter (OAO-2 Observatory)                                  58
+  31 OAO-UV6 filter (OAO-2 Observatory)                                  70
+  32 Johnson's R filter                                                  23
+  33 Johnson's I filter                                                  26
+  34 Johnson's J filter                                                  31
+  35 Johnson's K filter                                                  17
+  36 Johnson's L filter                                                  14
+  37 Butcher's r filter                                                  51
+  38 Butcher's i filter                                                  36
+  39 Butcher-Oemler R filter (10/75 1978, data from Koo, Durham).        31
+  40 Butcher-Oemler R filter ( 5/76 1978, data from Koo, Durham).        31
+  41 Basel u filter (R. Buser)                                           23
+  42 Basel g filter (R. Buser)                                           46
+  43 Basel r filter (R. Buser)                                           22
+  44 UKIRT H FILTER (Leiden, 1983)                                       33
+  45 R. S. Ellis U(PE) filter                                            53
+  46 R. S. Ellis J filter                                               105
+  47 R. S. Ellis R filter                                                57
+  48 R. S. Ellis N filter                                               111
+  49 C. MacKay and P. Hall KG3 filter (Cambridge)                       189
+  50 C. MacKay and P. Hall I filter (Cambridge)                         126
+  51 Gunn g filter + four-shooter Ti CCD + Palomar 200" atmosphere.51    29
+  52 Gunn r filter + four-shooter Ti CCD + Palomar 200" atmosphere.52    47
+  53 Gunn i filter + four-shooter Ti CCD + Palomar 200" atmosphere.53    75
+  54 Gunn z filter + four-shooter Ti CCD + Palomar 200" atmosphere.54    81
+  55 IR J filter + Palomar 200 IR detectors + atmosphere.55              21
+  56 IR H filter + Palomar 200 IR detectors + atmosphere.56              27
+  57 IR K filter + Palomar 200 IR detectors + atmosphere.57              33
+  58 IR K filter + Palomar 200 IR detectors + atmosphere.58              33
+  59 IR K filter + Palomar 200 IR detectors + atmosphere.59              33
+  60 IR K filter + Palomar 200 IR detectors + atmosphere.60              33
+  61 A. Tyson J filter                                                   40
+  62 A. Tyson R filter                                                   41
+  63 A. Tyson I filter                                                   65
+  64 ANS 1550 Wide Filter (J. Koorneef)                                   4
+  65 ANS 1800 Filter (J. Koorneef)                                       18
+  66 ANS 2200 Filter (J. Koorneef)                                        4
+  67 ANS 2500 Filter (J. Koorneef)                                        4
+  68 ANS 3300 Filter (J. Koorneef)                                       23
+  69 Approximate U band for Lilly and Cowie                              13
+  70 Approximate I band for Lilly and Cowie                              61
+  71 IRAS  12 micron, Neugebauer etal 1984,ApJL,278,L1                   35
+  72 IRAS  25 micron, Neugebauer etal 1984,ApJL,278,L1                   28
+  73 IRAS  60 micron, Neugebauer etal 1984,ApJL,278,L1                   46
+  74 IRAS 100 micron, Neugebauer etal 1984,ApJL,278,L1                   32
+  75 H filter Bessell and Brett PASP 100, 1134, 1988                     20
+  76 J filter Bessell and Brett PASP 100, 1134, 1988                     21
+  77 K filter Bessell and Brett PASP 100, 1134, 1988 (Follows Fig 8)     23
+  78 L (3.5 microns) filter Bessell and Brett PASP 100, 1134, 1988       21
+  79 L' (3.8 microns) filter Bessell and Brett PASP 100, 1134, 1988      20
+  80 M filter Bessell and Brett PASP 100, 1134, 1988                     19
+  81 KPNO narrow band IR filter Lambda eff = 11.1 microns FWHM=1.72     200
+  82 KPNO narrow band IR filter Lambda eff = 8.4 microns FWHM=1.7       200
+  83 Burstein et al. 1550 normalized square filter: (1250 to 1850 A).     7
+  84 Cousins R filter (Bessell 1983, PASP, 95,480). Use with V = 15.     65
+  85 Cousins I filter (Bessell 1983, PASP, 95,480). Use with V = 15.     39
+  86 Wainscoat and Cowie K' filter (1992, AJ, 103-1, 332)                65
+  87 Wainscoat and Cowie I filter (Close to Cousins I)                   71
+  88 Washington C filter (Geisler & Kapranidis 1983, AJ88,461)           19
+  89 Washington M filter (Geisler & Kapranidis 1983, AJ88,461)           18
+  90 Washington T1 filter (Geisler & Kapranidis 1983, AJ88,461)          22
+  91 Washington T2 filter (Geisler & Kapranidis 1983, AJ88,461)          18
+  92 WFPC2 filter F300W (via Caryl Gronwall)                             19
+  93 WFPC2 filter F450W (via Caryl Gronwall)                             22
+  94 WFPC2 filter F606W (via Caryl Gronwall)                             30
+  95 WFPC2 filter F814W (via Caryl Gronwall)                             33
+  96 WFPC2 filter F300W with red leak (via Madau)                       327
+  97 UV-1 Square Box from 2200 to 2400 A                                  9
+  98 UV-2 Square Box from 2640 to 2750 A                                  6
+  99 UV-3 Square Box from 2950 to 3150 A                                  9
+ 100 J-ESO (via Mathias Schultheis).                                    763
+ 101 H-ESO (via Mathias Schultheis).                                    557
+ 102 K-ESO (via Mathias Schultheis).                                    335
+ 103 L-ESO (via Mathias Schultheis).                                    160
+ 104 LW2-ISO 7 Microns (via Mathias Schultheis).                        492
+ 105 I  DeNIS passband  (via Mathias Schultheis).                       311
+ 106 J  DeNIS passband  (via Mathias Schultheis).                       251
+ 107 Ks DeNIS passband  (via Mathias Schultheis).                       300
+ 108 CTIO Ks Filter + NICMOS-3 detector (79K) + atm                     400
+ 109 Corrected Cousins I ("Iz" from Bessell 1983, PASP). Use with V=1    41
+ 110 Filter u for MEGACAM (CFHTLS, outside atmosphere, M. Schultheis)    79
+ 111 Filter g for MEGACAM (CFHTLS, outside atmosphere, M. Schultheis)    66
+ 112 Filter r for MEGACAM (CFHTLS, outside atmosphere, M. Schultheis)    64
+ 113 Filter i for MEGACAM (CFHTLS, outside atmosphere, M. Schultheis)    85
+ 114 Filter z for MEGACAM (CFHTLS, outside atmosphere, M. Schultheis)    83
+ 115 SDSS Camera u Response Function, airmass = 1.3 (June 2001)          47
+ 116 SDSS Camera g Response Function, airmass = 1.3 (June 2001)          89
+ 117 SDSS Camera r Response Function, airmass = 1.3 (June 2001)          75
+ 118 SDSS Camera i Response Function, airmass = 1.3 (June 2001)          89
+ 119 SDSS Camera z Response Function, airmass = 1.3 (June 2001)         141
+ 120 2MASS J filter (total response w/atm)                              109
+ 121 2MASS H filter (total response w/atm)                               58
+ 122 2MASS Ks filter (total response w/atm)                              78
+ 123 GALEX 1520 Angstrom (September 2003)                               471
+ 124 GALEX 2310 Angstrom (September 2003)                              1321
+ 125 ACS F475W filter                                                   401
+ 126 ACS F814W filter                                                   379
+ 127 ACS F850LP filter                                                  402
+ 128 Uz filter (David Elbaz)                                              4
+ 129 Gs filter (David Elbaz)                                              4
+ 130 Bz filter (David Elbaz)                                              4
+ 131 Bessel B filter (David Elbaz)                                       21
+ 132 Cousins I filter (David Elbaz)                                      23
+ 133 Jz filter (David Elbaz)                                              4
+ 134 Square K filter (David Elbaz)                                        4
+ 135 B filter CFH12K  * QE  (12/07/02)                                  148
+ 136 V filter CFH12K  * QE  (12/08/02)                                   71
+ 137 R filter CFH12K  * QE  (12/07/02)                                  133
+ 138 I filter CFH12K  * QE  (12/07/02)                                  162
+ 139 J filter SOFI/NTT from ETC                                          73
+ 140 Ks filter SOFI/NTT from ETC                                         88
+ 141 Filter u for MEGACAM (H.J. McCracken)                              100
+ 142 Filter g for MEGACAM (H.J. McCracken)                              100
+ 143 Filter r for MEGACAM (H.J. McCracken)                              100
+ 144 Filter i for MEGACAM (H.J. McCracken)                              100
+ 145 Filter z for MEGACAM (H.J. McCracken)                              100
+ 146 CFHT FOCAM B  filter (F. Lamareille)                               134
+ 147 CFHT FOCAM V  filter (F. Lamareille)                               160
+ 148 CFHT FOCAM I1 filter (F. Lamareille)                                59
+ 149 CFHT FOCAM I2 filter (F. Lamareille)                                64
+ 150 MOSAIC B filter (F. Lamareille)                                    250
+ 151 MOSAIC V filter (F. Lamareille)                                    215
+ 152 MOSAIC R filter (F. Lamareille)                                    401
+ 153 IRAC 3.6 micron filter (Transmission 1: 2004-08-09)                505
+ 154 IRAC 4.5 micron filter (Transmission 2: 2004-08-09)                417
+ 155 IRAC 5.8 micron filter (Transmission 3: 2004-08-09)                370
+ 156 IRAC 8.0 micron filter (Transmission 4: 2004-08-09)                421
+ 157 MIPS 24 micron filter                                              128
+ 158 MIPS 70 micron filter                                              128
+ 159 MIPS 160 micron filter                                             272
+ 160 ISO LW2 6.75 micron filter (D. Elbaz)                               49
+ 161 ISO LW3 15 micron filter (D. Elbaz)                                 75
+ 162 SCUBA 450 micron                                                    62
+ 163 SCUBA 850 micron                                                   102
+ 164 Subaru SuprimeCam B filter (www.naoj.org)                          200
+ 165 Subaru SuprimeCam V filter (www.naoj.org)                          200
+ 166 Subaru SuprimeCam R_C filter (www.naoj.org)                        200
+ 167 Subaru SuprimeCam i' filter (www.naoj.org)                         200
+ 168 Subaru SuprimeCam z' filter (www.naoj.org)                         200
+ 169 Herschel PACS 75um filter (L. Dunne, Feb 2009)                      69
+ 170 Herschel PACS 110um filter (L. Dunne, Feb 2009)                     42
+ 171 Herschel PACS 170um filter (L. Dunne, Feb 2009)                     26
+ 172 Herschel SPIRE 250um filter (L. Dunne, Feb 2009)                   444
+ 173 Herschel SPIRE 350um filter (L. Dunne, Feb 2009)                   444
+ 174 Herschel SPIRE 500um filter (L. Dunne, Feb 2009)                   444
+ 175 ISOPHOT P_3.29 (3.3um) [added April 2009]                          300
+ 176 ISOPHOT P_3.6 (3.6um) [added April 2009]                           300
+ 177 ISOPHOT P_4.85 (4.8um) [added April 2009]                          300
+ 178 ISOPHOT P_7.3 (7.3um) [added April 2009]                           300
+ 179 ISOPHOT P_7.7 (7.7um) [added April 2009]                           300
+ 180 ISOPHOT P_10 (10um) [added April 2009]                             300
+ 181 ISOPHOT P_11.3 (11.3um) [added April 2009]                         300
+ 182 ISOPHOT P_12.8 (12.8um) [added April 2009]                         300
+ 183 ISOPHOT P_16 (15um) [added April 2009]                             300
+ 184 ISOPHOT P_11.5 (12um) [added April 2009]                           300
+ 185 ISOPHOT P_20 (20um) [added April 2009]                             293
+ 186 ISOPHOT P_25 (25um) [added April 2009]                             295
+ 187 ISOPHOT P_60 (60um) [added April 2009]                             297
+ 188 ISOPHOT P_100 (100um) [added April 2009]                           300
+ 189 ISOPHOT C_50 (65um) [added April 2009]                             300
+ 190 ISOPHOT C_60 (60um) [added April 2009]                             277
+ 191 ISOPHOT C_70 (80um) [added April 2009]                             300
+ 192 ISOPHOT C_90 (90um) [added April 2009]                             300
+ 193 ISOPHOT C_100 (100um) [added April 2009]                           300
+ 194 ISOPHOT C_105 (105um) [added April 2009]                           300
+ 195 ISOPHOT C_120 (120um) [added April 2009]                           300
+ 196 ISOPHOT C_135 (150um) [added April 2009]                           300
+ 197 ISOPHOT C_160 (170um) [added April 2009]                           300
+ 198 ISOPHOT C_180 (180um) [added April 2009]                           300
+ 199 ISOPHOT C_200 (200um) [added April 2009]                           300
+ 200 IRS blue peak-up (16um) [added April 2009]                         352
+ 201 NICMOS F110W filter [added April 2009]                             808
+ 202 NICMOS F160W filter [added April 2009]                             795
+ 203 NICMOS F222M filter [added April 2009]                             975
+ 204 CSO 350 micron                                                      62
+ 205 B Suprime [D. Elbaz, added Jan. 2010]                              195
+ 206 V Suprime [D. Elbaz, added Jan. 2010]                              188
+ 207 R Suprime [D. Elbaz, added Jan. 2010]                              195
+ 208 I Suprime [D. Elbaz, added Jan. 2010]                              209
+ 209 Z Suprime [D. Elbaz, added Jan. 2010]                              200
+ 210 U KPNO [D. Elbaz, added Jan. 2010]                                 601
+ 211 ISAAC J [D. Elbaz, added Jan. 2010]                                200
+ 212 ISAAC H [D. Elbaz, added Jan. 2010]                                200
+ 213 ISAAC Ks [D. Elbaz, added Jan. 2010]                               200
+ 214 ACS F435W [D. Elbaz, added Jan. 2010]                              300
+ 215 ACS F606W [D. Elbaz, added Jan. 2010]                              300
+ 216 ACS F775W [D. Elbaz, added Jan. 2010]                              300
+ 217 ACS F850LP [D. Elbaz, added Jan. 2010]                             300
+ 218 AKARI N60 (65 mic) [M. Negrello, added Apr. 2010]                  100
+ 219 AKARI WIDE-S (90 mic) [M. Negrello, added Apr. 2010]               100
+ 220 AKARI WIDE-L (140 mic) [M. Negrello, added Apr. 2010]	              96
+ 221 AKARI N160 (160 mic) [M. Negrello, added Apr. 2010]                 92
+ 222 MUSYC U at 0.346um [added May 2010]                                286
+ 223 MUSYC B at 0.460um [added May 2010]                                291
+ 224 MUSYC V at 0.538um [added May 2010]                                252
+ 225 MUSYC R at 0.652um [added May 2010]                                725
+ 226 MUSYC I at 0.866um [added May 2010]                                515
+ 227 MUSYC z at 0.906um [added May 2010]                                888
+ 228 LABOCA 870um [added May 2010]                                      183
+ 229 SDSS u filter; Doi et al. (2010) [added May 2010]                   46
+ 230 SDSS g filter; Doi et al. (2010) [added May 2010]                   89
+ 231 SDSS r filter; Doi et al. (2010) [added May 2010]                   75
+ 232 SDSS i filter; Doi et al. (2010) [added May 2010]                   89
+ 233 SDSS z filter; Doi et al. (2010) [added May 2010]                  140
+ 234 WFCAM Y filter UKIRT [added May 2010]                              598
+ 235 WFCAM J filter UKIRT [added May 2010]                              798
+ 236 WFCAM H filter UKIRT [added May 2010]                             1199
+ 237 WFCAM K filter UKIRT [added May 2010]                             1198
+ 238 SMA 880um gaussian function [added June 2010]                      100
+ 239 MAMBO 1.2mm gaussian function [added June 2010]                    100
+ 240 15um gaussian filter for S. Juneau [added June 2010]               100
+ 241 40um gaussian filter for S.Juneau [added June 2010]                100
+ 242 20um gaussian filter [added Aug.2010]                              200
+ 243 30um gaussian filter [added Aug.2010]                              200
+ 244 J - Flamingos (M. Dickinson, Sep 2010)                             641
+ 245 Ks - Flamingos (M. Dickinson, Sep 2010)                           1021
+ 246 artificial filter @345GHz [added Dec.2010]                          50
+ 247 artificial filter @230GHz [added Dec.2010]                          50
+ 248 artificial filter @100GHz [added Dec.2010]                          50
+ 249 ESO WFI U38 filter nr.841 [added Feb.2011]                         107
+ 250 ESO WFI B filter nr.878 [added Feb.2011]                           450
+ 251 ESO WFI V filter nr.843 [added Feb.2011]                           250
+ 252 ESO WFI R filter nr.844 [added Feb.2011]                           476
+ 253 ESO WFI I filter nr.879 [added Feb.2011]                           620
+ 254 CFHT Megacam u [final - added March 2011]                           61
+ 255 CFHT Megacam g [final - added March 2011]                           61
+ 256 CFHT Megacam r [final - added March 2011]                           55
+ 257 CFHT Megacam i [final - added March 2011]                           65
+ 258 CFHT Megacam z [final - added March 2011]                           63
+ 259 NEWFIRM J1 [added March 2011]                                       96
+ 260 NEWFIRM J2 [added March 2011]                                       79
+ 261 NEWFIRM J3 [added March 2011]                                       73
+ 262 NEWFIRM H1 [added March 2011]                                       70
+ 263 NEWFIRM H2 [added March 2011]                                       64
+ 264 NEWFIRM K [added March 2011]                                        65
+ 265 Subaru IA427 [added March 2011]                                     39
+ 266 Subaru IA464 [added March 2011]                                     28
+ 267 Subaru IA484 [added March 2011]                                     32
+ 268 Subaru IA505 [added March 2011]                                     34
+ 269 Subaru IA527 [added March 2011]                                     35
+ 270 Subaru IA574 [added March 2011]                                     42
+ 271 Subaru IA624 [added March 2011]                                     33
+ 272 Subaru IA679 [added March 2011]                                     39
+ 273 Subaru IA709 [added March 2011]                                     33
+ 274 Subaru IA738 [added March 2011]                                     32
+ 275 Subaru IA767 [added March 2011]                                     28
+ 276 Subaru IA827 [added March 2011]                                     25
+ 277 CFHT WIRCAM J [added March 2011]                                  1077
+ 278 CFHT WIRCAM H [added March 2011]                                   828
+ 279 CFHT WIRCAM Ks [added March 2011]                                  912
