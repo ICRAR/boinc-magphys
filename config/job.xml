@@ -2,7 +2,6 @@
    <task>
       <application>fit_sed</application>
       <command_line>1 filters.dat observations.dat OptiLIB_cb07.bin InfraredLIB.bin OptiLIBis_cb07.bin</command_line>
-      <stdin_filename>stdin_file</stdin_filename>
       <stdout_filename>stdout_file</stdout_filename>
       <stderr_filename>stderr_file</stderr_filename> 
    </task>
