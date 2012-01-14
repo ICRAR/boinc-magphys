@@ -1,17 +1,22 @@
 <file_info>
   <number>0</number>
+  <sticky/>
 </file_info>
 <file_info>
   <number>1</number>
+  <sticky/>
 </file_info>
 <file_info>
   <number>2</number>
+  <sticky/>
 </file_info>
 <file_info>
   <number>3</number>
+  <sticky/>
 </file_info>
 <file_info>
   <number>4</number>
+  <sticky/>
 </file_info>
 <file_info>
   <number>5</number>
@@ -30,33 +35,41 @@
   <file_ref>
     <file_number>0</file_number>
     <open_name>zlibs.dat</open_name>
+    <copy_file/>
   </file_ref>
   <file_ref>
     <file_number>1</file_number>
     <open_name>filters.dat</open_name>
+    <copy_file/>
   </file_ref>  
   <file_ref>
     <file_number>2</file_number>
     <open_name>observations.dat</open_name>
+    <copy_file/>
   </file_ref>
   <file_ref>
     <file_number>3</file_number>
     <open_name>infrared_dce08_z0.4600.lbr</open_name>
+    <copy_file/>
   </file_ref>
   <file_ref>
     <file_number>4</file_number>
     <open_name>starformhist_cb07_z0.4600.lbr</open_name>
+    <copy_file/>
   </file_ref>
   <file_ref>
     <file_number>5</file_number>
     <open_name>OptiLIB_cb07.bin</open_name>
+    <copy_file/>
   </file_ref> 
   <file_ref>
     <file_number>6</file_number>
     <open_name>OptiLIBis_cb07.bin</open_name>
+    <copy_file/>
   </file_ref>
   <file_ref>
     <file_number>7</file_number>
     <open_name>InfraredLIB.bin</open_name>
+    <copy_file/>
   </file_ref>
 </workunit>
