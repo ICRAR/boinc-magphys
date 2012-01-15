@@ -72,4 +72,5 @@
     <open_name>InfraredLIB.bin</open_name>
     <copy_file/>
   </file_ref>
+  <rsc_disk_bound>10000000000</rsc_disk_bound>
 </workunit>
