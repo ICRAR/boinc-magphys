@@ -1,5 +1,8 @@
 Follow instructions here to setup BOINC server on debian: http://wiki.debian.org/BOINC/ServerGuide/
-Once the server is setup with BOINC stable version these instructions below can be used to setup magphys fit_sed program for distribution. We use the wrapper app to run the Fortran code under boinc: http://wiki.debian.org/BOINC/ServerGuide/WrapperApp
+Once the server is setup with BOINC stable version these instructions below can be used to setup magphys fit_sed program for distribution. We use the wrapper app to run the Fortran code under boinc: http://wiki.debian.org/BOINC/ServerGuide/WrapperApp.  Rake tasks exists for these steps below: 
+To setup project for the first time: rake create_project (and setup_website) 
+To recompile and make new versions of app available: rake update_versions (currently on debian platforms only)
+To create a work unit: rake create_work
 
 1. Create project.xml with platforms and wrapper app.
 
