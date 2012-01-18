@@ -3,6 +3,7 @@ Once the server is setup with BOINC stable version these instructions below can 
 To setup project for the first time: rake create_project (and setup_website) 
 To recompile and make new versions of app available: rake update_versions (currently on debian platforms only)
 To create a work unit: rake create_work
+All rake tasks require environment variable BOINC_SRC to be set.
 
 1. Create project.xml with platforms and wrapper app.
 
