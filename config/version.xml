@@ -1,0 +1,18 @@
+<version>
+  <file>
+    <physical_name>wrapper</physical_name>
+    <main_program/>
+    <copy_file/>
+    <logical_name>wrapper</logical_name>
+  </file>
+  <file>
+    <physical_name>fit_sed</physical_name>
+    <copy_file/>
+    <logical_name>fit_sed</logical_name>
+  </file>
+  <file>
+    <physical_name>job.xml</physical_name>
+    <copy_file/>
+    <logical_name>job.xml</logical_name>
+  </file>
+</version>
