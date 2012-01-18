@@ -17,7 +17,7 @@ APP_NAME="wrapper"
 APP_VERSION=1.0
 BOINC_PLATFORM="i686-pc-linux-gnu"
 PLATFORM_DIR = "#{PROJECT_ROOT}/apps/#{APP_NAME}/#{APP_VERSION}/#{BOINC_PLATFORM}"
-INPUT_FILES = FileList["zlibs.dat" "filters.dat" "observations.dat" "infrared_dce08_z0.4600.lbr" "starformhist_cb07_z0.4600.lbr" "OptiLIB_cb07.bin" "OptiLIBis_cb07.bin" "InfraredLIB.bin"]
+INPUT_FILES = FileList["zlibs.dat", "filters.dat", "observations.dat", "infrared_dce08_z0.4600.lbr", "starformhist_cb07_z0.4600.lbr", "OptiLIB_cb07.bin", "OptiLIBis_cb07.bin", "InfraredLIB.bin"]
 MAGPHYS_DATA_DIR = "/home/boincadm/magphys/download"
 DB_ROOT_PWD="xxx"
 
@@ -78,4 +78,15 @@ end
 desc 'update versions'
 task :update_versions => :sign_files do
   sh "cd #{PROJECT_ROOT}; echo \"y\" | xargs -n 1 | #{PROJECT_ROOT}/bin/update_versions"
+end
+
+desc 'copy input files to download'
+task :copy_input_files_to_download do
+  INPUT_FILES.each { |fname| cp "#{MAGPHYS_DATA_DIR}/#{fname}", "#{PROJECT_ROOT}/download"}
+end
+
+desc 'create work'
+task :create_work => :copy_input_files_to_download do 
+  cp_r "config/templates", "#{PROJECT_ROOT}"
+  sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/create_work -appname wrapper -wu_name test -wu_template templates/fitsed_wu -result_template templates/fitsed_result #{INPUT_FILES.to_s}"
 end
