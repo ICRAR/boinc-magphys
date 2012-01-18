@@ -54,17 +54,17 @@ end
 desc 'compile binaries'
 task :compile => :clean do
   sh "make -C src/magphys clean all; cd ../.."
-  cp "src/magphys/fit_sed", "build/#{BOINC_PLATFORM}"
+  cp "src/magphys/fit_sed", "build/#{BOINC_PLATFORM}", :preserve => true
   # wrapper depends on include and library files from the BOINC src directory. This must be set in wrapper Makefile for this to work.
   sh "make -C src/wrapper; cd ../.."  
-  cp "src/wrapper/wrapper", "build/#{BOINC_PLATFORM}"
+  cp "src/wrapper/wrapper", "build/#{BOINC_PLATFORM}", :preserve => true
 end
 
 desc 'copy to apps/platform directory'
 task :copy_files => :compile do
   mkdir_p "#{PLATFORM_DIR}"
   ["build/#{BOINC_PLATFORM}/wrapper", "build/#{BOINC_PLATFORM}/fit_sed", "config/job.xml", "config/version.xml"].each { |f| 
-    cp f, "#{PLATFORM_DIR}" 
+    cp f, "#{PLATFORM_DIR}", :preserve => true
   }
 end
 
