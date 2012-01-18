@@ -5,7 +5,7 @@ require 'rake'
 #Revision: 25070
 #Last Changed Date: 2012-01-10 21:17:51 -0500 (Tue, 10 Jan 2012)
 
-BOINC_SRC="/home/boincadm/boinc"
+BOINC_SRC=ENV["BOINC_SRC"]
 BOINC_TOOLS_DIR="#{BOINC_SRC}/tools"
 PROJECT_NAME="magphys"
 PROJECT_ROOT="/home/boincadm/boincprojects/#{PROJECT_NAME}"
@@ -55,7 +55,7 @@ desc 'compile binaries'
 task :compile => :clean do
   sh "make -C src/magphys clean all; cd ../.."
   cp "src/magphys/fit_sed", "build/#{BOINC_PLATFORM}", :preserve => true
-  # wrapper depends on include and library files from the BOINC src directory. This must be set in wrapper Makefile for this to work.
+  # wrapper depends on include and library files from the BOINC src directory. The wrapper Makefile requires the env var ENV[BOINC_SRC] to work.
   sh "make -C src/wrapper; cd ../.."  
   cp "src/wrapper/wrapper", "build/#{BOINC_PLATFORM}", :preserve => true
 end

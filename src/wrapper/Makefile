@@ -1,7 +1,7 @@
 # This should work on Linux.  Modify as needed for other platforms.
 
 # Change the following to match your installation
-BOINC_DIR = ../..
+BOINC_DIR = $(BOINC_SRC)
 BOINC_API_DIR = $(BOINC_DIR)/api
 BOINC_LIB_DIR = $(BOINC_DIR)/lib
 
