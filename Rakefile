@@ -15,8 +15,9 @@ DB_USER="magphys"
 DB_PWD="xx"
 APP_NAME="wrapper"
 APP_VERSION=1.0
-BOINC_PLATFORM="i686-pc-linux-gnu"
-PLATFORM_DIR = "#{PROJECT_ROOT}/apps/#{APP_NAME}/#{APP_VERSION}/#{BOINC_PLATFORM}"
+BUILD_PLATFORM="i686-pc-linux-gnu"
+PLATFORMS=["i686-pc-linux-gnu", "windows_intelx86"]
+PLATFORM_DIR = "#{PROJECT_ROOT}/apps/#{APP_NAME}/#{APP_VERSION}"
 INPUT_FILES = FileList["zlibs.dat", "filters.dat", "observations.dat", "infrared_dce08_z0.4600.lbr", "starformhist_cb07_z0.4600.lbr", "OptiLIB_cb07.bin", "OptiLIBis_cb07.bin", "InfraredLIB.bin"]
 MAGPHYS_DATA_DIR = "/home/boincadm/magphys/download"
 DB_ROOT_PWD="xxx"
@@ -47,31 +48,33 @@ task :setup_website do
 end
 
 task :clean do
-  rm_r 'build' if File.exists?("build")
-  mkdir_p "build/#{BOINC_PLATFORM}"
+  rm "platforms/#{BUILD_PLATFORM}/fit_sed" if File.exists?("platforms/#{BUILD_PLATFORM}/fit_sed")
+  rm "platforms/#{BUILD_PLATFORM}/wrapper" if File.exists?("platforms/#{BUILD_PLATFORM}/wrapper")
 end
 
-desc 'compile binaries'
+desc 'compile binaries for the current build platform'
 task :compile => :clean do
   sh "make -C src/magphys clean all; cd ../.."
-  cp "src/magphys/fit_sed", "build/#{BOINC_PLATFORM}", :preserve => true
+  cp "src/magphys/fit_sed", "platforms/#{BUILD_PLATFORM}", :preserve => true
   # wrapper depends on include and library files from the BOINC src directory. The wrapper Makefile requires the env var ENV[BOINC_SRC] to work.
-  sh "make -C src/wrapper; cd ../.."  
-  cp "src/wrapper/wrapper", "build/#{BOINC_PLATFORM}", :preserve => true
+  sh "make -C src/wrapper"  
+  cp "src/wrapper/wrapper", "platforms/#{BUILD_PLATFORM}", :preserve => true
 end
 
 desc 'copy to apps/platform directory'
 task :copy_files => :compile do
-  mkdir_p "#{PLATFORM_DIR}"
-  ["build/#{BOINC_PLATFORM}/wrapper", "build/#{BOINC_PLATFORM}/fit_sed", "config/job.xml", "config/version.xml"].each { |f| 
-    cp f, "#{PLATFORM_DIR}", :preserve => true
+  PLATFORMS.each { |platform|
+     mkdir_p "#{PLATFORM_DIR}/#{platform}" 
+     cp FileList["platforms/#{platform}/*", "config/job.xml"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
   }
 end
 
 desc 'sign files'
 task :sign_files => :copy_files do
-  ["wrapper", "fit_sed", "job.xml"].each { |f| 
-    sh "#{BOINC_TOOLS_DIR}/sign_executable #{PLATFORM_DIR}/#{f} #{PROJECT_ROOT}/keys/code_sign_private | tee #{PLATFORM_DIR}/#{f}.sig"
+  PLATFORMS.each { |platform|
+    FileList["#{PLATFORM_DIR}/#{platform}/*"].exclude("#{PLATFORM_DIR}/#{platform}/version.xml").to_a().each { |f| 
+    sh "#{BOINC_TOOLS_DIR}/sign_executable #{f} #{PROJECT_ROOT}/keys/code_sign_private | tee #{f}.sig"
+    }
   }
 end
 
