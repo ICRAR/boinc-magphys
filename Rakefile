@@ -16,7 +16,7 @@ DB_PWD="xx"
 APP_NAME="wrapper"
 APP_VERSION=1.0
 BUILD_PLATFORM="i686-pc-linux-gnu"
-PLATFORMS=["i686-pc-linux-gnu", "windows_intelx86"]
+PLATFORMS=["i686-pc-linux-gnu", "windows_intelx86", "i686-apple-darwin", "x86_64-apple-darwin"]
 PLATFORM_DIR = "#{PROJECT_ROOT}/apps/#{APP_NAME}/#{APP_VERSION}"
 INPUT_FILES = FileList["zlibs.dat", "filters.dat", "observations.dat", "infrared_dce08_z0.4600.lbr", "starformhist_cb07_z0.4600.lbr", "OptiLIB_cb07.bin", "OptiLIBis_cb07.bin", "InfraredLIB.bin"]
 MAGPHYS_DATA_DIR = "/home/boincadm/magphys/download"
@@ -65,7 +65,8 @@ desc 'copy to apps/platform directory'
 task :copy_files => :compile do
   PLATFORMS.each { |platform|
      mkdir_p "#{PLATFORM_DIR}/#{platform}" 
-     cp FileList["platforms/#{platform}/*", "config/job.xml"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
+     cp FileList["platforms/#{platform}/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
+     cp "config/job.xml", "#{PLATFORM_DIR}/#{platform}/job_#{platform}.xml", :preserve => true
   }
 end
 

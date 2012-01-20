@@ -1,0 +1,20 @@
+To compile BOINC wrapper on windows:
+
+1. Open the win_build/samples.sln file in Visual Studio 2010.
+2. Download the ssl dependency from 
+http://boinc.berkeley.edu/trac/browser/trunk/boinc_depends_win_vs2010 (svn url: http://boinc.berkeley.edu/svn/trunk/boinc_depends_win_vs2010/openssl/)
+3. Modify the include path to add directory for ssl include files downloaded previously.
+4. Build
+
+See http://boinc.berkeley.edu/trac/wiki/CompileClient#BuildingtheclientwithVisualStudio2005andVisualStudio2005ExpressEdition.
+
+Use Cygwin gfortran to compile Magphys.
+
+On Mac:
+
+1. cd to mac_build.
+2. Download wxMac-2.8.10, curl-7.21.3, and c-ares-1.7.4 according to instructions here: http://boinc.berkeley.edu/trac/wiki/MacBuild
+3. source setupForBOINC.sh --clean
+4. source ./BuildMacBOINC.sh -lib (only the boinc lib need to be built to compile the wrapper)
+5. cd samples/wrapper
+6. ./BuildMacWrapper.sh
