@@ -1,7 +1,7 @@
 RM = /bin/rm -f
 UTILIB = ./public_utilities.a
 #FC =  g77 -ggdb -O0 -ffixed-line-length-132 -fbounds-check
-FC = gfortran -std=legacy -ffixed-line-length-none
+FC = gfortran -std=legacy -ffixed-line-length-none -static-libgfortran
 
 .f.o:
 	$(FC) -c $<
