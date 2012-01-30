@@ -1,6 +1,6 @@
 ### This is a [BOINC WrapperApp](http://boinc.berkeley.edu/trac/wiki/WrapperApp) for [MagPhys](http://www.iap.fr/magphys/magphys/MAGPHYS.html)
 
-#### To compile BOINC wrapper on windows:
+#### To compile BOINC wrapper on Windows:
 
 1. Open the `win_build/samples.sln` file in Visual Studio 2010.
 2. Download the [ssl dependency](http://boinc.berkeley.edu/trac/browser/trunk/boinc_depends_win_vs2010) ([svn url](http://boinc.berkeley.edu/svn/trunk/boinc_depends_win_vs2010/openssl/))
