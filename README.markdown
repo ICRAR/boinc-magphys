@@ -1,5 +1,7 @@
 ### This is a [BOINC WrapperApp](http://boinc.berkeley.edu/trac/wiki/WrapperApp) for [MagPhys](http://www.iap.fr/magphys/magphys/MAGPHYS.html)
 
+To learn more about MagPhys take a look at the magphys-readme.pdf file included with the source.
+
 #### To compile BOINC wrapper on Windows:
 
 1. Open the `win_build/samples.sln` file in Visual Studio 2010.
