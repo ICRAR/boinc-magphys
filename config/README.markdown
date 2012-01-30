@@ -11,13 +11,15 @@ Once the server is setup with BOINC stable version these instructions below can 
   `./make_project --url_base "http://www.boinc-magphys.org" --db_name magphys --db_user magphys --db_passwd magphyspw --project_root ~/boincprojects/magphys --drop_db_first --delete_prev_inst magphys`
 
 2. Website setup:
-  `chmod g+w -R .`
-  `chmod -R o+x html/inc`
-  `sudo cp magphys.httpd.conf /etc/apache2/sites-available`
-  `sudo a2ensite magphys.httpd.conf`
-  `sudo /etc/init.d/apache2 reload`
-  `a2enmod rewrite`
-  `a2enmod deflate`
+  ```sh
+  chmod g+w -R .
+  chmod -R o+x html/inc
+  sudo cp magphys.httpd.conf /etc/apache2/sites-available
+  sudo a2ensite magphys.httpd.conf
+  sudo /etc/init.d/apache2 reload
+  a2enmod rewrite
+  a2enmod deflate
+  ```
 
 3. Create directory structure: `apps/wrapper/<version>/<platform>/<binaries>`:
   `-- binaries to include wrapper and the application binaries, job.xml file.`
@@ -25,9 +27,10 @@ Once the server is setup with BOINC stable version these instructions below can 
 4. `bin/xadd`
 
 5. Sign executables:
-  `~/boinc/tools/sign_executable wrapper_6.12_i686-pc-linux-gnu ../../keys/code_sign_private | tee wrapper_6.12_i686-pc-linux-gnu.sig`
-
-  `~/boinc/tools/sign_executable fit_sed ../../keys/code_sign_private | tee fit_sed.sig`
+  ```
+  ~/boinc/tools/sign_executable wrapper_6.12_i686-pc-linux-gnu ../../keys/code_sign_private | tee wrapper_6.12_i686-pc-linux-gnu.sig
+  ~/boinc/tools/sign_executable fit_sed ../../keys/code_sign_private | tee fit_sed.sig
+  ```
 
 6. `bin/update_versions`
 
@@ -36,13 +39,17 @@ Once the server is setup with BOINC stable version these instructions below can 
   `bin/create_work -appname wrapper -wu_name test -wu_template templates/fitsed_wu -result_template templates/fitsed_result zlibs.dat filters.dat observations.dat infrared_dce08_z0.4600.lbr starformhist_cb07_z0.4600.lbr OptiLIB_cb07.bin OptiLIBis_cb07.bin InfraredLIB.bin`
 
 8. Start daemons:
-  `bin/start`
-  `bin/status`
+  ```
+  bin/start
+  bin/status
+  ```
 
 To install client on debian:
-1. `sudo apt-get boinc-client boinc-manager`
-2. `/etc/init.d/boinc-client start`
-3. `Start the GUI for manager: System Tools -> BoincManager`
+  ```
+  sudo apt-get boinc-client boinc-manager
+  /etc/init.d/boinc-client start
+  Start the GUI for manager: System Tools -> BoincManager
+  ```
 
 The working directory for client is: `/var/lib/boinc-client`, configuration is in `/etc/default/boinc-client`.
 
