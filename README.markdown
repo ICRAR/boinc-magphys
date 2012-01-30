@@ -11,7 +11,7 @@
 
 #### To compile BOINC wrapper on Mac:
 
-1. cd to `mac_build`.
+1. cd to `mac_build`
 2. Download wxMac-2.8.10, curl-7.21.3, and c-ares-1.7.4 according to instructions [here](http://boinc.berkeley.edu/trac/wiki/MacBuild)
 3. `source setupForBOINC.sh --clean`
 4. `source ./BuildMacBOINC.sh -lib` (only the boinc lib is needed to compile the wrapper)
