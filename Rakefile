@@ -22,20 +22,10 @@ INPUT_FILES = FileList["zlibs.dat", "filters.dat", "observations.dat", "infrared
 MAGPHYS_DATA_DIR = "/home/boincadm/magphys/download"
 DB_ROOT_PWD="xxx"
 
-desc 'drop project database'
-task :drop_project_db do
-  sh "mysql -uroot -p#{DB_ROOT_PWD} -e \"drop database #{DB_NAME};\""
-end
-
-desc 'setup project database'
-task :setup_project_db do
-  sh "mysql -uroot -p#{DB_ROOT_PWD} -e \"create database #{DB_NAME};\""
-  sh "mysql -uroot -p#{DB_ROOT_PWD} -e \"grant all on #{DB_NAME}.* to #{DB_USER}@'%' identified by '#{DB_PWD}';\""
-end
 
 desc 'create project'
-task :create_project => :setup_project_db do
-  sh "echo 'Y' | xargs -n 1 | #{BOINC_TOOLS_DIR}/make_project --no_query --url_base #{BASE_URL} --srcdir #{BOINC_SRC} --db_name #{DB_NAME} --db_user #{DB_USER} --db_passwd #{DB_PWD} --project_root #{PROJECT_ROOT} --drop_db_first --delete_prev_inst #{PROJECT_NAME}"
+task :create_project  do
+  sh "yes | #{BOINC_TOOLS_DIR}/make_project --no_query --url_base #{BASE_URL} --srcdir #{BOINC_SRC} --db_name #{DB_NAME} --db_user #{DB_USER} --db_passwd #{DB_PWD} --project_root #{PROJECT_ROOT} --drop_db_first --delete_prev_inst #{PROJECT_NAME}"
   cp "config/project.xml", "#{PROJECT_ROOT}"
   sh "#{PROJECT_ROOT}/bin/xadd"
 end
