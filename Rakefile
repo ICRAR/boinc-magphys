@@ -23,18 +23,25 @@ MAGPHYS_DATA_DIR = "/home/boincadm/magphys/download"
 DB_ROOT_PWD="xxx"
 
 
+desc 'create BOINC MySQL user'
+task :create_user do
+  sh "mysql -u root -e \"CREATE USER 'magphys'@'localhost' IDENTIFIED BY 'xx';\""
+  sh "mysql -u root -e \"GRANT ALL ON #{DB_NAME}.* TO 'magphys'@'localhost';\""
+end
+
 desc 'create project'
-task :create_project  do
+task :create_project => :create_user do
   sh "yes | #{BOINC_TOOLS_DIR}/make_project --no_query --url_base #{BASE_URL} --srcdir #{BOINC_SRC} --db_name #{DB_NAME} --db_user #{DB_USER} --db_passwd #{DB_PWD} --project_root #{PROJECT_ROOT} --drop_db_first --delete_prev_inst #{PROJECT_NAME}"
   cp "config/project.xml", "#{PROJECT_ROOT}"
   sh "#{PROJECT_ROOT}/bin/xadd"
+  sh "chown -R boincadm:boincadm #{PROJECT_ROOT}"
 end
 
 desc 'setup project website'
 task :setup_website do
-  sh "sudo cp magphys.httpd.conf /etc/apache2/sites-available"
-  sh "sudo a2ensite magphys.httpd.conf"
-  sh "sudo /etc/init.d/apache2 reload"
+  sh "cp #{PROJECT_ROOT}/magphys.httpd.conf /etc/apache2/sites-available"
+  sh "a2ensite magphys.httpd.conf"
+  sh "/etc/init.d/apache2 reload"  
 end
 
 task :clean do
