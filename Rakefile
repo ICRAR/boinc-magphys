@@ -59,7 +59,7 @@ task :compile => :clean do
 end
 
 desc 'copy to apps/platform directory'
-task :copy_files => :compile do
+task :copy_files do
   PLATFORMS.each { |platform|
      mkdir_p "#{PLATFORM_DIR}/#{platform}" 
      cp FileList["platforms/#{platform}/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
@@ -78,7 +78,7 @@ end
 
 desc 'update versions'
 task :update_versions => :sign_files do
-  sh "cd #{PROJECT_ROOT}; echo \"y\" | xargs -n 1 | #{PROJECT_ROOT}/bin/update_versions"
+  sh "cd #{PROJECT_ROOT}; yes | #{PROJECT_ROOT}/bin/update_versions"
 end
 
 desc 'copy input files to download'
