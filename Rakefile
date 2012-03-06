@@ -5,6 +5,7 @@ require 'rake'
 #Revision: 25070
 #Last Changed Date: 2012-01-10 21:17:51 -0500 (Tue, 10 Jan 2012)
 
+
 BOINC_SRC=ENV["BOINC_SRC"]
 BOINC_TOOLS_DIR="#{BOINC_SRC}/tools"
 PROJECT_NAME="magphys"
@@ -18,7 +19,7 @@ APP_VERSION=1.0
 BUILD_PLATFORM="i686-pc-linux-gnu"
 PLATFORMS=["i686-pc-linux-gnu", "windows_intelx86", "i686-apple-darwin", "x86_64-apple-darwin"]
 PLATFORM_DIR = "#{PROJECT_ROOT}/apps/#{APP_NAME}/#{APP_VERSION}"
-INPUT_FILES = FileList["zlibs.dat", "filters.dat", "observations.dat", "infrared_dce08_z0.0000.lbr", "starformhist_cb07_z0.0000.lbr", "OptiLIB_cb07.bin", "OptiLIBis_cb07.bin", "InfraredLIB.bin"]
+INPUT_FILES = FileList["zlibs.dat", "filters.dat", "infrared_dce08_z0.0000.lbr", "starformhist_cb07_z0.0000.lbr", "OptiLIB_cb07.bin", "OptiLIBis_cb07.bin", "InfraredLIB.bin"]
 MAGPHYS_DATA_DIR = "/home/boincadm/magphys/download"
 DB_ROOT_PWD="xxx"
 
@@ -82,6 +83,9 @@ end
 
 desc 'copy input files to download'
 task :copy_input_files_to_download do
+  sh "mkdir -p #{MAGPHYS_DATA_DIR}"
+  sh "cd #{MAGPHYS_DATA_DIR} ; wget http://ict.icrar.org/store/ThoughtWorks/magphys.tar.gz"
+  sh "cd #{MAGPHYS_DATA_DIR} ; tar --strip-components=1 -xzvf magphys.tar.gz"
   INPUT_FILES.each { |fname| cp "#{MAGPHYS_DATA_DIR}/#{fname}", "#{PROJECT_ROOT}/download"}
 end
 
