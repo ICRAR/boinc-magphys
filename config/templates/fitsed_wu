@@ -2,48 +2,56 @@
   <number>0</number>
   <url>http://ict.icrar.org/store/ThoughtWorks/magphys/zlibs.dat</url>
   <md5_cksum>ba2c504f782be0dba3cc00113f3ff84d</md5_cksum>
+  <nbytes>15</nbytes>
   <sticky/>
 </file_info>
 <file_info>
   <number>1</number>
   <url>http://ict.icrar.org/store/ThoughtWorks/magphys/filters.dat</url>
   <md5_cksum>9fd669b4cd069546169ebed1c7155338</md5_cksum>
+  <nbytes>422</nbytes>
   <sticky/>
 </file_info>
 <file_info>
   <number>2</number>
   <url>http://ict.icrar.org/store/ThoughtWorks/magphys/observations.dat</url>
   <md5_cksum>4d2bdf6cdea9f77e5c0defc63b171dd4</md5_cksum>
+  <nbytes>1518</nbytes>
   <sticky/>
 </file_info>
 <file_info>
   <number>3</number>
   <url>http://ict.icrar.org/store/ThoughtWorks/magphys/infrared_dce08_z0.0000.lbr</url>
   <md5_cksum>b6b436460485d3b3ce44781ab38de86d</md5_cksum>
+  <nbytes>6650711</nbytes>
   <sticky/>
 </file_info>
 <file_info>
   <number>4</number>
   <url>http://ict.icrar.org/store/ThoughtWorks/magphys/starformhist_cb07_z0.0000.lbr</url>
   <md5_cksum>541b8fdceaf8b7a900d327777c94c083</md5_cksum>
+  <nbytes>18016460</nbytes>
   <sticky/>
 </file_info>
 <file_info>
   <number>5</number>
   <url>http://ict.icrar.org/store/ThoughtWorks/magphys/OptiLIB_cb07.bin</url>
   <md5_cksum>f226097e19029d6f98b62b085b971069</md5_cksum>
+  <nbytes>1537033672</nbytes>
   <sticky/>
 </file_info>
 <file_info>
   <number>6</number>
   <url>http://ict.icrar.org/store/ThoughtWorks/magphys/OptiLIBis_cb07.bin</url>
   <md5_cksum>42c6dc2781e82b878fbd2a6472565ba5</md5_cksum>
+  <nbytes>1537051896</nbytes>
   <sticky/>
 </file_info>
 <file_info>
   <number>7</number>
   <url>http://ict.icrar.org/store/ThoughtWorks/magphys/InfraredLIB.bin</url>
   <md5_cksum>a32881295fe78d5ebe4129a60afd71bc</md5_cksum>
+  <nbytes>1292425812</nbytes>
   <sticky/>
 </file_info>
 
