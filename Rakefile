@@ -10,7 +10,7 @@ BOINC_SRC=ENV["BOINC_SRC"]
 BOINC_TOOLS_DIR="#{BOINC_SRC}/tools"
 PROJECT_NAME="magphys"
 PROJECT_ROOT="/home/boincadm/boincprojects/#{PROJECT_NAME}"
-BASE_URL = "http://www.boinc-magphys.org"
+BASE_URL = ENV['BASE_URL'] || "http://www.boinc-magphys.org"
 DB_NAME="magphys"
 DB_USER="magphys"
 DB_PWD="xx"
@@ -83,5 +83,14 @@ end
 desc 'create work'
 task :create_work do
   cp_r "config/templates", "#{PROJECT_ROOT}"
-  sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/create_work -appname wrapper -wu_name test -wu_template templates/fitsed_wu -result_template templates/fitsed_result"
+# It appears as though create_work requires the number of "input files" to match the number of files mentioned in the template,
+# even in cases where the files are not local. I suspect this is a bug in the supplied make_work application. We will write our
+# own work generator eventually and this is only for test purposes anyway, so for now let's supply enough arguments to make
+# create_work happy.
+  sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/create_work -appname wrapper -wu_name test -wu_template templates/fitsed_wu -result_template templates/fitsed_result 1 2 3 4 5 6 7 8"
+end
+
+desc 'starts the BOINC daemons'
+task :start_daemons do
+ sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/start"
 end
