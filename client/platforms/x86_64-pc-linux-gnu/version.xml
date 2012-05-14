@@ -1,17 +1,17 @@
 <version>
   <file>
-    <physical_name>wrapper_i686-apple-darwin</physical_name>
+    <physical_name>wrapper_25353_x86_64-pc-linux-gnu</physical_name>
     <main_program/>
     <copy_file/>
     <logical_name>wrapper</logical_name>
   </file>
   <file>
-    <physical_name>fit_sed_i686-apple-darwin</physical_name>
+    <physical_name>fit_sed_x86_64-pc-linux-gnu</physical_name>
     <copy_file/>
     <logical_name>fit_sed</logical_name>
   </file>
   <file>
-    <physical_name>job_i686-apple-darwin.xml</physical_name>
+    <physical_name>job_x86_64-pc-linux-gnu.xml</physical_name>
     <copy_file/>
     <logical_name>job.xml</logical_name>
   </file>

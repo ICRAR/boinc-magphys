@@ -11,16 +11,16 @@ make_zgrid: make_zgrid.f filter.dec $(UTILIB)
 
 get_optic_colors: get_optic_colors.f filter.dec $(UTILIB)
 	$(FC) get_optic_colors.f $(UTILIB) -o get_optic_colors
-	
+
 get_infrared_colors: get_infrared_colors.f filter.dec $(UTILIB)
 	$(FC) get_infrared_colors.f $(UTILIB) -o get_infrared_colors
 
 fit_sed: fit_sed.f $(UTILIB)
 	$(FC) fit_sed.f $(UTILIB) -o fit_sed
-	
+
 read_optilib_bin: read_optilib_bin.f $(UTILIB)
 	$(FC) read_optilib_bin.f $(UTILIB) -o read_optilib_bin
-	
+
 read_irlib_bin: read_irlib_bin.f $(UTILIB)
 	$(FC) read_irlib_bin.f $(UTILIB) -o read_irlib_bin		
 

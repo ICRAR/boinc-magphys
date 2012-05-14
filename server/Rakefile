@@ -1,10 +1,7 @@
 require 'rake'
 
 #These steps are known to work with following BOINC server version:
-#URL: http://boinc.berkeley.edu/svn/branches/server_stable
-#Revision: 25070
-#Last Changed Date: 2012-01-10 21:17:51 -0500 (Tue, 10 Jan 2012)
-
+# Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-05-11
 
 BOINC_SRC=ENV["BOINC_SRC"]
 BOINC_TOOLS_DIR="#{BOINC_SRC}/tools"
