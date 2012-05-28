@@ -86,13 +86,16 @@ object_name = HDULIST[0].header['OBJECT']
 squares = squarify()
 print "Workunits for: %(object)s" % { "object":object_name } 
 
+total_pixels = 0
 for square_list in squares:
 	for square in square_list:
-		print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':len(square_list[square]) }
+		pixels_in_square = len(square_list[square])
+		total_pixels += pixels_in_square
+		print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':pixels_in_square }
 		outfile = open("observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % {'object':object_name, 'sq_x':square.x, 'sq_y':square.y}, 'w')
 		outfile.write("#  This workunit contains observations for object %(object)s\n" % { "object":object_name })
 		outfile.write("#  Square %(square)s contains %(count)s pixels with above-threshold observations\n" % {
-			'square':square, 'count':len(square_list[square]) })
+			'square':square, 'count':pixels_in_square })
 		outfile.write("#\n")
 
 		for pixel in square_list[square]:
@@ -104,6 +107,7 @@ for square_list in squares:
 				outfile.write("\n");
 		outfile.close();
 
+print "Total: %(squares)d squares, %(pixels)d pixels" % { 'squares':len(squares), 'pixels':total_pixels }
 print "================================ END OF OUTPUT ================================"
 
 # Uncomment to print general information about the file to stdout
