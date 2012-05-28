@@ -7,10 +7,10 @@ INPUT_FILE = '/Users/perh/Dropbox/Documents/Work/ThoughtWorks/Projects/ICRAR/POG
 GRID_SIZE = 5	
 
 # The file is 3840x3840. Right now only looking at a small square where there is data
-START_X = 1000
-START_Y = 1000
-END_X = 2000
-END_Y = 2000
+START_X = 1800
+START_Y = 1800
+END_X = 1900
+END_Y = 1900
 
 HDULIST = pyfits.open(INPUT_FILE);
 LAYER_COUNT = len(HDULIST)
@@ -23,7 +23,6 @@ LAYER_COUNT = len(HDULIST)
 ##
 
 def get_pixels(pix_x, pix_y):
-#	print "Extracting pixels from (%(pix_x)s, %(pix_y)s)" % {'pix_x':pix_x, 'pix_y':pix_y}
 	result = []
 	for x in pix_x:
 		if x >= END_X:
@@ -31,7 +30,7 @@ def get_pixels(pix_x, pix_y):
 		for y in pix_y:
 			if y >= END_Y:
 				continue;
-#			print "(x, y) = (%(x)d, %(y)d)" % { 'x':x, 'y':y }
+
 			pixels = [HDULIST[layer].data[x, y] for layer in range(LAYER_COUNT)]
 			live_pixels = 0
 			for p in pixels:
@@ -76,7 +75,6 @@ def squarify_1():
 	
 def squarify_2():
 	squares = []
-
 	for pix_y in range(START_Y, END_Y, GRID_SIZE):
 		pix_x = START_X
 		while pix_x < END_X:
@@ -86,20 +84,22 @@ def squarify_2():
 				pix_x+=GRID_SIZE;
 			else:
 				pix_x+=1
-
 	return squares
 
 def verify(squares):
 	result = []
+	distribution = [0 for i in range(GRID_SIZE * GRID_SIZE + 1)]
 	print "Verifying algorithm that returned %(x)d squares" % {'x':len(squares)}
-#	print "Verifying: %(x)s" % {'x':squares}
 	for square in squares:
 		pixels = get_pixels(range(square[0], square[0]+GRID_SIZE), range(square[1], square[1]+GRID_SIZE))
-		if len(pixels)>0:
+		pixel_count = len(pixels)
+		distribution[pixel_count] += 1
+		if pixel_count>0:
 			result.extend(pixels)
 
+	for i in range(GRID_SIZE * GRID_SIZE + 1):
+		print " -- %(pixels)2d pixels: %(count)7d squares" % { 'pixels':i, 'count':distribution[i] }
 	return "Found %(count)d pixels" % {'count':len(result) }
-#	print "Found %(count)d pixels: %(result)s" % {'count':len(result), 'result':result}
 	
 ##
 ##
@@ -112,15 +112,10 @@ def verify(squares):
 
 object_name = HDULIST[0].header['OBJECT']
 
-print "================================     ALG 0     ================================"
-print verify(squarify_0())
-print "================================ END OF OUTPUT ================================"
-print "================================     ALG 1     ================================"
-print verify(squarify_1())
-print "================================ END OF OUTPUT ================================"
-print "================================     ALG 2     ================================"
+
 print verify(squarify_2())
 print "================================ END OF OUTPUT ================================"
+
 # Uncomment to print general information about the file to stdout
 #HDULIST.info()
 
