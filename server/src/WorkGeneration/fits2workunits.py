@@ -3,13 +3,14 @@ import pyfits
 
 MIN_LIVE_CHANNELS_PER_PIXEL = 3;
 INPUT_FILE = '/Users/perh/Dropbox/Documents/Work/ThoughtWorks/Projects/ICRAR/POGS_NGC628_v3.fits';
+OUTPUT_DIR = '/Users/perh/Desktop/f2wu'
 GRID_SIZE = 5
 
 # The file is 3840x3840. Right now only looking at a small square where there is data
-START_X = 1800
-START_Y = 1800
-END_X = 2000
-END_Y = 2000
+START_X = 0
+START_Y = 0
+END_X = 3840
+END_Y = 3840
 
 HDULIST = pyfits.open(INPUT_FILE);
 LAYER_COUNT = len(HDULIST)
@@ -87,12 +88,16 @@ squares = squarify()
 print "Workunits for: %(object)s" % { "object":object_name } 
 
 total_pixels = 0
+
+mappingfile = open("%(output_dir)s/mapping-%(object)s" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
 for square_list in squares:
 	for square in square_list:
 		pixels_in_square = len(square_list[square])
 		total_pixels += pixels_in_square
+				
 		print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':pixels_in_square }
-		outfile = open("observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % {'object':object_name, 'sq_x':square.x, 'sq_y':square.y}, 'w')
+		outfile = open("%(output_dir)s/observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % {
+			'output_dir':OUTPUT_DIR, 'object':object_name, 'sq_x':square.x, 'sq_y':square.y}, 'w')
 		outfile.write("#  This workunit contains observations for object %(object)s\n" % { "object":object_name })
 		outfile.write("#  Square %(square)s contains %(count)s pixels with above-threshold observations\n" % {
 			'square':square, 'count':pixels_in_square })
@@ -101,6 +106,9 @@ for square_list in squares:
 		for pixel in square_list[square]:
 			for p in pixel.keys():
 #				print "    Pixel %(key)s => %(value)s" % { 'key':p, 'value':pixel[p]}
+				mappingfile.write("%(object)s %(sq_x)s %(sq_y)s %(dim)s %(pix_x)s %(pix_y)s\n" % {
+					'object':object_name, 'sq_x':square.x, 'sq_y':square.y, 'dim':GRID_SIZE, 'pix_x':p.x, 'pix_y':p.y
+				})
 				outfile.write("%(object)s~%(pix_x)s~%(pix_y)s" % {'object':object_name, 'pix_x':p.x, 'pix_y':p.y})
 				for one_value in pixel[p]:
 					outfile.write(" %(value)s" % { 'value':one_value })
