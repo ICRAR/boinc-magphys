@@ -44,36 +44,10 @@ def get_pixels(pix_x, pix_y):
 			if live_pixels >= MIN_LIVE_CHANNELS_PER_PIXEL:
 #				print "%(galaxy)s__%(x)d_%(y)d " % { 'galaxy':object_name, 'x':x, 'y':y}
 
-# DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-# DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-# 
-# To make it easier to see where the pixels come from, simply appending the coordinates for now.
-# This will obviously not work!
-#
-# DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-# DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-
-#				result.append(pixels)
-				result.append([x, y])
+				result.append(pixels)
 	return result
 	
-def squarify_0():
-	squares = []
-	for pix_x in range(START_X, END_X, GRID_SIZE):
-		for pix_y in range(START_Y, END_Y, GRID_SIZE):
-			squares.append([pix_x, pix_y]);
-	return squares
-	
-def squarify_1():
-	squares = []
-	for pix_x in range(START_X, END_X, GRID_SIZE):
-		for pix_y in range(START_Y, END_Y, GRID_SIZE):
-			pixels = get_pixels(range(pix_x, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE))
-			if len(pixels)>0:
-				squares.append([pix_x, pix_y]);
-	return squares
-	
-def squarify_2():
+def squarify():
 	squares = []
 	for pix_y in range(START_Y, END_Y, GRID_SIZE):
 		pix_x = START_X
@@ -113,7 +87,7 @@ def verify(squares):
 object_name = HDULIST[0].header['OBJECT']
 
 
-print verify(squarify_2())
+print verify(squarify())
 print "================================ END OF OUTPUT ================================"
 
 # Uncomment to print general information about the file to stdout
