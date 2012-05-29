@@ -134,7 +134,7 @@ def s_create_object(name, x, y, z):
 
 object_name = HDULIST[0].header['OBJECT']
 
-print "Workunits for: %(object)s" % { "object":object_name } 
+print "Work units for: %(object)s" % { "object":object_name } 
 squares = squarify()
 
 total_pixels = 0
