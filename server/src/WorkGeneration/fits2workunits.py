@@ -1,6 +1,12 @@
 import math
 import pyfits
+import sys
 
+if(len(sys.argv) != 2):
+	print "usage:   %(me)s FITS_file" % {'me':sys.argv[0]}
+	print "example: %(me)s /Users/astrogeek/Documents/ICRAR/POGS_NGC628_v3.fits" % {'me':sys.argv[0]}
+	sys.exit(-10)
+	
 MIN_LIVE_CHANNELS_PER_PIXEL = 3;
 INPUT_FILE = '/Users/perh/Dropbox/Documents/Work/ThoughtWorks/Projects/ICRAR/POGS_NGC628_v3.fits';
 OUTPUT_DIR = '/Users/perh/Desktop/f2wu'
@@ -128,11 +134,12 @@ def s_create_object(name, x, y, z):
 
 object_name = HDULIST[0].header['OBJECT']
 
-squares = squarify()
 print "Workunits for: %(object)s" % { "object":object_name } 
+squares = squarify()
 
 total_pixels = 0
 
+print "Writing SQL file ..."
 sqlfile = open("%(output_dir)s/dataset-%(object)s.sql" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
 sqlfile.write("START TRANSACTION;\n");
 sqlfile.write(s_create_object(object_name, END_X, END_Y, LAYER_COUNT));
@@ -144,7 +151,6 @@ for square_list in squares:
 sqlfile.write("COMMIT;\n");
 
 print "Total: %(squares)d squares, %(pixels)d pixels" % { 'squares':len(squares), 'pixels':total_pixels }
-print "================================ END OF OUTPUT ================================"
 
 # Uncomment to print general information about the file to stdout
 #HDULIST.info()
