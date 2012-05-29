@@ -48,7 +48,7 @@ c     ==========================================================================
       character*8 gal_name(galmax),aux_name
       character*6 numz
       character optlib*34,irlib*26
-      character filters*80,obs*80,optilib_models_file*80,irlib_models_file*80,optilibis_models_file*80
+      character filters*80,obs*80
 c     redshift libs
       integer nz,nzmax
       parameter(nzmax=5000)
@@ -149,30 +149,13 @@ c     save parameters
       save tbg1,tbg2,xi1,xi2,xi3
       save flux_obs,sigma,dist
       save mdust
-      
-c     ----Read arguments: 
-c         galaxy to fit, filters file, observations file, OPTILIB file, IRLIB file, OPTILIBIS file
-      character*80 arg
-      integer numargs
-      numargs = iargc ( )
-      if (numargs < 6) then
-        write(*,*) "Requires arguments: galaxy to fit, filters file, observations file, OPTILIB models file, IRLIB models file, OPTILIBIS models file"
-		call EXIT(-1)
-	  endif
-      call getarg ( 1, arg )
-      read( arg, *) i_gal
-      write(*,*) i_gal
-      call getarg( 2, filters)
-      call getarg( 3, obs)
-      call getarg( 4, optilib_models_file)
-      call getarg( 5, irlib_models_file)
-      call getarg( 6, optilibis_models_file)
-
+       
 c     ---------------------------------------------------------------------------
 c     Set things up: what filters to use, observations and models:
 c     ---------------------------------------------------------------------------
 
 c     READ FILTER FILE: "filters.dat"
+      call getenv('USER_FILTERS',filters)
       close(22)
       open(22,file=filters,status='old')
       do i=1,1
@@ -188,6 +171,7 @@ c     READ FILTER FILE: "filters.dat"
       close(22)
       
 c     READ FILE WITH OBSERVATIONS:
+      call getenv('USER_OBS',obs)
       close(20)
       open(20,file=obs,status='old')
       do i=1,1
@@ -213,6 +197,11 @@ c     READ FILE WITH REDSHIFTS OF THE MODEL LIBRARIES
          read(24,*,iostat=io) i,zlib(nz)
          enddo
          nz=nz-1
+          
+c     CHOOSE GALAXY TO FIT (enter corresponding i)
+      write (6,'(x,a,$)') 'Choose galaxy - enter i_gal: '
+      read (5,*) i_gal
+      write(*,*) i_gal
         
 c     WHAT OBSERVATIONS DO YOU WANT TO FIT?
 c     fit(ifilt)=1: fit flux from filter ifilt
@@ -1056,7 +1045,7 @@ c     --------------------------------------------------------------------------
          write(*,*) 'Storing best-fit SED...'
          write(*,*) outfile2
          call get_bestfit_sed(indx(sfh_sav),ir_sav,a_sav,
-     +        fmu_sfh(sfh_sav),redshift(i_gal),outfile2,optilib_models_file,irlib_models_file,optilibis_models_file)
+     +        fmu_sfh(sfh_sav),redshift(i_gal),outfile2)
 
          STOP
          END
@@ -1467,7 +1456,7 @@ c     ==========================================================================
 
 
 c     ===========================================================================
-      SUBROUTINE GET_BESTFIT_SED(i_opt,i_ir,dmstar,dfmu_aux,dz,outfile,optilib_models_file,irlib_models_file,optilibis_models_file)
+      SUBROUTINE GET_BESTFIT_SED(i_opt,i_ir,dmstar,dfmu_aux,dz,outfile)
 c     ---------------------------------------------------------------------------
 c     Gets the total (UV-to-infrared) best-fit SED
 c     
@@ -1482,7 +1471,6 @@ c           dz : redshift
 c      outfile : .sed file (output)
 c     ===========================================================================
       implicit none
-      character optilib_models_file*80,irlib_models_file*80,optilibis_models_file*80
       character infile1*80,infile2*80
       character*10 outfile
       integer nage,niw_opt,niw_ir,niw_tot
@@ -1508,8 +1496,8 @@ c     ==========================================================================
       fmu_aux=sngl(dfmu_aux)
       z=sngl(dz)
 
-      infile1=optilib_models_file
-      infile2=irlib_models_file
+      call getenv('OPTILIB',infile1)
+      call getenv('IRLIB',infile2)
 
       close (29)
       open (29,file=infile1,status='old',form='unformatted')
@@ -1557,7 +1545,7 @@ c     Normalise Optical SED by stellar mass of the model
       if (int(fmu*1000).ne.int(fmu_aux*1000)
      +     .and.int(fmu*1000).ne.(int(fmu_aux*1000)-1)
      +     .and.int(fmu*1000).ne.(int(fmu_aux*1000)+1) ) then
-         infile1=optilibis_models_file
+         call getenv('OPTILIBIS',infile1)
          close(29)
          open (29,file=infile1,status='old',form='unformatted')
          goto 7
@@ -1635,7 +1623,7 @@ c     Final SEDs - write output file
          write(31,311) log10(wl(i)*(1.+z)),log10(sedtot(i)/(1.+z)),
      +        log10(fopt_new0(i)/(1.+z))
       enddo
- 311  format(3f12.3)
+ 311  format(3f15.6)
 
  1    stop
       end
