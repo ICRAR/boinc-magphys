@@ -35,6 +35,9 @@ CREATE UNIQUE INDEX uniqObjectName ON object(name);
 -- Squares within an object must be unique
 CREATE UNIQUE INDEX uniqSquare ON square(object_id, top_x, top_y, size);
 
+-- Makes it easier to grab unprocessed squares (imagine if MySQL had had partial indices).
+CREATE INDEX wuGeneration ON square(wu_generated);
+
 -- One pixel corresponds exactly to each (x, y) coordinate within an object
 CREATE UNIQUE INDEX uniqPixel ON pixel(object_id, x, y);
 
