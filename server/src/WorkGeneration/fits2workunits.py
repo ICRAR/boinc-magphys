@@ -71,6 +71,30 @@ def squarify():
 				pix_x+=1
 	return squares
 
+def handle_square(square_list, square, sqlfile, mappingfile):
+	pixels_in_square = len(square_list[square])
+	print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':pixels_in_square }
+	outfile = open("%(output_dir)s/observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % {
+		'output_dir':OUTPUT_DIR, 'object':object_name, 'sq_x':square.x, 'sq_y':square.y}, 'w')
+	outfile.write("#  This workunit contains observations for object %(object)s\n" % { "object":object_name })
+	outfile.write("#  Square %(square)s contains %(count)s pixels with above-threshold observations\n" % {
+		'square':square, 'count':pixels_in_square })
+	outfile.write("#\n")
+
+	for pixel in square_list[square]:
+		for p in pixel.keys():
+#				print "    Pixel %(key)s => %(value)s" % { 'key':p, 'value':pixel[p]}
+			mappingfile.write("%(object)s %(sq_x)s %(sq_y)s %(dim)s %(pix_x)s %(pix_y)s\n" % {
+				'object':object_name, 'sq_x':square.x, 'sq_y':square.y, 'dim':GRID_SIZE, 'pix_x':p.x, 'pix_y':p.y
+			})
+			outfile.write("%(object)s~%(pix_x)s~%(pix_y)s" % {'object':object_name, 'pix_x':p.x, 'pix_y':p.y})
+			for one_value in pixel[p]:
+				outfile.write(" %(value)s" % { 'value':one_value })
+			outfile.write("\n");
+	outfile.close()
+	return pixels_in_square
+
+
 ## ######################################################################## ##
 ## 
 ## Functions for outputting SQL
@@ -107,28 +131,8 @@ sqlfile.write(s_create_object(object_name, END_X, END_Y, LAYER_COUNT));
 mappingfile = open("%(output_dir)s/mapping-%(object)s" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
 for square_list in squares:
 	for square in square_list:
-		pixels_in_square = len(square_list[square])
-		total_pixels += pixels_in_square
-				
-		print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':pixels_in_square }
-		outfile = open("%(output_dir)s/observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % {
-			'output_dir':OUTPUT_DIR, 'object':object_name, 'sq_x':square.x, 'sq_y':square.y}, 'w')
-		outfile.write("#  This workunit contains observations for object %(object)s\n" % { "object":object_name })
-		outfile.write("#  Square %(square)s contains %(count)s pixels with above-threshold observations\n" % {
-			'square':square, 'count':pixels_in_square })
-		outfile.write("#\n")
-
-		for pixel in square_list[square]:
-			for p in pixel.keys():
-#				print "    Pixel %(key)s => %(value)s" % { 'key':p, 'value':pixel[p]}
-				mappingfile.write("%(object)s %(sq_x)s %(sq_y)s %(dim)s %(pix_x)s %(pix_y)s\n" % {
-					'object':object_name, 'sq_x':square.x, 'sq_y':square.y, 'dim':GRID_SIZE, 'pix_x':p.x, 'pix_y':p.y
-				})
-				outfile.write("%(object)s~%(pix_x)s~%(pix_y)s" % {'object':object_name, 'pix_x':p.x, 'pix_y':p.y})
-				for one_value in pixel[p]:
-					outfile.write(" %(value)s" % { 'value':one_value })
-				outfile.write("\n");
-		outfile.close();
+		total_pixels += handle_square(square_list, square, sqlfile, mappingfile)	
+					
 
 print "Total: %(squares)d squares, %(pixels)d pixels" % { 'squares':len(squares), 'pixels':total_pixels }
 print "================================ END OF OUTPUT ================================"
