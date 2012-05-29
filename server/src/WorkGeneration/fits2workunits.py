@@ -71,7 +71,7 @@ def squarify():
 				pix_x+=1
 	return squares
 
-def handle_square(square_list, square, sqlfile, mappingfile):
+def handle_square(square_list, square, sqlfile):
 	pixels_in_square = len(square_list[square])
 	print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':pixels_in_square }
 	outfile = open("%(output_dir)s/observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % {
@@ -84,9 +84,6 @@ def handle_square(square_list, square, sqlfile, mappingfile):
 	for pixel in square_list[square]:
 		for p in pixel.keys():
 #				print "    Pixel %(key)s => %(value)s" % { 'key':p, 'value':pixel[p]}
-			mappingfile.write("%(object)s %(sq_x)s %(sq_y)s %(dim)s %(pix_x)s %(pix_y)s\n" % {
-				'object':object_name, 'sq_x':square.x, 'sq_y':square.y, 'dim':GRID_SIZE, 'pix_x':p.x, 'pix_y':p.y
-			})
 			outfile.write("%(object)s~%(pix_x)s~%(pix_y)s" % {'object':object_name, 'pix_x':p.x, 'pix_y':p.y})
 			for one_value in pixel[p]:
 				outfile.write(" %(value)s" % { 'value':one_value })
@@ -128,10 +125,9 @@ total_pixels = 0
 sqlfile = open("%(output_dir)s/dataset-%(object)s.sql" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
 sqlfile.write(s_create_object(object_name, END_X, END_Y, LAYER_COUNT));
 
-mappingfile = open("%(output_dir)s/mapping-%(object)s" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
 for square_list in squares:
 	for square in square_list:
-		total_pixels += handle_square(square_list, square, sqlfile, mappingfile)	
+		total_pixels += handle_square(square_list, square, sqlfile)	
 					
 
 print "Total: %(squares)d squares, %(pixels)d pixels" % { 'squares':len(squares), 'pixels':total_pixels }
