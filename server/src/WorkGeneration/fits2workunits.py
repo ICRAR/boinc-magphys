@@ -74,22 +74,12 @@ def squarify():
 def handle_square(square_list, square, sqlfile):
 	sqlfile.write(s_create_square(square, GRID_SIZE));
 	pixels_in_square = len(square_list[square])
-	print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':pixels_in_square }
-	outfile = open("%(output_dir)s/observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % {
-		'output_dir':OUTPUT_DIR, 'object':object_name, 'sq_x':square.x, 'sq_y':square.y}, 'w')
-	outfile.write("#  This workunit contains observations for object %(object)s\n" % { "object":object_name })
-	outfile.write("#  Square %(square)s contains %(count)s pixels with above-threshold observations\n" % {
-		'square':square, 'count':pixels_in_square })
-	outfile.write("#\n")
+#	print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':pixels_in_square }
 
 	for pixel in square_list[square]:
 		p = pixel.keys()[0];
+		sqlfile.write(s_create_pixel(p, pixel[p]));
 #		print "    Pixel %(key)s => %(value)s" % { 'key':p, 'value':pixel[p]}
-		outfile.write("%(object)s~%(pix_x)s~%(pix_y)s" % {'object':object_name, 'pix_x':p.x, 'pix_y':p.y})
-		for each_value in pixel[p]:
-			outfile.write(" %(value)s" % { 'value':each_value })
-		outfile.write("\n");
-	outfile.close()
 	return pixels_in_square
 
 
@@ -98,6 +88,15 @@ def handle_square(square_list, square, sqlfile):
 ## Functions for outputting SQL
 ## 
 ## ######################################################################## ##
+	
+def s_create_pixel(coordinates, pixel_values):
+	values = ""
+	for each_value in pixel_values:
+		values += "%(value)s " % { 'value':each_value }
+
+	return "INSERT INTO pixel(object_id, square_id, x, y, pixel_values) VALUES(@id_object, @id_last_square, %(x)d, %(y)d, '%(values)s');\n" % {
+		'x':coordinates.x, 'y':coordinates.y, 'values':values
+	}
 	
 def s_create_square(square, size):
 	insert = "\nINSERT INTO square(object_id, top_x, top_y, size) VALUES(@id_object, %(x)d, %(y)d, %(size)d);\n" % {
@@ -132,12 +131,14 @@ print "Workunits for: %(object)s" % { "object":object_name }
 total_pixels = 0
 
 sqlfile = open("%(output_dir)s/dataset-%(object)s.sql" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
+sqlfile.write("START TRANSACTION;\n");
 sqlfile.write(s_create_object(object_name, END_X, END_Y, LAYER_COUNT));
 
 for square_list in squares:
 	for square in square_list:
 		total_pixels += handle_square(square_list, square, sqlfile)	
 					
+sqlfile.write("COMMIT;\n");
 
 print "Total: %(squares)d squares, %(pixels)d pixels" % { 'squares':len(squares), 'pixels':total_pixels }
 print "================================ END OF OUTPUT ================================"
