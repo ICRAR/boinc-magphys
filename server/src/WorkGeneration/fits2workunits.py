@@ -72,6 +72,7 @@ def squarify():
 	return squares
 
 def handle_square(square_list, square, sqlfile):
+	sqlfile.write(s_create_square(square, GRID_SIZE));
 	pixels_in_square = len(square_list[square])
 	print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':pixels_in_square }
 	outfile = open("%(output_dir)s/observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % {
@@ -98,6 +99,14 @@ def handle_square(square_list, square, sqlfile):
 ## 
 ## ######################################################################## ##
 	
+def s_create_square(square, size):
+	insert = "\nINSERT INTO square(object_id, top_x, top_y, size) VALUES(@id_object, %(x)d, %(y)d, %(size)d);\n" % {
+		'x':square.x, 'y':square.y, 'size':size
+	}
+	get_id = "SELECT LAST_INSERT_ID() INTO @id_last_square;\n"
+
+	return insert + get_id
+
 def s_create_object(name, x, y, z):
 	insert = "INSERT INTO object(name, dimension_x, dimension_y, dimension_z) VALUES('%(name)s', %(x)d, %(y)d, %(z)d);\n" % {
 		'name':name, 'x':x, 'y':y, 'z':z
