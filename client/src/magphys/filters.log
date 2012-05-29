@@ -277,3 +277,51 @@
  277 CFHT WIRCAM J [added March 2011]                                  1077
  278 CFHT WIRCAM H [added March 2011]                                   828
  279 CFHT WIRCAM Ks [added March 2011]                                  912
+ 280 WISE W1 [Matt O'Dowd - may 2011]                                   398
+ 281 WISE W2 [Matt O'Dowd - may 2011]                                   548
+ 282 WISE W3 [Matt O'Dowd - may 2011]                                  1074
+ 283 WISE W4 [Matt O'Dowd - may 2011]                                   910
+ 284 MOIRCS J [K. Rubin, June 2011]                                     601
+ 285 MOIRCS H [K. Rubin, June 2011]                                    1602
+ 286 MOIRCS Ks [K. Rubin, June 2011]                                   1601
+ 287 Band 9 at 450um                                                     50
+ 288 Artifical filter at 2mm [added July 2011]                           50
+ 289 AKARI N2 [added Aug 2011]                                          234
+ 290 AKARI N3 [added Aug 2011]                                          234
+ 291 AKARI N4 [added Aug 2011]                                          234
+ 292 AKARI S7 [added Aug 2011]                                          103
+ 293 AKARI S9W [added Aug 2011]                                         103
+ 294 AKARI S11 [added Aug 2011]                                         103
+ 295 AKARI L15 [added Aug 2011]                                         150
+ 296 AKARI L18W [added Aug 2011]                                        169
+ 297 HST/WFC3 F110W [via M.Negrello - Aug 2011]                         271
+ 298 HST/WFC3 F160W [via M.Negrello - Aug 2011]                         332
+ 299 gaussian filter at 1.3mm [proxy for IRAM1.3]                        50
+ 300 gaussian filter at 2.77mm [proxy for PdBI 108.1GHz]                 50
+ 301 gaussian filter at 3.38mm [proxy for PdBI 88.7GHz]                  50
+ 302 gaussian filter at 3.6cm [proxy for 8.4GHz]                         50
+ 303 gaussian filter at 21cm [proxy for 1.4GHz]                          50
+ 304 Band 1 40GHz [added Sept.2011]                                      49
+ 305 Band 2 80GHz [added Sept.2011]                                      50
+ 306 Band 4 140GHz [added Sept 2011]                                     50
+ 307 Band 5 190GHz [added Sept 2011]                                     50
+ 308 Band 8 410GHz [added Sep 2011]                                      50
+ 309 Band 10 850 GHz [added Sept 2011]                                   50
+ 310 artificial band at 307.5 GHz                                        50
+ 311 artificial filter at 111.8 GHz                                      50
+ 312 UVOT filter u [added Jan 2012 - via L.Lanz]                        211
+ 313 UVOT filter b [added Jan 2012 - via L.Lanz]                        531
+ 314 UVOT filter v [added Jan 2012 - via L.Lanz]                        402
+ 315 UVOT filter uvw1 [added Jan 2012 - via L.Lanz]                     668
+ 316 UVOT filter uvw2 [added Jan 2012 - via L.Lanz]                     641
+ 317 UVOT filter uvm2 [added Jan 2012 - via L.Lanz]                     641
+ 318 VISTA Z [added Jan 2012 - via M.Negrello]                          163
+ 319 VISTA Y [added Jan 2012 - via M.Negrello]                          247
+ 320 VISTA J [added Jan 2012 - via M.Negrello]                          322
+ 321 VISTA H [added Jan 2012 - via M.Negrello]                          520
+ 322 VISTA Ks [added Jan 2012 - via M.Negrello]                         684
+ 323 PS1 g-band [added May 2012, via D. Thilker]                        237
+ 324 PS1 r-band [added May 2012, via D. Thilker]                        230
+ 325 PS1 i-band [added May 2012, via D. Thilker]                        202
+ 326 PS1 z-band [added May 2012, via D. Thilker]                        211
+ 327 PS1 Y-band [added May 2012, via D. Thilker]                        216

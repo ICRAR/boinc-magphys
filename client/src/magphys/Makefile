@@ -1,7 +1,8 @@
 RM = /bin/rm -f
 UTILIB = ./public_utilities.a
 #FC =  g77 -ggdb -O0 -ffixed-line-length-132 -fbounds-check
-FC = gfortran -std=legacy -ffixed-line-length-none -static-libgfortran
+#FC = gfortran -std=legacy -ffixed-line-length-none
+FC = /usr/local/bin/gfortran -std=legacy -ffixed-line-length-none -static-libgfortran 
 
 .f.o:
 	$(FC) -c $<
@@ -24,19 +25,22 @@ read_optilib_bin: read_optilib_bin.f $(UTILIB)
 read_irlib_bin: read_irlib_bin.f $(UTILIB)
 	$(FC) read_irlib_bin.f $(UTILIB) -o read_irlib_bin		
 
+fit_sed_skynet: fit_sed_skynet.f $(UTILIB)
+	$(FC) fit_sed_skynet.f $(UTILIB) -o fit_sed_skynet
+
 clean:
 	$(RM) public_utilities.a $(OBJFILES)
 
 all:
 	make public_utilities.a
-	make make_zgrid get_optic_colors get_infrared_colors fit_sed
+	make make_zgrid get_optic_colors get_infrared_colors fit_sed fit_sed_skynet
 	make read_optilib_bin read_irlib_bin
 
 #---------------------------------------------------------------------------
 #commands to build library public_utilities.a
-SRCFILES = make_zgrid.f get_optic_colors.f get_infrared_colors.f fit_sed.f read_optilib_bin.f read_irlib_bin.f
+SRCFILES = make_zgrid.f get_optic_colors.f get_infrared_colors.f fit_sed.f read_optilib_bin.f read_irlib_bin.f fit_sed_skynet.f
 
-OBJFILES = make_zgrid.o get_optic_colors.o get_infrared_colors.o fit_sed.o read_optilib_bin.o read_irlib_bin.o
+OBJFILES = make_zgrid.o get_optic_colors.o get_infrared_colors.o fit_sed.o read_optilib_bin.o read_irlib_bin.o fit_sed_skynet.o
 
 public_utilities.a: $(OBJFILES)
 	ar ruv public_utilities.a $?
