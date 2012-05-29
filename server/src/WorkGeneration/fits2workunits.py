@@ -84,7 +84,7 @@ def s_create_object(name, x, y, z):
 	get_id = "SELECT LAST_INSERT_ID() INTO @id_object;\n"
 
 	return insert + get_id
-	
+
 ## ######################################################################## ##
 ## 
 ## Where it all starts
@@ -100,6 +100,9 @@ squares = squarify()
 print "Workunits for: %(object)s" % { "object":object_name } 
 
 total_pixels = 0
+
+sqlfile = open("%(output_dir)s/dataset-%(object)s.sql" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
+sqlfile.write(s_create_object(object_name, END_X, END_Y, LAYER_COUNT));
 
 mappingfile = open("%(output_dir)s/mapping-%(object)s" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
 for square_list in squares:
