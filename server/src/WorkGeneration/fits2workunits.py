@@ -7,10 +7,10 @@ OUTPUT_DIR = '/Users/perh/Desktop/f2wu'
 GRID_SIZE = 5
 
 # The file is 3840x3840. Right now only looking at a small square where there is data
-START_X = 0
-START_Y = 0
-END_X = 3840
-END_Y = 3840
+START_X = 1900
+START_Y = 1900
+END_X = 2000
+END_Y = 2000
 
 HDULIST = pyfits.open(INPUT_FILE);
 LAYER_COUNT = len(HDULIST)
