@@ -83,12 +83,12 @@ def handle_square(square_list, square, sqlfile):
 	outfile.write("#\n")
 
 	for pixel in square_list[square]:
-		for p in pixel.keys():
-#				print "    Pixel %(key)s => %(value)s" % { 'key':p, 'value':pixel[p]}
-			outfile.write("%(object)s~%(pix_x)s~%(pix_y)s" % {'object':object_name, 'pix_x':p.x, 'pix_y':p.y})
-			for one_value in pixel[p]:
-				outfile.write(" %(value)s" % { 'value':one_value })
-			outfile.write("\n");
+		p = pixel.keys()[0];
+#		print "    Pixel %(key)s => %(value)s" % { 'key':p, 'value':pixel[p]}
+		outfile.write("%(object)s~%(pix_x)s~%(pix_y)s" % {'object':object_name, 'pix_x':p.x, 'pix_y':p.y})
+		for each_value in pixel[p]:
+			outfile.write(" %(value)s" % { 'value':each_value })
+		outfile.write("\n");
 	outfile.close()
 	return pixels_in_square
 
