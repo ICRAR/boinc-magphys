@@ -6,7 +6,10 @@ INPUT_FILE = '/Users/perh/Dropbox/Documents/Work/ThoughtWorks/Projects/ICRAR/POG
 OUTPUT_DIR = '/Users/perh/Desktop/f2wu'
 GRID_SIZE = 5
 
-# The file is 3840x3840. Right now only looking at a small square where there is data
+# TODO:    this should be gleaned from the FITS file
+# WARNING: START_X and/or START_Y should be zero or some calculations will
+#          be off; these should probably be removed before going "live"
+
 START_X = 1900
 START_Y = 1900
 END_X = 2000
