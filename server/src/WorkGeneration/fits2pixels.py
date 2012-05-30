@@ -99,9 +99,7 @@ def handle_square(square_list, square, sqlfile):
 ## ######################################################################## ##
 	
 def s_create_pixel(coordinates, pixel_values):
-	values = ""
-	for each_value in pixel_values:
-		values += "%(value)s " % { 'value':each_value }
+	values = " ".join(map(str, pixel_values))
 
 	return "INSERT INTO pixel(object_id, square_id, x, y, pixel_values) VALUES(@id_object, @id_last_square, %(x)d, %(y)d, '%(values)s');\n" % {
 		'x':coordinates.x, 'y':coordinates.y, 'values':values
