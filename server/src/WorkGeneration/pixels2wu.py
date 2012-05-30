@@ -96,10 +96,8 @@ def create_output_file(square):
 			'object':square.getObject().name, 'pix_x':pixel.x, 'pix_y':pixel.y, 'pixel_values':pixel.pixel_values})
 	outfile.close();
 	update_query = "UPDATE square SET wu_generated=NOW() WHERE id=%(sq_id)s" % {'sq_id':square.id}
-	print update_query
 	rows_updated = doUpdate(CONNECTION, update_query)
 	CONNECTION.commit()
-	print "  -- Updated %(r)d rows" % {'r':rows_updated}
 
 print "Fetching %(limit)s unprocessed squares..." % {'limit':SQUARES_TO_PROCESS}
 for square in Square._getByQuery("wu_generated IS NULL ORDER BY top_x+top_y ASC LIMIT %(limit)s" % {'limit':SQUARES_TO_PROCESS}):
