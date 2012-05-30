@@ -1,0 +1,32 @@
+c	filter.dec
+
+c	Array and common declarations for FUNCTION FILTER
+
+c	mxft = maximum number of filters
+c	mxft = 100 (modified 27/08/93)
+c	mxft = 120 (modified 04/04/96)
+c	mxft = 150 (modified 25/11/96)
+
+c	mxwf = maximum number of wavelengths/filter
+c	mxwf = 200 
+c	mxwf = 250 (modified 27/08/93)
+c	mxwf = 400 (modified 04/04/96)
+c	mxwf = 800 (modified 04/08/99)
+
+c	parameter (mxft=120,mxwf=400)
+c	parameter (mxft=100,mxwf=250)
+c	parameter (mxft=150,mxwf=400)
+c	parameter (mxft=150,mxwf=800)
+c	common /c_filter/ iread,jread,nf,np(mxft),r(mxwf,mxft,2)
+
+c	Modified 11-MAY-1999 to adapt to new format
+c	parameter (mxft=250,mxwp=15000,naux=5000)
+	parameter (mxft=350,mxwp=100000,naux=10000)
+	character*64 fid(0:mxft)
+	integer iread,jread,nf,ltot,ni(mxft),nl(mxft),np(mxft)
+	real r(mxwp,2)
+	common /c_filter/ iread,jread,ireset,zlast,nf,ltot,ni,nl,np,fid,r
+
+c	Modified 11 July 2003 to add common A0V
+	real xa0v(1250),ya0v(1250),za0v(1250)
+	common /a0v/ xa0v,ya0v,za0v
