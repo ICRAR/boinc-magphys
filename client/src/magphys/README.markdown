@@ -9,12 +9,13 @@ A number of the large model files have been omitted from the repository.
 To learn more about MagPhys take a look at the magphys-readme.pdf file in the download.
 
 #### To compile MagPhys on Windows:
-
+1. The Makefile relies on Cgywin being installed
 
 #### To compile MagPhys on Linux:
-
+1. The Makefile has been modified to link the final executable (fit_sed_skynet) as a single executable with no shared libraries.
+2. Use gfortran 4.4+ to compile 
 
 #### To compile MagPhys on Mac:
 
-1. The Makefile has been modified to link the final executable (fit_sed) as a single executable with no shared libraries.
+1. The Makefile has been modified to link the final executable (fit_sed_skynet) as a single executable with no shared libraries.
 2. Use gfortran 4.6.2+ to compile 
