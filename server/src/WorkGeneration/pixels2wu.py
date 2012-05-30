@@ -1,8 +1,16 @@
 import mysql.connector
 import mysql.connector.cursor
 import mysql.connector.errors
+import sys
 
+if(len(sys.argv) != 2):
+	print "usage:   %(me)s squares_to_process" % {'me':sys.argv[0]}
+	print "example: %(me)s 15" % {'me':sys.argv[0]}
+	sys.exit(-10)
+
+SQUARES_TO_PROCESS = sys.argv[1]
 CONNECTION = mysql.connector.connect(user='root', host='127.0.0.1', db='magphys_wu');
+OUTPUT_DIR = '/Users/perh/Desktop/f2wu'
 
 class ORMObject(object):
 	@classmethod
@@ -20,18 +28,10 @@ class ORMObject(object):
 		for row in result_set:
 			result.append(self(row))
 		return result;
-#	def has_all_required_fields(sellf, field_list):
-#		for field in field_list: 
-#			if not hasattr(sellf, field): 
-#				return 0
-#		return 1;
 
 	def __init__(self, db_values):
 		for key in db_values.keys():
 			setattr(self, key, db_values[key])
-#		if not self.has_all_required_fields(required_fields):
-#			raise StandardError("Not all required fields present. Required fields: %(fields)s" % {'fields':required_fields})
-		
 
 class Object(ORMObject):
 	def __str__(obj):
@@ -40,7 +40,9 @@ class Object(ORMObject):
 
 class Square(ORMObject):
 	def getObject(self):
-		return Object._getById(self.object_id)
+		if not hasattr(self, 'object'):
+			self.object = Object._getById(self.object_id)
+		return self.object
 	def getPixels(self):
 		return Pixel._getByQuery("square_id=%(square_id)s" % {'square_id':self.id});
 	def __str__(obj):
@@ -62,6 +64,10 @@ def fetchoneDict(cursor):
 	cols = [ d[0] for d in cursor.description ]
 	return dict(zip(cols, row))
 
+def doUpdate(conn, sql):
+	cursor = conn.cursor()
+	return cursor.execute(sql)
+	
 def fetchResultSet(conn, sql):
 	cursor = conn.cursor()
 	cursor.execute(sql)
@@ -74,11 +80,28 @@ def fetchResultSet(conn, sql):
 	return result
 
 def create_output_file(square):
-	print square
+#	object = square.getObject().name
+	pixels_in_square = len(square.getPixels())
+	filename_variables = { 'output_dir':OUTPUT_DIR, 'object':square.getObject().name, 'sq_x':square.top_x, 'sq_y':square.top_y}
+	filename = "%(output_dir)s/observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % filename_variables
+	print "  Writing %(filename)s" % {'filename':filename}
+	outfile = open(filename, 'w')
+	outfile.write("#  This workunit contains observations for object %(object)s\n" % { "object":square.getObject().name })
+	outfile.write("#  %(square)s contains %(count)s pixels with above-threshold observations\n" % {
+		'square':square, 'count':pixels_in_square })
+	outfile.write("#\n")
+	
 	for pixel in square.getPixels():
-		print pixel
+		outfile.write("%(object)s~%(pix_x)s~%(pix_y)s %(pixel_values)s\n" % {
+			'object':square.getObject().name, 'pix_x':pixel.x, 'pix_y':pixel.y, 'pixel_values':pixel.pixel_values})
+	outfile.close();
+	update_query = "UPDATE square SET wu_generated=NOW() WHERE id=%(sq_id)s" % {'sq_id':square.id}
+	print update_query
+	rows_updated = doUpdate(CONNECTION, update_query)
+	CONNECTION.commit()
+	print "  -- Updated %(r)d rows" % {'r':rows_updated}
 
-
-for square in Square._getByQuery("wu_generated IS NULL ORDER BY size DESC, id ASC LIMIT 10"):
+print "Fetching %(limit)s unprocessed squares..." % {'limit':SQUARES_TO_PROCESS}
+for square in Square._getByQuery("wu_generated IS NULL ORDER BY top_x+top_y ASC LIMIT %(limit)s" % {'limit':SQUARES_TO_PROCESS}):
 	create_output_file(square)
 
