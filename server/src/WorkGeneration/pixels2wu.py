@@ -3,14 +3,14 @@ import mysql.connector.cursor
 import mysql.connector.errors
 import sys
 
-if(len(sys.argv) != 2):
-	print "usage:   %(me)s squares_to_process" % {'me':sys.argv[0]}
-	print "example: %(me)s 15" % {'me':sys.argv[0]}
+if(len(sys.argv) != 3):
+	print "usage:   %(me)s squares_to_process output_directory" % {'me':sys.argv[0]}
+	print "example: %(me)s 15 /Users/astrogeek/f2wu" % {'me':sys.argv[0]}
 	sys.exit(-10)
 
 SQUARES_TO_PROCESS = sys.argv[1]
+OUTPUT_DIR = sys.argv[2]
 CONNECTION = mysql.connector.connect(user='root', host='127.0.0.1', db='magphys_wu');
-OUTPUT_DIR = '/Users/perh/Desktop/f2wu'
 
 class ORMObject(object):
 	@classmethod
@@ -83,7 +83,7 @@ def create_output_file(square):
 #	object = square.getObject().name
 	pixels_in_square = len(square.getPixels())
 	filename_variables = { 'output_dir':OUTPUT_DIR, 'object':square.getObject().name, 'sq_x':square.top_x, 'sq_y':square.top_y}
-	filename = "%(output_dir)s/observations/obs%(object)s.%(sq_x)s.%(sq_y)s" % filename_variables
+	filename = "%(output_dir)s/obs%(object)s.%(sq_x)s.%(sq_y)s" % filename_variables
 	print "  Writing %(filename)s" % {'filename':filename}
 	outfile = open(filename, 'w')
 	outfile.write("#  This workunit contains observations for object %(object)s\n" % { "object":square.getObject().name })
