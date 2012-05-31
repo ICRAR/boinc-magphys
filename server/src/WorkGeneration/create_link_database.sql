@@ -29,6 +29,8 @@ CREATE TABLE pixel (
 	pixel_values TEXT NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+CREATE INDEX lookupPixel ON pixel(square_id);
+
 -- Objects are referenced by name
 CREATE UNIQUE INDEX uniqObjectName ON object(name);
 
