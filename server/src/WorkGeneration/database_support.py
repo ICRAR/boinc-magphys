@@ -2,13 +2,16 @@ import mysql.connector
 import mysql.connector.cursor
 import mysql.connector.errors
 
-class ConnectionHolder:
+class Database:
 	@classmethod
 	def getConnection(self):
 		if not hasattr(self, 'c'):
 			self.c = mysql.connector.connect(user='root', host='127.0.0.1', db='magphys_wu');
 		return self.c
-
+		
+	@classmethod
+	def commitTransaction(self):
+		return self.getConnection().commit()
 
 def doUpdate(conn, sql):
 	cursor = conn.cursor()
@@ -28,13 +31,13 @@ def fetchResultSet(conn, sql):
 class ORMObject(object):
 	@classmethod
 	def _getById(self, id):
-		result_set = fetchResultSet(ConnectionHolder.getConnection(), "SELECT * FROM %(cls_name)s WHERE id = %(obj_id)d" % { 
+		result_set = fetchResultSet(Database.getConnection(), "SELECT * FROM %(cls_name)s WHERE id = %(obj_id)d" % { 
 			'cls_name':self.__name__, 'obj_id':id })
 		return self(result_set[0])
 	
 	@classmethod
 	def _getByQuery(self, where):
-		result_set = fetchResultSet(ConnectionHolder.getConnection(), "SELECT * FROM %(cls_name)s WHERE %(where_clause)s" % {
+		result_set = fetchResultSet(Database.getConnection(), "SELECT * FROM %(cls_name)s WHERE %(where_clause)s" % {
 			'cls_name':self.__name__, 'where_clause':where })
 		
 		result = []
