@@ -31,13 +31,6 @@ LAYER_COUNT = len(HDULIST)
 ## 
 ## ######################################################################## ##
 
-class Coordinate:
-	def __init__(self, x_coord, y_coord):
-		self.x = x_coord
-		self.y = y_coord
-	def __str__(obj):
-		return "<%(x)s, %(y)s>" % {'x':obj.x,'y':obj.y}
-
 def get_pixels(pix_x, pix_y):
 #	print "Getting pixels in <%(x)s, %(y)s>" % {'x':pix_x, 'y':pix_y} 
 	result = []
@@ -71,11 +64,9 @@ def create_square(object, pix_x, pix_y):
 		square = Square({'object_id':object.id, 'top_x':pix_x, 'top_y':pix_y, 'size':GRID_SIZE}).save()
 		
 		for pixel in pixels:
-#			p = pixel.keys()[0]
 			pixel.object_id = object.id
 			pixel.square_id = square.id
 			pixel.save()
-#			px = Pixel({'object_id':object.id,'square_id':square.id,'x':p.x,'y':p.y,'pixel_values':" ".join(map(str, pixel[p]))}).save()
 
 		return GRID_SIZE
 	else:
