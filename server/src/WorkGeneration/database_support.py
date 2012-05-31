@@ -60,7 +60,7 @@ class ORMObject(object):
 
 		sql = "INSERT INTO %(table)s(%(columns)s) VALUES(%(values)s)" % {
 			'table':self.__class__.__name__, 'columns':columns, 'values':values}
-		print ">>SQL: " + sql
+#		print ">>SQL: " + sql
 		rows_updated = doUpdate(Database.getConnection(), sql)
 		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
 		rs = fetchResultSet(Database.getConnection(), "SELECT LAST_INSERT_ID()")
@@ -77,7 +77,7 @@ class ORMObject(object):
 
 		sql = "UPDATE %(table)s SET %(updates)s WHERE id=%(id)d" % {
 			'table':self.__class__.__name__, 'updates':",".join(updates), 'id':self.id}
-		print ">>SQL: " + sql
+#		print ">>SQL: " + sql
 		rows_updated = doUpdate(Database.getConnection(), sql)
 		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
 		return self
