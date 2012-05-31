@@ -106,13 +106,6 @@ def s_create_pixel(coordinates, pixel_values):
 		'x':coordinates.x, 'y':coordinates.y, 'values':values
 	}
 	
-def s_create_object(name, x, y, z):
-	insert = "INSERT INTO object(name, dimension_x, dimension_y, dimension_z) VALUES('%(name)s', %(x)d, %(y)d, %(z)d);\n" % {
-		'name':name, 'x':x, 'y':y, 'z':z
-	}
-	get_id = "SELECT LAST_INSERT_ID() INTO @id_object;\n"
-
-	return insert + get_id
 
 ## ######################################################################## ##
 ## 
