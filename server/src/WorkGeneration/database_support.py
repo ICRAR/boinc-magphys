@@ -55,7 +55,7 @@ class ORMObject(object):
 	def _create(self):
 		self._checkForQuotes()
 		dict = self.__dict__
-		columns = ",".join(dict.keys())
+		columns = ",".join("`" + key + "`" for key in dict.keys())
 		values = ",".join("\"" + str(dict[key]) + "\"" for key in dict.keys())
 
 		sql = "INSERT INTO %(table)s(%(columns)s) VALUES(%(values)s)" % {
@@ -65,6 +65,7 @@ class ORMObject(object):
 		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
 		rs = fetchResultSet(Database.getConnection(), "SELECT LAST_INSERT_ID()")
 		self.id = rs[0]['LAST_INSERT_ID()']
+		return self
 
 	def _update(self):
 		self._checkForQuotes()
@@ -72,13 +73,14 @@ class ORMObject(object):
 
 		updates = []
 		for key in dict.keys():
-			if key != "id": updates.append("%(col)s=\"%(val)s\"" % {'col':key, 'val':dict[key]})
+			if key != "id": updates.append("`%(col)s`=\"%(val)s\"" % {'col':key, 'val':dict[key]})
 
 		sql = "UPDATE %(table)s SET %(updates)s WHERE id=%(id)d" % {
 			'table':self.__class__.__name__, 'updates':",".join(updates), 'id':self.id}
 		print ">>SQL: " + sql
 		rows_updated = doUpdate(Database.getConnection(), sql)
 		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
+		return self
 
 	def save(self):
 		if not hasattr(self, 'id'):
@@ -106,7 +108,7 @@ class Square(ORMObject):
 
 class Pixel(ORMObject):
 	def __str__(obj):
-		return "Pixel[%(id)d]<%(x)s, %(y)s>(square_id = %(sq_id)d, object_id = %(o_id)s" % {
+		return "Pixel[%(id)d]<%(x)s, %(y)s>(square_id = %(sq_id)d, object_id = %(o_id)s)" % {
 			'id':obj.id, 'x':obj.x,'y':obj.y,'sq_id':obj.square_id,'o_id':obj.object_id}
 	def getObject(self):
 		return Object._getById(self.object_id)

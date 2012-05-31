@@ -10,7 +10,6 @@ if(len(sys.argv) != 2):
 	
 MIN_LIVE_CHANNELS_PER_PIXEL = 3;
 INPUT_FILE = '/Users/perh/Dropbox/Documents/Work/ThoughtWorks/Projects/ICRAR/POGS_NGC628_v3.fits';
-OUTPUT_DIR = '/Users/perh/Desktop/f2wu'
 GRID_SIZE = 5
 
 # TODO:    this should be gleaned from the FITS file
@@ -65,7 +64,7 @@ def get_pixels(pix_x, pix_y):
 				result.append({coords: pixels})
 	return result
 		
-def squarify():
+def squarify(object):
 	squares = []
 	for pix_y in range(START_Y, END_Y, GRID_SIZE):
 		print "Scanned %(pct_done)3d%% of image" % { 'pct_done':100*(pix_y-START_Y)/(END_Y-START_Y) }
@@ -74,38 +73,31 @@ def squarify():
 			pixels = get_pixels([pix_x], range(pix_y, pix_y+GRID_SIZE))
 			if len(pixels)>0:
 				pixels.extend(get_pixels(range(pix_x+1, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE)))
-				coords = Coordinate(pix_x, pix_y) #"s%(x)s,%(y)s"%{'x':pix_x,'y':pix_y}
-				squares.append({coords:pixels});
+				
+				square = Square({'object_id':object.id, 'top_x':pix_x, 'top_y':pix_y, 'size':GRID_SIZE}).save()
+				
+				for pixel in pixels:
+					p = pixel.keys()[0];
+					px = Pixel({'object_id':object.id,'square_id':square.id,'x':p.x,'y':p.y,'pixel_values':" ".join(map(str, pixel[p]))}).save()
+
 				pix_x+=GRID_SIZE;
 			else:
 				pix_x+=1
 	return squares
 
-def handle_square(square_list, square, sqlfile):
+def handle_square(square_list, square):
 	pixels_in_square = len(square_list[square])
 	sq = Square({'object_id':object.id, 'top_x':square.x, 'top_y':square.y, 'size':GRID_SIZE})
 	sq.save()
-
+	print "Wrote %(object)s to database" % { 'object':sq }
+	
 	for pixel in square_list[square]:
 		p = pixel.keys()[0];
-		sqlfile.write(s_create_pixel(p, pixel[p]));
-#		print "    Pixel %(key)s => %(value)s" % { 'key':p, 'value':pixel[p]}
+		px = Pixel({'object_id':object.id,'square_id':sq.id,'x':p.x,'y':p.y,'pixel_values':" ".join(map(str, pixel[p]))}).save()
+		print "Wrote %(object)s to database" % { 'object':px }
 	return pixels_in_square
 
 
-## ######################################################################## ##
-## 
-## Functions for outputting SQL
-## 
-## ######################################################################## ##
-	
-def s_create_pixel(coordinates, pixel_values):
-	values = " ".join(map(str, pixel_values))
-
-	return "INSERT INTO pixel(object_id, square_id, x, y, pixel_values) VALUES(@id_object, @id_last_square, %(x)d, %(y)d, '%(values)s');\n" % {
-		'x':coordinates.x, 'y':coordinates.y, 'values':values
-	}
-	
 
 ## ######################################################################## ##
 ## 
@@ -125,19 +117,13 @@ object.save()
 
 print "Wrote %(object)s to database" % { 'object':object }
 
-squares = squarify()
+squares = squarify(object)
 
 total_pixels = 0
 
-print "Writing SQL file ..."
-sqlfile = open("%(output_dir)s/dataset-%(object)s.sql" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
-sqlfile.write("START TRANSACTION;\n");
-
-for square_list in squares:
-	for square in square_list:
-		total_pixels += handle_square(square_list, square, sqlfile)	
-					
-sqlfile.write("COMMIT;\n");
+#for square_list in squares:
+#	for square in square_list:
+#		total_pixels += handle_square(square_list, square)	
 
 print "Total: %(squares)d squares, %(pixels)d pixels" % { 'squares':len(squares), 'pixels':total_pixels }
 
