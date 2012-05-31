@@ -99,7 +99,7 @@ def squarify(object):
 #Here, it might be useful to assert that there are 12 input layers/channels/HDUs
 #print "List length: %(#)d" % {'#': len(HDULIST)} 
 
-object_name = HDULIST[0].header['OBJECT'] + "3"
+object_name = HDULIST[0].header['OBJECT']
 print("Work units for: %(object)s" % { "object":object_name } )
 
 # Create and save the object
