@@ -1,25 +1,33 @@
+from __future__ import print_function
 import math
 import pyfits
 import sys
 from database_support import *
 
-if(len(sys.argv) != 2):
-	print "usage:   %(me)s FITS_file" % {'me':sys.argv[0]}
-	print "example: %(me)s /Users/astrogeek/Documents/ICRAR/POGS_NGC628_v3.fits" % {'me':sys.argv[0]}
+if(len(sys.argv) < 2):
+	print("usage:   %(me)s FITS_file [start_x start_y end_x end_y]" % {'me':sys.argv[0]})
+	print("         specify square cutout parameters only in development mode")
+	print("example: %(me)s /Users/astrogeek/Documents/ICRAR/POGS_NGC628_v3.fits" % {'me':sys.argv[0]})
 	sys.exit(-10)
 	
 MIN_LIVE_CHANNELS_PER_PIXEL = 3;
-INPUT_FILE = '/Users/perh/Dropbox/Documents/Work/ThoughtWorks/Projects/ICRAR/POGS_NGC628_v3.fits';
+INPUT_FILE = sys.argv[1]
 GRID_SIZE = 5
 
 # TODO:    this should be gleaned from the FITS file
 # WARNING: START_X and/or START_Y should be zero or some calculations will
 #          be off; these should probably be removed before going "live"
-
-START_X = 1900
-START_Y = 1900
-END_X = 2000
-END_Y = 2000
+START_X = 0
+START_Y = 0
+END_X = 3840
+END_Y = 3840
+if len(sys.argv) > 5:
+	START_X = int(sys.argv[2])
+	START_Y = int(sys.argv[3])
+	END_X = int(sys.argv[4])
+	END_Y = int(sys.argv[5])
+	print("\nDEVELOPMENT MODE: cutting out square (%(s_x)d, %(s_y)d) to (%(e_x)d, %(e_y)d)\n" % {
+		's_x':START_X,'s_y':START_Y,'e_x':END_X,'e_y':END_Y})
 
 HDULIST = pyfits.open(INPUT_FILE);
 LAYER_COUNT = len(HDULIST)
@@ -74,7 +82,9 @@ def create_square(object, pix_x, pix_y):
 
 def squarify(object):
 	for pix_y in range(START_Y, END_Y, GRID_SIZE):
-		print "Scanned %(pct_done)3d%% of image" % { 'pct_done':100*(pix_y-START_Y)/(END_Y-START_Y) }
+		str = "Scanned %(pct_done)3d%% of image" % { 'pct_done':100*(pix_y-START_Y)/(END_Y-START_Y) }
+		print(str, end="\r")
+		sys.stdout.flush()
 		pix_x = START_X
 		while pix_x < END_X:
 			pix_x += create_square(object, pix_x, pix_y)
@@ -90,17 +100,17 @@ def squarify(object):
 #print "List length: %(#)d" % {'#': len(HDULIST)} 
 
 object_name = HDULIST[0].header['OBJECT'] + "3"
-print "Work units for: %(object)s" % { "object":object_name } 
+print("Work units for: %(object)s" % { "object":object_name } )
 
 # Create and save the object
 object = Object({'name':object_name, 'dimension_x':END_X, 'dimension_y':END_Y, 'dimension_z':LAYER_COUNT})
 object.save()
 
-print "Wrote %(object)s to database" % { 'object':object }
+print("Wrote %(object)s to database" % { 'object':object })
 
 squares = squarify(object)
 
-print "Done"
+print("\nDone")
 # Uncomment to print general information about the file to stdout
 #HDULIST.info()
 
