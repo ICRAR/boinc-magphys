@@ -82,9 +82,9 @@ def squarify():
 	return squares
 
 def handle_square(square_list, square, sqlfile):
-	sqlfile.write(s_create_square(square, GRID_SIZE));
 	pixels_in_square = len(square_list[square])
-#	print "  Square %(square)s has %(count)s pixels" % { 'square':square, 'count':pixels_in_square }
+	sq = Square({'object_id':object.id, 'top_x':square.x, 'top_y':square.y, 'size':GRID_SIZE})
+	sq.save()
 
 	for pixel in square_list[square]:
 		p = pixel.keys()[0];
@@ -106,14 +106,6 @@ def s_create_pixel(coordinates, pixel_values):
 		'x':coordinates.x, 'y':coordinates.y, 'values':values
 	}
 	
-def s_create_square(square, size):
-	insert = "\nINSERT INTO square(object_id, top_x, top_y, size) VALUES(@id_object, %(x)d, %(y)d, %(size)d);\n" % {
-		'x':square.x, 'y':square.y, 'size':size
-	}
-	get_id = "SELECT LAST_INSERT_ID() INTO @id_last_square;\n"
-
-	return insert + get_id
-
 def s_create_object(name, x, y, z):
 	insert = "INSERT INTO object(name, dimension_x, dimension_y, dimension_z) VALUES('%(name)s', %(x)d, %(y)d, %(z)d);\n" % {
 		'name':name, 'x':x, 'y':y, 'z':z
@@ -131,12 +123,11 @@ def s_create_object(name, x, y, z):
 #Here, it might be useful to assert that there are 12 input layers/channels/HDUs
 #print "List length: %(#)d" % {'#': len(HDULIST)} 
 
-object_name = HDULIST[0].header['OBJECT']
+object_name = HDULIST[0].header['OBJECT'] + "3"
 print "Work units for: %(object)s" % { "object":object_name } 
 
 # Create and save the object
 object = Object({'name':object_name, 'dimension_x':END_X, 'dimension_y':END_Y, 'dimension_z':LAYER_COUNT})
-object.description = "This is an optional description"
 object.save()
 
 print "Wrote %(object)s to database" % { 'object':object }
@@ -148,7 +139,6 @@ total_pixels = 0
 print "Writing SQL file ..."
 sqlfile = open("%(output_dir)s/dataset-%(object)s.sql" % {'output_dir':OUTPUT_DIR, 'object':object_name}, 'w')
 sqlfile.write("START TRANSACTION;\n");
-sqlfile.write(s_create_object(object_name, END_X, END_Y, LAYER_COUNT));
 
 for square_list in squares:
 	for square in square_list:

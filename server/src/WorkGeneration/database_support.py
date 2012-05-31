@@ -65,8 +65,7 @@ class ORMObject(object):
 		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
 		rs = fetchResultSet(Database.getConnection(), "SELECT LAST_INSERT_ID()")
 		self.id = rs[0]['LAST_INSERT_ID()']
-		
-		
+
 	def _update(self):
 		self._checkForQuotes()
 		dict = self.__dict__
@@ -85,16 +84,15 @@ class ORMObject(object):
 		if not hasattr(self, 'id'):
 			return self._create()
 		return self._update()
-		
-	
+
 	def __init__(self, db_values):
 		for key in db_values.keys():
 			setattr(self, key, db_values[key])
 
 class Object(ORMObject):
 	def __str__(obj):
-		return "Object[%(id)d]<%(x)s x %(y)s x %(z)s>(%(name)s): %(desc)s" % {
-			'id':obj.id, 'x':obj.dimension_x,'y':obj.dimension_y,'z':obj.dimension_z,'name':obj.name,'desc':obj.description}
+		return "Object[%(id)d]<%(x)s x %(y)s x %(z)s>(%(name)s)" % {
+			'id':obj.id, 'x':obj.dimension_x,'y':obj.dimension_y,'z':obj.dimension_z,'name':obj.name}
 
 class Square(ORMObject):
 	def getObject(self):
