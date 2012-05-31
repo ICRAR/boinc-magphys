@@ -52,17 +52,15 @@ class ORMObject(object):
 			if str(value).find("\"") > -1:
 				raise StandardError("Sorry; I cannot yet escape quotes in values :(");
 
-
 	def _create(self):
 		self._checkForQuotes()
 		dict = self.__dict__
 		columns = ",".join(dict.keys())
 		values = ",".join("\"" + str(dict[key]) + "\"" for key in dict.keys())
 
-
 		sql = "INSERT INTO %(table)s(%(columns)s) VALUES(%(values)s)" % {
 			'table':self.__class__.__name__, 'columns':columns, 'values':values}
-		
+		print ">>SQL: " + sql
 		rows_updated = doUpdate(Database.getConnection(), sql)
 		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
 		rs = fetchResultSet(Database.getConnection(), "SELECT LAST_INSERT_ID()")
@@ -70,13 +68,22 @@ class ORMObject(object):
 		
 		
 	def _update(self):
-		raise NotImplementedError("cannot do this yet")
+		self._checkForQuotes()
+		dict = self.__dict__
+
+		updates = []
+		for key in dict.keys():
+			if key != "id": updates.append("%(col)s=\"%(val)s\"" % {'col':key, 'val':dict[key]})
+
+		sql = "UPDATE %(table)s SET %(updates)s WHERE id=%(id)d" % {
+			'table':self.__class__.__name__, 'updates':",".join(updates), 'id':self.id}
+		print ">>SQL: " + sql
+		rows_updated = doUpdate(Database.getConnection(), sql)
+		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
 
 	def save(self):
 		if not hasattr(self, 'id'):
-			print "No ID; create"
 			return self._create()
-		print "has ID; update"
 		return self._update()
 		
 	
