@@ -59,31 +59,34 @@ def get_pixels(pix_x, pix_y):
 			# we might discard a pixel that have data for 10 channels but is missing UV, while retaining pixels where we have
 			# data for only, say, 6 pixels but that has UV? Discussion with Kevin?
 			if live_pixels >= MIN_LIVE_CHANNELS_PER_PIXEL:
-#				print "%(galaxy)s__%(x)d_%(y)d " % { 'galaxy':object_name, 'x':x, 'y':y}
-				coords = Coordinate(x, y) #"p%(x)s,%(y)s"%{'x':x,'y':y}
-				result.append({coords: pixels})
+				result.append(Pixel({'x':x,'y':y,'pixel_values':" ".join(map(str, pixels))}))
+
 	return result
+
+def create_square(object, pix_x, pix_y):
+	pixels = get_pixels([pix_x], range(pix_y, pix_y+GRID_SIZE))
+	if len(pixels)>0:
+		pixels.extend(get_pixels(range(pix_x+1, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE)))
 		
+		square = Square({'object_id':object.id, 'top_x':pix_x, 'top_y':pix_y, 'size':GRID_SIZE}).save()
+		
+		for pixel in pixels:
+#			p = pixel.keys()[0]
+			pixel.object_id = object.id
+			pixel.square_id = square.id
+			pixel.save()
+#			px = Pixel({'object_id':object.id,'square_id':square.id,'x':p.x,'y':p.y,'pixel_values':" ".join(map(str, pixel[p]))}).save()
+
+		return GRID_SIZE
+	else:
+		return 1
+
 def squarify(object):
-	squares = []
 	for pix_y in range(START_Y, END_Y, GRID_SIZE):
 		print "Scanned %(pct_done)3d%% of image" % { 'pct_done':100*(pix_y-START_Y)/(END_Y-START_Y) }
 		pix_x = START_X
 		while pix_x < END_X:
-			pixels = get_pixels([pix_x], range(pix_y, pix_y+GRID_SIZE))
-			if len(pixels)>0:
-				pixels.extend(get_pixels(range(pix_x+1, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE)))
-				
-				square = Square({'object_id':object.id, 'top_x':pix_x, 'top_y':pix_y, 'size':GRID_SIZE}).save()
-				
-				for pixel in pixels:
-					p = pixel.keys()[0];
-					px = Pixel({'object_id':object.id,'square_id':square.id,'x':p.x,'y':p.y,'pixel_values':" ".join(map(str, pixel[p]))}).save()
-
-				pix_x+=GRID_SIZE;
-			else:
-				pix_x+=1
-	return squares
+			pix_x += create_square(object, pix_x, pix_y)
 
 def handle_square(square_list, square):
 	pixels_in_square = len(square_list[square])
@@ -119,14 +122,7 @@ print "Wrote %(object)s to database" % { 'object':object }
 
 squares = squarify(object)
 
-total_pixels = 0
-
-#for square_list in squares:
-#	for square in square_list:
-#		total_pixels += handle_square(square_list, square)	
-
-print "Total: %(squares)d squares, %(pixels)d pixels" % { 'squares':len(squares), 'pixels':total_pixels }
-
+print "Done"
 # Uncomment to print general information about the file to stdout
 #HDULIST.info()
 
