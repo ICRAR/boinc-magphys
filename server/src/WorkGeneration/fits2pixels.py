@@ -88,19 +88,6 @@ def squarify(object):
 		while pix_x < END_X:
 			pix_x += create_square(object, pix_x, pix_y)
 
-def handle_square(square_list, square):
-	pixels_in_square = len(square_list[square])
-	sq = Square({'object_id':object.id, 'top_x':square.x, 'top_y':square.y, 'size':GRID_SIZE})
-	sq.save()
-	print "Wrote %(object)s to database" % { 'object':sq }
-	
-	for pixel in square_list[square]:
-		p = pixel.keys()[0];
-		px = Pixel({'object_id':object.id,'square_id':sq.id,'x':p.x,'y':p.y,'pixel_values':" ".join(map(str, pixel[p]))}).save()
-		print "Wrote %(object)s to database" % { 'object':px }
-	return pixels_in_square
-
-
 
 ## ######################################################################## ##
 ## 
