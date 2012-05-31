@@ -45,6 +45,41 @@ class ORMObject(object):
 			result.append(self(row))
 		return result;
 
+	def _checkForQuotes(self):
+		dict = self.__dict__
+		for key in dict.keys():
+			value = dict[key]
+			if str(value).find("\"") > -1:
+				raise StandardError("Sorry; I cannot yet escape quotes in values :(");
+
+
+	def _create(self):
+		self._checkForQuotes()
+		dict = self.__dict__
+		columns = ",".join(dict.keys())
+		values = ",".join("\"" + str(dict[key]) + "\"" for key in dict.keys())
+
+
+		sql = "INSERT INTO %(table)s(%(columns)s) VALUES(%(values)s)" % {
+			'table':self.__class__.__name__, 'columns':columns, 'values':values}
+		
+		rows_updated = doUpdate(Database.getConnection(), sql)
+		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
+		rs = fetchResultSet(Database.getConnection(), "SELECT LAST_INSERT_ID()")
+		self.id = rs[0]['LAST_INSERT_ID()']
+		
+		
+	def _update(self):
+		raise NotImplementedError("cannot do this yet")
+
+	def save(self):
+		if not hasattr(self, 'id'):
+			print "No ID; create"
+			return self._create()
+		print "has ID; update"
+		return self._update()
+		
+	
 	def __init__(self, db_values):
 		for key in db_values.keys():
 			setattr(self, key, db_values[key])

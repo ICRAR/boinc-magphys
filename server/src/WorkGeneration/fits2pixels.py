@@ -1,6 +1,7 @@
 import math
 import pyfits
 import sys
+from database_support import *
 
 if(len(sys.argv) != 2):
 	print "usage:   %(me)s FITS_file" % {'me':sys.argv[0]}
@@ -131,8 +132,15 @@ def s_create_object(name, x, y, z):
 #print "List length: %(#)d" % {'#': len(HDULIST)} 
 
 object_name = HDULIST[0].header['OBJECT']
-
 print "Work units for: %(object)s" % { "object":object_name } 
+
+# Create and save the object
+object = Object({'name':object_name, 'dimension_x':END_X, 'dimension_y':END_Y, 'dimension_z':LAYER_COUNT})
+object.description = "This is an optional description"
+object.save()
+
+print "Wrote %(object)s to database" % { 'object':object }
+
 squares = squarify()
 
 total_pixels = 0
