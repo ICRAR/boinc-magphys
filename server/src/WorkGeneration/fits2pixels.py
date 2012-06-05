@@ -9,8 +9,18 @@ if(len(sys.argv) < 2):
 	print("         specify square cutout parameters only in development mode")
 	print("example: %(me)s /Users/astrogeek/Documents/ICRAR/POGS_NGC628_v3.fits" % {'me':sys.argv[0]})
 	sys.exit(-10)
+
+status = {}
+status['calls__get_pixels'] = 0
+status['get_pixels_get_attempts'] = 0 		# Number of attempts to retrieve (x,y) pixels
+status['get_pixels_get_successful'] = 0 	# Number of pixels where more than MIN_LIVE_CHANNELS_PER_PIXEL contained data
+status['get_pixels_values_returned'] = 0 	# Number of individual pixel values returned
+status['calls__create_square'] = 0 
+status['create__square'] = 0
+status['create__pixel'] = 0
 	
-MIN_LIVE_CHANNELS_PER_PIXEL = 3;
+# This value was suggested by David Thilker on 2012-06-05 as a starting point.	
+MIN_LIVE_CHANNELS_PER_PIXEL = 9;
 INPUT_FILE = sys.argv[1]
 GRID_SIZE = 5
 
@@ -40,6 +50,7 @@ LAYER_COUNT = len(HDULIST)
 ## ######################################################################## ##
 
 def get_pixels(pix_x, pix_y):
+	status['calls__get_pixels'] += 1;
 #	print "Getting pixels in <%(x)s, %(y)s>" % {'x':pix_x, 'y':pix_y} 
 	result = []
 	for x in pix_x:
@@ -49,29 +60,31 @@ def get_pixels(pix_x, pix_y):
 			if y >= END_Y:
 				continue;
 
+			status['get_pixels_get_attempts'] += 1;
 			pixels = [HDULIST[layer].data[x, y] for layer in range(LAYER_COUNT)]
 			live_pixels = 0
 			for p in pixels:
 				if not math.isnan(p):
 					live_pixels += 1
 
-			# For now, only output pixels where MIN_LIVE_CHANNELS_PER_PIXEL or more channels have data
-			# Are all channels created equally, or should different channels have different "weights" so that, for example,
-			# we might discard a pixel that have data for 10 channels but is missing UV, while retaining pixels where we have
-			# data for only, say, 6 pixels but that has UV? Discussion with Kevin?
 			if live_pixels >= MIN_LIVE_CHANNELS_PER_PIXEL:
+				status['get_pixels_get_successful'] += 1;
+				status['get_pixels_values_returned'] += live_pixels;
 				result.append(Pixel({'x':x,'y':y,'pixel_values':" ".join(map(str, pixels))}))
 
 	return result
 
 def create_square(object, pix_x, pix_y):
+	status['calls__create_square'] += 1;
 	pixels = get_pixels([pix_x], range(pix_y, pix_y+GRID_SIZE))
 	if len(pixels)>0:
 		pixels.extend(get_pixels(range(pix_x+1, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE)))
 		
+		status['create__square'] += 1;
 		square = Square({'object_id':object.id, 'top_x':pix_x, 'top_y':pix_y, 'size':GRID_SIZE}).save()
 		
 		for pixel in pixels:
+			status['create__pixel'] += 1;
 			pixel.object_id = object.id
 			pixel.square_id = square.id
 			pixel.save()
@@ -110,7 +123,13 @@ print("Wrote %(object)s to database" % { 'object':object })
 
 squares = squarify(object)
 
+print("\nRun status")
+for key in sorted(status.keys()):
+	print("%(key)30s %(val)s" % { 'key':key, 'val':status[key] })
+
+Database.getConnection().commit()
 print("\nDone")
 # Uncomment to print general information about the file to stdout
 #HDULIST.info()
+
 
