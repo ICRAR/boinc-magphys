@@ -19,11 +19,6 @@ status['calls__create_square'] = 0
 status['create__square'] = 0
 status['create__pixel'] = 0
 	
-# This value was suggested by David Thilker on 2012-06-05 as a starting point.	
-MIN_LIVE_CHANNELS_PER_PIXEL = 9;
-INPUT_FILE = sys.argv[1]
-GRID_SIZE = 5
-
 # TODO:    this should be gleaned from the FITS file
 # WARNING: START_X and/or START_Y should be zero or some calculations will
 #          be off; these should probably be removed before going "live"
@@ -39,6 +34,11 @@ if len(sys.argv) > 5:
 	print("\nDEVELOPMENT MODE: cutting out square (%(s_x)d, %(s_y)d) to (%(e_x)d, %(e_y)d)\n" % {
 		's_x':START_X,'s_y':START_Y,'e_x':END_X,'e_y':END_Y})
 
+# This value was suggested by David Thilker on 2012-06-05 as a starting point.	
+MIN_LIVE_CHANNELS_PER_PIXEL = 9;
+INPUT_FILE = sys.argv[1]
+GRID_SIZE = 5
+
 HDULIST = pyfits.open(INPUT_FILE);
 LAYER_COUNT = len(HDULIST)
 
@@ -49,7 +49,32 @@ LAYER_COUNT = len(HDULIST)
 ## 
 ## ######################################################################## ##
 
+def sort_layers(hdu_list, layer_count):
+	"""
+	Look at the layers of a HDU and order them based on the effective wavelength stored in the header
+	"""
+	dictionary = {}
+	
+	for layer in range(layer_count):
+		hdu = hdu_list[layer]
+		header = hdu.header
+		lamda = header['MAGPHYSL']
+		if lamda is None:
+			raise LookupError('No MAGPHYS Lamda value found')
+		else:
+			dictionary[lamda] = layer
+	
+	items = dictionary.items()
+	items.sort()
+	return [value for key, value in items]
+
 def get_pixels(pix_x, pix_y):
+	"""
+		Retrieves pixels from each pair of (x, y) coordinates specified in pix_x and pix_y. 
+		Returns pixels only from those coordinates where there is data in more than 
+		MIN_LIVE_CHANNELS_PER_PIXEL channels. Pixels are retrieved in the order specified in
+		the global LAYER_ORDER list.
+	"""
 	status['calls__get_pixels'] += 1;
 #	print "Getting pixels in <%(x)s, %(y)s>" % {'x':pix_x, 'y':pix_y} 
 	result = []
@@ -61,7 +86,8 @@ def get_pixels(pix_x, pix_y):
 				continue;
 
 			status['get_pixels_get_attempts'] += 1;
-			pixels = [HDULIST[layer].data[x, y] for layer in range(LAYER_COUNT)]
+#			pixels = [HDULIST[layer].data[x, y] for layer in range(LAYER_COUNT)]
+			pixels = [HDULIST[layer].data[x, y] for layer in LAYER_ORDER]
 			live_pixels = 0
 			for p in pixels:
 				if not math.isnan(p):
@@ -121,6 +147,7 @@ object.save()
 
 print("Wrote %(object)s to database" % { 'object':object })
 
+LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
 squares = squarify(object)
 
 print("\nRun status")
