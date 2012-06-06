@@ -16,13 +16,12 @@ def create_output_file(square):
 	filename = "%(output_dir)s/obs%(object)s.%(sq_x)s.%(sq_y)s" % filename_variables
 	print "  Writing %(filename)s" % {'filename':filename}
 	outfile = open(filename, 'w')
-	outfile.write("#  This workunit contains observations for object %(object)s\n" % { "object":square.getObject().name })
-	outfile.write("#  %(square)s contains %(count)s pixels with above-threshold observations\n" % {
+	outfile.write("#  This workunit contains observations for object %(object)s. " % { "object":square.getObject().name })
+	outfile.write("%(square)s contains %(count)s pixels with above-threshold observations\n" % {
 		'square':square, 'count':pixels_in_square })
-	outfile.write("#\n")
 	
 	for pixel in square.getPixels():
-		outfile.write("%(object)s~%(pix_x)s~%(pix_y)s %(pixel_values)s\n" % {
+		outfile.write("%(object)s.%(pix_x)s.%(pix_y)s %(pixel_values)s\n" % {
 			'object':square.getObject().name, 'pix_x':pixel.x, 'pix_y':pixel.y, 'pixel_values':pixel.pixel_values})
 	outfile.close();
 	update_query = "UPDATE square SET wu_generated=NOW() WHERE id=%(sq_id)s" % {'sq_id':square.id}
