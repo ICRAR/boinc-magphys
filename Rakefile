@@ -27,7 +27,7 @@ task :copy_files do
      cp FileList["client/platforms/common/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
   }
   
-  cp "server/config/project.xml", "#{PLATFORM_ROOT}", :preserve => true
+  cp "server/config/project.xml", "#{PROJECT_ROOT}", :preserve => true
   
   # Now added
   sh "#{PROJECT_ROOT}/bin/xadd"
