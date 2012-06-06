@@ -49,7 +49,7 @@ end
 
 desc 'create work'
 task :create_work do
-  cp_r "config/templates", "#{PROJECT_ROOT}"
+  cp_r "server/config/templates", "#{PROJECT_ROOT}"
 # It appears as though create_work requires the number of "input files" to match the number of files mentioned in the template,
 # even in cases where the files are not local. I suspect this is a bug in the supplied make_work application. We will write our
 # own work generator eventually and this is only for test purposes anyway, so for now let's supply enough arguments to make
