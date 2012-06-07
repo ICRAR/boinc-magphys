@@ -9,9 +9,7 @@
 
 ## Python scripts
 
-MySQL Connector/Python can be installed with either **sudo easy_install mysql-connector** or **sudo pip mysql-connector**
-  
-Note that the scripts assume that they can use the MySQL "root" user without password.
+MySQL Connector/Python can be installed with either **sudo easy_install mysql-connector** or **sudo pip mysql-connector**. Note that the scripts assume that they can use the MySQL "root" user without password.
   
 # Example run
 
