@@ -17,5 +17,6 @@ MySQL Connector/Python can be installed with either **sudo easy_install mysql-co
     $ mysql -u root < create_link_database.sql # DROPS THE magphys_wu SCHEMA and recreates it
     $ python ./fits2pixels.py /Users/astrogeek/Documents/ICRAR/POGS_NGC628_v3.fits
     $ python ./pixels2obsfiles.py 123 /Users/astrogeek/Documents/ICRAR/obsfiles
-    $ ./not_yet_written_script /Users/astrogeek/Documents/ICRAR/obsfiles
+    $ python ./obsfiles2wu /home/ec2-user/f2wu /home/ec2-user/projects/pogs
 	
+Note that *obsfiles2wu* will move the observations files into the BOINC project's download hierarchy.
