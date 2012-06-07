@@ -38,4 +38,3 @@ for file in file_list:
 	
 	if call(cmd_create_work):
 		print "Something went wrong; sorry"
-		
