@@ -7,7 +7,7 @@ from database_support import *
 if(len(sys.argv) < 2):
 	print("usage:   %(me)s FITS_file [start_x start_y end_x end_y]" % {'me':sys.argv[0]})
 	print("         specify square cutout parameters only in development mode")
-	print("example: %(me)s /Users/astrogeek/Documents/ICRAR/POGS_NGC628_v3.fits" % {'me':sys.argv[0]})
+	print("example: %(me)s /home/ec2-user/POGS_NGC628_v3.fits" % {'me':sys.argv[0]})
 	sys.exit(-10)
 
 status = {}

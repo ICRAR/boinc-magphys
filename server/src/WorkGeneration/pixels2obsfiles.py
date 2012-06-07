@@ -3,7 +3,7 @@ from database_support import *
 
 if(len(sys.argv) != 3):
 	print "usage:   %(me)s squares_to_process output_directory" % {'me':sys.argv[0]}
-	print "example: %(me)s 15 /Users/astrogeek/f2wu" % {'me':sys.argv[0]}
+	print "example: %(me)s 15 /home/ec2-user/f2wu" % {'me':sys.argv[0]}
 	sys.exit(-10)
 
 SQUARES_TO_PROCESS = sys.argv[1]
