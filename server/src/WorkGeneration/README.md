@@ -1,6 +1,6 @@
 # Generation of work units: overview
 
-*fits2pixels.py* takes a FITS file as input and cuts it up into squares which are inserted into a database. This database is then queried by *pixels2obsfiles.py* which creates a specified number of observations files (one file per square). The third script, which will move observations files into the BOINC project's download hierarchy and call **create_work** is not yet written.
+*fits2pixels.py* takes a FITS file as input and cuts it up into squares which are inserted into a database. This database is then queried by *pixels2obsfiles.py* which creates a specified number of observations files (one file per square). The third script, which will move observations files into the BOINC project's download hierarchy and call **create_work**, is not yet written.
 
 # Prerequisites
 
