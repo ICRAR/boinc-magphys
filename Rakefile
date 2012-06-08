@@ -15,7 +15,7 @@ BOINC_TOOLS_DIR="#{BOINC_SRC}/tools"
 desc 'setup project website'
 task :setup_website do
   sh "cp #{PROJECT_ROOT}/#{PROJECT_NAME}.httpd.conf /etc/httpd/conf.d"
-  sh "/etc/init.d/httpd reload"  
+  sh "/etc/init.d/httpd restart"
 end
 
 desc 'copy to apps/platform directory'
