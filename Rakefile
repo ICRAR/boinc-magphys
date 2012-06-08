@@ -15,11 +15,13 @@ BOINC_TOOLS_DIR="#{BOINC_SRC}/tools"
 desc 'setup project website'
 task :setup_website do
   sh "cp #{PROJECT_ROOT}/#{PROJECT_NAME}.httpd.conf /etc/httpd/conf.d"
-  sh "/etc/init.d/httpd reload"  
+  sh "/etc/init.d/httpd restart"
 end
 
 desc 'copy to apps/platform directory'
 task :copy_files do
+  cp_r "server/config/templates", "#{PROJECT_ROOT}"
+
   PLATFORMS.each { |platform|
      mkdir_p "#{PLATFORM_DIR}/#{platform}" 
      cp FileList["client/platforms/#{platform}/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
@@ -27,7 +29,7 @@ task :copy_files do
      cp FileList["client/platforms/common/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
   }
   
-  cp "server/config/project.xml", "#{PLATFORM_ROOT}", :preserve => true
+  cp "server/config/project.xml", "#{PROJECT_ROOT}", :preserve => true
   
   # Now added
   sh "#{PROJECT_ROOT}/bin/xadd"
@@ -49,7 +51,7 @@ end
 
 desc 'create work'
 task :create_work do
-  cp_r "config/templates", "#{PROJECT_ROOT}"
+# cp_r "server/config/templates", "#{PROJECT_ROOT}"
 # It appears as though create_work requires the number of "input files" to match the number of files mentioned in the template,
 # even in cases where the files are not local. I suspect this is a bug in the supplied make_work application. We will write our
 # own work generator eventually and this is only for test purposes anyway, so for now let's supply enough arguments to make
