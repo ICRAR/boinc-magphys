@@ -1,6 +1,6 @@
 <version>
   <file>
-    <physical_name>wrapper_wrapper_25353_windows_x86_64.exe</physical_name>
+    <physical_name>wrapper_25353_windows_x86_64.exe</physical_name>
     <main_program/>
     <copy_file/>
     <logical_name>wrapper</logical_name>
@@ -16,27 +16,5 @@
     <physical_name>job_windows_x86_64.xml</physical_name>
     <copy_file/>
     <logical_name>job.xml</logical_name>
-  </file>
-  <file>
-	<physical_name>filters.dat</physical_name>
-	<copy_file/>
-	<logical_name>filters.dat</logical_name>
-  </file>
-  <file>
-	<physical_name>infrared_dce08_z0.0000.lbr</physical_name>
-	<copy_file/>
-	<logical_name>infrared_dce08_z0.0000.lbr</logical_name>
-	<gzip/>
-  </file>
-  <file>
-	<physical_name>starformhist_cb07_z0.0000.lbr</physical_name>
-	<copy_file/>
-	<logical_name>starformhist_cb07_z0.0000.lbr</logical_name>
-	<gzip/>
-  </file>
-  <file>
-	<physical_name>zlibs.dat</physical_name>
-	<copy_file/>
-	<logical_name>zlibs.dat</logical_name>
   </file>
 </version>
