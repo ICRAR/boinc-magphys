@@ -8,6 +8,7 @@ if(len(sys.argv) != 3):
 	print "example: %(me)s /home/ec2-user/f2wu /home/ec2-user/projects/pogs" % {'me':sys.argv[0]}
 	sys.exit(-10)
 
+APP_NAME = "magphys_wrapper"
 FILE_DIR = sys.argv[1]
 BOINC_PROJECT_ROOT = sys.argv[2]
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
@@ -28,7 +29,7 @@ for file in file_list:
 
 	cmd_create_work = [
 		BIN_PATH + "/create_work",
-		"--appname",         "wrapper",
+		"--appname",         APP_NAME,
 		"--wu_name",         file,
 		"--wu_template",     TEMPLATES_PATH + "/fitsed_wu",
 		"--result_template", TEMPLATES_PATH + "/fitsed_result",
