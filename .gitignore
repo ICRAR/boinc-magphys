@@ -11,3 +11,4 @@ zlibs.dat
 *.sed
 *.a
 *.lbr
+*.pyc

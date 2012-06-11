@@ -29,27 +29,6 @@
   <nbytes>18016460</nbytes>
   <sticky/>
 </file_info>
-<file_info>
-  <number>5</number>
-  <url>http://ict.icrar.org/store/ThoughtWorks/magphys/OptiLIB_cb07.bin</url>
-  <md5_cksum>f226097e19029d6f98b62b085b971069</md5_cksum>
-  <nbytes>1537033672</nbytes>
-  <sticky/>
-</file_info>
-<file_info>
-  <number>6</number>
-  <url>http://ict.icrar.org/store/ThoughtWorks/magphys/OptiLIBis_cb07.bin</url>
-  <md5_cksum>42c6dc2781e82b878fbd2a6472565ba5</md5_cksum>
-  <nbytes>1537051896</nbytes>
-  <sticky/>
-</file_info>
-<file_info>
-  <number>7</number>
-  <url>http://ict.icrar.org/store/ThoughtWorks/magphys/InfraredLIB.bin</url>
-  <md5_cksum>a32881295fe78d5ebe4129a60afd71bc</md5_cksum>
-  <nbytes>1292425812</nbytes>
-  <sticky/>
-</file_info>
 
 <workunit>
   <file_ref>
@@ -71,18 +50,6 @@
   <file_ref>
     <file_number>4</file_number>
     <open_name>starformhist_cb07_z0.4600.lbr</open_name>
-  </file_ref>
-  <file_ref>
-    <file_number>5</file_number>
-    <open_name>OptiLIB_cb07.bin</open_name>
-  </file_ref> 
-  <file_ref>
-    <file_number>6</file_number>
-    <open_name>OptiLIBis_cb07.bin</open_name>
-  </file_ref>
-  <file_ref>
-    <file_number>7</file_number>
-    <open_name>InfraredLIB.bin</open_name>
   </file_ref>
   <rsc_disk_bound>5000000000</rsc_disk_bound>
 </workunit>

@@ -34,7 +34,7 @@ for file in file_list:
 		"--wu_template",     TEMPLATES_PATH + "/fitsed_wu",
 		"--result_template", TEMPLATES_PATH + "/fitsed_result",
 		file,
-		"1", "2", "3", "4", "5", "6", "7"		
+		"zlibs.dat", "filters.dat", "infrared_dce08_z0.4600.lbr", "starformhist_cb07_z0.4600.lbr"		
 	]
 	
 	if call(cmd_create_work):
