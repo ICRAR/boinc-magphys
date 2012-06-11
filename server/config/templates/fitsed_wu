@@ -10,7 +10,7 @@
 </file_info>
 <file_info>
   <number>2</number>
-  <url>https://raw.github.com/ICRAR/boinc-magphys/master/client/platforms/common/filters.dat</url>
+  <url>http://s3.amazonaws.com/37531f0e3af2357dff3309ad84e06dc6/filters.dat</url>
   <md5_cksum>37531f0e3af2357dff3309ad84e06dc6</md5_cksum>
   <nbytes>290</nbytes>
   <sticky/>
