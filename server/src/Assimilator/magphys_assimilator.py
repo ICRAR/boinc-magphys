@@ -104,19 +104,15 @@ class MagphysAssimilator(Assimilator.Assimilator):
             #list.append(node.data)
         return dom.getElementsByTagName('file_ref')
     
-    def processFiles(self, sedFile, fitFile):
+    def processResult(self, session, sedFile, fitFile, results):
         parts = fitFile.split('/')
         last = parts[len(parts)-1]
         parts = last.split('.')
         pointName = parts[0]
         print 'Point Name',
         print pointName
-        #f = open(sedFile , "r")
-        #for line in f:
-        #    print line,
-        #f.close()
         
-        session = self.Session()
+        #session = self.Session()
         wu = session.query(WorkUnitResult).filter("point_name=:name").params(name=pointName).first()
         doAdd = False
         if (wu == None):
@@ -128,6 +124,8 @@ class MagphysAssimilator(Assimilator.Assimilator):
                 for histogram in parameter.histograms:
                     session.delete(histogram)
                 session.delete(parameter)
+            for user in wu.users:
+                session.delete(user)
         wu.point_name = pointName;
         wu.filters = []
         wu.parameters = []
@@ -135,14 +133,22 @@ class MagphysAssimilator(Assimilator.Assimilator):
         self.processFitFile(fitFile, wu)
         self.processSedFile(sedFile, wu)
         
+        for result in results:
+            usr = WorkUnitUser()
+            usr.userid = result.userid
+            wu.users.append(usr)
+            
         if wu.wuresult_id == None:
             session.add(wu)
-        session.commit()
+        #session.commit()
     
     def processFitFile(self, fitFile, wu):
+        """
+        Read the ".fit" file, add the values to the WorkUnitResult row, and insert the filter,
+        parameter and histogram rows.
+        """
         f = open(fitFile , "r")
         lineNo = 0
-        #parameterName = None
         parameter = None
         percentilesNext = False
         histogramNext = False
@@ -207,8 +213,6 @@ class MagphysAssimilator(Assimilator.Assimilator):
                 if line.startswith("# ..."):
                     parts = line.split('...')
                     parameterName = parts[1].strip()
-                    #print "parameterName is",
-                    #print parameterName
                     parameter = WorkUnitParameter()
                     parameter.parameter_name = parameterName;
                     wu.parameters.append(parameter)
@@ -235,6 +239,9 @@ class MagphysAssimilator(Assimilator.Assimilator):
         f.close()
     
     def processSedFile(self, sedFile, wu):
+        """
+        Read the ".sed" file, and add other values to the WorkUnitResult row.
+        """
         f = open(sedFile , "r")
         lineNo = 0
         #parameterName = None
@@ -251,27 +258,9 @@ class MagphysAssimilator(Assimilator.Assimilator):
         f.close()
         
     def assimilate_handler(self, wu, results, canonical_result):
-        
-        print "Testing"
-        #engine = create_engine("mysql://root:@localhost/magphys_as")
-        #Base = declarative_base()
-        #Session = sessionmaker(bind=engine)
-        #Session = sessionmaker()
-        #Session.configure(bind=engine)
-        session = Session()
-        #ed_user = User('ed', 'Ed Jones', 'edspassword')
-        #session.add(ed_user)
-        #our_user = session.query(User).filter_by(name='ed').first()
-        #wu = session.query(WorkUnit).filter("point_name=:name").params(name="abc").first()
-        wu = WorkUnit()
-        session.commit()
-        
-        #db=_mysql.connect("localhost", "root", "", "magphys-boinc")
-        
-        #c=db.cursor()
-        #max_price=5
-        #c.execute("""SELECT spam, eggs, sausage FROM breakfast
-        #  WHERE price < %s""", (max_price,))
+        """
+        Process the Results.
+        """
 
         if (wu.canonical_resultid):
             file_list = []
@@ -280,24 +269,21 @@ class MagphysAssimilator(Assimilator.Assimilator):
             sedFile = None;
             fitFile = None;
             for file in file_list:
-                processFile(file)
                 if (fileName.endswith(".sed")):
                     sedFile = fileName
                 elif (fileName.endswith(".fit")):
                     fitFile = fileName
                     
             if (sedFile and fitFile):
-                pass
+                session = self.Session()
+                self.processResult(session, sedFile, fitFile, results)
+                session.commit()
             else:
                 self.logCritical("Both of the sed and fit files were not returned\n")
         else:
-            reportErrors(su)
+            reportErrors(wu)
             
         return 0;
-
-    def processFit(self, fitFile):
-        print fitFile
-
     
 if __name__ == '__main__':
     asm = MagphysAssimilator()
