@@ -96,10 +96,18 @@ class MagphysAssimilator(Assimilator.Assimilator):
         Assimilator.Assimilator.__init__(self)
         #super(MagphysAssimilator, self).__init__(self)
         
-        engine = create_engine("mysql://root:@localhost/magphys_as")
+        login = "mysql://root:@localhost/magphys_as"
+        try:
+             f = open(os.path.expanduser("~/Magphys.Profile") , "r")
+             for line in f:
+                 if line.startswith("url="):
+                   login = line[4:]
+             f.close()
+        except IOError as e:
+            pass
+            
+        engine = create_engine(login)
         self.Session = sessionmaker(bind=engine)
-        #Session = sessionmaker()
-        #Session.configure(bind=engine)
     
     def get_output_file_infos(self, result, list):
         dom = parseString(result.xml_doc_in)
