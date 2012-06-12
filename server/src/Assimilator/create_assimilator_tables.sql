@@ -5,58 +5,58 @@ USE magphys_as;
 CREATE TABLE work_unit_result (
   wuresult_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   point_name  VARCHAR(100) NOT NULL,
-  i_sfh       FLOAT NOT NULL,
-  i_ir        FLOAT NOT NULL,
-  chi2        FLOAT NOT NULL,
-  redshift    FLOAT NOT NULL,
-  fmu_sfh     FLOAT,
-  fmu_ir      FLOAT,
-  mu          FLOAT,
-  tauv        FLOAT,
-  s_sfr       FLOAT,
-  m           FLOAT,
-  ldust       FLOAT,
-  t_w_bc      FLOAT,
-  t_c_ism     FLOAT,
-  xi_c_tot    FLOAT,
-  xi_pah_tot  FLOAT,
-  xi_mir_tot  FLOAT,
-  x_w_tot     FLOAT,
-  tvism       FLOAT,
-  mdust       FLOAT,
-  sfr         FLOAT,
-  i_opt       FLOAT,
-  dmstar      FLOAT,
-  dfmu_aux    FLOAT,
-  dz          FLOAT
+  i_sfh       DOUBLE NOT NULL,
+  i_ir        DOUBLE NOT NULL,
+  chi2        DOUBLE NOT NULL,
+  redshift    DOUBLE NOT NULL,
+  fmu_sfh     DOUBLE,
+  fmu_ir      DOUBLE,
+  mu          DOUBLE,
+  tauv        DOUBLE,
+  s_sfr       DOUBLE,
+  m           DOUBLE,
+  ldust       DOUBLE,
+  t_w_bc      DOUBLE,
+  t_c_ism     DOUBLE,
+  xi_c_tot    DOUBLE,
+  xi_pah_tot  DOUBLE,
+  xi_mir_tot  DOUBLE,
+  x_w_tot     DOUBLE,
+  tvism       DOUBLE,
+  mdust       DOUBLE,
+  sfr         DOUBLE,
+  i_opt       DOUBLE,
+  dmstar      DOUBLE,
+  dfmu_aux    DOUBLE,
+  dz          DOUBLE
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE work_unit_filter (
   wufilter_id                BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   wuresult_id                BIGINT UNSIGNED NOT NULL,
   filter_name                VARCHAR(100) NOT NULL,
-  observed_flux              FLOAT NOT NULL,
-  observational_uncertainty  FLOAT NOT NULL,
-  flux_bfm                   FLOAT NOT NULL
+  observed_flux              DOUBLE NOT NULL,
+  observational_uncertainty  DOUBLE NOT NULL,
+  flux_bfm                   DOUBLE NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE work_unit_parameter (
   wuparameter_id     BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   wuresult_id        BIGINT UNSIGNED NOT NULL,
   parameter_name     VARCHAR(100) NOT NULL,
-  percentile2_5      FLOAT NOT NULL,
-  percentile16       FLOAT NOT NULL,
-  percentile50       FLOAT NOT NULL,
-  percentile84       FLOAT NOT NULL,
-  percentile97_5     FLOAT NOT NULL
+  percentile2_5      DOUBLE NOT NULL,
+  percentile16       DOUBLE NOT NULL,
+  percentile50       DOUBLE NOT NULL,
+  percentile84       DOUBLE NOT NULL,
+  percentile97_5     DOUBLE NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 
 CREATE TABLE work_unit_histogram (
   wuhistogram_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   wuparameter_id BIGINT UNSIGNED NOT NULL,
-  x_axis         FLOAT NOT NULL,
-  hist_value     FLOAT NOT NULL
+  x_axis         DOUBLE NOT NULL,
+  hist_value     DOUBLE NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE work_unit_user (

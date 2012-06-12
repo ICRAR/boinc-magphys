@@ -9,7 +9,7 @@ import xml.dom
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, REAL, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.orm import sessionmaker
 
