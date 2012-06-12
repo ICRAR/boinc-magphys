@@ -5,6 +5,7 @@ import os, re, signal, sys, time, hashlib
 import boinc_path_config
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
+import xml.dom
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -99,10 +100,7 @@ class MagphysAssimilator(Assimilator.Assimilator):
     def get_output_file_infos(self, result, list):
         dom = parseString(result.xml_doc_in)
         for node in dom.getElementsByTagName('file_ref'):
-            print node
-            list.append(node.nodeValue)
-            #list.append(node.data)
-        return dom.getElementsByTagName('file_ref')
+            list.append(node.firstChild.nodeValue)
     
     def processResult(self, session, sedFile, fitFile, results):
         parts = fitFile.split('/')
@@ -269,10 +267,11 @@ class MagphysAssimilator(Assimilator.Assimilator):
             sedFile = None;
             fitFile = None;
             for file in file_list:
-                if (fileName.endswith(".sed")):
-                    sedFile = fileName
-                elif (fileName.endswith(".fit")):
-                    fitFile = fileName
+                print file
+                if (file.endswith(".sed")):
+                    sedFile = file
+                elif (file.endswith(".fit")):
+                    fitFile = file
                     
             if (sedFile and fitFile):
                 session = self.Session()
