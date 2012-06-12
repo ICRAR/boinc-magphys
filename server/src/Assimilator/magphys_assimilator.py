@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 
 import Assimilator
 import os, re, signal, sys, time, hashlib
@@ -12,10 +13,10 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
-class WorkUnit(Base):
-    __tablename__ = 'work_unit'
+class WorkUnitResult(Base):
+    __tablename__ = 'work_unit_result'
     
-    work_unit_id = Column(Integer, primary_key=True)
+    wuresult_id = Column(Integer, primary_key=True)
     point_name = Column(String(100))
     i_sfh = Column(Float)
     i_ir = Column(Float)
@@ -38,25 +39,24 @@ class WorkUnit(Base):
     tvism = Column(Float)
     mdust = Column(Float)
     sfr = Column(Float)
-    #filters = relationship("WorkUnitFilter", order_by="WorkUnitFilter.filter_name", backref="work_unit")
     
 class WorkUnitFilter(Base):
     __tablename__ = 'work_unit_filter'
     
-    filter_id = Column(Integer, primary_key=True)
-    work_unit_id = Column(Integer, ForeignKey('work_unit.work_unit_id'))
+    wufilter_id = Column(Integer, primary_key=True)
+    wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
     filter_name = Column(String(100))
     observed_flux = Column(Float)
     observational_uncertainty = Column(Float)
     flux_bfm = Column(Float)
     
-    work_unit = relationship("WorkUnit", backref=backref('filters', order_by=filter_id))
+    work_unit = relationship("WorkUnitResult", backref=backref('filters', order_by=wufilter_id))
     
 class WorkUnitParameter(Base):
     __tablename__ = 'work_unit_parameter'
     
-    parameter_id = Column(Integer, primary_key=True)
-    work_unit_id = Column(Integer, ForeignKey('work_unit.work_unit_id'))
+    wuparameter_id = Column(Integer, primary_key=True)
+    wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
     parameter_name = Column(String(100))
     percentile2_5 = Column(Float)
     percentile16 = Column(Float)
@@ -64,17 +64,26 @@ class WorkUnitParameter(Base):
     percentile84 = Column(Float)
     percentile97_5 = Column(Float)
     
-    work_unit = relationship("WorkUnit", backref=backref('parameters', order_by=parameter_id))
+    work_unit = relationship("WorkUnitResult", backref=backref('parameters', order_by=wuparameter_id))
 
 class WorkUnitHistogram(Base):
     __tablename__ = 'work_unit_histogram'
     
-    histogram_id = Column(Integer, primary_key=True)
-    parameter_id = Column(Integer, ForeignKey('work_unit_parameter.parameter_id'))
+    wuhistogram_id = Column(Integer, primary_key=True)
+    wuparameter_id = Column(Integer, ForeignKey('work_unit_parameter.wuparameter_id'))
     x_axis = Column(Float)
     hist_value = Column(Float)
     
-    parameter = relationship("WorkUnitParameter", backref=backref('histograms', order_by=histogram_id))
+    parameter = relationship("WorkUnitParameter", backref=backref('histograms', order_by=wuhistogram_id))
+    
+class WorkUnitUser(Base):
+    __tablename__ = 'work_unit_user'
+    
+    wuuser_id = Column(Integer, primary_key=True)
+    wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
+    userid = Column(Integer)
+    
+    work_unit = relationship("WorkUnitResult", backref=backref('users', order_by=wuuser_id))
             
 class MagphysAssimilator(Assimilator.Assimilator):
     
@@ -108,10 +117,10 @@ class MagphysAssimilator(Assimilator.Assimilator):
         #f.close()
         
         session = self.Session()
-        wu = session.query(WorkUnit).filter("point_name=:name").params(name=pointName).first()
+        wu = session.query(WorkUnitResult).filter("point_name=:name").params(name=pointName).first()
         doAdd = False
         if (wu == None):
-            wu = WorkUnit()
+            wu = WorkUnitResult()
         else:
             for filter in wu.filters:
                 session.delete(filter)
@@ -123,13 +132,14 @@ class MagphysAssimilator(Assimilator.Assimilator):
         wu.filters = []
         wu.parameters = []
         
-        self.processFitFile(fitFile, pointName, wu)
+        self.processFitFile(fitFile, wu)
+        self.processSedFile(sedFile, wu)
         
-        if wu.work_unit_id == None:
+        if wu.wuresult_id == None:
             session.add(wu)
         session.commit()
     
-    def processFitFile(self, fitFile, pointName, wu):
+    def processFitFile(self, fitFile, wu):
         f = open(fitFile , "r")
         lineNo = 0
         #parameterName = None
@@ -222,6 +232,22 @@ class MagphysAssimilator(Assimilator.Assimilator):
                     hist.hist_value = float(values[1])
                     parameter.histograms.append(hist)
                     
+        f.close()
+    
+    def processSedFile(self, sedFile, wu):
+        f = open(sedFile , "r")
+        lineNo = 0
+        #parameterName = None
+        skynetFound = False
+        for line in f:
+            lineNo = lineNo + 1
+            
+            if lineNo == 1:
+                if line.startswith(" #...theSkyNet"):
+                    skynetFound = True
+            elif lineNo == 2 and skynetFound:
+                values = line.split()
+                wu.a = float(values[2])
         f.close()
         
     def assimilate_handler(self, wu, results, canonical_result):
