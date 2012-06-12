@@ -9,7 +9,7 @@ import xml.dom
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.orm import sessionmaker
 
@@ -23,7 +23,6 @@ class WorkUnitResult(Base):
     i_ir = Column(Float)
     chi2 = Column(Float)
     redshift = Column(Float)
-    a = Column(Float)
     fmu_sfh = Column(Float)
     fmu_ir = Column(Float)
     mu = Column(Float)
@@ -40,6 +39,10 @@ class WorkUnitResult(Base):
     tvism = Column(Float)
     mdust = Column(Float)
     sfr = Column(Float)
+    i_opt = Column(Float)
+    dmstar = Column(Float)
+    dfmu_aux = Column(Float)
+    dz = Column(Float)
     
 class WorkUnitFilter(Base):
     __tablename__ = 'work_unit_filter'
@@ -83,6 +86,7 @@ class WorkUnitUser(Base):
     wuuser_id = Column(Integer, primary_key=True)
     wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
     userid = Column(Integer)
+    create_time = Column(TIMESTAMP)
     
     work_unit = relationship("WorkUnitResult", backref=backref('users', order_by=wuuser_id))
             
@@ -134,6 +138,7 @@ class MagphysAssimilator(Assimilator.Assimilator):
         for result in results:
             usr = WorkUnitUser()
             usr.userid = result.userid
+            #usr.create_time = 
             wu.users.append(usr)
             
         if wu.wuresult_id == None:
@@ -252,7 +257,11 @@ class MagphysAssimilator(Assimilator.Assimilator):
                     skynetFound = True
             elif lineNo == 2 and skynetFound:
                 values = line.split()
-                wu.a = float(values[2])
+                wu.i_opt = float(values[0])
+                wu.i_ir = float(values[1])
+                wu.dmstar = float(values[2])
+                wu.dfmu_aux = float(values[3])
+                wu.dz = float(values[4])
         f.close()
         
     def assimilate_handler(self, wu, results, canonical_result):

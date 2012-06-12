@@ -9,7 +9,6 @@ CREATE TABLE work_unit_result (
   i_ir        FLOAT NOT NULL,
   chi2        FLOAT NOT NULL,
   redshift    FLOAT NOT NULL,
-  a           FLOAT,
   fmu_sfh     FLOAT,
   fmu_ir      FLOAT,
   mu          FLOAT,
@@ -25,7 +24,11 @@ CREATE TABLE work_unit_result (
   x_w_tot     FLOAT,
   tvism       FLOAT,
   mdust       FLOAT,
-  sfr         FLOAT
+  sfr         FLOAT,
+  i_opt       FLOAT,
+  dmstar      FLOAT,
+  dfmu_aux    FLOAT,
+  dz          FLOAT
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE work_unit_filter (
@@ -59,7 +62,8 @@ CREATE TABLE work_unit_histogram (
 CREATE TABLE work_unit_user (
   wuuser_id                  BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   wuresult_id                BIGINT UNSIGNED NOT NULL,
-  userid                     INTEGER
+  userid                     INTEGER NOT NULL,
+  create_time                TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE INDEX work_unit_name_ix ON work_unit_result(point_name);
