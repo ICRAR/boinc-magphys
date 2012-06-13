@@ -34,22 +34,27 @@
   <file_ref>
     <file_number>0</file_number>
     <open_name>observations.dat</open_name>
+		<copy_file/>
   </file_ref>
   <file_ref>
     <file_number>1</file_number>
     <open_name>zlibs.dat</open_name>
+		<copy_file/>
   </file_ref>
   <file_ref>
     <file_number>2</file_number>
     <open_name>filters.dat</open_name>
+		<copy_file/>
   </file_ref>  
   <file_ref>
     <file_number>3</file_number>
-    <open_name>infrared_dce08_z0.4600.lbr</open_name>
+    <open_name>infrared_dce08_z0.0000.lbr</open_name>
+		<copy_file/>
   </file_ref>
   <file_ref>
     <file_number>4</file_number>
-    <open_name>starformhist_cb07_z0.4600.lbr</open_name>
+    <open_name>starformhist_cb07_z0.0000.lbr</open_name>
+		<copy_file/>
   </file_ref>
   <rsc_disk_bound>5000000000</rsc_disk_bound>
 </workunit>
