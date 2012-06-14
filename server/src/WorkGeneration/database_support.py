@@ -6,7 +6,7 @@ class Database:
 	@classmethod
 	def getConnection(self):
 		if not hasattr(self, 'c'):
-			self.c = mysql.connector.connect(user='root', host='127.0.0.1', db='magphys_wu');
+			self.c = mysql.connector.connect(user='root', host='localhost', db='magphys_wu');
 		return self.c
 		
 	@classmethod
@@ -52,7 +52,7 @@ class ORMObject(object):
 			if str(value).find("\"") > -1:
 				raise StandardError("Sorry; I cannot yet escape quotes in values :(");
 
-	def _create(self):
+	def _write(self):
 		self._checkForQuotes()
 		dict = self.__dict__
 		columns = ",".join("`" + key + "`" for key in dict.keys())
@@ -63,6 +63,11 @@ class ORMObject(object):
 #		print ">>SQL: " + sql
 		rows_updated = doUpdate(Database.getConnection(), sql)
 		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
+		self.id = "<no ID>"
+		return self
+
+	def _create(self):
+		self.write()
 		rs = fetchResultSet(Database.getConnection(), "SELECT LAST_INSERT_ID()")
 		self.id = rs[0]['LAST_INSERT_ID()']
 		return self
@@ -86,6 +91,11 @@ class ORMObject(object):
 		if not hasattr(self, 'id'):
 			return self._create()
 		return self._update()
+
+	def write(self):
+		if not hasattr(self, 'id'):
+			return self._write()
+		raise StandardError("Cannot write new object; appears to already have been saved")
 
 	def __init__(self, db_values):
 		for key in db_values.keys():

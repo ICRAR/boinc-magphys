@@ -2,6 +2,7 @@ from __future__ import print_function
 import math
 import pyfits
 import sys
+import cProfile
 from database_support import *
 
 if(len(sys.argv) < 2):
@@ -35,12 +36,13 @@ if len(sys.argv) > 5:
 		's_x':START_X,'s_y':START_Y,'e_x':END_X,'e_y':END_Y})
 
 # This value was suggested by David Thilker on 2012-06-05 as a starting point.	
-MIN_LIVE_CHANNELS_PER_PIXEL = 9;
+MIN_LIVE_CHANNELS_PER_PIXEL = 9
 INPUT_FILE = sys.argv[1]
-GRID_SIZE = 5
+GRID_SIZE = 10
 
-HDULIST = pyfits.open(INPUT_FILE);
+HDULIST = pyfits.open(INPUT_FILE)
 LAYER_COUNT = len(HDULIST)
+HARD_CODED_REDSHIFT = 0.0
 
 
 ## ######################################################################## ##
@@ -96,7 +98,7 @@ def get_pixels(pix_x, pix_y):
 			if live_pixels >= MIN_LIVE_CHANNELS_PER_PIXEL:
 				status['get_pixels_get_successful'] += 1;
 				status['get_pixels_values_returned'] += live_pixels;
-				result.append(Pixel({'x':x,'y':y,'pixel_values':" ".join(map(str, pixels))}))
+				result.append(Pixel({'x':x,'y':y,'redshift':HARD_CODED_REDSHIFT,'pixel_values':" ".join(map(str, pixels))}))
 
 	return result
 
@@ -113,7 +115,7 @@ def create_square(object, pix_x, pix_y):
 			status['create__pixel'] += 1;
 			pixel.object_id = object.id
 			pixel.square_id = square.id
-			pixel.save()
+			pixel.write() # Performance optimisation: write() does not retrieve ID after INSERT
 
 		return GRID_SIZE
 	else:
@@ -127,7 +129,6 @@ def squarify(object):
 		pix_x = START_X
 		while pix_x < END_X:
 			pix_x += create_square(object, pix_x, pix_y)
-
 
 ## ######################################################################## ##
 ## 
@@ -148,6 +149,7 @@ object.save()
 print("Wrote %(object)s to database" % { 'object':object })
 
 LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
+
 squares = squarify(object)
 
 print("\nRun status")
@@ -158,5 +160,3 @@ Database.getConnection().commit()
 print("\nDone")
 # Uncomment to print general information about the file to stdout
 #HDULIST.info()
-
-

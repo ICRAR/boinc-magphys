@@ -21,8 +21,8 @@ def create_output_file(square):
 		'square':square, 'count':pixels_in_square })
 	
 	for pixel in square.getPixels():
-		outfile.write("%(object)s.%(pix_x)s.%(pix_y)s %(pixel_values)s\n" % {
-			'object':square.getObject().name, 'pix_x':pixel.x, 'pix_y':pixel.y, 'pixel_values':pixel.pixel_values})
+		outfile.write("%(object)s.%(pix_x)s.%(pix_y)s %(pixel_redshift)s %(pixel_values)s\n" % {
+			'object':square.getObject().name, 'pix_x':pixel.x, 'pix_y':pixel.y, 'pixel_redshift':pixel.redshift, 'pixel_values':pixel.pixel_values})
 	outfile.close();
 	update_query = "UPDATE square SET wu_generated=NOW() WHERE id=%(sq_id)s" % {'sq_id':square.id}
 	rows_updated = doUpdate(Database.getConnection(), update_query)
