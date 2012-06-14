@@ -15,12 +15,12 @@
 <result>
   <file_ref>
     <file_name><OUTFILE_0/></file_name>
-    <open_name>4732.sed</open_name>
+    <open_name>GI3_0500.s</open_name>
     <copy_file/>
   </file_ref>
 <file_ref>
     <file_name><OUTFILE_1/></file_name>
-    <open_name>4732.fit</open_name>
+    <open_name>GI3_0500.f</open_name>
     <copy_file/>
   </file_ref>
 </result>
