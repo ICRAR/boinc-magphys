@@ -38,7 +38,7 @@ if len(sys.argv) > 5:
 # This value was suggested by David Thilker on 2012-06-05 as a starting point.	
 MIN_LIVE_CHANNELS_PER_PIXEL = 9
 INPUT_FILE = sys.argv[1]
-GRID_SIZE = 10
+GRID_SIZE = 7
 
 HDULIST = pyfits.open(INPUT_FILE)
 LAYER_COUNT = len(HDULIST)
