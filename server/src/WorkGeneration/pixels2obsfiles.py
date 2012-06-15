@@ -9,21 +9,23 @@ if(len(sys.argv) != 3):
 SQUARES_TO_PROCESS = sys.argv[1]
 OUTPUT_DIR = sys.argv[2]
 
+def baseN(num,b,numerals="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+    return ((num == 0) and numerals[0]) or (baseN(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b])
+
 def create_output_file(square):
-#	object = square.getObject().name
 	pixels_in_square = len(square.getPixels())
-	filename_variables = { 'output_dir':OUTPUT_DIR, 'object':square.getObject().name, 'sq_x':square.top_x, 'sq_y':square.top_y}
-	filename = "%(output_dir)s/obs%(object)s.%(sq_x)s.%(sq_y)s" % filename_variables
+	filename_variables = { 'output_dir':OUTPUT_DIR, 'square':square.id}
+	filename = "%(output_dir)s/wu%(square)s" % filename_variables
 	print "  Writing %(filename)s" % {'filename':filename}
 	outfile = open(filename, 'w')
 	outfile.write("#  This workunit contains observations for object %(object)s. " % { "object":square.getObject().name })
 	outfile.write("%(square)s contains %(count)s pixels with above-threshold observations\n" % {
 		'square':square, 'count':pixels_in_square })
-	
+
 	row_num = 0
 	for pixel in square.getPixels():
-		outfile.write("%(row)03d %(pixel_redshift)s %(pixel_values)s\n" % {
-			'row':row_num, 'pixel_redshift':pixel.redshift, 'pixel_values':pixel.pixel_values})
+		outfile.write("pix%(id)s %(pixel_redshift)s %(pixel_values)s\n" % {
+			'id':baseN(pixel.id, 62), 'pixel_redshift':pixel.redshift, 'pixel_values':pixel.pixel_values})
 		row_num += 1
 	outfile.close();
 	update_query = "UPDATE square SET wu_generated=NOW() WHERE id=%(sq_id)s" % {'sq_id':square.id}
