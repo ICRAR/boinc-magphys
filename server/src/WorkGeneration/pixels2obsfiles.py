@@ -20,9 +20,11 @@ def create_output_file(square):
 	outfile.write("%(square)s contains %(count)s pixels with above-threshold observations\n" % {
 		'square':square, 'count':pixels_in_square })
 	
+	row_num = 0
 	for pixel in square.getPixels():
-		outfile.write("%(object)s.%(pix_x)s.%(pix_y)s %(pixel_redshift)s %(pixel_values)s\n" % {
-			'object':square.getObject().name, 'pix_x':pixel.x, 'pix_y':pixel.y, 'pixel_redshift':pixel.redshift, 'pixel_values':pixel.pixel_values})
+		outfile.write("%(row)03d %(pixel_redshift)s %(pixel_values)s\n" % {
+			'row':row_num, 'pixel_redshift':pixel.redshift, 'pixel_values':pixel.pixel_values})
+		row_num += 1
 	outfile.close();
 	update_query = "UPDATE square SET wu_generated=NOW() WHERE id=%(sq_id)s" % {'sq_id':square.id}
 	rows_updated = doUpdate(Database.getConnection(), update_query)
