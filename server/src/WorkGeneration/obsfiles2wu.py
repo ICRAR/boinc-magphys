@@ -14,7 +14,7 @@ BOINC_PROJECT_ROOT = sys.argv[2]
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates" # In true BOINC style, this is magically relative to the project root
 
-FPOPS_EST_PER_PIXEL = "635e9"	# Estimated number of FP ops per pixel 
+FPOPS_EST_PER_PIXEL = "650e9"	# Estimated number of FP ops per pixel 
 FPOPS_BOUND_PER_PIXEL = "15e12"	# Maximum number client will allow before terminating job
 
 # The BOINC scripts/apps do not feel at home outside their directory
