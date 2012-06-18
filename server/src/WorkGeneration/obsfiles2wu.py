@@ -14,8 +14,9 @@ BOINC_PROJECT_ROOT = sys.argv[2]
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates" # In true BOINC style, this is magically relative to the project root
 
-FPOPS_EST_PER_PIXEL = "650e9"	# Estimated number of FP ops per pixel 
-FPOPS_BOUND_PER_PIXEL = "15e12"	# Maximum number client will allow before terminating job
+exp = "e9"
+FPOPS_EST_PER_PIXEL = 650						# Estimated number of gigaflops per pixel 
+FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	# Maximum number of gigaflops per pixel client will allow before terminating job
 
 # The BOINC scripts/apps do not feel at home outside their directory
 os.chdir(BOINC_PROJECT_ROOT)
@@ -24,6 +25,10 @@ file_list = os.listdir(FILE_DIR);
 
 for file in file_list:
 	if file[0] == '.': continue	# Process everything but dot-files
+
+	## TODO
+	## TODO: open file, count lines and calculate totel est/bounc FLOPS
+	## TODO
 
 	new_full_path = check_output([BIN_PATH + "/dir_hier_path", file]).rstrip()
 	
@@ -36,10 +41,10 @@ for file in file_list:
 		"--wu_name",         file,
 		"--wu_template",     TEMPLATES_PATH + "/fitsed_wu",
 		"--result_template", TEMPLATES_PATH + "/fitsed_result",
-		"--rsc_fpops_est",   FPOPS_EST_PER_PIXEL,
-		"--rsc_fpops_bound", FPOPS_BOUND_PER_PIXEL,
+		"--rsc_fpops_est",   FPOPS_EST_PER_PIXEL + FPOPS_EXP,
+		"--rsc_fpops_bound", FPOPS_BOUND_PER_PIXEL + FPOPS_EXP,
 		file,
-		"zlibs.dat", "filters.dat", "infrared_dce08_z0.0000.lbr", "starformhist_cb07_z0.0000.lbr"		
+		"filter_spec.dat", "zlibs.dat", "infrared_dce08_z0.0000.lbr", "starformhist_cb07_z0.0000.lbr"		
 	]
 	
 	if call(cmd_create_work):
