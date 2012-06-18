@@ -14,7 +14,7 @@ BOINC_PROJECT_ROOT = sys.argv[2]
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates" # In true BOINC style, this is magically relative to the project root
 
-exp = "e9"
+FPOPS_EXP = "e9"
 FPOPS_EST_PER_PIXEL = 650						# Estimated number of gigaflops per pixel 
 FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	# Maximum number of gigaflops per pixel client will allow before terminating job
 
@@ -41,8 +41,8 @@ for file in file_list:
 		"--wu_name",         file,
 		"--wu_template",     TEMPLATES_PATH + "/fitsed_wu",
 		"--result_template", TEMPLATES_PATH + "/fitsed_result",
-		"--rsc_fpops_est",   FPOPS_EST_PER_PIXEL + FPOPS_EXP,
-		"--rsc_fpops_bound", FPOPS_BOUND_PER_PIXEL + FPOPS_EXP,
+		"--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL, 'exp':FPOPS_EXP},
+		"--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL, 'exp':FPOPS_EXP},
 		file,
 		"filter_spec.dat", "zlibs.dat", "infrared_dce08_z0.0000.lbr", "starformhist_cb07_z0.0000.lbr"		
 	]
