@@ -26,7 +26,7 @@ file_list = os.listdir(FILE_DIR);
 for file_name in file_list:
 	if file_name[0] == '.': continue	# Process everything but dot-files
 
-	pixels_in_file = sum(1 for line in open(file_name))-1
+	pixels_in_file = sum(1 for line in open(FILE_DIR + "/" + file_name))-1
 	print("Creating work unit from observations file %(file)s: %(pixels)d pixels" % {'file':file_name, 'pixels':pixels_in_file})
 
 	new_full_path = check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()	
