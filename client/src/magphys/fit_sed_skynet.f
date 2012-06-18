@@ -57,7 +57,7 @@ c     ==========================================================================
       character*12 filt_name(nmax)
       character*10 outfile1,outfile2
       character*500 filter_header
-      character*8 gal_name(galmax),aux_name
+      character*30 gal_name(galmax),aux_name
       character*6 numz
       character optlib*34,irlib*26
       character filters*80,obs*80
@@ -276,10 +276,18 @@ c     OUTPUT FILES
 c     name.fit: fit results, PDFs etc
 c     name.sed: best-fit SED
       aux_name=gal_name(i_gal)
-      outfile1=aux_name(1:largo(aux_name))//'.fit'
-      outfile2=aux_name(1:largo(aux_name))//'.sed'
       close(31) 
-      open (31, file=outfile1, status='unknown')
+c     ---------------------------------------------------------------------------
+      if (skynet .eqv. .FALSE.) then
+	      outfile1=aux_name(1:largo(aux_name))//'.fit'
+	      outfile2=aux_name(1:largo(aux_name))//'.sed'
+	      open (31, file=outfile1, status='unknown')
+c     ---------------------------------------------------------------------------
+      else  
+          outfile1='output.fit'
+	      open (31, file=outfile1, status='unknown', access='append')
+	      write(31,*) '####### ',gal_name(i_gal)
+      endif
       
 c     Choose libraries according to the redshift of the source
 c     Find zlib(i) closest of the galaxie's redshift
@@ -1086,10 +1094,9 @@ c     --------------------------------------------------------------------------
 
 c     ---------------------------------------------------------------------------
          if (skynet .eqv. .TRUE.) then
-            close (31)
-            open (31,file=outfile2,status='unknown')
             write(31,*) '#...theSkyNet parameters of this model'
             write(31,*) indx(sfh_sav),ir_sav,a_sav,fmu_sfh(sfh_sav),redshift(i_gal)
+            close (31)
          else
 c     ---------------------------------------------------------------------------
 
