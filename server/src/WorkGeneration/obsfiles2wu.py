@@ -23,27 +23,24 @@ os.chdir(BOINC_PROJECT_ROOT)
 
 file_list = os.listdir(FILE_DIR);
 
-for file in file_list:
-	if file[0] == '.': continue	# Process everything but dot-files
+for file_name in file_list:
+	if file_name[0] == '.': continue	# Process everything but dot-files
 
-	## TODO
-	## TODO: open file, count lines and calculate totel est/bounc FLOPS
-	## TODO
+	int pixels_in_file = sum(1 for line in open(file_name))-1
+	print("Creating work unit from observations file %(file)s: %(pixels)d pixels" % {'file':file_name, 'pixels':pixels_in_file})
 
-	new_full_path = check_output([BIN_PATH + "/dir_hier_path", file]).rstrip()
-	
-	print("Creating work unit from observations file %(file)s" % {'file':file})
-	os.rename(FILE_DIR + "/" + file, new_full_path)
+	new_full_path = check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()	
+	os.rename(FILE_DIR + "/" + file_name, new_full_path)
 
 	cmd_create_work = [
 		BIN_PATH + "/create_work",
 		"--appname",         APP_NAME,
-		"--wu_name",         file,
+		"--wu_name",         file_name,
 		"--wu_template",     TEMPLATES_PATH + "/fitsed_wu",
 		"--result_template", TEMPLATES_PATH + "/fitsed_result",
-		"--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL, 'exp':FPOPS_EXP},
-		"--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL, 'exp':FPOPS_EXP},
-		file,
+		"--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
+		"--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
+		file_name,
 		"filter_spec.dat", "zlibs.dat", "infrared_dce08_z0.0000.lbr", "starformhist_cb07_z0.0000.lbr"		
 	]
 	
