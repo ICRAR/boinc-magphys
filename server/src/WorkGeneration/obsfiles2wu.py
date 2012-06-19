@@ -14,9 +14,12 @@ BOINC_PROJECT_ROOT = sys.argv[2]
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates" # In true BOINC style, this is magically relative to the project root
 
-FPOPS_EXP = "e9"
+MIN_QUORUM = 4									# Validator run when there are at least this many results for a work unit
+TARGET_NRESULTS = MIN_QUORUM+2					# Initially create this many instances of a work unit
+DELAY_BOUND = 86400 * 30 						# Clients must report results within a month
 FPOPS_EST_PER_PIXEL = 650						# Estimated number of gigaflops per pixel 
 FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	# Maximum number of gigaflops per pixel client will allow before terminating job
+FPOPS_EXP = "e9"
 
 # The BOINC scripts/apps do not feel at home outside their directory
 os.chdir(BOINC_PROJECT_ROOT)
@@ -35,6 +38,9 @@ for file_name in file_list:
 	cmd_create_work = [
 		BIN_PATH + "/create_work",
 		"--appname",         APP_NAME,
+		"--min_quorum",      MIN_QUORUM,
+		"--delay_bound",     DELAY_BOUND,
+		"--target_nresults", TARGET_NRESULTS,
 		"--wu_name",         file_name,
 		"--wu_template",     TEMPLATES_PATH + "/fitsed_wu",
 		"--result_template", TEMPLATES_PATH + "/fitsed_result",
