@@ -38,9 +38,9 @@ for file_name in file_list:
 	cmd_create_work = [
 		BIN_PATH + "/create_work",
 		"--appname",         APP_NAME,
-		"--min_quorum",      MIN_QUORUM,
-		"--delay_bound",     DELAY_BOUND,
-		"--target_nresults", TARGET_NRESULTS,
+		"--min_quorum",      "%(min_quorum)s" % {'min_quorum':MIN_QUORUM},
+		"--delay_bound",     "%(delay_bound)s" % {'delay_bound':DELAY_BOUND},
+		"--target_nresults", "%(target_nresults)s" % {'target_nresults':TARGET_NRESULTS},
 		"--wu_name",         file_name,
 		"--wu_template",     TEMPLATES_PATH + "/fitsed_wu",
 		"--result_template", TEMPLATES_PATH + "/fitsed_result",
