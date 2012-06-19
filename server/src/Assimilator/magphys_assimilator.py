@@ -276,15 +276,13 @@ class MagphysAssimilator(Assimilator.Assimilator):
         """
 
         if (wu.canonical_resultid):
-            file_list = []
-            self.get_output_file_infos(canonical_result, file_list)
-            
-            outFile = None;
-            for file in file_list:
-                print file
-                outFile = file
+            #file_list = []
+            outFile = self.get_file_path(canonical_result)
+            #self.get_output_file_infos(canonical_result, file_list)
                     
             if (outFile):
+                print "Reading File",
+                print outFile
                 session = self.Session()
                 self.processResult(session, outFile, results)
                 session.commit()
