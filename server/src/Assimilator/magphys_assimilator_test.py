@@ -12,24 +12,29 @@ class DummyWorkUnit:
     
 class DummyResult:
     userid = 0
+    
+class DummyConfig:
+    upload_dir = ""
+    uldl_dir_fanout = 1
 
 class MagphysAssimilatorTest(magphys_assimilator.MagphysAssimilator):
     
     def __init__(self):
         magphys_assimilator.MagphysAssimilator.__init__(self)
     
-    def test(self, sedFile, fitFile):
+    def test(self, uploadDir, outFile):
         str_list = []
         str_list.append("<?xml version=\"1.0\" ?>\n")
         str_list.append("<output>\n")
-        str_list.append("  <file_ref>")
-        str_list.append(sedFile)
-        str_list.append("</file_ref>\n")
-        str_list.append("  <file_ref>")
-        str_list.append(fitFile)
-        str_list.append("</file_ref>\n")
+        str_list.append("  <file_name>")
+        str_list.append(outFile)
+        str_list.append("</file_name>\n")
         str_list.append("</output>")
         #print ''.join(str_list)
+        
+        self.config = DummyConfig()
+        self.config.upload_dir = uploadDir
+        self.config.uldl_dir_fanout = 1024
         
         result1 = DummyResult()
         result1.userid = 1
@@ -49,4 +54,4 @@ class MagphysAssimilatorTest(magphys_assimilator.MagphysAssimilator):
     
 if __name__ == '__main__':
     asm = MagphysAssimilatorTest()
-    asm.test("/Users/rob/magphys/pix0.sed", "/Users/rob/magphys/pix0.fit")
+    asm.test("/Users/rob", "magphys/output.fit")

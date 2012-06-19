@@ -189,11 +189,11 @@ class Assimilator():
                 wu.commit()
                 
             # assimilate handler
-            self.assimilate_handler(wu, results, canonical_result)
+            rc = self.assimilate_handler(wu, results, canonical_result)
     
             # TODO: check for DEFER_ASSIMILATION as a return value from assimilate_handler
             
-            if self.update_db:
+            if self.update_db and rc == 0:
                 # tag wu as ASSIMILATE_DONE
                 wu.assimilate_state = boinc_db.ASSIMILATE_DONE
                 wu.transition_time = int(time.time())

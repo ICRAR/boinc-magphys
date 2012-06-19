@@ -14,10 +14,10 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
-class WorkUnitResult(Base):
-    __tablename__ = 'work_unit_result'
+class PixelResult(Base):
+    __tablename__ = 'pixel_result'
     
-    wuresult_id = Column(Integer, primary_key=True)
+    pxresult_id = Column(Integer, primary_key=True)
     point_name = Column(String(100))
     i_sfh = Column(Float)
     i_ir = Column(Float)
@@ -44,23 +44,23 @@ class WorkUnitResult(Base):
     dfmu_aux = Column(Float)
     dz = Column(Float)
     
-class WorkUnitFilter(Base):
-    __tablename__ = 'work_unit_filter'
+class PixelFilter(Base):
+    __tablename__ = 'pixel_filter'
     
-    wufilter_id = Column(Integer, primary_key=True)
-    wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
+    pxfilter_id = Column(Integer, primary_key=True)
+    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     filter_name = Column(String(100))
     observed_flux = Column(Float)
     observational_uncertainty = Column(Float)
     flux_bfm = Column(Float)
     
-    work_unit = relationship("WorkUnitResult", backref=backref('filters', order_by=wufilter_id))
+    work_unit = relationship("PixelResult", backref=backref('filters', order_by=pxfilter_id))
     
-class WorkUnitParameter(Base):
-    __tablename__ = 'work_unit_parameter'
+class PixelParameter(Base):
+    __tablename__ = 'pixel_parameter'
     
-    wuparameter_id = Column(Integer, primary_key=True)
-    wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
+    pxparameter_id = Column(Integer, primary_key=True)
+    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     parameter_name = Column(String(100))
     percentile2_5 = Column(Float)
     percentile16 = Column(Float)
@@ -68,27 +68,27 @@ class WorkUnitParameter(Base):
     percentile84 = Column(Float)
     percentile97_5 = Column(Float)
     
-    work_unit = relationship("WorkUnitResult", backref=backref('parameters', order_by=wuparameter_id))
+    work_unit = relationship("PixelResult", backref=backref('parameters', order_by=pxparameter_id))
 
-class WorkUnitHistogram(Base):
-    __tablename__ = 'work_unit_histogram'
+class PixelHistogram(Base):
+    __tablename__ = 'pixel_histogram'
     
-    wuhistogram_id = Column(Integer, primary_key=True)
-    wuparameter_id = Column(Integer, ForeignKey('work_unit_parameter.wuparameter_id'))
+    pxhistogram_id = Column(Integer, primary_key=True)
+    pxparameter_id = Column(Integer, ForeignKey('pixel_parameter.pxparameter_id'))
     x_axis = Column(Float)
     hist_value = Column(Float)
     
-    parameter = relationship("WorkUnitParameter", backref=backref('histograms', order_by=wuhistogram_id))
+    parameter = relationship("PixelParameter", backref=backref('histograms', order_by=pxhistogram_id))
     
-class WorkUnitUser(Base):
-    __tablename__ = 'work_unit_user'
+class PixelUser(Base):
+    __tablename__ = 'pixel_user'
     
-    wuuser_id = Column(Integer, primary_key=True)
-    wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
+    pxuser_id = Column(Integer, primary_key=True)
+    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     userid = Column(Integer)
     create_time = Column(TIMESTAMP)
     
-    work_unit = relationship("WorkUnitResult", backref=backref('users', order_by=wuuser_id))
+    work_unit = relationship("PixelResult", backref=backref('users', order_by=pxuser_id))
             
 class MagphysAssimilator(Assimilator.Assimilator):
     
@@ -111,166 +111,164 @@ class MagphysAssimilator(Assimilator.Assimilator):
     
     def get_output_file_infos(self, result, list):
         dom = parseString(result.xml_doc_in)
-        for node in dom.getElementsByTagName('file_ref'):
+        for node in dom.getElementsByTagName('file_name'):
             list.append(node.firstChild.nodeValue)
-    
-    def processResult(self, session, sedFile, fitFile, results):
-        parts = fitFile.split('/')
-        last = parts[len(parts)-1]
-        parts = last.split('.')
-        pointName = parts[0]
-        print 'Point Name',
-        print pointName
         
-        #session = self.Session()
-        wu = session.query(WorkUnitResult).filter("point_name=:name").params(name=pointName).first()
+    def getResult(self, session, pointName):
+        pxresult = session.query(PixelResult).filter("point_name=:name").params(name=pointName).first()
         doAdd = False
-        if (wu == None):
-            wu = WorkUnitResult()
+        if (pxresult == None):
+            pxresult = PixelResult()
         else:
-            for filter in wu.filters:
+            for filter in pxresult.filters:
                 session.delete(filter)
-            for parameter in wu.parameters:
+            for parameter in pxresult.parameters:
                 for histogram in parameter.histograms:
                     session.delete(histogram)
                 session.delete(parameter)
-            for user in wu.users:
+            for user in pxresult.users:
                 session.delete(user)
-        wu.point_name = pointName;
-        wu.filters = []
-        wu.parameters = []
-        
-        self.processFitFile(fitFile, wu)
-        self.processSedFile(sedFile, wu)
-        
+        pxresult.point_name = pointName;
+        pxresult.filters = []
+        pxresult.parameters = []
+        return pxresult
+    
+    def saveResult(self, session, pxresult, results):
         for result in results:
-            usr = WorkUnitUser()
+            usr = PixelUser()
             usr.userid = result.userid
             #usr.create_time = 
-            wu.users.append(usr)
+            pxresult.users.append(usr)
             
-        if wu.wuresult_id == None:
-            session.add(wu)
-        #session.commit()
+        if pxresult.pxresult_id == None:
+            session.add(pxresult)
     
-    def processFitFile(self, fitFile, wu):
+    def processResult(self, session, outFile, results):
         """
-        Read the ".fit" file, add the values to the WorkUnitResult row, and insert the filter,
+        Read the output file, add the values to the PixelResult row, and insert the filter,
         parameter and histogram rows.
         """
-        f = open(fitFile , "r")
+        f = open(outFile , "r")
         lineNo = 0
+        pointName = None
+        pxresult = None
         parameter = None
         percentilesNext = False
         histogramNext = False
+        skynetNext = False
         for line in f:
             lineNo = lineNo + 1
             
-            if lineNo == 2:
-                filterNames = line.split()
-                for filterName in filterNames:
-                    if filterName != '#':
-                        filter = WorkUnitFilter()
-                        filter.filter_name = filterName
-                        wu.filters.append(filter)
-            elif lineNo == 3:
-                idx = 0
+            if line.startswith(" ####### "):
+                if pxresult:
+                    self.saveResult(session, pxresult, results)
                 values = line.split()
-                for value in values:
-                    filter = wu.filters[idx]
-                    filter.observed_flux = float(value)
-                    idx = idx + 1
-            elif lineNo == 4:
-                idx = 0
-                values = line.split()
-                for value in values:
-                    filter = wu.filters[idx]
-                    filter.observational_uncertainty = float(value)
-                    idx = idx + 1
-            elif lineNo == 9:
-                values = line.split()
-                wu.i_sfh = float(values[0])
-                wu.i_ir = float(values[1])
-                wu.chi2 = float(values[2])
-                wu.redshift = float(values[3])
-                #for value in values:
-                #    print value
-            elif lineNo == 11:
-                values = line.split()
-                wu.fmu_sfh = float(values[0])
-                wu.fmu_ir = float(values[1])
-                wu.mu = float(values[2])
-                wu.tauv = float(values[3])
-                wu.s_sfr = float(values[4])
-                wu.m = float(values[5])
-                wu.ldust = float(values[6])
-                wu.t_w_bc = float(values[7])
-                wu.t_c_ism = float(values[8])
-                wu.xi_c_tot = float(values[9])
-                wu.xi_pah_tot = float(values[10])
-                wu.xi_mir_tot = float(values[11])
-                wu.x_w_tot = float(values[12])
-                wu.tvism = float(values[13])
-                wu.mdust = float(values[14])
-                wu.sfr = float(values[15])
-            elif lineNo == 13:
-                idx = 0
-                values = line.split()
-                for value in values:
-                    filter = wu.filters[idx]
-                    filter.flux_bfm = float(value)
-                    idx = idx + 1
-            elif lineNo > 13:
-                if line.startswith("# ..."):
-                    parts = line.split('...')
-                    parameterName = parts[1].strip()
-                    parameter = WorkUnitParameter()
-                    parameter.parameter_name = parameterName;
-                    wu.parameters.append(parameter)
-                    percentilesNext = False;
-                    histogramNext = True
-                elif line.startswith("#....percentiles of the PDF......") and parameter != None:
-                    percentilesNext = True;
-                    histogramNext = False
-                elif percentilesNext:
+                pointName = values[1]
+                print pointName
+                pxresult = self.getResult(session, pointName)
+                lineNo = 0
+                percentilesNext = False;
+                histogramNext = False
+                skynetNext = False
+            elif pxresult:
+                if lineNo == 2:
+                    filterNames = line.split()
+                    for filterName in filterNames:
+                        if filterName != '#':
+                            filter = PixelFilter()
+                            filter.filter_name = filterName
+                            pxresult.filters.append(filter)
+                elif lineNo == 3:
+                    idx = 0
                     values = line.split()
-                    parameter.percentile2_5 = float(values[0])
-                    parameter.percentile16 = float(values[1])
-                    parameter.percentile50 = float(values[2])
-                    parameter.percentile84 = float(values[3])
-                    parameter.percentile97_5 = float(values[4])
-                    percentilesNext = False;
-                elif histogramNext:
-                    hist = WorkUnitHistogram()
+                    for value in values:
+                        filter = pxresult.filters[idx]
+                        filter.observed_flux = float(value)
+                        idx = idx + 1
+                elif lineNo == 4:
+                    idx = 0
                     values = line.split()
-                    hist.x_axis = float(values[0])
-                    hist.hist_value = float(values[1])
-                    parameter.histograms.append(hist)
+                    for value in values:
+                        filter = pxresult.filters[idx]
+                        filter.observational_uncertainty = float(value)
+                        idx = idx + 1
+                elif lineNo == 9:
+                    values = line.split()
+                    pxresult.i_sfh = float(values[0])
+                    pxresult.i_ir = float(values[1])
+                    pxresult.chi2 = float(values[2])
+                    pxresult.redshift = float(values[3])
+                    #for value in values:
+                    #    print value
+                elif lineNo == 11:
+                    values = line.split()
+                    pxresult.fmu_sfh = float(values[0])
+                    pxresult.fmu_ir = float(values[1])
+                    pxresult.mu = float(values[2])
+                    pxresult.tauv = float(values[3])
+                    pxresult.s_sfr = float(values[4])
+                    pxresult.m = float(values[5])
+                    pxresult.ldust = float(values[6])
+                    pxresult.t_w_bc = float(values[7])
+                    pxresult.t_c_ism = float(values[8])
+                    pxresult.xi_c_tot = float(values[9])
+                    pxresult.xi_pah_tot = float(values[10])
+                    pxresult.xi_mir_tot = float(values[11])
+                    pxresult.x_w_tot = float(values[12])
+                    pxresult.tvism = float(values[13])
+                    pxresult.mdust = float(values[14])
+                    pxresult.sfr = float(values[15])
+                elif lineNo == 13:
+                    idx = 0
+                    values = line.split()
+                    for value in values:
+                        filter = pxresult.filters[idx]
+                        filter.flux_bfm = float(value)
+                        idx = idx + 1
+                elif lineNo > 13:
+                    if line.startswith("# ..."):
+                        parts = line.split('...')
+                        parameterName = parts[1].strip()
+                        parameter = PixelParameter()
+                        parameter.parameter_name = parameterName;
+                        pxresult.parameters.append(parameter)
+                        percentilesNext = False;
+                        histogramNext = True
+                        skynetNext = False
+                    elif line.startswith("#....percentiles of the PDF......") and parameter != None:
+                        percentilesNext = True;
+                        histogramNext = False
+                        skynetNext = False
+                    elif line.startswith(" #...theSkyNet"):
+                        percentilesNext = False;
+                        histogramNext = False
+                        skynetNext = True
+                    elif percentilesNext:
+                        values = line.split()
+                        parameter.percentile2_5 = float(values[0])
+                        parameter.percentile16 = float(values[1])
+                        parameter.percentile50 = float(values[2])
+                        parameter.percentile84 = float(values[3])
+                        parameter.percentile97_5 = float(values[4])
+                        percentilesNext = False;
+                    elif histogramNext:
+                        hist = PixelHistogram()
+                        values = line.split()
+                        hist.x_axis = float(values[0])
+                        hist.hist_value = float(values[1])
+                        parameter.histograms.append(hist)
+                    elif skynetNext:
+                        values = line.split()
+                        pxresult.i_opt = float(values[0])
+                        pxresult.i_ir = float(values[1])
+                        pxresult.dmstar = float(values[2])
+                        pxresult.dfmu_aux = float(values[3])
+                        pxresult.dz = float(values[4])
+                        skynetNext = False
                     
         f.close()
-    
-    def processSedFile(self, sedFile, wu):
-        """
-        Read the ".sed" file, and add other values to the WorkUnitResult row.
-        """
-        f = open(sedFile , "r")
-        lineNo = 0
-        #parameterName = None
-        skynetFound = False
-        for line in f:
-            lineNo = lineNo + 1
-            
-            if lineNo == 1:
-                if line.startswith(" #...theSkyNet"):
-                    skynetFound = True
-            elif lineNo == 2 and skynetFound:
-                values = line.split()
-                wu.i_opt = float(values[0])
-                wu.i_ir = float(values[1])
-                wu.dmstar = float(values[2])
-                wu.dfmu_aux = float(values[3])
-                wu.dz = float(values[4])
-        f.close()
+        if pxresult:
+            self.saveResult(session, pxresult, results)
         
     def assimilate_handler(self, wu, results, canonical_result):
         """
@@ -278,26 +276,21 @@ class MagphysAssimilator(Assimilator.Assimilator):
         """
 
         if (wu.canonical_resultid):
-            file_list = []
-            self.get_output_file_infos(canonical_result, file_list)
-            
-            sedFile = None;
-            fitFile = None;
-            for file in file_list:
-                print file
-                if (file.endswith(".sed")):
-                    sedFile = file
-                elif (file.endswith(".fit")):
-                    fitFile = file
+            #file_list = []
+            outFile = self.get_file_path(canonical_result)
+            #self.get_output_file_infos(canonical_result, file_list)
                     
-            if (sedFile and fitFile):
+            if (outFile):
+                print "Reading File",
+                print outFile
                 session = self.Session()
-                self.processResult(session, sedFile, fitFile, results)
+                self.processResult(session, outFile, results)
                 session.commit()
             else:
-                self.logCritical("Both of the sed and fit files were not returned\n")
+                self.logCritical("The output file was not found\n")
         else:
-            reportErrors(wu)
+            report_errors(wu)
+            return -1
             
         return 0;
     
