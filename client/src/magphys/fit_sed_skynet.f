@@ -176,7 +176,6 @@ c     Do nothing as this is the normal model
           skynet = .TRUE.  
           call getarg ( 1, arg )
           read( arg, *) i_gal
-          write(*,*) i_gal
           call getarg( 2, filters)
           call getarg( 3, obs)
       else
@@ -237,13 +236,20 @@ c     READ FILE WITH REDSHIFTS OF THE MODEL LIBRARIES
          read(24,*,iostat=io) i,zlib(nz)
          enddo
          nz=nz-1
-          
+      close(24) 
+   
 c     CHOOSE GALAXY TO FIT (enter corresponding i)
       if (skynet .eqv. .FALSE.) then
           write (6,'(x,a,$)') 'Choose galaxy - enter i_gal: '
           read (5,*) i_gal
       endif
-      write(*,*) i_gal
+      write(*,*) i_gal, n_obs
+
+c     Do we have the observation
+      if (i_gal .gt. n_obs) then
+         write(*,*) 'Observation does not exist'
+         return
+      endif
         
 c     WHAT OBSERVATIONS DO YOU WANT TO FIT?
 c     fit(ifilt)=1: fit flux from filter ifilt
