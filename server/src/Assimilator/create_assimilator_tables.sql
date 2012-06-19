@@ -66,4 +66,9 @@ CREATE TABLE work_unit_user (
   create_time                TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+ALTER TABLE work_unit_filter ADD CONSTRAINT wufilter_result_fk FOREIGN KEY(wuresult_id) REFERENCES work_unit_result(wuresult_id);
+ALTER TABLE work_unit_parameter ADD CONSTRAINT wuparameter_result_fk FOREIGN KEY(wuresult_id) REFERENCES work_unit_result(wuresult_id);
+ALTER TABLE work_unit_histogram ADD CONSTRAINT wuhistogram_parameter_fk FOREIGN KEY(wuparameter_id) REFERENCES work_unit_parameter(wuparameter_id);
+ALTER TABLE work_unit_user ADD CONSTRAINT wuuser_result_fk FOREIGN KEY(wuresult_id) REFERENCES work_unit_result(wuresult_id);
+
 CREATE INDEX work_unit_name_ix ON work_unit_result(point_name);
