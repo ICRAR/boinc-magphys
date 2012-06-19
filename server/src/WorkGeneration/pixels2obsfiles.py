@@ -9,9 +9,6 @@ if(len(sys.argv) != 3):
 SQUARES_TO_PROCESS = sys.argv[1]
 OUTPUT_DIR = sys.argv[2]
 
-def baseN(num,b,numerals="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"):
-    return ((num == 0) and numerals[0]) or (baseN(num // b, b, numerals).lstrip(numerals[0]) + numerals[num % b])
-
 def create_output_file(square):
 	pixels_in_square = len(square.getPixels())
 	filename_variables = { 'output_dir':OUTPUT_DIR, 'square':square.id}
@@ -25,7 +22,7 @@ def create_output_file(square):
 	row_num = 0
 	for pixel in square.getPixels():
 		outfile.write("pix%(id)s %(pixel_redshift)s %(pixel_values)s\n" % {
-			'id':baseN(pixel.id, 62), 'pixel_redshift':pixel.redshift, 'pixel_values':pixel.pixel_values})
+			'id':pixel.id, 'pixel_redshift':pixel.redshift, 'pixel_values':pixel.pixel_values})
 		row_num += 1
 	outfile.close();
 	update_query = "UPDATE square SET wu_generated=NOW() WHERE id=%(sq_id)s" % {'sq_id':square.id}
