@@ -88,17 +88,18 @@ def get_pixels(pix_x, pix_y):
 				continue;
 
 			status['get_pixels_get_attempts'] += 1;
-#			pixels = [HDULIST[layer].data[x, y] for layer in range(LAYER_COUNT)]
 			pixels = [HDULIST[layer].data[x, y] for layer in LAYER_ORDER]
+			pixel_tuples = []
 			live_pixels = 0
 			for p in pixels:
 				if not math.isnan(p):
 					live_pixels += 1
+					pixel_tuples.extend([p, p/10])
 
 			if live_pixels >= MIN_LIVE_CHANNELS_PER_PIXEL:
 				status['get_pixels_get_successful'] += 1;
 				status['get_pixels_values_returned'] += live_pixels;
-				result.append(Pixel({'x':x,'y':y,'redshift':HARD_CODED_REDSHIFT,'pixel_values':" ".join(map(str, pixels))}))
+				result.append(Pixel({'x':x,'y':y,'redshift':HARD_CODED_REDSHIFT,'pixel_values':" ".join(map(str, pixel_tuples))}))
 
 	return result
 
