@@ -14,10 +14,10 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
-class WorkUnitResult(Base):
-    __tablename__ = 'work_unit_result'
+class PixelResult(Base):
+    __tablename__ = 'pixel_result'
     
-    wuresult_id = Column(Integer, primary_key=True)
+    pxresult_id = Column(Integer, primary_key=True)
     point_name = Column(String(100))
     i_sfh = Column(Float)
     i_ir = Column(Float)
@@ -44,23 +44,23 @@ class WorkUnitResult(Base):
     dfmu_aux = Column(Float)
     dz = Column(Float)
     
-class WorkUnitFilter(Base):
-    __tablename__ = 'work_unit_filter'
+class PixelFilter(Base):
+    __tablename__ = 'pixel_filter'
     
-    wufilter_id = Column(Integer, primary_key=True)
-    wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
+    pxfilter_id = Column(Integer, primary_key=True)
+    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     filter_name = Column(String(100))
     observed_flux = Column(Float)
     observational_uncertainty = Column(Float)
     flux_bfm = Column(Float)
     
-    work_unit = relationship("WorkUnitResult", backref=backref('filters', order_by=wufilter_id))
+    work_unit = relationship("PixelResult", backref=backref('filters', order_by=pxfilter_id))
     
-class WorkUnitParameter(Base):
-    __tablename__ = 'work_unit_parameter'
+class PixelParameter(Base):
+    __tablename__ = 'pixel_parameter'
     
-    wuparameter_id = Column(Integer, primary_key=True)
-    wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
+    pxparameter_id = Column(Integer, primary_key=True)
+    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     parameter_name = Column(String(100))
     percentile2_5 = Column(Float)
     percentile16 = Column(Float)
@@ -68,27 +68,27 @@ class WorkUnitParameter(Base):
     percentile84 = Column(Float)
     percentile97_5 = Column(Float)
     
-    work_unit = relationship("WorkUnitResult", backref=backref('parameters', order_by=wuparameter_id))
+    work_unit = relationship("PixelResult", backref=backref('parameters', order_by=pxparameter_id))
 
-class WorkUnitHistogram(Base):
-    __tablename__ = 'work_unit_histogram'
+class PixelHistogram(Base):
+    __tablename__ = 'pixel_histogram'
     
-    wuhistogram_id = Column(Integer, primary_key=True)
-    wuparameter_id = Column(Integer, ForeignKey('work_unit_parameter.wuparameter_id'))
+    pxhistogram_id = Column(Integer, primary_key=True)
+    pxparameter_id = Column(Integer, ForeignKey('pixel_parameter.pxparameter_id'))
     x_axis = Column(Float)
     hist_value = Column(Float)
     
-    parameter = relationship("WorkUnitParameter", backref=backref('histograms', order_by=wuhistogram_id))
+    parameter = relationship("PixelParameter", backref=backref('histograms', order_by=pxhistogram_id))
     
-class WorkUnitUser(Base):
-    __tablename__ = 'work_unit_user'
+class PixelUser(Base):
+    __tablename__ = 'pixel_user'
     
-    wuuser_id = Column(Integer, primary_key=True)
-    wuresult_id = Column(Integer, ForeignKey('work_unit_result.wuresult_id'))
+    pxuser_id = Column(Integer, primary_key=True)
+    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     userid = Column(Integer)
     create_time = Column(TIMESTAMP)
     
-    work_unit = relationship("WorkUnitResult", backref=backref('users', order_by=wuuser_id))
+    work_unit = relationship("PixelResult", backref=backref('users', order_by=pxuser_id))
             
 class MagphysAssimilator(Assimilator.Assimilator):
     
@@ -115,10 +115,10 @@ class MagphysAssimilator(Assimilator.Assimilator):
             list.append(node.firstChild.nodeValue)
         
     def getResult(self, session, pointName):
-        pxresult = session.query(WorkUnitResult).filter("point_name=:name").params(name=pointName).first()
+        pxresult = session.query(PixelResult).filter("point_name=:name").params(name=pointName).first()
         doAdd = False
         if (pxresult == None):
-            pxresult = WorkUnitResult()
+            pxresult = PixelResult()
         else:
             for filter in pxresult.filters:
                 session.delete(filter)
@@ -135,17 +135,17 @@ class MagphysAssimilator(Assimilator.Assimilator):
     
     def saveResult(self, session, pxresult, results):
         for result in results:
-            usr = WorkUnitUser()
+            usr = PixelUser()
             usr.userid = result.userid
             #usr.create_time = 
             pxresult.users.append(usr)
             
-        if pxresult.wuresult_id == None:
+        if pxresult.pxresult_id == None:
             session.add(pxresult)
     
     def processResult(self, session, outFile, results):
         """
-        Read the output file, add the values to the WorkUnitResult row, and insert the filter,
+        Read the output file, add the values to the PixelResult row, and insert the filter,
         parameter and histogram rows.
         """
         f = open(outFile , "r")
@@ -175,7 +175,7 @@ class MagphysAssimilator(Assimilator.Assimilator):
                     filterNames = line.split()
                     for filterName in filterNames:
                         if filterName != '#':
-                            filter = WorkUnitFilter()
+                            filter = PixelFilter()
                             filter.filter_name = filterName
                             pxresult.filters.append(filter)
                 elif lineNo == 3:
@@ -229,7 +229,7 @@ class MagphysAssimilator(Assimilator.Assimilator):
                     if line.startswith("# ..."):
                         parts = line.split('...')
                         parameterName = parts[1].strip()
-                        parameter = WorkUnitParameter()
+                        parameter = PixelParameter()
                         parameter.parameter_name = parameterName;
                         pxresult.parameters.append(parameter)
                         percentilesNext = False;
@@ -252,7 +252,7 @@ class MagphysAssimilator(Assimilator.Assimilator):
                         parameter.percentile97_5 = float(values[4])
                         percentilesNext = False;
                     elif histogramNext:
-                        hist = WorkUnitHistogram()
+                        hist = PixelHistogram()
                         values = line.split()
                         hist.x_axis = float(values[0])
                         hist.hist_value = float(values[1])

@@ -2,8 +2,8 @@ DROP SCHEMA IF EXISTS magphys_as;
 CREATE SCHEMA magphys_as;
 USE magphys_as;
 
-CREATE TABLE work_unit_result (
-  wuresult_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE pixel_result (
+  pxresult_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   point_name  VARCHAR(100) NOT NULL,
   i_sfh       DOUBLE NOT NULL,
   i_ir        DOUBLE NOT NULL,
@@ -31,18 +31,18 @@ CREATE TABLE work_unit_result (
   dz          DOUBLE
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE TABLE work_unit_filter (
-  wufilter_id                BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  wuresult_id                BIGINT UNSIGNED NOT NULL,
+CREATE TABLE pixel_filter (
+  pxfilter_id                BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  pxresult_id                BIGINT UNSIGNED NOT NULL,
   filter_name                VARCHAR(100) NOT NULL,
   observed_flux              DOUBLE NOT NULL,
   observational_uncertainty  DOUBLE NOT NULL,
   flux_bfm                   DOUBLE NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE TABLE work_unit_parameter (
-  wuparameter_id     BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  wuresult_id        BIGINT UNSIGNED NOT NULL,
+CREATE TABLE pixel_parameter (
+  pxparameter_id     BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  pxresult_id        BIGINT UNSIGNED NOT NULL,
   parameter_name     VARCHAR(100) NOT NULL,
   percentile2_5      DOUBLE NOT NULL,
   percentile16       DOUBLE NOT NULL,
@@ -52,23 +52,23 @@ CREATE TABLE work_unit_parameter (
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 
-CREATE TABLE work_unit_histogram (
-  wuhistogram_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  wuparameter_id BIGINT UNSIGNED NOT NULL,
+CREATE TABLE pixel_histogram (
+  pxhistogram_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  pxparameter_id BIGINT UNSIGNED NOT NULL,
   x_axis         DOUBLE NOT NULL,
   hist_value     DOUBLE NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE TABLE work_unit_user (
-  wuuser_id                  BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  wuresult_id                BIGINT UNSIGNED NOT NULL,
+CREATE TABLE pixel_user (
+  pxuser_id                  BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  pxresult_id                BIGINT UNSIGNED NOT NULL,
   userid                     INTEGER NOT NULL,
   create_time                TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-ALTER TABLE work_unit_filter ADD CONSTRAINT wufilter_result_fk FOREIGN KEY(wuresult_id) REFERENCES work_unit_result(wuresult_id);
-ALTER TABLE work_unit_parameter ADD CONSTRAINT wuparameter_result_fk FOREIGN KEY(wuresult_id) REFERENCES work_unit_result(wuresult_id);
-ALTER TABLE work_unit_histogram ADD CONSTRAINT wuhistogram_parameter_fk FOREIGN KEY(wuparameter_id) REFERENCES work_unit_parameter(wuparameter_id);
-ALTER TABLE work_unit_user ADD CONSTRAINT wuuser_result_fk FOREIGN KEY(wuresult_id) REFERENCES work_unit_result(wuresult_id);
+ALTER TABLE pixel_filter ADD CONSTRAINT pxfilter_result_fk FOREIGN KEY(pxresult_id) REFERENCES pixel_result(pxresult_id);
+ALTER TABLE pixel_parameter ADD CONSTRAINT pxparameter_result_fk FOREIGN KEY(pxresult_id) REFERENCES pixel_result(pxresult_id);
+ALTER TABLE pixel_histogram ADD CONSTRAINT pxhistogram_parameter_fk FOREIGN KEY(pxparameter_id) REFERENCES pixel_parameter(pxparameter_id);
+ALTER TABLE pixel_user ADD CONSTRAINT pxuser_result_fk FOREIGN KEY(pxresult_id) REFERENCES pixel_result(pxresult_id);
 
-CREATE INDEX work_unit_name_ix ON work_unit_result(point_name);
+CREATE INDEX pixelresult_name_ix ON pixel_result(point_name);
