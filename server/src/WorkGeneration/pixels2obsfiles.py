@@ -11,8 +11,9 @@ OUTPUT_DIR = sys.argv[2]
 
 def create_output_file(square):
 	pixels_in_square = len(square.getPixels())
-	filename_variables = { 'output_dir':OUTPUT_DIR, 'square':square.id}
-	filename = "%(output_dir)s/wu%(square)s" % filename_variables
+	object = square.getObject()
+	filename_variables = { 'object':object.name, 'output_dir':OUTPUT_DIR, 'square':square.id}
+	filename = "%(output_dir)s/%(object)s__wu%(square)s" % filename_variables
 	print "  Writing %(filename)s" % {'filename':filename}
 	outfile = open(filename, 'w')
 	outfile.write("#  This workunit contains observations for object %(object)s. " % { "object":square.getObject().name })
