@@ -20,21 +20,6 @@ status['calls__create_square'] = 0
 status['create__square'] = 0
 status['create__pixel'] = 0
 	
-# TODO:    this should be gleaned from the FITS file
-# WARNING: START_X and/or START_Y should be zero or some calculations will
-#          be off; these should probably be removed before going "live"
-START_X = 0
-START_Y = 0
-END_X = 3840
-END_Y = 3840
-if len(sys.argv) > 5:
-	START_X = int(sys.argv[2])
-	START_Y = int(sys.argv[3])
-	END_X = int(sys.argv[4])
-	END_Y = int(sys.argv[5])
-	print("\nDEVELOPMENT MODE: cutting out square (%(s_x)d, %(s_y)d) to (%(e_x)d, %(e_y)d)\n" % {
-		's_x':START_X,'s_y':START_Y,'e_x':END_X,'e_y':END_Y})
-
 # This value was suggested by David Thilker on 2012-06-05 as a starting point.	
 MIN_LIVE_CHANNELS_PER_PIXEL = 9
 INPUT_FILE = sys.argv[1]
@@ -44,6 +29,20 @@ HDULIST = pyfits.open(INPUT_FILE)
 LAYER_COUNT = len(HDULIST)
 HARD_CODED_REDSHIFT = 0.0
 
+START_X = 0
+START_Y = 0
+END_Y = HDULIST[0].data.shape[0]
+END_X = HDULIST[0].data.shape[1]
+
+print("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':END_X,'y':END_Y,'z':LAYER_COUNT,'pix':END_X*END_Y/1000000.0})
+
+if len(sys.argv) > 5:
+	START_X = int(sys.argv[2])
+	START_Y = int(sys.argv[3])
+	END_X = int(sys.argv[4])
+	END_Y = int(sys.argv[5])
+	print("\nDEVELOPMENT MODE: cutting out square (%(s_x)d, %(s_y)d) to (%(e_x)d, %(e_y)d)\n" % {
+		's_x':START_X,'s_y':START_Y,'e_x':END_X,'e_y':END_Y})
 
 ## ######################################################################## ##
 ## 
