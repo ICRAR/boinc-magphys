@@ -17,7 +17,7 @@ TEMPLATES_PATH = "templates" # In true BOINC style, this is magically relative t
 MIN_QUORUM = 4									# Validator run when there are at least this many results for a work unit
 TARGET_NRESULTS = MIN_QUORUM+2					# Initially create this many instances of a work unit
 DELAY_BOUND = 86400 * 30 						# Clients must report results within a month
-FPOPS_EST_PER_PIXEL = 650						# Estimated number of gigaflops per pixel 
+FPOPS_EST_PER_PIXEL = 1898						# Estimated number of gigaflops per pixel 
 FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	# Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e9"
 
