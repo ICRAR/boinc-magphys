@@ -61,5 +61,6 @@ end
 
 desc 'starts the BOINC daemons'
 task :start_daemons do
+ sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/xadd"
  sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/start"
 end
