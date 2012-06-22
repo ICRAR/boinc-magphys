@@ -32,13 +32,13 @@ class ORMObject(object):
 	@classmethod
 	def _getById(self, id):
 		result_set = fetchResultSet(Database.getConnection(), "SELECT * FROM %(cls_name)s WHERE id = %(obj_id)d" % { 
-			'cls_name':self.__name__, 'obj_id':id })
+			'cls_name':self.__name__.lower(), 'obj_id':id })
 		return self(result_set[0])
 	
 	@classmethod
 	def _getByQuery(self, where):
 		result_set = fetchResultSet(Database.getConnection(), "SELECT * FROM %(cls_name)s WHERE %(where_clause)s" % {
-			'cls_name':self.__name__, 'where_clause':where })
+			'cls_name':self.__name__.lower(), 'where_clause':where })
 		
 		result = []
 		for row in result_set:
@@ -59,7 +59,7 @@ class ORMObject(object):
 		values = ",".join("\"" + str(dict[key]) + "\"" for key in dict.keys())
 
 		sql = "INSERT INTO %(table)s(%(columns)s) VALUES(%(values)s)" % {
-			'table':self.__class__.__name__, 'columns':columns, 'values':values}
+			'table':self.__class__.__name__.lower(), 'columns':columns, 'values':values}
 #		print ">>SQL: " + sql
 		rows_updated = doUpdate(Database.getConnection(), sql)
 		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
@@ -81,7 +81,7 @@ class ORMObject(object):
 			if key != "id": updates.append("`%(col)s`=\"%(val)s\"" % {'col':key, 'val':dict[key]})
 
 		sql = "UPDATE %(table)s SET %(updates)s WHERE id=%(id)d" % {
-			'table':self.__class__.__name__, 'updates':",".join(updates), 'id':self.id}
+			'table':self.__class__.__name__.lower(), 'updates':",".join(updates), 'id':self.id}
 #		print ">>SQL: " + sql
 		rows_updated = doUpdate(Database.getConnection(), sql)
 		if rows_updated != 1: raise StandardError("Something went wrong; expected exactly one updated row. Don't know how to recover, so dying")
