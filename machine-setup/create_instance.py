@@ -84,7 +84,7 @@ def run_command(command):
     """
     Execute a command.
     """
-    print '{0}'.format(command)
+    #print '{0}'.format(command)
     channel.send(command + '\n')
     wait_for_prompt()
 
@@ -103,7 +103,7 @@ run_command('git clone git://github.com/ICRAR/boinc-magphys.git')
 run_command('cd ~/boinc-magphys/machine-setup')
 run_command('chmod +x amazon_linux_boinc_server_install_*.sh')
 run_command('./amazon_linux_boinc_server_install_01.sh')
-run_command('./amazon_linux_boinc_server_install_02.sh')
+#run_command('./amazon_linux_boinc_server_install_02.sh')
 
 for user in list_of_users:
     run_command('sudo useradd {0}'.format(user))
