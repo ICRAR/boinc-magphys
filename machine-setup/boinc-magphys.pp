@@ -108,7 +108,7 @@ file { "/home/ec2-user/f2wu":
 
 file { "/opt/boinc":
     ensure => "directory",
-    owner  => "boinc",
+    owner  => "ec2-user",
     group  => "boinc",
     mode   => 775,
     require => User[boinc],
