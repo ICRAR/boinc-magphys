@@ -89,14 +89,14 @@ service { 'httpd':
     enable => true
 }
 
-file { "~/galaxies":
+file { "/home/ec2-user/galaxies":
     ensure => "directory",
     owner  => "ec2-user",
     group  => "boinc",
     mode   => 775,
 }
 
-file { "~/f2wu":
+file { "/home/ec2-user/f2wu":
     ensure => "directory",
     owner  => "ec2-user",
     group  => "boinc",

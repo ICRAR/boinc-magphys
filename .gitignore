@@ -12,9 +12,4 @@ zlibs.dat
 *.a
 *.lbr
 *.pyc
-
-machine-setup/Machine-setup.iml
-
-server/src/Assimilator/Assimilator.iml
-
-server/src/WorkGeneration/WorkGeneration.iml
+*.iml
