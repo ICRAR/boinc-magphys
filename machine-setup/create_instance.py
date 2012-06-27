@@ -20,12 +20,18 @@ INSTANCE_TYPE   = 't1.micro'
 SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH
 KEY_FILE        = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 PUBLIC_KEYS     = os.path.expanduser('~/Documents/Keys')
+PUBLIC_IP       = '23.21.160.71'
 
 # Create the EC2 instance
 print 'Starting an EC2 instance of type {0} with image {1}'.format(INSTANCE_TYPE, IMAGE)
 
 # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
 conn = boto.connect_ec2()
+
+# Disassociate the public IP
+if not conn.disassociate_address(public_ip=PUBLIC_IP):
+    print 'Could not disassociate the IP {0}'.format(PUBLIC_IP)
+
 reservation = conn.run_instances(IMAGE, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
 instance = reservation.instances[0]
 time.sleep(10) # Sleep so Amazon recognizes the new instance
@@ -34,6 +40,12 @@ while not instance.update() == 'running':
     sys.stdout.flush()
     time.sleep(5)
 print '.'
+
+if not conn.associate_address(instance_id=instance.id, public_ip=PUBLIC_IP):
+    print 'Could not associate the IP {0} to the instance {1}'.format(PUBLIC_IP, instance.id)
+
+# Load the new instance data as the dns_name will have changed
+instance.update(True)
 
 # The instance is started, but not useable (yet)
 print 'Started the instance: {0}'.format(instance.dns_name)
