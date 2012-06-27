@@ -25,9 +25,8 @@ rm setuptools-0.6c11-py2.7.egg
 sudo rm -f /usr/bin/easy_install
 sudo easy_install-2.7 pip
 sudo rm -f /usr/bin/pip
-sudo pip-2.7 install mysql-connector
+sudo pip-2.7 install mysql-connector sqlalchemy
 sudo pip-2.7 install Numpy pyfits
-sudo pip-2.7 install sqlalchemy
 
 # Move to the magphys area and start configuring
 cd /home/ec2-user/boinc-magphys

@@ -14,7 +14,7 @@ echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet app
 fi
 
 # Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-05-11
-sudo svn co http://boinc.berkeley.edu/svn/tags/boinc_core_release_7_0_25 /opt
+sudo svn co http://boinc.berkeley.edu/svn/tags/boinc_core_release_7_0_25 /opt/boinc
 
 # This is needed because the files that Apache serve are inside the user's home directory.
 chmod 711 /opt/boinc

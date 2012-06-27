@@ -1,92 +1,93 @@
 package { 'httpd':
-    ensure => installed
+    ensure => installed,
 }
 package { 'autoconf':
-    ensure => installed
+    ensure => installed,
 }
 package { 'automake':
-    ensure => installed
+    ensure => installed,
 }
 package { 'binutils':
-    ensure => installed
+    ensure => installed,
 }
 package { 'gcc':
-    ensure => installed
+    ensure => installed,
 }
 package { 'gcc-c++':
-    ensure => installed
+    ensure => installed,
 }
 package { 'gdb':
-    ensure => installed
+    ensure => installed,
 }
 package { 'libtool':
-    ensure => installed
+    ensure => installed,
 }
 package { 'make':
-    ensure => installed
+    ensure => installed,
 }
 package { 'gcc-gfortran':
-    ensure => installed
+    ensure => installed,
 }
 package { 'openssl':
-    ensure => installed
+    ensure => installed,
 }
 package { 'openssl-devel':
-    ensure => installed
+    ensure => installed,
 }
 package { 'mysql-devel':
-    ensure => installed
+    ensure => installed,
 }
 package { 'php':
-    ensure => installed
+    ensure => installed,
 }
 package { 'php-cli':
-    ensure => installed
+    ensure => installed,
 }
 package { 'php-gd':
-    ensure => installed
+    ensure => installed,
 }
 package { 'php-mysql':
-    ensure => installed
+    ensure => installed,
 }
 package { 'python-devel':
-    ensure => installed
+    ensure => installed,
 }
 package { 'python27':
-    ensure => installed
+    ensure => installed,
 }
 package { 'python27-devel':
-    ensure => installed
+    ensure => installed,
 }
 package { 'MySQL-python':
-    ensure => installed
+    ensure => installed,
 }
 package { 'subversion':
-    ensure => installed
+    ensure => installed,
 }
 package { 'rubygem-rake':
-    ensure => installed
+    ensure => installed,
 }
 
 # We have to install the MySQL - even though we don't necessarily need to activate - BOINC gets stroppy
 package { 'mysql-server':
-    ensure => installed
+    ensure => installed,
 }
 
 user { 'boinc':
   ensure  => present,
-  managehome => true
+  managehome => true,
 }
 
 user { 'apache':
   ensure  => present,
   groups => 'boinc',
-  require => User['boinc']
+  require => User['boinc'],
 }
 
 service { 'httpd':
     ensure => running,
-    enable => true
+    enable => true,
+    require => Package['httpd']
 }
 
 file { "/home/ec2-user/galaxies":
@@ -94,6 +95,7 @@ file { "/home/ec2-user/galaxies":
     owner  => "ec2-user",
     group  => "boinc",
     mode   => 775,
+    require => User[boinc],
 }
 
 file { "/home/ec2-user/f2wu":
@@ -101,4 +103,6 @@ file { "/home/ec2-user/f2wu":
     owner  => "ec2-user",
     group  => "boinc",
     mode   => 775,
+    require => User[boinc],
 }
+
