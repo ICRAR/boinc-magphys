@@ -14,14 +14,14 @@ echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet app
 fi
 
 # Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-05-11
-svn co http://boinc.berkeley.edu/svn/tags/boinc_core_release_7_0_25 /opt/boinc
+svn co http://boinc.berkeley.edu/svn/tags/boinc_core_release_7_0_25 /home/ec2-user/boinc
 
-cd /opt/boinc
+cd /home/ec2-user/boinc
 ./_autosetup
 ./configure --disable-client --disable-manager
 make
 
-cd /opt/boinc/tools
+cd /home/ec2-user/boinc/tools
 
 if [[ -z "$DB_HOST" ]]; then
 yes | ./make_project -v --test_app --url_base $BASE_URL --db_user $DB_USER pogs
@@ -33,7 +33,5 @@ fi
 ## /opt/boinc/projects/pogs/html/user/create_account.php
 ## contains an error on line 51 ("$name" should be "$user_name")
 ##
-sed --in-place '51d' /opt/boinc/projects/pogs/html/user/create_account.php
-sed --in-place '51iif (!is_valid_user_name($user_name, $reason)) {' /opt/boinc/projects/pogs/html/user/create_account.php
-
-sudo chown -R boinc:boinc /opt/boinc
+sed --in-place '51d' /home/ec2-user/boinc/projects/pogs/html/user/create_account.php
+sed --in-place '51iif (!is_valid_user_name($user_name, $reason)) {' /home/ec2-user/boinc/projects/pogs/html/user/create_account.php

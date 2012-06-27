@@ -4,7 +4,7 @@ require 'rake'
 # Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-05-11
 
 PROJECT_NAME="pogs"
-PROJECT_ROOT="/opt/boinc/projects/#{PROJECT_NAME}"
+PROJECT_ROOT="/home/ec2-user/boinc/projects/#{PROJECT_NAME}"
 APP_NAME="magphys_wrapper"
 APP_VERSION=1.0
 PLATFORMS=["windows_x86_64", "x86_64-apple-darwin", "x86_64-pc-linux-gnu"]

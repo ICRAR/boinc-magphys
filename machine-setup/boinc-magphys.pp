@@ -106,7 +106,7 @@ file { "/home/ec2-user/f2wu":
     require => User[boinc],
 }
 
-file { "/opt/boinc":
+file { "/home/ec2-user/boinc":
     ensure => "directory",
     owner  => "ec2-user",
     group  => "boinc",
