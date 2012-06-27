@@ -24,7 +24,7 @@ make
 cd /home/ec2-user/boinc/tools
 
 if [[ -z "$DB_HOST" ]]; then
-yes | ./make_project -v --test_app --url_base $BASE_URL --db_user $DB_USER pogs
+yes | ./make_project -v --url_base $BASE_URL --db_user $DB_USER pogs
 else
 yes | ./make_project -v --url_base $BASE_URL --db_user $DB_USER --db_host $DB_HOST --db_name $DB_NAME -db_passwd $DB_PASSWD pogs
 fi
@@ -33,5 +33,5 @@ fi
 ## /opt/boinc/projects/pogs/html/user/create_account.php
 ## contains an error on line 51 ("$name" should be "$user_name")
 ##
-sed --in-place '51d' /home/ec2-user/boinc/projects/pogs/html/user/create_account.php
-sed --in-place '51iif (!is_valid_user_name($user_name, $reason)) {' /home/ec2-user/boinc/projects/pogs/html/user/create_account.php
+sed --in-place '51d' /home/ec2-user/projects/pogs/html/user/create_account.php
+sed --in-place '51iif (!is_valid_user_name($user_name, $reason)) {' /home/ec2-user/projects/pogs/html/user/create_account.php

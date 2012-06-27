@@ -110,7 +110,7 @@ for user in list_of_users:
     run_command('sudo mkdir /home/{0}/.ssh'.format(user))
     run_command('sudo chmod 700 /home/{0}/.ssh'.format(user))
     run_command('sudo chown {0}:{0} /home/{0}/.ssh'.format(user))
-    run_command('sudo mv {0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
+    run_command('sudo mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
     run_command('sudo chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
     run_command('sudo chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
 

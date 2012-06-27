@@ -40,4 +40,4 @@ rake start_daemons
 
 crontab -l > /tmp/crontab.txt
 echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/boinc/projects/pogs ; /home/ec2-user/boinc/projects/pogs/bin/start --cron" >> /tmp/crontab.txt
-crontab  /tmp/crontab.txt
+crontab /tmp/crontab.txt

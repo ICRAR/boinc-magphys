@@ -46,7 +46,7 @@ for file_name in file_list:
         "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
         "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
     ]
-    args_files = [file_name, "filter_spec.dat", "zlibs.dat", "infrared_dce08_z0.0000.lbr", "starformhist_cb07_z0.0000.lbr"]
+    args_files = [file_name]
 
     cmd_create_work = [
         BIN_PATH + "/create_work"
