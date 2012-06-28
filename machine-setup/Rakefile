@@ -10,6 +10,7 @@ APP_VERSION=1.0
 PLATFORMS=["windows_x86_64", "x86_64-apple-darwin", "x86_64-pc-linux-gnu"]
 PLATFORM_DIR = "#{PROJECT_ROOT}/apps/#{APP_NAME}/#{APP_VERSION}"
 BOINC_TOOLS_DIR="/home/ec2-user/boinc/tools"
+SOURCE_DIR="/home/ec2-user/boinc-magphys"
 
 desc 'setup project website'
 task :setup_website do
@@ -19,16 +20,16 @@ end
 
 desc 'copy to apps/platform directory'
 task :copy_files do
-  cp_r "server/config/templates", "#{PROJECT_ROOT}"
+  cp_r "#{SOURCE_DIR}/server/config/templates", "#{PROJECT_ROOT}"
 
   PLATFORMS.each { |platform|
      mkdir_p "#{PLATFORM_DIR}/#{platform}"
-     cp FileList["client/platforms/#{platform}/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
-     cp "client/config/job.xml", "#{PLATFORM_DIR}/#{platform}/job_#{platform}.xml", :preserve => true
-     cp FileList["client/platforms/common/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
+     cp FileList["#{SOURCE_DIR}/client/platforms/#{platform}/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
+     cp "#{SOURCE_DIR}/client/config/job.xml", "#{PLATFORM_DIR}/#{platform}/job_#{platform}.xml", :preserve => true
+     cp FileList["#{SOURCE_DIR}/client/platforms/common/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
   }
 
-  cp "server/config/project.xml", "#{PROJECT_ROOT}", :preserve => true
+  cp "#{SOURCE_DIR}/server/config/project.xml", "#{PROJECT_ROOT}", :preserve => true
 
   # Now added
   sh "#{PROJECT_ROOT}/bin/xadd"

@@ -1,15 +1,2 @@
-*o
-*bin
-*~
 .DS_Store
-fit_sed
-get_infrared_colors
-get_optic_colors
-make_zgrid
-zlibs.dat
-*.fit
-*.sed
-*.a
-*.lbr
-*.pyc
 *.iml
