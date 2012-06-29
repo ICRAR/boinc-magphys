@@ -11,4 +11,3 @@ sudo rake setup_website
 # Copy files into place
 rake update_versions
 rake start_daemons
-

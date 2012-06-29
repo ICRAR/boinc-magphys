@@ -41,8 +41,8 @@ for file_name in file_list:
         "--delay_bound",     "%(delay_bound)s" % {'delay_bound':DELAY_BOUND},
         "--target_nresults", "%(target_nresults)s" % {'target_nresults':TARGET_NRESULTS},
         "--wu_name",         file_name,
-        "--wu_template",     TEMPLATES_PATH + "/fitsed_wu",
-        "--result_template", TEMPLATES_PATH + "/fitsed_result",
+        "--wu_template",     TEMPLATES_PATH + "/fitsed_wu.xml",
+        "--result_template", TEMPLATES_PATH + "/fitsed_result.xml",
         "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
         "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
     ]

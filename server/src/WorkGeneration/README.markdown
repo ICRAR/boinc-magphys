@@ -4,7 +4,7 @@
 
 # Prerequisites
 
-* AWS running at least a small model - this uses more memory than a micro model provides 
+* AWS running at least a small model - this uses more memory than a micro model provides
 * MySQL locally installed
 * Python >=2.7.1 (tested on Python 2.7.1 (r271:86832, Jun 16 2011, 16:59:05))
 
@@ -19,14 +19,14 @@ MySQL Connector/Python can be installed with either **sudo easy_install-2.7 mysq
 ## Flow-control
 
 In general, it is assumed that **fits2pixels.py** will be called occassionally, once per FITS file, and that **pixels2obsfiles.py** and **obsfiles2wu.py** will be called for small chunks (hundreds to thousands) or squares regularly. The two latter scripts could perhaps be merged into one, eventually.
-  
+
 # Example run
 
     $ cd /path/to/this/directory
     $ mysql -u root < create_link_database.sql # DROPS THE magphys_wu SCHEMA and recreates it
-    $ python2.7 fits2pixels.py /Users/astrogeek/Documents/ICRAR/POGS_NGC628_v3.fits
-    $ python2.7 pixels2obsfiles.py 123 /Users/astrogeek/Documents/ICRAR/obsfiles
+    $ python2.7 fits2pixels.py /home/ec2-user/galaxies/POGS_NGC628_v3.fits
+    $ python2.7 pixels2obsfiles.py 123 /home/ec2-user/f2wu
     $ python2.7 obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/pogs
-	
+
 Note that *obsfiles2wu* will move the observations files into the BOINC project's download hierarchy.
 

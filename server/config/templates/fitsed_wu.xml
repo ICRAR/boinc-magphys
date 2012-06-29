@@ -1,60 +1,14 @@
-<file_info>
-  <number>0</number>
-</file_info>
-<file_info>
-  <number>1</number>
-  <url>http://s3.amazonaws.com/37531f0e3af2357dff3309ad84e06dc6/filter_spec.dat</url>
-  <md5_cksum>37531f0e3af2357dff3309ad84e06dc6</md5_cksum>
-  <nbytes>290</nbytes>
-  <sticky/>
-</file_info>
-<file_info>
-  <number>2</number>
-  <url>http://ict.icrar.org/store/ThoughtWorks/magphys/zlibs.dat</url>
-  <md5_cksum>ba2c504f782be0dba3cc00113f3ff84d</md5_cksum>
-  <nbytes>15</nbytes>
-  <sticky/>
-</file_info>
-<file_info>
-  <number>3</number>
-  <url>http://ict.icrar.org/store/ThoughtWorks/magphys/infrared_dce08_z0.0000.lbr</url>
-  <md5_cksum>b6b436460485d3b3ce44781ab38de86d</md5_cksum>
-  <nbytes>6650711</nbytes>
-  <sticky/>
-</file_info>
-<file_info>
-  <number>4</number>
-  <url>http://ict.icrar.org/store/ThoughtWorks/magphys/starformhist_cb07_z0.0000.lbr</url>
-  <md5_cksum>541b8fdceaf8b7a900d327777c94c083</md5_cksum>
-  <nbytes>18016460</nbytes>
-  <sticky/>
-</file_info>
+<input_template>
+    <file_info>
+        <number>0</number>
+    </file_info>
 
-<workunit>
-  <file_ref>
-    <file_number>0</file_number>
-    <open_name>observations.dat</open_name>
-	<copy_file/>
-  </file_ref>
-  <file_ref>
-    <file_number>1</file_number>
-    <open_name>filter_spec.dat</open_name>
-	<copy_file/>
-  </file_ref>  
-  <file_ref>
-    <file_number>2</file_number>
-    <open_name>zlibs.dat</open_name>
-	<copy_file/>
-  </file_ref>
-  <file_ref>
-    <file_number>3</file_number>
-    <open_name>infrared_dce08_z0.0000.lbr</open_name>
-	<copy_file/>
-  </file_ref>
-  <file_ref>
-    <file_number>4</file_number>
-    <open_name>starformhist_cb07_z0.0000.lbr</open_name>
-	<copy_file/>
-  </file_ref>
-  <rsc_disk_bound>5000000000</rsc_disk_bound>
-</workunit>
+    <workunit>
+      <file_ref>
+        <file_number>0</file_number>
+        <open_name>observations.dat</open_name>
+        <copy_file/>
+      </file_ref>
+      <rsc_disk_bound>5000000000</rsc_disk_bound>
+    </workunit>
+</input_template>
