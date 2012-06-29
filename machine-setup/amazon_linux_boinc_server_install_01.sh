@@ -58,6 +58,11 @@ else
 mysql --user=$DB_USER --password=$DB_PASSWD --host=$DB_HOST < /home/ec2-user/boinc-magphys/server/src/Assimilator/create_assimilator_tables.sql
 fi
 
+# Setup the pythonpath
+echo ' ' >> ~/.bash_profile
+echo 'PYTHONPATH=$PYTHONPATH:/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src/Assimilator' >> ~/.bash_profile
+echo 'export PYTHONPATH' >> ~/.bash_profile
+
 # Setup the python
 wget http://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg
 sudo sh setuptools-0.6c11-py2.7.egg
@@ -67,3 +72,10 @@ sudo easy_install-2.7 pip
 sudo rm -f /usr/bin/pip
 sudo pip-2.7 install mysql-connector sqlalchemy
 sudo pip-2.7 install Numpy pyfits
+
+wget http://aarnet.dl.sourceforge.net/project/mysql-python/mysql-python/1.2.3/MySQL-python-1.2.3.tar.gz
+tar -xvf MySQL-python-1.2.3.tar.gz
+cd MySQL-python-1.2.3
+sudo python2.7 setup.py install
+cd /home/ec2-user
+sudo rm -rf /home/ec2-user/MySQL-python-1.2.3*
