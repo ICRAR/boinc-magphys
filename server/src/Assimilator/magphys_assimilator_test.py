@@ -7,7 +7,7 @@ from xml.dom.minidom import parseString
 import magphys_assimilator
 
 class DummyWorkUnit:
-    canonical_resultid = 1
+    canonical_result = None
     xml_doc_in = ""
     
 class DummyResult:
@@ -24,12 +24,36 @@ class MagphysAssimilatorTest(magphys_assimilator.MagphysAssimilator):
     
     def test(self, uploadDir, outFile):
         str_list = []
-        str_list.append("<?xml version=\"1.0\" ?>\n")
-        str_list.append("<output>\n")
-        str_list.append("  <file_name>")
+        str_list.append("<file_info>\n")
+        str_list.append("    <name>\n")
+        str_list.append("        ");
         str_list.append(outFile)
+        str_list.append("\n")
+        str_list.append("    </name>\n")
+        str_list.append("    <generated_locally/>\n")
+        str_list.append("    <upload_when_present/>\n")
+        str_list.append("    <max_nbytes>1000000</max_nbytes>\n")
+        str_list.append("    <url>\n")
+        str_list.append("        http://ec2-23-21-160-71.compute-1.amazonaws.com/pogs_cgi/file_upload_handler\n")
+        str_list.append("    </url>\n")
+        str_list.append("</file_info>\n")
+        str_list.append("<result>\n")
+        str_list.append("    <file_ref>\n")
+        str_list.append("        <file_name>\n")
+        #str_list.append("            ");
+        str_list.append(outFile)
+        #str_list.append("\n")
         str_list.append("</file_name>\n")
-        str_list.append("</output>")
+        str_list.append("        <open_name>output.fit</open_name>\n")
+        str_list.append("        <copy_file/>\n")
+        str_list.append("    </file_ref>\n")
+        str_list.append("</result>\n")
+        #str_list.append("<?xml version=\"1.0\" ?>\n")
+        #str_list.append("<output>\n")
+        #str_list.append("  <file_name>")
+        #str_list.append(outFile)
+        #str_list.append("</file_name>\n")
+        #str_list.append("</output>")
         #print ''.join(str_list)
         
         self.config = DummyConfig()
@@ -46,6 +70,7 @@ class MagphysAssimilatorTest(magphys_assimilator.MagphysAssimilator):
         canonical_result.xml_doc_in = ''.join(str_list)
         
         wu = DummyWorkUnit()
+        wu.canonical_result = result1
         self.assimilate_handler(wu, results, canonical_result)
         
         #session = self.Session()
