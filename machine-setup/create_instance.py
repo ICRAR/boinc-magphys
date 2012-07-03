@@ -126,6 +126,9 @@ for user in list_of_users:
     run_command('sudo chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
     run_command('sudo chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
 
+    # Add them to the sudoers
+    run_command('''sudo su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
+
 channel.close()
 ssh.close()
 

@@ -35,13 +35,6 @@ crontab -l > /tmp/crontab.txt
 echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/boinc/projects/pogs ; /home/ec2-user/boinc/projects/pogs/bin/start --cron" >> /tmp/crontab.txt
 crontab /tmp/crontab.txt
 
-## ARGH
-## /opt/boinc/projects/pogs/html/user/create_account.php
-## contains an error on line 51 ("$name" should be "$user_name")
-##
-sed --in-place '51d' /home/ec2-user/projects/pogs/html/user/create_account.php
-sed --in-place '51iif (!is_valid_user_name($user_name, $reason)) {' /home/ec2-user/projects/pogs/html/user/create_account.php
-
 # Setup the database for recording WU's
 if [[ -z "$DB_HOST" ]]; then
 #Local setup

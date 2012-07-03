@@ -73,15 +73,10 @@ package { 'mysql-server':
     ensure => installed,
 }
 
-user { 'boinc':
-  ensure  => present,
-  managehome => true,
-}
-
 user { 'apache':
   ensure  => present,
-  groups => 'boinc',
-  require => User['boinc'],
+  groups => ['ec2-user']
+  require => User['ec2-user'],
 }
 
 service { 'httpd':
@@ -93,23 +88,20 @@ service { 'httpd':
 file { "/home/ec2-user/galaxies":
     ensure => "directory",
     owner  => "ec2-user",
-    group  => "boinc",
     mode   => 775,
-    require => User[boinc],
+    require => User['ec2-user'],
 }
 
 file { "/home/ec2-user/f2wu":
     ensure => "directory",
     owner  => "ec2-user",
-    group  => "boinc",
     mode   => 775,
-    require => User[boinc],
+    require => User['ec2-user'],
 }
 
 file { "/home/ec2-user/boinc":
     ensure => "directory",
     owner  => "ec2-user",
-    group  => "boinc",
     mode   => 775,
-    require => User[boinc],
+    require => User['ec2-user'],
 }
