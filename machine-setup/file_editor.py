@@ -20,7 +20,7 @@ def edit_config_xml():
         if line.rstrip() == '  </daemons>':
             sys.stdout.write('''    <daemon>
       <cmd>
-        sample_bitwise_validator -d 3 --app magphys_wrapper
+        /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu
       </cmd>
     </daemon>
     <daemon>
@@ -52,7 +52,7 @@ def edit_project_inc():
     """
     for line in fileinput.input(['/home/ec2-user/projects/pogs/html/project/project.inc'], inplace=True):
         if line.rstrip() == 'define("PROJECT", "REPLACE WITH PROJECT NAME");':
-            sys.stdout.write('define("PROJECT", "POGS – the PS1 Optical Galaxy Survey");\n')
+            sys.stdout.write('define("PROJECT", "POGS - the PS1 Optical Galaxy Survey");\n')
         elif line.rstrip() == 'define("COPYRIGHT_HOLDER", "REPLACE WITH COPYRIGHT HOLDER");':
             sys.stdout.write('define("COPYRIGHT_HOLDER", "The International Centre for Radio Astronomy Research");\n')
         else:

@@ -2,6 +2,10 @@
 
 . variables.sh
 
+# Build the validator
+cd /home/ec2-user/boinc-magphys/server/src/Validator
+make
+
 # Move to the magphys area and start configuring
 cd /home/ec2-user/boinc-magphys/machine-setup
 
