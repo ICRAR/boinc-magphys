@@ -16,7 +16,7 @@ from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 class PixelResult(Base):
     __tablename__ = 'pixel_result'
-
+    
     pxresult_id = Column(Integer, primary_key=True)
     point_name = Column(String(100))
     i_sfh = Column(Float)
@@ -43,22 +43,22 @@ class PixelResult(Base):
     dmstar = Column(Float)
     dfmu_aux = Column(Float)
     dz = Column(Float)
-
+    
 class PixelFilter(Base):
     __tablename__ = 'pixel_filter'
-
+    
     pxfilter_id = Column(Integer, primary_key=True)
     pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     filter_name = Column(String(100))
     observed_flux = Column(Float)
     observational_uncertainty = Column(Float)
     flux_bfm = Column(Float)
-
+    
     work_unit = relationship("PixelResult", backref=backref('filters', order_by=pxfilter_id))
-
+    
 class PixelParameter(Base):
     __tablename__ = 'pixel_parameter'
-
+    
     pxparameter_id = Column(Integer, primary_key=True)
     pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     parameter_name = Column(String(100))
@@ -67,35 +67,35 @@ class PixelParameter(Base):
     percentile50 = Column(Float)
     percentile84 = Column(Float)
     percentile97_5 = Column(Float)
-
+    
     work_unit = relationship("PixelResult", backref=backref('parameters', order_by=pxparameter_id))
 
 class PixelHistogram(Base):
     __tablename__ = 'pixel_histogram'
-
+    
     pxhistogram_id = Column(Integer, primary_key=True)
     pxparameter_id = Column(Integer, ForeignKey('pixel_parameter.pxparameter_id'))
     x_axis = Column(Float)
     hist_value = Column(Float)
-
+    
     parameter = relationship("PixelParameter", backref=backref('histograms', order_by=pxhistogram_id))
-
+    
 class PixelUser(Base):
     __tablename__ = 'pixel_user'
-
+    
     pxuser_id = Column(Integer, primary_key=True)
     pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     userid = Column(Integer)
     create_time = Column(TIMESTAMP)
-
+    
     work_unit = relationship("PixelResult", backref=backref('users', order_by=pxuser_id))
-
+            
 class MagphysAssimilator(assimilator.Assimilator):
-
+    
     def __init__(self):
         assimilator.Assimilator.__init__(self)
         #super(MagphysAssimilator, self).__init__(self)
-
+        
         login = "mysql://root:@localhost/magphys_as"
         try:
              f = open(os.path.expanduser("~/Magphys.Profile") , "r")
@@ -105,19 +105,22 @@ class MagphysAssimilator(assimilator.Assimilator):
              f.close()
         except IOError as e:
             pass
-
+            
         engine = create_engine(login)
         self.Session = sessionmaker(bind=engine)
-
+    
     def get_output_file_infos(self, result, list):
         dom = parseString(result.xml_doc_in)
         for node in dom.getElementsByTagName('file_name'):
             list.append(node.firstChild.nodeValue)
-
+        
     def getResult(self, session, pointName):
-        pxresult = session.query(PixelResult).filter("point_name=:name").params(name=pointName).first()
-        doAdd = False
-        if (pxresult == None):
+        if self.noinsert:
+            pxresult = None
+        else:
+            pxresult = session.query(PixelResult).filter("point_name=:name").params(name=pointName).first()
+        #doAdd = False
+        if pxresult == None:
             pxresult = PixelResult()
         else:
             for filter in pxresult.filters:
@@ -132,17 +135,17 @@ class MagphysAssimilator(assimilator.Assimilator):
         pxresult.filters = []
         pxresult.parameters = []
         return pxresult
-
+    
     def saveResult(self, session, pxresult, results):
         for result in results:
             usr = PixelUser()
             usr.userid = result.userid
-            #usr.create_time =
+            #usr.create_time = 
             pxresult.users.append(usr)
-
-        if pxresult.pxresult_id == None:
+            
+        if pxresult.pxresult_id == None and not self.noinsert:
             session.add(pxresult)
-
+    
     def processResult(self, session, outFile, results):
         """
         Read the output file, add the values to the PixelResult row, and insert the filter,
@@ -158,7 +161,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         skynetNext = False
         for line in f:
             lineNo = lineNo + 1
-
+            
             if line.startswith(" ####### "):
                 if pxresult:
                     self.saveResult(session, pxresult, results)
@@ -265,11 +268,11 @@ class MagphysAssimilator(assimilator.Assimilator):
                         pxresult.dfmu_aux = float(values[3])
                         pxresult.dz = float(values[4])
                         skynetNext = False
-
+                    
         f.close()
         if pxresult:
             self.saveResult(session, pxresult, results)
-
+        
     def assimilate_handler(self, wu, results, canonical_result):
         """
         Process the Results.
@@ -279,21 +282,24 @@ class MagphysAssimilator(assimilator.Assimilator):
             #file_list = []
             outFile = self.get_file_path(canonical_result)
             #self.get_output_file_infos(canonical_result, file_list)
-
+                    
             if (outFile):
                 print "Reading File",
                 print outFile
                 session = self.Session()
                 self.processResult(session, outFile, results)
-                session.commit()
+                if self.noinsert:
+                    session.rollback()
+                else:
+                    session.commit()
             else:
                 self.logCritical("The output file was not found\n")
         else:
             report_errors(wu)
             return -1
-
+            
         return 0;
-
+    
 if __name__ == '__main__':
     asm = MagphysAssimilator()
     asm.run()
