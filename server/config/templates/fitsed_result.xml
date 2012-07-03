@@ -12,9 +12,7 @@
     </file_info>
     <result>
         <file_ref>
-            <file_name>
-                <OUTFILE_0/>
-            </file_name>
+            <file_name><OUTFILE_0/></file_name>
             <open_name>output.fit</open_name>
             <copy_file/>
         </file_ref>
