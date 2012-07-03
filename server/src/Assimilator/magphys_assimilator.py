@@ -138,10 +138,11 @@ class MagphysAssimilator(assimilator.Assimilator):
     
     def saveResult(self, session, pxresult, results):
         for result in results:
-            usr = PixelUser()
-            usr.userid = result.userid
-            #usr.create_time = 
-            pxresult.users.append(usr)
+            if result.user and result.validate_status == boinc_db.VALIDATE_STATE_VALID:
+                usr = PixelUser()
+                usr.userid = result.user.id
+                #usr.create_time = 
+                pxresult.users.append(usr)
             
         if pxresult.pxresult_id == None and not self.noinsert:
             session.add(pxresult)
