@@ -278,7 +278,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         Process the Results.
         """
 
-        if (wu.canonical_resultid):
+        if wu.canonical_result:
             #file_list = []
             outFile = self.get_file_path(canonical_result)
             #self.get_output_file_infos(canonical_result, file_list)
@@ -295,7 +295,7 @@ class MagphysAssimilator(assimilator.Assimilator):
             else:
                 self.logCritical("The output file was not found\n")
         else:
-            report_errors(wu)
+            self.report_errors(wu)
             return -1
             
         return 0;
