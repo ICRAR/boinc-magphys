@@ -46,6 +46,7 @@ if not conn.associate_address(instance_id=instance.id, public_ip=PUBLIC_IP):
     print 'Could not associate the IP {0} to the instance {1}'.format(PUBLIC_IP, instance.id)
     sys.exit()
 
+# Give AWS time to switch everything over
 time.sleep(10)
 
 # Load the new instance data as the dns_name will have changed

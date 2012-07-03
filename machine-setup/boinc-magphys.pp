@@ -75,7 +75,7 @@ package { 'mysql-server':
 
 user { 'apache':
   ensure  => present,
-  groups => ['ec2-user']
+  groups => ['ec2-user'],
   require => User['ec2-user'],
 }
 
