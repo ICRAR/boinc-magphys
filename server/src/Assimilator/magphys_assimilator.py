@@ -299,7 +299,6 @@ class MagphysAssimilator(assimilator.Assimilator):
                 self.logCritical("The output file was not found\n")
         else:
             self.report_errors(wu)
-            return -1
             
         return 0;
     
