@@ -41,11 +41,16 @@ while not instance.update() == 'running':
     time.sleep(5)
 print '.'
 
+print 'Current DNS name is {0}. About to associate the Elastic IP'.format(instance.dns_name)
 if not conn.associate_address(instance_id=instance.id, public_ip=PUBLIC_IP):
     print 'Could not associate the IP {0} to the instance {1}'.format(PUBLIC_IP, instance.id)
+    sys.exit()
+
+time.sleep(10)
 
 # Load the new instance data as the dns_name will have changed
 instance.update(True)
+print 'Current DNS name is {0} after associating the Elastic IP'.format(instance.dns_name)
 
 # The instance is started, but not useable (yet)
 print 'Started the instance: {0}'.format(instance.dns_name)
