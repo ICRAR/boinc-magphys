@@ -19,6 +19,7 @@ class PixelResult(Base):
     
     pxresult_id = Column(Integer, primary_key=True)
     point_name = Column(String(100))
+    workunit_id = Column(Integer)
     i_sfh = Column(Float)
     i_ir = Column(Float)
     chi2 = Column(Float)
@@ -147,7 +148,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         if pxresult.pxresult_id == None and not self.noinsert:
             session.add(pxresult)
     
-    def processResult(self, session, outFile, results):
+    def processResult(self, session, outFile, wu, results):
         """
         Read the output file, add the values to the PixelResult row, and insert the filter,
         parameter and histogram rows.
@@ -170,6 +171,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 pointName = values[1]
                 print pointName
                 pxresult = self.getResult(session, pointName)
+                pxresult.workunit_id = wu.id
                 lineNo = 0
                 percentilesNext = False;
                 histogramNext = False
@@ -288,7 +290,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 print "Reading File",
                 print outFile
                 session = self.Session()
-                self.processResult(session, outFile, results)
+                self.processResult(session, outFile, wu, results)
                 if self.noinsert:
                     session.rollback()
                 else:

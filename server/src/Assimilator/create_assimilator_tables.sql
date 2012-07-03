@@ -5,6 +5,7 @@ USE magphys_as;
 CREATE TABLE pixel_result (
   pxresult_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   point_name  VARCHAR(100) NOT NULL,
+  workunit_id INTEGER,
   i_sfh       DOUBLE NOT NULL,
   i_ir        DOUBLE NOT NULL,
   chi2        DOUBLE NOT NULL,

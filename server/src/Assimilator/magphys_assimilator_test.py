@@ -7,11 +7,12 @@ from xml.dom.minidom import parseString
 import magphys_assimilator
 
 class DummyWorkUnit:
+    id = 1
     canonical_result = None
     xml_doc_in = ""
     
 class DummyResult:
-    userid = 0
+    user = None
     
 class DummyConfig:
     upload_dir = ""
