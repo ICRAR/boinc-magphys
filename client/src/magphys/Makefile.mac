@@ -1,13 +1,6 @@
 RM = /bin/rm -f
 UTILIB = ./public_utilities.a
-#FC =  g77 -ggdb -O0 -ffixed-line-length-132 -fbounds-check
-#FC = gfortran -std=legacy -ffixed-line-length-none
-# OS X
-FC = /usr/local/bin/gfortran -std=legacy -ffixed-line-length-none -static-libgfortran 
-
-# Linux
-#FC = gfortran -std=legacy -ffixed-line-length-none -static-libgfortran 
-
+FC = /usr/local/bin/gfortran -std=legacy -ffixed-line-length-none -static-libgfortran
 
 .f.o:
 	$(FC) -c $<
@@ -28,10 +21,10 @@ read_optilib_bin: read_optilib_bin.f $(UTILIB)
 	$(FC) read_optilib_bin.f $(UTILIB) -o read_optilib_bin
 
 read_irlib_bin: read_irlib_bin.f $(UTILIB)
-	$(FC) read_irlib_bin.f $(UTILIB) -o read_irlib_bin		
+	$(FC) read_irlib_bin.f $(UTILIB) -o read_irlib_bin
 
-fit_sed_skynet: fit_sed_skynet.f $(UTILIB)
-	$(FC) fit_sed_skynet.f $(UTILIB) -o fit_sed_skynet
+fit_sed_x86_64-apple-darwin: fit_sed_skynet.f $(UTILIB)
+	$(FC) fit_sed_skynet.f $(UTILIB) -o fit_sed_x86_64-apple-darwin
 
 clean:
 	$(RM) public_utilities.a $(OBJFILES)
