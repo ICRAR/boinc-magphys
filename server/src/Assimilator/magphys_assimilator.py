@@ -139,7 +139,7 @@ class MagphysAssimilator(assimilator.Assimilator):
     
     def saveResult(self, session, pxresult, results):
         for result in results:
-            if result.user and result.validate_status == boinc_db.VALIDATE_STATE_VALID:
+            if result.user and result.validate_state == boinc_db.VALIDATE_STATE_VALID:
                 usr = PixelUser()
                 usr.userid = result.user.id
                 #usr.create_time = 
