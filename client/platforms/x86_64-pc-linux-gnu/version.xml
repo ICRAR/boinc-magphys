@@ -1,6 +1,6 @@
 <version>
     <file>
-        <physical_name>wrapper_25353_x86_64-pc-linux-gnu</physical_name>
+        <physical_name>wrapper_x86_64-pc-linux-gnu</physical_name>
         <main_program/>
         <copy_file/>
         <logical_name>wrapper</logical_name>
