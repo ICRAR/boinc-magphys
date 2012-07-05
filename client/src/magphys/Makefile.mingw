@@ -1,13 +1,6 @@
 RM = /bin/rm -f
 UTILIB = ./public_utilities.a
-#FC =  g77 -ggdb -O0 -ffixed-line-length-132 -fbounds-check
-#FC = gfortran -std=legacy -ffixed-line-length-none
-# OS X
-FC = /usr/local/bin/gfortran -std=legacy -ffixed-line-length-none -static-libgfortran 
-
-# Linux
-#FC = gfortran -std=legacy -ffixed-line-length-none -static-libgfortran 
-
+FC =  gfortran -ggdb -O0 -ffixed-line-length-none
 
 .f.o:
 	$(FC) -c $<
@@ -22,16 +15,19 @@ get_infrared_colors: get_infrared_colors.f filter.dec $(UTILIB)
 	$(FC) get_infrared_colors.f $(UTILIB) -o get_infrared_colors
 
 fit_sed: fit_sed.f $(UTILIB)
-	$(FC) fit_sed.f $(UTILIB) -o fit_sed
+	$(FC) -o fit_sed -static $(UTILIB) fit_sed.f
+
+fit_sed_windows_x86_64: fit_sed_skynet.f
+	$(FC) -o fit_sed_windows_x86_64 -static fit_sed_skynet.f
+
+fit_sed_windows_intelx86: fit_sed_skynet.f
+	$(FC) -o fit_sed_windows_intelx86 -static fit_sed_skynet.f
 
 read_optilib_bin: read_optilib_bin.f $(UTILIB)
 	$(FC) read_optilib_bin.f $(UTILIB) -o read_optilib_bin
 
 read_irlib_bin: read_irlib_bin.f $(UTILIB)
-	$(FC) read_irlib_bin.f $(UTILIB) -o read_irlib_bin		
-
-fit_sed_skynet: fit_sed_skynet.f $(UTILIB)
-	$(FC) fit_sed_skynet.f $(UTILIB) -o fit_sed_skynet
+	$(FC) read_irlib_bin.f $(UTILIB) -o read_irlib_bin
 
 clean:
 	$(RM) public_utilities.a $(OBJFILES)

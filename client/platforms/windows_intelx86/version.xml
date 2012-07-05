@@ -1,21 +1,22 @@
 <version>
     <file>
-        <physical_name>wrapper_x86_64-pc-linux-gnu</physical_name>
+        <physical_name>wrapper_windows_intelx86.exe</physical_name>
         <main_program/>
         <copy_file/>
         <logical_name>wrapper</logical_name>
         <gzip/>
     </file>
     <file>
-        <physical_name>fit_sed_x86_64-pc-linux-gnu</physical_name>
+        <physical_name>fit_sed_windows_intelx86.exe</physical_name>
         <copy_file/>
         <logical_name>fit_sed</logical_name>
         <gzip/>
     </file>
     <file>
-        <physical_name>job_x86_64-pc-linux-gnu.xml</physical_name>
+        <physical_name>job_windows_intelx86.xml</physical_name>
         <copy_file/>
         <logical_name>job.xml</logical_name>
+        <gzip/>
     </file>
     <file>
         <physical_name>filters.dat</physical_name>

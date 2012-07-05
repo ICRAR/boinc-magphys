@@ -41,11 +41,17 @@ while not instance.update() == 'running':
     time.sleep(5)
 print '.'
 
+print 'Current DNS name is {0}. About to associate the Elastic IP'.format(instance.dns_name)
 if not conn.associate_address(instance_id=instance.id, public_ip=PUBLIC_IP):
     print 'Could not associate the IP {0} to the instance {1}'.format(PUBLIC_IP, instance.id)
+    sys.exit()
+
+# Give AWS time to switch everything over
+time.sleep(10)
 
 # Load the new instance data as the dns_name will have changed
 instance.update(True)
+print 'Current DNS name is {0} after associating the Elastic IP'.format(instance.dns_name)
 
 # The instance is started, but not useable (yet)
 print 'Started the instance: {0}'.format(instance.dns_name)
@@ -125,6 +131,9 @@ for user in list_of_users:
     run_command('sudo mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
     run_command('sudo chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
     run_command('sudo chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
+
+    # Add them to the sudoers
+    run_command('''sudo su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
 channel.close()
 ssh.close()

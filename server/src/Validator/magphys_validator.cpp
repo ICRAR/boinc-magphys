@@ -1,4 +1,5 @@
 // Validator for magphys FIT files
+#include <stdlib.h>
 #include <math.h>
 
 
@@ -13,7 +14,11 @@
 
 using namespace std;
 
-#include "wrapper.h"
+#include "error_numbers.h"
+#include "boinc_db.h"
+#include "sched_util.h"
+#include "validate_util.h"
+#include "sched_msgs.h"
 
 class fit_number {
 private:
@@ -183,7 +188,7 @@ bool fit_record::operator==(fit_record &x)
 	this->parse(x.ftrec_num.size());
     if (x.ftrec_type == DATA)
 	x.parse(this->ftrec_num.size());
-    
+
     // Do fuzzy numeric compare
     return (this->ftrec_num == x.ftrec_num);
 }
@@ -218,7 +223,7 @@ bool operator==(fit_record &x, fit_record &y)
 	x.parse(y.ftrec_num.size());
     if (y.ftrec_type == fit_record::DATA)
 	y.parse(x.ftrec_num.size());
-    
+
     // Do fuzzy numeric compare
     return (x.ftrec_num == y.ftrec_num);
 }
@@ -236,6 +241,8 @@ bool operator==(fit_record &x, fit_record &y)
 //   marked as invalid.
 int init_result(RESULT& result, void*& data)
 {
+    log_messages.printf(MSG_DEBUG, "init_result\n");
+    log_messages.printf
     string fname;
     int retval;
 
@@ -264,8 +271,9 @@ int init_result(RESULT& result, void*& data)
 // compare_results() takes two results and their associated memory structures.
 // It returns (via the 'match' argument) true if the two results are
 // equivalent (within the tolerances of the application).
-int compare_results(RESULT& r1, void* data1, RESULT& r2, void* data2, bool& match)
+int compare_results(RESULT& r1, void* data1, RESULT const& r2, void* data2, bool& match)
 {
+    log_messages.printf(MSG_DEBUG, "compare_result\n");
     fit_file *a = (fit_file *)data1;
     fit_file *b = (fit_file *)data2;
 
@@ -273,10 +281,10 @@ int compare_results(RESULT& r1, void* data1, RESULT& r2, void* data2, bool& matc
     return (0);
 }
 
-
 // Destroy the structure at date
-int cleanup_result(RESULT& r, void* data)
+int cleanup_result(RESULT const& r, void* data)
 {
+    log_messages.printf(MSG_DEBUG, "cleanup_result\n");
     delete (fit_file *)data;
     return (0);
 }

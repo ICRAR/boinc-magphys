@@ -1,6 +1,6 @@
 <version>
     <file>
-        <physical_name>wrapper_25353_windows_x86_64.exe</physical_name>
+        <physical_name>wrapper_windows_x86_64.exe</physical_name>
         <main_program/>
         <copy_file/>
         <logical_name>wrapper</logical_name>

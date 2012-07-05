@@ -2,6 +2,10 @@
 
 . variables.sh
 
+# Build the validator
+cd /home/ec2-user/boinc-magphys/server/src/Validator
+make
+
 # Move to the magphys area and start configuring
 cd /home/ec2-user/boinc-magphys/machine-setup
 
@@ -12,19 +16,12 @@ sudo rake setup_website
 chmod 711 /home/ec2-user
 chmod -R oug+r /home/ec2-user/projects/pogs
 chmod -R oug+x /home/ec2-user/projects/pogs/html
-chmod oug+w /home/ec2-user/projects/pogs/log_*
+chmod ug+w /home/ec2-user/projects/pogs/log_*
+chmod ug+wx /home/ec2-user/projects/pogs/upload
 
-# Setup the pythonpath
-echo ' ' >> ~/.bash_profile
-echo 'PYTHONPATH=$PYTHONPATH:/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src/Assimilator' >> ~/.bash_profile
-echo 'export PYTHONPATH' >> ~/.bash_profile
-
-wget http://aarnet.dl.sourceforge.net/project/mysql-python/mysql-python/1.2.3/MySQL-python-1.2.3.tar.gz
-tar -xvf MySQL-python-1.2.3.tar.gz
-cd MySQL-python-1.2.3
-sudo python2.7 setup.py install
-cd /home/ec2-user
-sudo rm -rf /home/ec2-user/MySQL-python-1.2.3*
+# Edit the files
+cd /home/ec2-user/boinc-magphys/machine-setup
+python2.7 file_editor.py
 
 # Copy files into place
 cd /home/ec2-user/boinc-magphys/machine-setup

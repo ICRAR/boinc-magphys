@@ -1,6 +1,6 @@
 RM = /bin/rm -f
 UTILIB = ./public_utilities.a
-FC =  g77 -ggdb -O0 -ffixed-line-length-none
+FC = /usr/local/bin/gfortran -std=legacy -ffixed-line-length-none -static-libgfortran
 
 .f.o:
 	$(FC) -c $<
@@ -15,19 +15,16 @@ get_infrared_colors: get_infrared_colors.f filter.dec $(UTILIB)
 	$(FC) get_infrared_colors.f $(UTILIB) -o get_infrared_colors
 
 fit_sed: fit_sed.f $(UTILIB)
-	$(FC) -o fit_sed -static $(UTILIB) fit_sed.f
-
-fit_sed_windows_x86_64: fit_sed_skynet.f $(UTILIB)
-	$(FC) -o fit_sed_windows_x86_64 -static $(UTILIB) fit_sed_skynet.f
-
-fit_sed_windows_intelx86: fit_sed_skynet.f $(UTILIB)
-	$(FC) -o fit_sed_windows_intelx86 -static $(UTILIB) fit_sed_skynet.f
+	$(FC) fit_sed.f $(UTILIB) -o fit_sed
 
 read_optilib_bin: read_optilib_bin.f $(UTILIB)
 	$(FC) read_optilib_bin.f $(UTILIB) -o read_optilib_bin
 
 read_irlib_bin: read_irlib_bin.f $(UTILIB)
 	$(FC) read_irlib_bin.f $(UTILIB) -o read_irlib_bin
+
+fit_sed_x86_64-apple-darwin: fit_sed_skynet.f $(UTILIB)
+	$(FC) fit_sed_skynet.f $(UTILIB) -o fit_sed_x86_64-apple-darwin
 
 clean:
 	$(RM) public_utilities.a $(OBJFILES)
