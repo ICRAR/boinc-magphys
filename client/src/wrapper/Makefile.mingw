@@ -27,4 +27,4 @@ distclean:
 	/bin/rm -f $(PROGS) *.o libstdc++.a
 
 wrapper: wrapper.o libstdc++.a $(BOINC_LIB_DIR)/libboinc.a $(BOINC_LIB_DIR)/libboinc_api.a
-	g++ $(CXXFLAGS) -o wrapper wrapper.o libstdc++.a -lboinc_api -lboinc --static-libgcc
+	g++ $(CXXFLAGS) -o wrapper wrapper.o libstdc++.a -lboinc_api -lboinc --static
