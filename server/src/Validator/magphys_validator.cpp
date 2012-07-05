@@ -14,7 +14,11 @@
 
 using namespace std;
 
-#include "wrapper.h"
+#include "error_numbers.h"
+#include "boinc_db.h"
+#include "sched_util.h"
+#include "validate_util.h"
+#include "sched_msgs.h"
 
 class fit_number {
 private:
@@ -237,6 +241,8 @@ bool operator==(fit_record &x, fit_record &y)
 //   marked as invalid.
 int init_result(RESULT& result, void*& data)
 {
+    log_messages.printf(MSG_DEBUG, "init_result\n");
+    log_messages.printf
     string fname;
     int retval;
 
@@ -267,6 +273,7 @@ int init_result(RESULT& result, void*& data)
 // equivalent (within the tolerances of the application).
 int compare_results(RESULT& r1, void* data1, RESULT const& r2, void* data2, bool& match)
 {
+    log_messages.printf(MSG_DEBUG, "compare_result\n");
     fit_file *a = (fit_file *)data1;
     fit_file *b = (fit_file *)data2;
 
@@ -274,10 +281,10 @@ int compare_results(RESULT& r1, void* data1, RESULT const& r2, void* data2, bool
     return (0);
 }
 
-
 // Destroy the structure at date
 int cleanup_result(RESULT const& r, void* data)
 {
+    log_messages.printf(MSG_DEBUG, "cleanup_result\n");
     delete (fit_file *)data;
     return (0);
 }
