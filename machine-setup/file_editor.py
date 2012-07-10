@@ -25,7 +25,7 @@ def edit_config_xml():
     </daemon>
     <daemon>
       <cmd>
-        python2.7 /home/ec2-user/boinc-magphys/server/src/Assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper
+        python2.7 /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper
       </cmd>
     </daemon>
   </daemons>
@@ -52,9 +52,11 @@ def edit_project_inc():
     """
     for line in fileinput.input(['/home/ec2-user/projects/pogs/html/project/project.inc'], inplace=True):
         if line.rstrip() == 'define("PROJECT", "REPLACE WITH PROJECT NAME");':
-            sys.stdout.write('define("PROJECT", "POGS - the PS1 Optical Galaxy Survey");\n')
+            sys.stdout.write('define("PROJECT", "theSkyNet POGS - the PS1 Optical Galaxy Survey");\n')
         elif line.rstrip() == 'define("COPYRIGHT_HOLDER", "REPLACE WITH COPYRIGHT HOLDER");':
             sys.stdout.write('define("COPYRIGHT_HOLDER", "The International Centre for Radio Astronomy Research");\n')
+        elif line.rstrip() == 'define("STYLESHEET", "white.css");':
+            sys.stdout.write('define("STYLESHEET", "black.css");\n')
         else:
             sys.stdout.write(line)
 
@@ -84,8 +86,19 @@ We will measure physical parameters (such as stellar mass surface density, star 
         else:
             sys.stdout.write(line)
 
+def edit_create_forums_php():
+    """
+    Edit /home/ec2-user/projects/pogs/html/ops/create_forums.php
+    """
+    for line in fileinput.input(['/home/ec2-user/projects/pogs/html/ops/create_forums.php'], inplace=True):
+        if line.rstrip() ==  'die("edit script to use your forum names, and remove the die()\n");':
+            pass    # Do nothing
+        else:
+            sys.stdout.write(line)
+
 # Make the changes to the files
 edit_config_xml()
 edit_create_account__php()
 edit_project_inc()
 edit_user_php()
+edit_create_forums_php()

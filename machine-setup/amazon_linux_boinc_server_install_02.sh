@@ -23,6 +23,10 @@ chmod ug+wx /home/ec2-user/projects/pogs/upload
 cd /home/ec2-user/boinc-magphys/machine-setup
 python2.7 file_editor.py
 
+# Setup the forums
+cd /home/ec2-user/projects/pogs/html/ops
+php create_forums.php
+
 # Copy files into place
 cd /home/ec2-user/boinc-magphys/machine-setup
 rake update_versions

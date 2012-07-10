@@ -13,6 +13,11 @@ except ImportError, e:
 import os
 import glob
 import time
+import getpass
+
+skip_elastic_ip = False
+if len(sys.argv) == 2 and sys.argv[1] == 'skip_elastic_ip':
+    skip_elastic_ip = True
 
 IMAGE           = 'ami-6078da09' # Basic 64-bit Amazon Linux AMI
 KEY_NAME        = 'icrar-boinc'
@@ -22,15 +27,19 @@ KEY_FILE        = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 PUBLIC_KEYS     = os.path.expanduser('~/Documents/Keys')
 PUBLIC_IP       = '23.21.160.71'
 
+ops_username = raw_input('Ops area username: ')
+ops_password = getpass.getpass('Password: ')
+
 # Create the EC2 instance
 print 'Starting an EC2 instance of type {0} with image {1}'.format(INSTANCE_TYPE, IMAGE)
 
 # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
 conn = boto.connect_ec2()
 
-# Disassociate the public IP
-if not conn.disassociate_address(public_ip=PUBLIC_IP):
-    print 'Could not disassociate the IP {0}'.format(PUBLIC_IP)
+if not skip_elastic_ip:
+    # Disassociate the public IP
+    if not conn.disassociate_address(public_ip=PUBLIC_IP):
+        print 'Could not disassociate the IP {0}'.format(PUBLIC_IP)
 
 reservation = conn.run_instances(IMAGE, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
 instance = reservation.instances[0]
@@ -41,15 +50,16 @@ while not instance.update() == 'running':
     time.sleep(5)
 print '.'
 
-print 'Current DNS name is {0}. About to associate the Elastic IP'.format(instance.dns_name)
-if not conn.associate_address(instance_id=instance.id, public_ip=PUBLIC_IP):
-    print 'Could not associate the IP {0} to the instance {1}'.format(PUBLIC_IP, instance.id)
-    sys.exit()
+if not skip_elastic_ip:
+    print 'Current DNS name is {0}. About to associate the Elastic IP'.format(instance.dns_name)
+    if not conn.associate_address(instance_id=instance.id, public_ip=PUBLIC_IP):
+        print 'Could not associate the IP {0} to the instance {1}'.format(PUBLIC_IP, instance.id)
+        sys.exit()
 
 # Give AWS time to switch everything over
 time.sleep(10)
 
-# Load the new instance data as the dns_name will have changed
+# Load the new instance data as the dns_name may have changed
 instance.update(True)
 print 'Current DNS name is {0} after associating the Elastic IP'.format(instance.dns_name)
 
@@ -134,6 +144,10 @@ for user in list_of_users:
 
     # Add them to the sudoers
     run_command('''sudo su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
+
+# Setup the ops area password
+run_command('cd /home/ec2-user/projects/pogs/html/ops')
+run_command('htpasswd -c .htpasswd {0} {1}'.format(ops_username, ops_password))
 
 channel.close()
 ssh.close()

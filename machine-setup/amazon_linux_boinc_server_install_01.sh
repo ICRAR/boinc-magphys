@@ -13,8 +13,8 @@ sudo chown -R mysql:mysql /var/lib/mysql/*
 echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet apply
 fi
 
-# Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-05-11
-svn co http://boinc.berkeley.edu/svn/tags/boinc_core_release_7_0_25 /home/ec2-user/boinc
+# Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-07-10
+svn co http://boinc.berkeley.edu/svn/trunk/boinc /home/ec2-user/boinc
 
 cd /home/ec2-user/boinc
 ./_autosetup
@@ -32,23 +32,15 @@ fi
 
 # Setup the crontab job to keep things ticking
 crontab -l > /tmp/crontab.txt
-echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/boinc/projects/pogs ; /home/ec2-user/boinc/projects/pogs/bin/start --cron" >> /tmp/crontab.txt
+echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/pogs ; /home/ec2-user/projects/pogs/bin/start --cron" >> /tmp/crontab.txt
 crontab /tmp/crontab.txt
 
 # Setup the database for recording WU's
 if [[ -z "$DB_HOST" ]]; then
 #Local setup
-mysql --user=$DB_USER < /home/ec2-user/boinc-magphys/server/src/WorkGeneration/create_link_database.sql
+mysql --user=$DB_USER < /home/ec2-user/boinc-magphys/server/src/Database/create_database.sql
 else
-mysql --user=$DB_USER --password=$DB_PASSWD --host=$DB_HOST < /home/ec2-user/boinc-magphys/server/src/WorkGeneration/create_link_database.sql
-fi
-
-# Setup the database for Assimilating data
-if [[ -z "$DB_HOST" ]]; then
-#Local setup
-mysql --user=$DB_USER < /home/ec2-user/boinc-magphys/server/src/Assimilator/create_assimilator_tables.sql
-else
-mysql --user=$DB_USER --password=$DB_PASSWD --host=$DB_HOST < /home/ec2-user/boinc-magphys/server/src/Assimilator/create_assimilator_tables.sql
+mysql --user=$DB_USER --password=$DB_PASSWD --host=$DB_HOST < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql
 fi
 
 # Setup the pythonpath

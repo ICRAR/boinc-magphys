@@ -3,13 +3,14 @@ import os
 import subprocess
 
 if(len(sys.argv) != 3):
-    print "usage:   %(me)s observations_directory boinc_project_root" % {'me':sys.argv[0]}
-    print "example: %(me)s /home/ec2-user/f2wu /home/ec2-user/projects/pogs" % {'me':sys.argv[0]}
+    print "usage:   %(me)s files_to_process observations_directory boinc_project_root" % {'me':sys.argv[0]}
+    print "example: %(me)s 100 /home/ec2-user/f2wu /home/ec2-user/projects/pogs" % {'me':sys.argv[0]}
     sys.exit(-10)
 
 APP_NAME = "magphys_wrapper"
-FILE_DIR = sys.argv[1]
-BOINC_PROJECT_ROOT = sys.argv[2]
+FILES_TO_PROCESS = sys.argv[1]
+FILE_DIR = sys.argv[2]
+BOINC_PROJECT_ROOT = sys.argv[3]
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates"                     # In true BOINC style, this is magically relative to the project root
 
@@ -65,3 +66,6 @@ for file_name in file_list:
         print "Something went wrong; sorry"
 
     files_processed += 1
+
+    if files_processed >= FILES_TO_PROCESS:
+        break

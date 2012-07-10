@@ -10,8 +10,8 @@ c     --------------------------------------------------------------------------
 c     Compares model fluxes with observed fluxes from the ultraviolet to the
 c     far-infrared by computing the chi^2 goodness-of-fit of each model.
 c     The probability of each model is exp(-1/2 chi^2)
-c     The code also builds the likelihood distribution of each parameter 
-c     
+c     The code also builds the likelihood distribution of each parameter
+c
 c     INPUTS:
 c     - filter file - define USER_FILTERS in .galsbit_tcshrc
 c     - file with redshifts & observed fluxes of the
@@ -21,7 +21,7 @@ c     were computed "zlibs.dat"
 c     - .lbr files generated with get_optic_colors.f
 c     & get_infrared_colors.f
 c     - number of the galaxy to fit: i_gal
-c     
+c
 c     OUTPUTS: - "name".fit file containing:
 c     -- observed fluxes
 c     -- mininum chi2
@@ -38,9 +38,9 @@ c     Author : Kevin Vinsen
 c	  Date : 29th May 2012
 c     ---------------------------------------------------------------------------
 c     Added minor changes to allow the code to run from the command line and not
-c     to perform the normalisation against the models. Instead it writes the 
+c     to perform the normalisation against the models. Instead it writes the
 c     parameters required to normalise it later.
-c     The skyNet project is a citizen science project and we cannot expect the 
+c     The skyNet project is a citizen science project and we cannot expect the
 c     general public to download the 3 large .bin files
 c     ===========================================================================
 
@@ -137,10 +137,10 @@ c     histograms
       real*8 i_tbg2(nmod)
 c     cosmological parameters
       real*8 h,omega,omega_lambda,clambda,q
-      real*8 cosmol_c,dl  
+      real*8 cosmol_c,dl
 c     histogram parameters: min,max,bin width
       data fmu_min/0./,fmu_max/1.0005/,dfmu/0.001/
-      data fmuism_min/0./,fmuism_max/1.0005/,dfmu_ism/0.001/       
+      data fmuism_min/0./,fmuism_max/1.0005/,dfmu_ism/0.001/
       data mu_min/0./,mu_max/1.0005/,dmu/0.001/
       data tv_min/0./,tv_max/6.0025/,dtv/0.005/
       data ssfr_min/-13./,ssfr_max/-5.9975/,dssfr/0.05/
@@ -161,7 +161,7 @@ c     save parameters
       save tbg1,tbg2,xi1,xi2,xi3
       save flux_obs,sigma,dist
       save mdust
-       
+
 c     ---------------------------------------------------------------------------
 c     Are we in skynet mode
 c     ---------------------------------------------------------------------------
@@ -170,10 +170,10 @@ c     --------------------------------------------------------------------------
       logical skynet
       numargs = iargc ( )
       if (numargs .eq. 0) then
-c     Do nothing as this is the normal model    
-          skynet = .FALSE.  
+c     Do nothing as this is the normal model
+          skynet = .FALSE.
       else if (numargs .eq. 3) then
-          skynet = .TRUE.  
+          skynet = .TRUE.
           call getarg ( 1, arg )
           read( arg, *) i_gal
           call getarg( 2, filters)
@@ -182,7 +182,7 @@ c     Do nothing as this is the normal model
         write(*,*) "Requires arguments: pixel to fit, filters file, observations file"
 		call EXIT(-1)
 	  endif
-	  
+
 c     ---------------------------------------------------------------------------
 
 c     ---------------------------------------------------------------------------
@@ -206,7 +206,7 @@ c     READ FILTER FILE: "filters.dat"
       enddo
       nfilt=ifilt-1
       close(22)
-      
+
 c     READ FILE WITH OBSERVATIONS:
       if (skynet .eqv. .FALSE.) then
           call getenv('USER_OBS',obs)
@@ -236,8 +236,8 @@ c     READ FILE WITH REDSHIFTS OF THE MODEL LIBRARIES
          read(24,*,iostat=io) i,zlib(nz)
          enddo
          nz=nz-1
-      close(24) 
-   
+      close(24)
+
 c     CHOOSE GALAXY TO FIT (enter corresponding i)
       if (skynet .eqv. .FALSE.) then
           write (6,'(x,a,$)') 'Choose galaxy - enter i_gal: '
@@ -248,9 +248,9 @@ c     CHOOSE GALAXY TO FIT (enter corresponding i)
 c     Do we have the observation
       if (i_gal .gt. n_obs) then
          write(*,*) 'Observation does not exist'
-         return
+         exit(0)
       endif
-        
+
 c     WHAT OBSERVATIONS DO YOU WANT TO FIT?
 c     fit(ifilt)=1: fit flux from filter ifilt
 c     fit(ifilt)=0: do not fit flux from filter ifilt (set flux=-99)
@@ -268,33 +268,33 @@ c     Count number of non-zero fluxes (i.e. detections) to fit
             n_flux=n_flux+1
          endif
       enddo
-      
+
 c     COMPUTE LUMINOSITY DISTANCE from z given cosmology
 c     Obtain cosmological constant and q
       clambda=cosmol_c(h,omega,omega_lambda,q)
-      
+
 c     Compute distance in Mpc from the redshifts z
       dist(i_gal)=dl(h,q,redshift(i_gal))
       dist(i_gal)=dist(i_gal)*3.086e+24/dsqrt(1.+redshift(i_gal))
-      
-      
+
+
 c     OUTPUT FILES
 c     name.fit: fit results, PDFs etc
 c     name.sed: best-fit SED
       aux_name=gal_name(i_gal)
-      close(31) 
+      close(31)
 c     ---------------------------------------------------------------------------
       if (skynet .eqv. .FALSE.) then
 	      outfile1=aux_name(1:largo(aux_name))//'.fit'
 	      outfile2=aux_name(1:largo(aux_name))//'.sed'
 	      open (31, file=outfile1, status='unknown')
 c     ---------------------------------------------------------------------------
-      else  
+      else
           outfile1='output.fit'
 	      open (31, file=outfile1, status='unknown', access='append')
 	      write(31,*) '####### ',gal_name(i_gal)
       endif
-      
+
 c     Choose libraries according to the redshift of the source
 c     Find zlib(i) closest of the galaxie's redshift
       do i=1,nz
@@ -312,11 +312,11 @@ c              (if diffz(1) not gt 0.005)
       write(numz,'(f6.4)') zlib(1)
       optlib = 'starformhist_cb07_z'//numz//'.lbr'
       irlib = 'infrared_dce08_z'//numz//'.lbr'
-      
+
       write(*,*) 'z= ',redshift(i_gal)
       write(*,*) 'optilib=',optlib
       write(*,*) 'irlib=',irlib
- 
+
 c     ---------------------------------------------------------------------------
 c     What part of the SED are the filters sampling at the redshift of the galaxy?
 c     - lambda(rest-frame) < 2.5 mic : emission purely stellar (attenuated by dust)
@@ -475,13 +475,13 @@ c     Observed fluxes: Jy -> Lsun/Hz
                sigma(i_gal,k)=0.05*flux_obs(i_gal,k)
             endif
          enddo
-         
+
          do k=1,nfilt
             if (sigma(i_gal,k).gt.0.0) then
                w(i_gal,k) = 1.0 / (sigma(i_gal,k)**2)
             endif
          enddo
-         
+
 c     ---------------------------------------------------------------------------
 c     Initialize variables:
          n_models=0
@@ -520,19 +520,19 @@ c     The high-resolution marginalized likelihood distributions will be
 c     computed on-the-run
 c     ---------------------------------------------------------------------------
 
-c     f_mu (SFH) & f_mu (IR)               
+c     f_mu (SFH) & f_mu (IR)
          call get_histgrid(dfmu,fmu_min,fmu_max,nbin_fmu,fmu_hist)
 c     mu parameter
          call get_histgrid(dmu,mu_min,mu_max,nbin_mu,mu_hist)
 c     tauv (dust optical depth)
          call get_histgrid(dtv,tv_min,tv_max,nbin_tv,tv_hist)
-c     sSFR    
+c     sSFR
          call get_histgrid(dssfr,ssfr_min,ssfr_max,nbin_ssfr,ssfr_hist)
-c     SFR    
+c     SFR
          call get_histgrid(dsfr,sfr_min,sfr_max,nbin_sfr,sfr_hist)
-c     Mstars     
+c     Mstars
          call get_histgrid(da,a_min,a_max,nbin_a,a_hist)
-c     Ldust   
+c     Ldust
          call get_histgrid(dldust,ld_min,ld_max,nbin_ld,ld_hist)
 c     fmu_ism
          call get_histgrid(dfmu_ism,fmuism_min,fmuism_max,nbin_fmu_ism,
@@ -551,10 +551,10 @@ c     [makes code faster -- implemented by the Nottingham people]
          do i_sfh=1, n_sfh
             aux=((fmu_sfh(i_sfh)-fmu_min)/(fmu_max-fmu_min))*nbin_fmu
             i_fmu_sfh(i_sfh) = 1 + dint(aux)
-            
+
             aux = ((mu(i_sfh)-mu_min)/(mu_max-mu_min)) * nbin_mu
             i_mu(i_sfh) = 1 + dint(aux)
-            
+
             aux=((tauv(i_sfh)-tv_min)/(tv_max-tv_min)) * nbin_tv
             i_tauv(i_sfh) = 1 + dint(aux)
 
@@ -567,7 +567,7 @@ c     [makes code faster -- implemented by the Nottingham people]
             aux=((lssfr(i_sfh)-ssfr_min)/(ssfr_max-ssfr_min))* nbin_ssfr
             i_lssfr(i_sfh) = 1 + dint(aux)
          enddo
-          
+
          do i_ir=1, n_ir
             aux=((fmu_ir(i_ir)-fmu_min)/(fmu_max-fmu_min)) * nbin_fmu
             i_fmu_ir(i_ir) = 1+dint(aux)
@@ -597,11 +597,11 @@ c
 c     For each model in the stellar library, find all the models in the infrared
 c     dust emission library for which the proportion of dust luminosity from stellar
 c     birth clouds and diffuse ISM is the same, i.e. same "fmu" parameter (+/- df)
-c     Scale each infrared model satisfying this condition to the total dust 
+c     Scale each infrared model satisfying this condition to the total dust
 c     luminosity Ldust predicted by the stellar+attenuation model
 c     [this satisfies the energy balance]
 c
-c     
+c
 c     For each combination of model, compute the chi^2 goodness-of-fit
 c     by comparing the observed UV-to-IR fluxes with the model predictions
 c
@@ -625,7 +625,7 @@ c     Check progress of the fit...
                write (*,*) '100% done...', n_sfh, " opt. models - fit finished"
             endif
 
-            df=0.15             !fmu_opt=fmu_ir +/- dfmu 
+            df=0.15             !fmu_opt=fmu_ir +/- dfmu
 
 c     Search for the IR models with f_mu within the range set by df
             DO i_ir=1,n_ir
@@ -640,7 +640,7 @@ c     Search for the IR models with f_mu within the range set by df
 
                   n_models=n_models+1 !to keep track of total number of combinations
 
-c     Build the model flux array by adding SFH & IR                 
+c     Build the model flux array by adding SFH & IR
                   do k=1,nfilt_sfh-nfilt_mix
                      flux_mod(k)=flux_sfh(i_sfh,k)
                   enddo
@@ -650,7 +650,7 @@ c     Build the model flux array by adding SFH & IR
                   enddo
                   do k=nfilt_sfh+1,nfilt
                      flux_mod(k)=ldust(i_sfh)*flux_ir(i_ir,k-nfilt_sfh+nfilt_mix)
-                  enddo          
+                  enddo
 c     Compute scaling factor "a" - this is the number that minimizes chi^2
                   do k=1,nfilt
                      if (flux_obs(i_gal,k).gt.0) then
@@ -661,16 +661,16 @@ c     Compute scaling factor "a" - this is the number that minimizes chi^2
                   a=num/den
 c     Compute chi^2 goodness-of-fit
                   do k=1,nfilt_sfh
-                     if (flux_obs(i_gal,k).gt.0) then                  
+                     if (flux_obs(i_gal,k).gt.0) then
                         chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
      +                       **2)*w(i_gal,k))
                         chi2_opt=chi2
                      endif
-                  enddo 
+                  enddo
 
                   if (chi2.lt.600.) then
                      do k=nfilt_sfh+1,nfilt
-                        if (flux_obs(i_gal,k).gt.0) then                  
+                        if (flux_obs(i_gal,k).gt.0) then
                            chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
      +                          **2)*w(i_gal,k))
                            chi2_ir=chi2_ir+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
@@ -700,23 +700,23 @@ c     and compute probability histogram
 c     (normalize only in the end of the big loop)
 c     for now just add up probabilities in each bin
 
-c     f_mu (SFH)               
+c     f_mu (SFH)
                   ibin= i_fmu_sfh(i_sfh)
                   ibin = max(1,min(ibin,nbin_fmu))
-                  psfh(ibin)=psfh(ibin)+prob                          
-c     f_mu (IR)               
+                  psfh(ibin)=psfh(ibin)+prob
+c     f_mu (IR)
                   ibin = i_fmu_ir(i_ir)
                   ibin = max(1,min(ibin,nbin_fmu))
                   pir(ibin)=pir(ibin)+prob
-c     mu              
+c     mu
                   ibin= i_mu(i_sfh)
                   ibin = max(1,min(ibin,nbin_mu))
                   pmu(ibin)=pmu(ibin)+prob
-c     tauV              
+c     tauV
                   ibin= i_tauv(i_sfh)
                   ibin = max(1,min(ibin,nbin_tv))
                   ptv(ibin)=ptv(ibin)+prob
-c     tvism              
+c     tvism
                   ibin= i_tvism(i_sfh)
                   ibin = max(1,min(ibin,nbin_tv))
                   ptvism(ibin)=ptvism(ibin)+prob
@@ -729,7 +729,7 @@ c     Mstar
                   aux=((a-a_min)/(a_max-a_min)) * nbin_a
                   ibin=1+dint(aux)
                   ibin = max(1,min(ibin,nbin_a))
-                  pa(ibin)=pa(ibin)+prob  
+                  pa(ibin)=pa(ibin)+prob
 c     SFR_0.1Gyr
                   aux=((lssfr(i_sfh)+a-sfr_min)/(sfr_max-sfr_min))
      +                 * nbin_sfr
@@ -737,15 +737,15 @@ c     SFR_0.1Gyr
                   ibin = max(1,min(ibin,nbin_sfr))
                   psfr(ibin)=psfr(ibin)+prob
 c     Ldust
-                  aux=((logldust(i_sfh)+a-ld_min)/(ld_max-ld_min)) 
+                  aux=((logldust(i_sfh)+a-ld_min)/(ld_max-ld_min))
      +                 * nbin_ld
                   ibin=1+dint(aux)
                   ibin = max(1,min(ibin,nbin_ld))
-                  pldust(ibin)=pldust(ibin)+prob  
+                  pldust(ibin)=pldust(ibin)+prob
 c     xi_C^tot
                   ibin= i_fmu_ism(i_ir)
                   ibin = max(1,min(ibin,nbin_fmu_ism))
-                  pism(ibin)=pism(ibin)+prob 
+                  pism(ibin)=pism(ibin)+prob
 c     T_C^ISM
                   ibin= i_tbg1(i_ir)
                   ibin = max(1,min(ibin,nbin_tbg1))
@@ -777,7 +777,7 @@ c     Mdust
             ENDDO               !loop in i_ir
          ENDDO                  !loop in i_sfh
 
-c     Chi2-weighted models: normalize to total probability ptot         
+c     Chi2-weighted models: normalize to total probability ptot
          write(*,*) 'Number of random SFH models:       ', n_sfh
          write(*,*) 'Number of IR dust emission models: ', n_ir
          write(*,*) 'Value of df:                       ', df
@@ -803,11 +803,11 @@ c     --------------------------------------------------------------------------
             ptbg1(i)=ptbg1(i)/ptot
             ptbg2(i)=ptbg2(i)/ptot
             pxi1(i)=pxi1(i)/ptot
-            pxi2(i)=pxi2(i)/ptot          
+            pxi2(i)=pxi2(i)/ptot
             pxi3(i)=pxi3(i)/ptot
             pmd(i)=pmd(i)/ptot
          enddo
-         
+
          call get_percentiles(nbin_fmu,fmu_hist,psfh,pct_fmu_sfh)
          call get_percentiles(nbin_fmu,fmu_hist,pir,pct_fmu_ir)
          call get_percentiles(nbin_mu,mu_hist,pmu,pct_mu)
@@ -879,7 +879,7 @@ c     New histogram parameters
          md_max=9.
 
          call degrade_hist(dfmu,fmu_min,fmu_max,nbin_fmu,nbin2_fmu,
-     +        fmu_hist,fmu2_hist,psfh,psfh2)    
+     +        fmu_hist,fmu2_hist,psfh,psfh2)
          call degrade_hist(dfmu,fmu_min,fmu_max,nbin_fmu,nbin2_fmu,
      +        fmu_hist,fmu2_hist,pir,pir2)
          call degrade_hist(dfmu,fmu_min,fmu_max,nbin_mu,nbin2_mu,
@@ -935,7 +935,7 @@ c     --------------------------------------------------------------------------
      +        '..xi_PAH^tot..xi_MIR^tot....xi_W^tot.....tvism',
      +        '.......Mdust.....SFR')
  803     format(0p4f10.3,1p3e12.3,0p2f10.1,0p5f10.3,1p2e12.3)
-         
+
          write(31,703)
          write(31,804)
  804     format('# BEST FIT MODEL: (i_sfh, i_ir, chi2, redshift)')
@@ -989,7 +989,7 @@ c     --------------------------------------------------------------------------
  809     format('# ... mu parameter ...')
          do ibin=1,nbin2_mu
             write(31,807) mu2_hist(ibin),pmu2(ibin)
-         enddo        
+         enddo
          write(31,60)
          write(31,61) (pct_mu(k),k=1,5)
 
@@ -1117,7 +1117,7 @@ c     --------------------------------------------------------------------------
 c     ===========================================================================
       SUBROUTINE DEGRADE_HIST(delta,min,max,nbin1,nbin2,hist1,hist2,prob1,prob2)
 c     ---------------------------------------------------------------------------
-c     Degrades the resolution of the histograms containing the likelihood 
+c     Degrades the resolution of the histograms containing the likelihood
 c     distribution of the parameters: to facilitate storage & visualization
 c     ---------------------------------------------------------------------------
 c     delta : bin width
@@ -1137,17 +1137,17 @@ c     ==========================================================================
       real*8 hist1(nbin1),prob1(nbin1)
       real*8 hist2(maxnbin2),prob2(maxnbin2)
       real*8 aux
-      
+
       max2=0.
       max2=max+(delta/2.)
 
       call get_histgrid(delta,min,max2,nbin2,hist2)
-      
+
       do i=1,nbin1
          aux=((hist1(i)-min)/(max-min)) * nbin2
          ibin=1+dint(aux)
          prob2(ibin)=prob2(ibin)+prob1(i)
-      enddo            
+      enddo
 
       RETURN
       END
@@ -1155,12 +1155,12 @@ c     ==========================================================================
 c     ===========================================================================
       SUBROUTINE GET_HISTGRID(dv,vmin,vmax,nbin,vout)
 c     ---------------------------------------------------------------------------
-c     Build histogram grid (i.e. vector of bins) 
+c     Build histogram grid (i.e. vector of bins)
 c     ---------------------------------------------------------------------------
 c       dv : bin width
 c     vmin : minumum value
 c     vmax : maximum value
-c     nbin : number of bins 
+c     nbin : number of bins
 c     vout : output vector of bins
 c     ===========================================================================
       implicit none
@@ -1168,7 +1168,7 @@ c     ==========================================================================
       parameter(maxnbin=5000)
       real*8 vout(maxnbin)
       real*8 vmin,vmax,x1,x2,dv
-      
+
       ibin=1
       x1=vmin
       x2=vmin+dv
@@ -1204,7 +1204,7 @@ c     ==========================================================================
 
       call sort2(n,par,probability)
 
-      pless=0.      
+      pless=0.
       do i=1,5
          n_perc(i)=1
          pless=0.
@@ -1523,10 +1523,10 @@ c     ==========================================================================
       SUBROUTINE GET_BESTFIT_SED(i_opt,i_ir,dmstar,dfmu_aux,dz,outfile)
 c     ---------------------------------------------------------------------------
 c     Gets the total (UV-to-infrared) best-fit SED
-c     
+c
 c     Gets stellar spectrum and dust emission spectra from .bin files
 c     and adds them to get total SED, and writes output in .sed file
-c     
+c
 c        i_opt : index in the Optical library
 c         i_ir : index in the Infrared library
 c       dmstar : stellar mass (scaling)
@@ -1555,7 +1555,7 @@ c     ==========================================================================
       real sedtot(niw_tot),wl(niw_tot)
       real fir_new(niw_tot),fopt_new(niw_tot),fopt_aux(niw_tot)
       real fopt_new0(niw_tot),fopt_aux0(niw_tot)
-      
+
       mstar=sngl(dmstar)
       fmu_aux=sngl(dfmu_aux)
       z=sngl(dz)
@@ -1588,7 +1588,7 @@ c     Read Optical SEDs and properties (1st file = models 1 to 25000)
          read (29) nage,(age(i),sfr(i),i=1,nage),(sfrav(i),i=1,5)
          sfrav(3)=sfrav(3)/mstr1
          read (29) (opt_sed(i),opt_sed0(i),i=1,niw_opt)
-         
+
          if (indx.eq.i_opt) then
             fmuopt(imod)=fmu
 c     Normalise Optical SED by stellar mass of the model
@@ -1605,7 +1605,7 @@ c     Normalise Optical SED by stellar mass of the model
      +     .or.int(fmu*1000).eq.(int(fmu_aux*1000)-1)
      +     .or.int(fmu*1000).eq.(int(fmu_aux*1000)+1)) then
          write(*,*) 'optical... done'
-      endif 
+      endif
       if (int(fmu*1000).ne.int(fmu_aux*1000)
      +     .and.int(fmu*1000).ne.(int(fmu_aux*1000)-1)
      +     .and.int(fmu*1000).ne.(int(fmu_aux*1000)+1) ) then
@@ -1614,11 +1614,11 @@ c     Normalise Optical SED by stellar mass of the model
          open (29,file=infile1,status='old',form='unformatted')
          goto 7
       endif
-          
+
 c     Read Infrared SEDs and properties
       read (30) niw_ir,(wl_ir(i),i=1,niw_ir)
       do imod=1,50000
-         read (30) (irprop(i),i=1,8)	     	      
+         read (30) (irprop(i),i=1,8)
          read (30) (ir_sed(i),i=1,niw_ir)
          fmuir(imod)=irprop(1)
          if (imod.eq.i_ir) then
@@ -1629,9 +1629,9 @@ c     Read Infrared SEDs and properties
          endif
       enddo
  3    write(*,*) 'infrared... done'
-      
+
       write(*,*) 'Ldust/L_sun= ',mstar*ldust
-      
+
       write(31,315)
  315  format('#...fmu(Opt).....fmu(IR)....tform/yr.......gamma',
      +     '........Z/Zo........tauV..........mu.....M*/Msun',
@@ -1639,7 +1639,7 @@ c     Read Infrared SEDs and properties
       write(31,316) fmu,irprop(1),tform,gamma,zmet,tauv0,mu,mstar,
      +     sfrav(3),ldust*mstar
  316  format(0p2f12.3,1pe12.3,0p4f12.3,1p3e12.3)
-      
+
       write(31,319)
       write(31,317)
  317  format('#...xi_C^ISM....T_W^BC/K...T_C^ISM/K...xi_PAH^BC',
@@ -1669,7 +1669,7 @@ c     Make new wavelength vector by combining them
 c     Interpolate the optical SED in the new wavelength grid (do it in log)
       do i=1,niw_opt
          fopt_aux(i)=log10(fopt(i))
-         fopt_aux0(i)=log10(fopt0(i))           
+         fopt_aux0(i)=log10(fopt0(i))
       enddo
 
       do i=1,niw_tot
@@ -1703,7 +1703,7 @@ c     npts   - number of pairs of data points
 c     nterms - number of terms in fitting polynomial
 c     xin    - input value of x
 c     yout   - interplolated value of y
-c     
+c
 c     comments
 c     dimension statement valid for nterms up to 10
 c     value of nterms may be modified by the program
