@@ -18,6 +18,9 @@ svn co http://boinc.berkeley.edu/svn/trunk/boinc /home/ec2-user/boinc
 
 cd /home/ec2-user/boinc
 ./_autosetup
+
+# A bug in the configure.ac needs this to be run twice
+./_autosetup
 ./configure --disable-client --disable-manager
 make
 

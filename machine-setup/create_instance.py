@@ -15,9 +15,37 @@ import glob
 import time
 import getpass
 
-skip_elastic_ip = False
-if len(sys.argv) == 2 and sys.argv[1] == 'skip_elastic_ip':
-    skip_elastic_ip = True
+
+def query_yes_no(question, default="yes"):
+    """Ask a yes/no question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+        It must be "yes" (the default), "no" or None (meaning
+        an answer is required of the user).
+
+    The "answer" return value is one of "yes" or "no".
+    """
+    valid = {"yes":True,   "y":True,  "ye":True,
+             "no":False,     "n":False}
+    if default == None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = raw_input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
 
 IMAGE           = 'ami-6078da09' # Basic 64-bit Amazon Linux AMI
 KEY_NAME        = 'icrar-boinc'
@@ -27,6 +55,7 @@ KEY_FILE        = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 PUBLIC_KEYS     = os.path.expanduser('~/Documents/Keys')
 PUBLIC_IP       = '23.21.160.71'
 
+use_elastic_ip = query_yes_no('Do you want to assign the Elastic IP [{0}] to this instance'.format(PUBLIC_IP), 'no')
 ops_username = raw_input('Ops area username: ')
 ops_password = getpass.getpass('Password: ')
 
@@ -36,7 +65,7 @@ print 'Starting an EC2 instance of type {0} with image {1}'.format(INSTANCE_TYPE
 # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
 conn = boto.connect_ec2()
 
-if not skip_elastic_ip:
+if use_elastic_ip:
     # Disassociate the public IP
     if not conn.disassociate_address(public_ip=PUBLIC_IP):
         print 'Could not disassociate the IP {0}'.format(PUBLIC_IP)
@@ -50,7 +79,7 @@ while not instance.update() == 'running':
     time.sleep(5)
 print '.'
 
-if not skip_elastic_ip:
+if use_elastic_ipcd :
     print 'Current DNS name is {0}. About to associate the Elastic IP'.format(instance.dns_name)
     if not conn.associate_address(instance_id=instance.id, public_ip=PUBLIC_IP):
         print 'Could not associate the IP {0} to the instance {1}'.format(PUBLIC_IP, instance.id)
