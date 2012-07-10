@@ -120,28 +120,35 @@ for file in glob.glob(PUBLIC_KEYS + '/*.pub'):
 ftp.close()
 
 # Open a shell. We have to use the invoke_shell because the scripts have SUDO elements
-channel = ssh.invoke_shell()
+channel = ssh.invoke_shell(width=200)
 channel.set_combine_stderr(True)
+print 'Timeout on channel: {0}'.format(channel.gettimeout())
 
 def wait_for_prompt():
     """
     Wait for the prompt
     """
-    done = False
-    while not done:
-        time.sleep(0.5)
+    buff1 = ''
+    while True:
         while channel.recv_ready():
-            buff = channel.recv(1024)
-            sys.stdout.write(buff)
+            buff2 = channel.recv(1024)
+            sys.stdout.write(buff2)
             sys.stdout.flush()
-            if buff.endswith(']$ '):
-                done = True
+            if buff2.endswith(']$ '):
+                return
+            else:
+                # Defend against the rare occasion when the ']' is at the end of the
+                # buffer and the $ starts the next buffer
+                buff = buff1 + buff2
+                if buff.endswith(']$ '):
+                    return
+            buff1 = buff2
+            time.sleep(0.1)
 
 def run_command(command):
     """
     Execute a command.
     """
-    #print '{0}'.format(command)
     channel.send(command + '\n')
     wait_for_prompt()
 
