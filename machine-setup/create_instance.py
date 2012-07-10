@@ -79,7 +79,7 @@ while not instance.update() == 'running':
     time.sleep(5)
 print '.'
 
-if use_elastic_ipcd :
+if use_elastic_ip :
     print 'Current DNS name is {0}. About to associate the Elastic IP'.format(instance.dns_name)
     if not conn.associate_address(instance_id=instance.id, public_ip=PUBLIC_IP):
         print 'Could not associate the IP {0} to the instance {1}'.format(PUBLIC_IP, instance.id)
@@ -176,7 +176,7 @@ for user in list_of_users:
 
 # Setup the ops area password
 run_command('cd /home/ec2-user/projects/pogs/html/ops')
-run_command('htpasswd -c .htpasswd {0} {1}'.format(ops_username, ops_password))
+run_command('htpasswd -bc .htpasswd {0} {1}'.format(ops_username, ops_password))
 
 channel.close()
 ssh.close()
