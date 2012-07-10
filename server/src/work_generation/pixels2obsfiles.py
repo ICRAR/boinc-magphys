@@ -1,5 +1,5 @@
 import sys
-from database_support import *
+from src.database.database_support import *
 
 if(len(sys.argv) != 3):
     print "usage:   %(me)s squares_to_process output_directory" % {'me':sys.argv[0]}

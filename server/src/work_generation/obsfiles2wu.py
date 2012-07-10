@@ -1,7 +1,6 @@
 import sys
 import os
-from subprocess import call
-from subprocess import check_output
+import subprocess
 
 if(len(sys.argv) != 3):
     print "usage:   %(me)s observations_directory boinc_project_root" % {'me':sys.argv[0]}
@@ -58,11 +57,11 @@ for file_name in file_list:
     cmd_create_work.extend(args_files)
 
     # Copy file into BOINC's download hierarchy
-    new_full_path = check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()
+    new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()
     os.rename(FILE_DIR + "/" + file_name, new_full_path)
 
     # And "create work" = create the work unit
-    if call(cmd_create_work):
+    if subprocess.call(cmd_create_work):
         print "Something went wrong; sorry"
 
     files_processed += 1

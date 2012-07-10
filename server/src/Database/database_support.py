@@ -1,6 +1,30 @@
-import mysql.connector
-import mysql.connector.cursor
-import mysql.connector.errors
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+class Galaxy(Base):
+    __tablename__ = 'galaxy'
+    galaxy_id = Column(BigInteger, primary_key=True)
+    name = Column(String(128))
+    dimension_x = Column(Integer)
+    dimension_y = Column(Integer)
+    dimension_z = Column(Integer)
+    redshift = Column(Float)
+
+class Square(Base):
+    square_id    = Column(BigInteger, primary_key=True)
+    galaxy_id    = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
+    top_x        = Column(Integer)
+    top_y        = Column(Integer)
+    size         = Column(Integer)
+    wu_generated = Column(TIMESTAMP)
+
+
+
+
 
 class Database:
 	@classmethod
@@ -8,7 +32,7 @@ class Database:
 		if not hasattr(self, 'c'):
 			self.c = mysql.connector.connect(user='root', host='localhost', db='magphys_wu');
 		return self.c
-		
+
 	@classmethod
 	def commitTransaction(self):
 		return self.getConnection().commit()
@@ -16,7 +40,7 @@ class Database:
 def doUpdate(conn, sql):
 	cursor = conn.cursor()
 	return cursor.execute(sql)
-	
+
 def fetchResultSet(conn, sql):
 	cursor = conn.cursor()
 	cursor.execute(sql)
@@ -27,19 +51,19 @@ def fetchResultSet(conn, sql):
 			cols = [ d[0] for d in cursor.description ]
 			result.append(dict(zip(cols, row)))
 	return result
-	
+
 class ORMObject(object):
 	@classmethod
 	def _getById(self, id):
-		result_set = fetchResultSet(Database.getConnection(), "SELECT * FROM %(cls_name)s WHERE id = %(obj_id)d" % { 
+		result_set = fetchResultSet(Database.getConnection(), "SELECT * FROM %(cls_name)s WHERE id = %(obj_id)d" % {
 			'cls_name':self.__name__.lower(), 'obj_id':id })
 		return self(result_set[0])
-	
+
 	@classmethod
 	def _getByQuery(self, where):
 		result_set = fetchResultSet(Database.getConnection(), "SELECT * FROM %(cls_name)s WHERE %(where_clause)s" % {
 			'cls_name':self.__name__.lower(), 'where_clause':where })
-		
+
 		result = []
 		for row in result_set:
 			result.append(self(row))
