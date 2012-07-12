@@ -44,7 +44,8 @@ print("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':END_
 # Connect to the database
 login = "mysql://root:@localhost/magphys"
 engine = create_engine(login)
-session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=engine)
+session = Session()
 rollback = False
 
 ## ######################################################################## ##
@@ -222,5 +223,3 @@ else:
     session.commit()
 
 print("\nDone")
-# Uncomment to print general information about the file to stdout
-#HDULIST.info()
