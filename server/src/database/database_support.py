@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship, backref
 
 # The database is partitioned to improve performance, this means there are no primary
@@ -27,7 +27,7 @@ class Square(Base):
     top_x        = Column(Integer)
     top_y        = Column(Integer)
     size         = Column(Integer)
-    wu_generated = Column(TIMESTAMP)
+    wu_generated = Column(DateTime)
 
 class PixelResult(Base):
     __tablename__ = 'pixel_result'
