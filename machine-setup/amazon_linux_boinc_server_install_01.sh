@@ -62,12 +62,5 @@ sudo pip-2.7 install sqlalchemy
 sudo pip-2.7 install Numpy
 sudo pip-2.7 install pyfits
 
-#sudo pip-2.7 install mysql-connector sqlalchemy
-#sudo pip-2.7 install Numpy pyfits
-
-#wget http://aarnet.dl.sourceforge.net/project/mysql-python/mysql-python/1.2.3/MySQL-python-1.2.3.tar.gz
-#tar -xvf MySQL-python-1.2.3.tar.gz
-#cd MySQL-python-1.2.3
-##sudo python2.7 setup.py install
-#cd /home/ec2-user
-#sudo rm -rf /home/ec2-user/MySQL-python-1.2.3*
+# Used by BOINC in the assimilator
+sudo pip-2.7 install MySQL-python

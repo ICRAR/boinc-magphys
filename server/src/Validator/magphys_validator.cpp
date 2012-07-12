@@ -242,7 +242,6 @@ bool operator==(fit_record &x, fit_record &y)
 int init_result(RESULT& result, void*& data)
 {
     log_messages.printf(MSG_DEBUG, "init_result\n");
-    log_messages.printf
     string fname;
     int retval;
 
