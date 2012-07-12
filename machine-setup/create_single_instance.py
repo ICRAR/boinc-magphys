@@ -47,7 +47,7 @@ def query_yes_no(question, default="yes"):
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
 
-IMAGE           = 'ami-6078da09' # Basic 64-bit Amazon Linux AMI
+IMAGE           = 'ami-aecd60c7' # Basic 64-bit Amazon Linux AMI - old
 KEY_NAME        = 'icrar-boinc'
 INSTANCE_TYPE   = 't1.micro'
 SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH

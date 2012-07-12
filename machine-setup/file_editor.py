@@ -34,18 +34,6 @@ def edit_config_xml():
         else:
             sys.stdout.write(line)
 
-def edit_create_account__php():
-    """
-    Edit /home/ec2-user/projects/pogs/html/user/create_account.php
-
-    1. Correct the error on line 51
-    """
-    for line in fileinput.input(['/home/ec2-user/projects/pogs/html/user/create_account.php'], inplace=True):
-        if line.rstrip() == 'if (!is_valid_user_name($name, $reason)) {':
-            sys.stdout.write('if (!is_valid_user_name($user_name, $reason)) {\n')
-        else:
-            sys.stdout.write(line)
-
 def edit_project_inc():
     """
     Edit /home/ec2-user/projects/pogs/html/project/project.inc
@@ -98,7 +86,6 @@ def edit_create_forums_php():
 
 # Make the changes to the files
 edit_config_xml()
-edit_create_account__php()
 edit_project_inc()
 edit_user_php()
 edit_create_forums_php()

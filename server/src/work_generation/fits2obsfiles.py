@@ -30,7 +30,7 @@ OUTPUT_DIR = sys.argv[2]
 SIGMA = 0.1
 GRID_SIZE = 7
 
-HDULIST = pyfits.open(INPUT_FILE)
+HDULIST = pyfits.open(INPUT_FILE, memmap=True)
 LAYER_COUNT = len(HDULIST)
 HARD_CODED_REDSHIFT = 0.0
 
