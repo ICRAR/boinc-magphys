@@ -2,6 +2,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship, backref
 
+# The database is partitioned to improve performance, this means there are no primary
+# keys, but the ORM mapping of sqlalchemy needs them - doesn't seem to hurt having
+# them even though they don't really exist
+
 Base = declarative_base()
 class Galaxy(Base):
     __tablename__ = 'galaxy'

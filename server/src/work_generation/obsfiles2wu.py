@@ -4,13 +4,17 @@ import subprocess
 
 if(len(sys.argv) != 3):
     print "usage:   %(me)s files_to_process observations_directory boinc_project_root" % {'me':sys.argv[0]}
-    print "example: %(me)s 100 /home/ec2-user/f2wu /home/ec2-user/projects/pogs" % {'me':sys.argv[0]}
+    print "example: %(me)s /home/ec2-user/f2wu /home/ec2-user/projects/pogs 100" % {'me':sys.argv[0]}
     sys.exit(-10)
 
 APP_NAME = "magphys_wrapper"
-FILES_TO_PROCESS = sys.argv[1]
-FILE_DIR = sys.argv[2]
-BOINC_PROJECT_ROOT = sys.argv[3]
+FILE_DIR = sys.argv[1]
+BOINC_PROJECT_ROOT = sys.argv[2]
+if len(sys.argv) > 2:
+    FILES_TO_PROCESS = sys.argv[3]
+else:
+    FILES_TO_PROCESS = sys.maxint
+
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates"                     # In true BOINC style, this is magically relative to the project root
 
