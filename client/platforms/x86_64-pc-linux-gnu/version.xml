@@ -13,11 +13,6 @@
         <gzip/>
     </file>
     <file>
-        <physical_name>job_x86_64-pc-linux-gnu.xml</physical_name>
-        <copy_file/>
-        <logical_name>job.xml</logical_name>
-    </file>
-    <file>
         <physical_name>filters.dat</physical_name>
         <copy_file/>
         <logical_name>filters.dat</logical_name>

@@ -25,7 +25,6 @@ task :copy_files do
   PLATFORMS.each { |platform|
      mkdir_p "#{PLATFORM_DIR}/#{platform}"
      cp FileList["#{SOURCE_DIR}/client/platforms/#{platform}/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
-     cp "#{SOURCE_DIR}/client/config/job.xml", "#{PLATFORM_DIR}/#{platform}/job_#{platform}.xml", :preserve => true
      cp FileList["#{SOURCE_DIR}/client/platforms/common/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
   }
 

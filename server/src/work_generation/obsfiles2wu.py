@@ -25,12 +25,30 @@ FPOPS_EXP = "e12"
 
 # The BOINC scripts/apps do not feel at home outside their directory
 os.chdir(BOINC_PROJECT_ROOT)
-
 file_list = os.listdir(FILE_DIR)
+
+def create_job_xml(file_name, pixels_in_file):
+    new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()
+    file = open(new_full_path, 'wb')
+    file.write('<job_desc>\n')
+    for i in range(1, pixels_in_file):
+        file.write('''   <task>
+      <application>fit_sed</application>
+      <command_line>{0} filters.dat observations.dat</command_line>
+      <stdout_filename>stdout_file</stdout_filename>
+      <stderr_filename>stderr_file</stderr_filename>
+   </task>
+'''.format(i))
+    file.write('</job_desc>\n')
+    file.close()
 
 files_processed = 0
 for file_name in file_list:
-    if file_name[0] == '.': continue	# Process everything but dot-files
+    if file_name[0] == '.':
+        continue	# Process everything but dot-files
+
+    # Create the job file
+    file_name_job = file_name + '.job.xml'
 
     pixels_in_file = sum(1 for line in open(FILE_DIR + "/" + file_name))-1
     print("Creating work unit from observations file %(file)s: %(pixels)d pixels" % {'file':file_name, 'pixels':pixels_in_file})
@@ -47,7 +65,7 @@ for file_name in file_list:
         "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
         "--additional_xml", "<credit>%(pixels)d</credit>" % {'pixels':pixels_in_file},
     ]
-    args_files = [file_name]
+    args_files = [file_name, file_name_job]
 
     cmd_create_work = [
         BIN_PATH + "/create_work"
@@ -60,6 +78,8 @@ for file_name in file_list:
     # Copy file into BOINC's download hierarchy
     new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()
     os.rename(FILE_DIR + "/" + file_name, new_full_path)
+
+    create_job_xml(file_name_job, pixels_in_file)
 
     # And "create work" = create the work unit
     if subprocess.call(cmd_create_work):

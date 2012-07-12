@@ -1,14 +1,24 @@
 <input_template>
     <file_info>
         <number>0</number>
+        <gzip_when_done/>
+    </file_info>
+    <file_info>
+        <number>1</number>
+        <gzip_when_done/>
     </file_info>
 
     <workunit>
-      <file_ref>
-        <file_number>0</file_number>
-        <open_name>observations.dat</open_name>
-        <copy_file/>
-      </file_ref>
-      <rsc_disk_bound>5000000000</rsc_disk_bound>
+        <file_ref>
+            <file_number>0</file_number>
+            <open_name>observations.dat</open_name>
+            <copy_file/>
+        </file_ref>
+        <file_ref>
+            <file_number>1</file_number>
+            <open_name>job.xml</open_name>
+            <copy_file/>
+        </file_ref>
+        <rsc_disk_bound>5000000000</rsc_disk_bound>
     </workunit>
 </input_template>

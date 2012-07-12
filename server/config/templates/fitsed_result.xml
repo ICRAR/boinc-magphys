@@ -9,6 +9,7 @@
         <url>
             <UPLOAD_URL/>
         </url>
+        <gzip_when_done/>
     </file_info>
     <result>
         <file_ref>
