@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 
 
 if len(sys.argv) < 3:
-    print("usage:   %(me)s FITS_file output_directory [start_x start_y end_x end_y]" % {'me':sys.argv[0]})
+    print("usage:   %(me)s FITS_file output_directory [galaxy_name]" % {'me':sys.argv[0]})
     print("         specify square cutout parameters only in development mode")
     print("example: %(me)s /home/ec2-user/POGS_NGC628_v3.fits /home/ec2-user/f2wu" % {'me':sys.argv[0]})
     sys.exit(-10)
@@ -40,14 +40,6 @@ END_Y = HDULIST[0].data.shape[0]
 END_X = HDULIST[0].data.shape[1]
 
 print("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':END_X,'y':END_Y,'z':LAYER_COUNT,'pix':END_X*END_Y/1000000.0})
-
-if len(sys.argv) > 6:
-    START_X = int(sys.argv[3])
-    START_Y = int(sys.argv[4])
-    END_X = int(sys.argv[5])
-    END_Y = int(sys.argv[6])
-    print("\nDEVELOPMENT MODE: cutting out square (%(s_x)d, %(s_y)d) to (%(e_x)d, %(e_y)d)\n" % {
-        's_x':START_X,'s_y':START_Y,'e_x':END_X,'e_y':END_Y})
 
 # Connect to the database
 login = "mysql://root:@localhost/magphys"
@@ -197,7 +189,10 @@ def squarify(galaxy):
 #Here, it might be useful to assert that there are 12 input layers/channels/HDUs
 #print "List length: %(#)d" % {'#': len(HDULIST)}
 
-object_name = HDULIST[0].header['OBJECT']
+if len(sys.argv) > 3:
+    object_name = sys.argv[3]
+else:
+    object_name = HDULIST[0].header['OBJECT']
 print("Work units for: %(object)s" % { "object":object_name } )
 
 # Create and save the object
