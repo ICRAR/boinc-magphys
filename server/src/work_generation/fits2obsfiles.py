@@ -129,6 +129,9 @@ def get_pixels(pix_x, pix_y):
                 if not math.isnan(p):
                     live_pixels += 1
                     pixel_tuples.extend(p)
+                else:
+                    # A zero tells MAGPHYS - we have no value here
+                    pixel_tuples.extend(0)
 
             if live_pixels >= MIN_LIVE_CHANNELS_PER_PIXEL:
                 status['get_pixels_get_successful'] += 1
