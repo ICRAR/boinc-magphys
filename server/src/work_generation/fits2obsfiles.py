@@ -166,7 +166,7 @@ def create_square(galaxy, pix_x, pix_y):
             session.add(pixel_result)
             session.flush()
 
-            pixel.pixel_id = pixel_result.pixel_id
+            pixel.pixel_id = pixel_result.pxresult_id
 
         # Write the pixels
         create_output_file(galaxy, square, pixels)
