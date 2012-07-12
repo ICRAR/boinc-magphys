@@ -208,7 +208,7 @@ session.add(galaxy)
 # Flush to the DB so we can get the id
 session.flush()
 
-print("Wrote %(object)s to database" % { 'object':galaxy })
+print("Wrote %(object)s to database" % { 'object':galaxy.name })
 
 LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
 squares = squarify(galaxy)
