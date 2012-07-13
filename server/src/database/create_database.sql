@@ -13,21 +13,22 @@ CREATE TABLE galaxy (
 
 CREATE UNIQUE INDEX galaxy_name_ix ON galaxy(name);
 
-CREATE TABLE square (
-  square_id    BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE area (
+  area_id      BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   galaxy_id    BIGINT UNSIGNED NOT NULL,
   top_x        INTEGER UNSIGNED NOT NULL,
   top_y        INTEGER UNSIGNED NOT NULL,
-  size         INTEGER UNSIGNED NOT NULL
+  bottom_x     INTEGER UNSIGNED NOT NULL,
+  bottom_y     INTEGER UNSIGNED NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-ALTER TABLE square ADD CONSTRAINT square_galaxy_fk FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);
-CREATE INDEX square_galaxy_ix ON square(galaxy_id);
-CREATE UNIQUE INDEX square_ix ON square(galaxy_id, top_x, top_y, size);
+ALTER TABLE area ADD CONSTRAINT area_galaxy_fk FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);
+CREATE INDEX area_galaxy_ix ON area(galaxy_id);
+CREATE UNIQUE INDEX area_ix ON area(galaxy_id, top_x, top_y, bottom_x, bottom_y);
 
 CREATE TABLE pixel_result (
   pxresult_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  square_id   BIGINT UNSIGNED NOT NULL,
+  area_id     BIGINT UNSIGNED NOT NULL,
   galaxy_id   BIGINT UNSIGNED NOT NULL,
   x           INTEGER UNSIGNED NOT NULL,
   y           INTEGER UNSIGNED NOT NULL,
@@ -61,7 +62,7 @@ CREATE TABLE pixel_result (
 PARTITION BY KEY (galaxy_id)
 PARTITIONS 16;
 
-CREATE INDEX pixel_result_square_ix ON pixel_result(square_id);
+CREATE INDEX pixel_result_area_ix ON pixel_result(area_id);
 CREATE UNIQUE INDEX pixel_result_ix ON pixel_result(galaxy_id, x, y);
 
 CREATE TABLE pixel_filter (

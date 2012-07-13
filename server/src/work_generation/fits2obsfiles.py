@@ -4,7 +4,7 @@ import logging
 import math
 import pyfits
 import sys
-from database.database_support import Galaxy, Square, PixelResult
+from database.database_support import Galaxy, Area, PixelResult
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from work_generation import FILTER_BANDS
@@ -14,7 +14,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 if len(sys.argv) < 3:
     print("usage:   %(me)s FITS_file output_directory [galaxy_name]" % {'me':sys.argv[0]})
-    print("         specify square cutout parameters only in development mode")
     print("example: %(me)s /home/ec2-user/POGS_NGC628_v3.fits /home/ec2-user/f2wu" % {'me':sys.argv[0]})
     sys.exit(-10)
 
@@ -23,8 +22,8 @@ status['calls__get_pixels'] = 0
 status['get_pixels_get_attempts'] = 0 		# Number of attempts to retrieve (x,y) pixels
 status['get_pixels_get_successful'] = 0 	# Number of pixels where more than MIN_LIVE_CHANNELS_PER_PIXEL contained data
 status['get_pixels_values_returned'] = 0 	# Number of individual pixel values returned
-status['calls__create_square'] = 0
-status['create__square'] = 0
+status['calls__create_area'] = 0
+status['create__area'] = 0
 status['create__pixel'] = 0
 
 # This value was suggested by David Thilker on 2012-06-05 as a starting point.
@@ -102,16 +101,18 @@ def sort_layers(hdu_list, layer_count):
 
     return layers
 
-def create_output_file(galaxy, square, pixels):
+def create_output_file(galaxy, area, pixels):
     """
-        Write an output file for this square
+        Write an output file for this area
     """
-    pixels_in_square = len(pixels)
-    filename = '%(output_dir)s/%(galaxy)s__wu%(square)s' % { 'galaxy':galaxy.name, 'output_dir':OUTPUT_DIR, 'square':square.square_id}
+    pixels_in_area = len(pixels)
+    filename = '%(output_dir)s/%(galaxy)s__wu%(area)s' % { 'galaxy':galaxy.name, 'output_dir':OUTPUT_DIR, 'area':area.area_id}
     outfile = open(filename, 'w')
     outfile.write('#  This workunit contains observations for galaxy %(galaxy)s. ' % { 'galaxy':galaxy.name })
-    outfile.write('%(square)s contains %(count)s pixels with above-threshold observations\n' % {
-        'square':square.square_id, 'count':pixels_in_square })
+    outfile.write('Area %(area)s contains %(count)s pixels with above-threshold observations. ' % {
+        'area':area.area_id, 'count':pixels_in_area })
+    outfile.write('(%(top_x)s,%(top_y)s) to (%(bottom_x)s,%(bottom_y)s)\n' % {
+        'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,})
 
     row_num = 0
     for pixel in pixels:
@@ -133,6 +134,8 @@ def get_pixels(pix_x, pix_y):
     status['calls__get_pixels'] += 1
 
     result = []
+    max_x = 0
+    max_y = 0
     for x in pix_x:
         if x >= END_X:
             continue
@@ -160,29 +163,37 @@ def get_pixels(pix_x, pix_y):
                 status['get_pixels_get_successful'] += 1
                 status['get_pixels_values_returned'] += live_pixels
                 result.append(Pixel(x, y, pixels))
+                if x > max_x:
+                    max_x = x
+                if y > max_y:
+                    max_y = y
 
-    return result
+    return max_x, max_y, result
 
-def create_square(galaxy, pix_x, pix_y):
-    status['calls__create_square'] += 1
-    pixels = get_pixels([pix_x], range(pix_y, pix_y+GRID_SIZE))
+def create_area(galaxy, pix_x, pix_y):
+    """
+    Create a area - we try to make them squares, but at the edges they aren't
+    """
+    status['calls__create_area'] += 1
+    max_x, max_y, pixels = get_pixels([pix_x], range(pix_y, pix_y+GRID_SIZE))
     if len(pixels) > 0:
-        pixels.extend(get_pixels(range(pix_x+1, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE)))
+        max_x, max_y , pixels.extend(get_pixels(range(pix_x+1, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE)))
 
-        status['create__square'] += 1
-        square = Square()
-        square.galaxy_id = galaxy.galaxy_id
-        square.top_x = pix_x
-        square.top_y = pix_y
-        square.size = GRID_SIZE
-        session.add(square)
+        status['create__area'] += 1
+        area = Area()
+        area.galaxy_id = galaxy.galaxy_id
+        area.top_x = pix_x
+        area.top_y = pix_y
+        area.bottom_x = max_x
+        area.bottom_y = max_y
+        session.add(area)
         session.flush()
 
         for pixel in pixels:
             status['create__pixel'] += 1
             pixel_result = PixelResult()
             pixel_result.galaxy_id = galaxy.galaxy_id
-            pixel_result.square_id = square.square_id
+            pixel_result.area_id = area.area_id
             pixel_result.x = pixel.x
             pixel_result.y = pixel.y
             session.add(pixel_result)
@@ -191,7 +202,7 @@ def create_square(galaxy, pix_x, pix_y):
             pixel.pixel_id = pixel_result.pxresult_id
 
         # Write the pixels
-        create_output_file(galaxy, square, pixels)
+        create_output_file(galaxy, area, pixels)
 
         return GRID_SIZE
     else:
@@ -204,7 +215,7 @@ def squarify(galaxy):
         sys.stdout.flush()
         pix_x = START_X
         while pix_x < END_X:
-            pix_x += create_square(galaxy, pix_x, pix_y)
+            pix_x += create_area(galaxy, pix_x, pix_y)
 
 ## ######################################################################## ##
 ##
@@ -236,7 +247,7 @@ session.flush()
 LOG.info("Wrote %(object)s to database" % { 'object':galaxy.name })
 
 LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
-squares = squarify(galaxy)
+squarify(galaxy)
 
 LOG.info("\nRun status")
 for key in sorted(status.keys()):

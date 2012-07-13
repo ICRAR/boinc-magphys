@@ -20,19 +20,20 @@ class Galaxy(Base):
     def __repr__(self):
         return 'galaxy: {galaxy_id : {0}, name : {1}}'.format(self.galaxy_id, self.name)
 
-class Square(Base):
-    __tablename__ = 'square'
-    square_id    = Column(BigInteger, primary_key=True)
+class Area(Base):
+    __tablename__ = 'area'
+    area_id      = Column(BigInteger, primary_key=True)
     galaxy_id    = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
     top_x        = Column(Integer)
     top_y        = Column(Integer)
-    size         = Column(Integer)
+    bottom_x     = Column(Integer)
+    bottom_y     = Column(Integer)
 
 class PixelResult(Base):
     __tablename__ = 'pixel_result'
 
     pxresult_id = Column(BigInteger, primary_key=True)
-    square_id = Column(BigInteger)
+    area_id = Column(BigInteger)
     galaxy_id = Column(BigInteger)
     x = Column(Integer)
     y = Column(Integer)
