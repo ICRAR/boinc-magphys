@@ -94,6 +94,7 @@ class PixelHistogram(Base):
 
     pxhistogram_id = Column(Integer, primary_key=True)
     pxparameter_id = Column(Integer, ForeignKey('pixel_parameter.pxparameter_id'))
+    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
     x_axis = Column(Float)
     hist_value = Column(Float)
 

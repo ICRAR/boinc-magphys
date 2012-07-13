@@ -1,14 +1,10 @@
 <output_template>
     <file_info>
-        <name>
-            <OUTFILE_0/>
-        </name>
+        <name><OUTFILE_0/></name>
         <generated_locally/>
         <upload_when_present/>
         <max_nbytes>1000000</max_nbytes>
-        <url>
-            <UPLOAD_URL/>
-        </url>
+        <url><UPLOAD_URL/></url>
         <gzip_when_done/>
     </file_info>
     <result>

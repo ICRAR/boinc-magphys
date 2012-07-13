@@ -182,6 +182,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                         percentilesNext = False;
                     elif histogramNext:
                         hist = PixelHistogram()
+                        hist.pxresult_id = pxresult.pxresult_id
                         values = line.split()
                         hist.x_axis = float(values[0])
                         hist.hist_value = float(values[1])
