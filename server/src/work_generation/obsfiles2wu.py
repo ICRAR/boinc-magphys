@@ -1,6 +1,10 @@
+import logging
 import sys
 import os
 import subprocess
+
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 if(len(sys.argv) != 3):
     print "usage:   %(me)s files_to_process observations_directory boinc_project_root" % {'me':sys.argv[0]}
@@ -55,7 +59,7 @@ for file_name in file_list:
     file_name_job = file_name + '.job.xml'
 
     pixels_in_file = sum(1 for line in open(FILE_DIR + "/" + file_name))-1
-    print("Creating work unit from observations file %(file)s: %(pixels)d pixels" % {'file':file_name, 'pixels':pixels_in_file})
+    LOG.info("Creating work unit from observations file %(file)s: %(pixels)d pixels" % {'file':file_name, 'pixels':pixels_in_file})
 
     args_params = [
         "--appname",         APP_NAME,
@@ -87,7 +91,7 @@ for file_name in file_list:
 
     # And "create work" = create the work unit
     if subprocess.call(cmd_create_work):
-        print "Something went wrong; sorry"
+        LOG.error("Something went wrong; sorry")
 
     files_processed += 1
 

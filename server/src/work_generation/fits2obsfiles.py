@@ -1,5 +1,6 @@
 from __future__ import print_function
 import datetime
+import logging
 import math
 import pyfits
 import sys
@@ -7,6 +8,8 @@ from database.database_support import Galaxy, Square, PixelResult
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 if len(sys.argv) < 3:
     print("usage:   %(me)s FITS_file output_directory [galaxy_name]" % {'me':sys.argv[0]})
@@ -39,7 +42,7 @@ START_Y = 0
 END_Y = HDULIST[0].data.shape[0]
 END_X = HDULIST[0].data.shape[1]
 
-print("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':END_X,'y':END_Y,'z':LAYER_COUNT,'pix':END_X*END_Y/1000000.0})
+LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':END_X,'y':END_Y,'z':LAYER_COUNT,'pix':END_X*END_Y/1000000.0})
 
 # Connect to the database
 login = "mysql://root:@localhost/magphys"
@@ -197,7 +200,7 @@ if len(sys.argv) > 3:
     object_name = sys.argv[3]
 else:
     object_name = HDULIST[0].header['OBJECT']
-print("Work units for: %(object)s" % { "object":object_name } )
+LOG.info("Work units for: %(object)s" % { "object":object_name } )
 
 # Create and save the object
 galaxy = Galaxy()
@@ -211,12 +214,12 @@ session.add(galaxy)
 # Flush to the DB so we can get the id
 session.flush()
 
-print("Wrote %(object)s to database" % { 'object':galaxy.name })
+LOG.info("Wrote %(object)s to database" % { 'object':galaxy.name })
 
 LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
 squares = squarify(galaxy)
 
-print("\nRun status")
+LOG.info("\nRun status")
 for key in sorted(status.keys()):
     print("%(key)30s %(val)s" % { 'key':key, 'val':status[key] })
 
@@ -225,4 +228,4 @@ if rollback:
 else:
     session.commit()
 
-print("\nDone")
+LOG.info("\nDone")
