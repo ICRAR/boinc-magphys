@@ -26,10 +26,8 @@ class MagphysAssimilatorTest(magphys_assimilator.MagphysAssimilator):
     def test(self, uploadDir, outFile):
         str_list = []
         str_list.append("<file_info>\n")
-        str_list.append("    <name>\n")
-        str_list.append("        ");
+        str_list.append("    <name>")
         str_list.append(outFile)
-        str_list.append("\n")
         str_list.append("    </name>\n")
         str_list.append("    <generated_locally/>\n")
         str_list.append("    <upload_when_present/>\n")
@@ -40,10 +38,8 @@ class MagphysAssimilatorTest(magphys_assimilator.MagphysAssimilator):
         str_list.append("</file_info>\n")
         str_list.append("<result>\n")
         str_list.append("    <file_ref>\n")
-        str_list.append("        <file_name>\n")
-        #str_list.append("            ");
+        str_list.append("        <file_name>")
         str_list.append(outFile)
-        #str_list.append("\n")
         str_list.append("</file_name>\n")
         str_list.append("        <open_name>output.fit</open_name>\n")
         str_list.append("        <copy_file/>\n")

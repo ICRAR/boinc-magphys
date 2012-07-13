@@ -34,14 +34,16 @@ class MagphysAssimilator(assimilator.Assimilator):
         for node in dom.getElementsByTagName('file_name'):
             list.append(node.firstChild.nodeValue)
 
-    def getResult(self, session, pointName):
+    def getResult(self, session, pxresultId):
         if self.noinsert:
             pxresult = None
         else:
-            pxresult = session.query(PixelResult).filter("point_name=:name").params(name=pointName).first()
+            pxresult = session.query(PixelResult).filter("pxresult_id=:pxresultId").params(pxresultId=pxresultId).first()
         #doAdd = False
         if pxresult == None:
-            pxresult = PixelResult()
+            print "Pixel Result row not found for pxresultId of", pxresultId
+            return None
+            #pxresult = PixelResult()
         else:
             for filter in pxresult.filters:
                 session.delete(filter)
@@ -51,7 +53,6 @@ class MagphysAssimilator(assimilator.Assimilator):
                 session.delete(parameter)
             for user in pxresult.users:
                 session.delete(user)
-        pxresult.point_name = pointName;
         pxresult.filters = []
         pxresult.parameters = []
         return pxresult
@@ -88,9 +89,12 @@ class MagphysAssimilator(assimilator.Assimilator):
                     self.saveResult(session, pxresult, results)
                 values = line.split()
                 pointName = values[1]
-                print pointName
-                pxresult = self.getResult(session, pointName)
-                pxresult.workunit_id = wu.id
+                print "pointName", pointName
+                pxresultId = pointName[3:].rstrip()
+                print "pxresultId", pxresultId
+                pxresult = self.getResult(session, pxresultId)
+                if pxresult:
+                  pxresult.workunit_id = wu.id
                 lineNo = 0
                 percentilesNext = False;
                 histogramNext = False
