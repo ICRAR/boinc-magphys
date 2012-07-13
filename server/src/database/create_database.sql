@@ -78,6 +78,8 @@ CREATE TABLE pixel_filter (
 PARTITION BY KEY (pxresult_id)
 PARTITIONS 16;
 
+CREATE INDEX pxfilter_pxresult_ix ON pixel_filter(pxresult_id);
+
 CREATE TABLE pixel_parameter (
   pxparameter_id     BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   pxresult_id        BIGINT UNSIGNED NOT NULL,
@@ -92,6 +94,7 @@ CREATE TABLE pixel_parameter (
 PARTITION BY KEY (pxresult_id)
 PARTITIONS 16;
 
+CREATE INDEX pxparameter_pxresult_ix ON pixel_parameter(pxresult_id);
 
 CREATE TABLE pixel_histogram (
   pxhistogram_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -104,6 +107,8 @@ CREATE TABLE pixel_histogram (
 PARTITION BY KEY (pxresult_id)
 PARTITIONS 16;
 
+CREATE INDEX pxhistogram_pxresult_ix ON pixel_histogram(pxresult_id);
+
 CREATE TABLE pixel_user (
   pxuser_id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   pxresult_id                BIGINT UNSIGNED NOT NULL,
@@ -113,3 +118,5 @@ CREATE TABLE pixel_user (
 ) CHARACTER SET utf8 ENGINE=InnoDB
 PARTITION BY KEY (pxresult_id)
 PARTITIONS 16;
+
+CREATE INDEX pxuser_pxresult_ix ON pixel_user(pxresult_id);
