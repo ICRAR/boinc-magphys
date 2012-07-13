@@ -109,10 +109,8 @@ def create_output_file(galaxy, area, pixels):
     filename = '%(output_dir)s/%(galaxy)s__wu%(area)s' % { 'galaxy':galaxy.name, 'output_dir':OUTPUT_DIR, 'area':area.area_id}
     outfile = open(filename, 'w')
     outfile.write('#  This workunit contains observations for galaxy %(galaxy)s. ' % { 'galaxy':galaxy.name })
-    outfile.write('Area %(area)s contains %(count)s pixels with above-threshold observations. ' % {
-        'area':area.area_id, 'count':pixels_in_area })
-    outfile.write('(%(top_x)s,%(top_y)s) to (%(bottom_x)s,%(bottom_y)s)\n' % {
-        'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,})
+    outfile.write('Area %(area)s (%(top_x)s,%(top_y)s) to (%(bottom_x)s,%(bottom_y)s) contains %(count)s pixels with above-threshold observations.\n' % {
+        'area':area.area_id, 'count':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,})
 
     row_num = 0
     for pixel in pixels:
@@ -136,11 +134,11 @@ def get_pixels(pix_x, pix_y):
     result = []
     max_x = pix_x
     max_y = pix_y
-    for x in range(pix_x, pix_x + GRID_SIZE - 1):
+    for x in range(pix_x, pix_x + GRID_SIZE):
         if x >= END_X:
             # Have we moved off the edge
             continue
-        for y in range(pix_y, pix_y + GRID_SIZE - 1):
+        for y in range(pix_y, pix_y + GRID_SIZE):
             # Have we moved off the edge
             if y >= END_Y:
                 continue

@@ -64,7 +64,7 @@ echo "***************************************************"
 echo
 
 export MACOSX_DEPLOYMENT_TARGET=10.6
-export CC=/usr/bin/gcc;export CXX=/usr/bin/g++
+export CC=/usr/bin/gcc-4.2;export CXX=/usr/bin/g++-4.2
 export LDFLAGS="-Wl,-syslibroot,/Developer/SDKs/MacOSX10.6.sdk,-arch,i386"
 export VARIANTFLAGS="-arch i386 -DMAC_OS_X_VERSION_MAX_ALLOWED=1040 -DMAC_OS_X_VERSION_MIN_REQUIRED=1040 -isysroot /Developer/SDKs/MacOSX10.6.sdk -fvisibility=hidden -fvisibility-inlines-hidden"
 
@@ -84,7 +84,7 @@ echo "***************************************************"
 echo
 
 export MACOSX_DEPLOYMENT_TARGET=10.6
-export CC=/usr/bin/gcc;export CXX=/usr/bin/g++
+export CC=/usr/bin/gcc-4.2;export CXX=/usr/bin/g++-4.2
 export LDFLAGS="-Wl,-arch x86_64"
 export LDFLAGS="-Wl,-syslibroot,/Developer/SDKs/MacOSX10.6.sdk,-arch,x86_64"
 export VARIANTFLAGS="-arch x86_64 -DMAC_OS_X_VERSION_MAX_ALLOWED=1050 -DMAC_OS_X_VERSION_MIN_REQUIRED=1050 -isysroot /Developer/SDKs/MacOSX10.6.sdk -fvisibility=hidden -fvisibility-inlines-hidden"

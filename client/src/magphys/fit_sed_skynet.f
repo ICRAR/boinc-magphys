@@ -102,7 +102,8 @@ c     histograms
       real*8 pct_tbg1(5),pct_xi1(5),pct_xi2(5)
       real*8 pct_xi3(5),pct_tvism(5),pct_ism(5),pct_md(5)
       integer nbinmax1,nbinmax2
-      parameter (nbinmax1=1500,nbinmax2=150)
+c theSkyNet parameter (nbinmax1=1500,nbinmax2=150)
+      parameter (nbinmax1=3000,nbinmax2=300)
       real*8 psfh2(nbinmax2),pir2(nbinmax2),pmu2(nbinmax2)
       real*8 ptv2(nbinmax2),pxi2_2(nbinmax2),pssfr2(nbinmax2)
       real*8 pa2(nbinmax2),pldust2(nbinmax2)
@@ -144,13 +145,17 @@ c     histogram parameters: min,max,bin width
       data mu_min/0./,mu_max/1.0005/,dmu/0.001/
       data tv_min/0./,tv_max/6.0025/,dtv/0.005/
       data ssfr_min/-13./,ssfr_max/-5.9975/,dssfr/0.05/
-      data sfr_min/-3./,sfr_max/3.5005/,dsfr/0.005/
-      data a_min/7./,a_max/13.0025/,da/0.005/
-      data ld_min/7./,ld_max/13.0025/,dldust/0.005/
+c theSkyNet data sfr_min/-3./,sfr_max/3.5005/,dsfr/0.005/
+c theSkyNet data a_min/7./,a_max/13.0025/,da/0.005/
+c theSkyNet data ld_min/7./,ld_max/13.0025/,dldust/0.005/
+      data sfr_min/-8./,sfr_max/3.5005/,dsfr/0.005/
+      data a_min/2./,a_max/13.0025/,da/0.005/
+      data ld_min/2./,ld_max/13.0025/,dldust/0.005/
       data tbg1_min/30./,tbg1_max/60.0125/,dtbg/0.025/
       data tbg2_min/15./,tbg2_max/25.0125/
       data xi_min/0./,xi_max/1.0001/,dxi/0.001/
-      data md_min/3./,md_max/9./,dmd/0.005/
+c theSkyNet data md_min/3./,md_max/9./,dmd/0.005/
+      data md_min/-2./,md_max/9./,dmd/0.005/
 c     cosmology
       data h/70./,omega/0.30/,omega_lambda/0.70/
       data isave/0/
@@ -492,7 +497,8 @@ c     Initialize variables:
             flux_mod(k)=0.
          enddo
 
-         do i=1,1500
+c theSkyNet do i=1,1500
+         do i=1,3000
             psfh(i)=0.
             pir(i)=0.
             pmu(i)=0.
@@ -789,7 +795,8 @@ c     Chi2-weighted models: normalize to total probability ptot
 c     ---------------------------------------------------------------------------
 c     Compute percentiles of the (normalized) likelihood distributions
 c     ---------------------------------------------------------------------------
-         do i=1,1500
+c theSkyNet do i=1,1500
+         do i=1,3000
             psfh(i)=psfh(i)/ptot
             pir(i)=pir(i)/ptot
             pmu(i)=pmu(i)/ptot
@@ -827,7 +834,7 @@ c     --------------------------------------------------------------------------
 
 c     ---------------------------------------------------------------------------
 c     Degrade the resolution od the likelihood distribution histograms
-c     from 1500 max bins to 100 max bins for storing in output file + plotting
+c     from 3000 max bins to 100 max bins for storing in output file + plotting
 c     ---------------------------------------------------------------------------
          do i=1,100
             psfh2(i)=0.
@@ -863,10 +870,12 @@ c     New histogram parameters
          ssfr_min=-13.0
          ssfr_max=-6.0
          dsfr=0.10
-         sfr_min=-3.
+c theSkyNet sfr_min=-3.
+         sfr_min=-8.
          sfr_max=3.
          da=0.10
-         a_min=7.0
+c theSkyNet a_min=7.0
+         a_min=2.0
          a_max=13.0
          dtbg=1.
          tbg2_min=15.
@@ -875,7 +884,8 @@ c     New histogram parameters
          tbg1_max=60.
          dxi=0.05
          dmd=0.10
-         md_min=3.
+c theSkyNet md_min=3.
+         md_min=-2.
          md_max=9.
 
          call degrade_hist(dfmu,fmu_min,fmu_max,nbin_fmu,nbin2_fmu,
