@@ -92,7 +92,7 @@ def create_output_file(galaxy, square, pixels):
     pixels_in_square = len(pixels)
     filename = '%(output_dir)s/%(galaxy)s__wu%(square)s' % { 'galaxy':galaxy.name, 'output_dir':OUTPUT_DIR, 'square':square.square_id}
     outfile = open(filename, 'w')
-    outfile.write('#  This workunit contains observations for galaxy %(galaxy)s. ' % { 'galaxy':square.getObject().name })
+    outfile.write('#  This workunit contains observations for galaxy %(galaxy)s. ' % { 'galaxy':galaxy.name })
     outfile.write('%(square)s contains %(count)s pixels with above-threshold observations\n' % {
         'square':square.square_id, 'count':pixels_in_square })
 
