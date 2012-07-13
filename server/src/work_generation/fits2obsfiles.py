@@ -1,5 +1,5 @@
 from __future__ import print_function
-import datetime
+
 import logging
 import math
 import pyfits
@@ -7,6 +7,7 @@ import sys
 from database.database_support import Galaxy, Square, PixelResult
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from work_generation import FILTER_BANDS
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -65,29 +66,45 @@ class Pixel:
         self.x = x
         self.y = y
         self.pixels = pixels
+        self.pixel_id = None
 
 def sort_layers(hdu_list, layer_count):
     """
     Look at the layers of a HDU and order them based on the effective wavelength stored in the header
     """
-    dictionary = {}
-
+    names = []
     for layer in range(layer_count):
         hdu = hdu_list[layer]
-        header = hdu.header
-        lamda = header['MAGPHYSL']
-        if lamda is None:
-            raise LookupError('No MAGPHYS Lamda value found')
-        else:
-            dictionary[lamda] = layer
+        filter_name = hdu.header['MAGPHYSN']
+        if filter_name is None:
+            raise LookupError('The layer {0} does not have MAGPHYSN in it'.format(layer))
+        names.append(filter_name)
 
-    items = dictionary.items()
-    items.sort()
-    return [value for key, value in items]
+        found_filter = False
+        for name in FILTER_BANDS:
+            if filter_name == name:
+                found_filter = True
+                break
+
+        if not found_filter:
+            raise LookupError('The filter {0} in the fits file is not expected'.format(filter_name))
+
+    layers = []
+    for filter_name in FILTER_BANDS:
+        found_it = False
+        for i in len(names):
+            if names[i] == filter_name:
+                layers.append(i)
+                found_it = True
+                break
+        if not found_it:
+            layers.append(-1)
+
+    return layers
 
 def create_output_file(galaxy, square, pixels):
     """
-    Write an output file for this square
+        Write an output file for this square
     """
     pixels_in_square = len(pixels)
     filename = '%(output_dir)s/%(galaxy)s__wu%(square)s' % { 'galaxy':galaxy.name, 'output_dir':OUTPUT_DIR, 'square':square.square_id}
@@ -106,7 +123,6 @@ def create_output_file(galaxy, square, pixels):
         row_num += 1
     outfile.close()
 
-
 def get_pixels(pix_x, pix_y):
     """
         Retrieves pixels from each pair of (x, y) coordinates specified in pix_x and pix_y.
@@ -114,7 +130,7 @@ def get_pixels(pix_x, pix_y):
         MIN_LIVE_CHANNELS_PER_PIXEL channels. Pixels are retrieved in the order specified in
         the global LAYER_ORDER list.
     """
-    status['calls__get_pixels'] += 1;
+    status['calls__get_pixels'] += 1
 
     result = []
     for x in pix_x:
@@ -125,21 +141,25 @@ def get_pixels(pix_x, pix_y):
                 continue
 
             status['get_pixels_get_attempts'] += 1
-            pixels = [HDULIST[layer].data[x, y] for layer in LAYER_ORDER]
-            pixel_tuples = []
             live_pixels = 0
-            for p in pixels:
-                if math.isnan(p):
-                    # A zero tells MAGPHYS - we have no value here
-                    pixel_tuples.append(0)
+            pixels = []
+            for layer in LAYER_ORDER:
+                if layer == -1:
+                    # The layer is missing
+                    pixels.append(0)
                 else:
-                    live_pixels += 1
-                    pixel_tuples.append(p)
+                    pixel = HDULIST[layer].data[x, y]
+                    if math.isnan(pixel):
+                        # A zero tells MAGPHYS - we have no value here
+                        pixels.append(0)
+                    else:
+                        live_pixels += 1
+                        pixels.append(pixel)
 
             if live_pixels >= MIN_LIVE_CHANNELS_PER_PIXEL:
                 status['get_pixels_get_successful'] += 1
                 status['get_pixels_values_returned'] += live_pixels
-                result.append(Pixel(x, y, pixel_tuples))
+                result.append(Pixel(x, y, pixels))
 
     return result
 
@@ -155,7 +175,6 @@ def create_square(galaxy, pix_x, pix_y):
         square.top_x = pix_x
         square.top_y = pix_y
         square.size = GRID_SIZE
-        square.wu_generated = datetime.datetime
         session.add(square)
         session.flush()
 

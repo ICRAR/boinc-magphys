@@ -18,8 +18,7 @@ CREATE TABLE square (
   galaxy_id    BIGINT UNSIGNED NOT NULL,
   top_x        INTEGER UNSIGNED NOT NULL,
   top_y        INTEGER UNSIGNED NOT NULL,
-  size         INTEGER UNSIGNED NOT NULL,
-  wu_generated TIMESTAMP DEFAULT NULL
+  size         INTEGER UNSIGNED NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 ALTER TABLE square ADD CONSTRAINT square_galaxy_fk FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);

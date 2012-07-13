@@ -27,7 +27,6 @@ class Square(Base):
     top_x        = Column(Integer)
     top_y        = Column(Integer)
     size         = Column(Integer)
-    wu_generated = Column(TIMESTAMP)
 
 class PixelResult(Base):
     __tablename__ = 'pixel_result'
