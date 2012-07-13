@@ -134,12 +134,14 @@ def get_pixels(pix_x, pix_y):
     status['calls__get_pixels'] += 1
 
     result = []
-    max_x = 0
-    max_y = 0
-    for x in pix_x:
+    max_x = pix_x
+    max_y = pix_y
+    for x in range(pix_x, pix_x + GRID_SIZE - 1):
         if x >= END_X:
+            # Have we moved off the edge
             continue
-        for y in pix_y:
+        for y in range(pix_y, pix_y + GRID_SIZE - 1):
+            # Have we moved off the edge
             if y >= END_Y:
                 continue
 
@@ -170,53 +172,45 @@ def get_pixels(pix_x, pix_y):
 
     return max_x, max_y, result
 
-def create_area(galaxy, pix_x, pix_y):
+def create_area(galaxy, pix_y):
     """
-    Create a area - we try to make them squares, but at the edges they aren't
+    Create a area - we try to make them squares, but they aren't as the images have dead zones
     """
     status['calls__create_area'] += 1
-    max_x, max_y, pixels = get_pixels([pix_x], range(pix_y, pix_y+GRID_SIZE))
-    if len(pixels) > 0:
-        max_x, max_y, more_pixels = get_pixels(range(pix_x+1, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE))
-        pixels.extend(more_pixels)
-
-        status['create__area'] += 1
-        area = Area()
-        area.galaxy_id = galaxy.galaxy_id
-        area.top_x = pix_x
-        area.top_y = pix_y
-        area.bottom_x = max_x
-        area.bottom_y = max_y
-        session.add(area)
-        session.flush()
-
-        for pixel in pixels:
-            status['create__pixel'] += 1
-            pixel_result = PixelResult()
-            pixel_result.galaxy_id = galaxy.galaxy_id
-            pixel_result.area_id = area.area_id
-            pixel_result.x = pixel.x
-            pixel_result.y = pixel.y
-            session.add(pixel_result)
+    for pix_x in range(START_X, END_X, GRID_SIZE):
+        max_x, max_y, pixels = get_pixels(pix_x, pix_y)
+        if len(pixels) > 0:
+            status['create__area'] += 1
+            area = Area()
+            area.galaxy_id = galaxy.galaxy_id
+            area.top_x = pix_x
+            area.top_y = pix_y
+            area.bottom_x = max_x
+            area.bottom_y = max_y
+            session.add(area)
             session.flush()
 
-            pixel.pixel_id = pixel_result.pxresult_id
+            for pixel in pixels:
+                status['create__pixel'] += 1
+                pixel_result = PixelResult()
+                pixel_result.galaxy_id = galaxy.galaxy_id
+                pixel_result.area_id = area.area_id
+                pixel_result.x = pixel.x
+                pixel_result.y = pixel.y
+                session.add(pixel_result)
+                session.flush()
 
-        # Write the pixels
-        create_output_file(galaxy, area, pixels)
+                pixel.pixel_id = pixel_result.pxresult_id
 
-        return GRID_SIZE
-    else:
-        return 1
+            # Write the pixels
+            create_output_file(galaxy, area, pixels)
 
 def squarify(galaxy):
     for pix_y in range(START_Y, END_Y, GRID_SIZE):
         str = "Scanned %(pct_done)3d%% of image" % { 'pct_done':100*(pix_y-START_Y)/(END_Y-START_Y) }
         print(str, end="\r")
         sys.stdout.flush()
-        pix_x = START_X
-        while pix_x < END_X:
-            pix_x += create_area(galaxy, pix_x, pix_y)
+        create_area(galaxy, pix_y)
 
 ## ######################################################################## ##
 ##
