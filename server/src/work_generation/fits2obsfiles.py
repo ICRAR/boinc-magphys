@@ -177,7 +177,8 @@ def create_area(galaxy, pix_x, pix_y):
     status['calls__create_area'] += 1
     max_x, max_y, pixels = get_pixels([pix_x], range(pix_y, pix_y+GRID_SIZE))
     if len(pixels) > 0:
-        max_x, max_y , pixels.extend(get_pixels(range(pix_x+1, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE)))
+        max_x, max_y, more_pixels = get_pixels(range(pix_x+1, pix_x+GRID_SIZE), range(pix_y, pix_y+GRID_SIZE))
+        pixels.extend(more_pixels)
 
         status['create__area'] += 1
         area = Area()
