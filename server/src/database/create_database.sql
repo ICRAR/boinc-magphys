@@ -24,7 +24,6 @@ CREATE TABLE square (
 ALTER TABLE square ADD CONSTRAINT square_galaxy_fk FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);
 CREATE INDEX square_galaxy_ix ON square(galaxy_id);
 CREATE UNIQUE INDEX square_ix ON square(galaxy_id, top_x, top_y, size);
-CREATE INDEX wu_generation_id ON square(wu_generated);
 
 CREATE TABLE pixel_result (
   pxresult_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
