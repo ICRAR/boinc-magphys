@@ -117,7 +117,7 @@ def create_output_file(galaxy, square, pixels):
     for pixel in pixels:
         outfile.write('pix%(id)s %(pixel_redshift)s ' % {'id':pixel.pixel_id, 'pixel_redshift':galaxy.redshift})
         for value in pixel.pixels:
-            outfile.write("{0} {1}".format(value, value * SIGMA))
+            outfile.write("{0}  {1}  ".format(value, value * SIGMA))
 
         outfile.write('\n')
         row_num += 1
