@@ -92,7 +92,7 @@ def sort_layers(hdu_list, layer_count):
     layers = []
     for filter_name in FILTER_BANDS:
         found_it = False
-        for i in len(names):
+        for i in range(len(names)):
             if names[i] == filter_name:
                 layers.append(i)
                 found_it = True
