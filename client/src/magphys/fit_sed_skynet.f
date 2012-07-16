@@ -253,7 +253,7 @@ c     CHOOSE GALAXY TO FIT (enter corresponding i)
 c     Do we have the observation
       if (i_gal .gt. n_obs) then
          write(*,*) 'Observation does not exist'
-         exit(0)
+         call EXIT(0)
       endif
 
 c     WHAT OBSERVATIONS DO YOU WANT TO FIT?
