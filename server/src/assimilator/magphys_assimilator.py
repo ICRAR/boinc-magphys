@@ -5,7 +5,7 @@ import os
 import boinc_path_config
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
-from database.database_support import PixelResult, PixelUser, PixelFilter, PixelParameter, PixelHistogram
+from database.database_support import PixelResult, PixelUser, PixelFilter, PixelParameter, PixelHistogram, login
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -16,15 +16,15 @@ class MagphysAssimilator(assimilator.Assimilator):
         assimilator.Assimilator.__init__(self)
         #super(MagphysAssimilator, self).__init__(self)
 
-        login = "mysql://root:@localhost/magphys"
-        try:
-             f = open(os.path.expanduser("~/Magphys.Profile") , "r")
-             for line in f:
-                 if line.startswith("url="):
-                   login = line[4:]
-             f.close()
-        except IOError as e:
-            pass
+        #login = "mysql://root:@localhost/magphys"
+        #try:
+        #     f = open(os.path.expanduser("~/Magphys.Profile") , "r")
+        #     for line in f:
+        #         if line.startswith("url="):
+        #           login = line[4:]
+        #     f.close()
+        #except IOError as e:
+        #    pass
 
         engine = create_engine(login)
         self.Session = sessionmaker(bind=engine)
@@ -89,9 +89,9 @@ class MagphysAssimilator(assimilator.Assimilator):
                     self.saveResult(session, pxresult, results)
                 values = line.split()
                 pointName = values[1]
-                print "pointName", pointName
+                #print "pointName", pointName
                 pxresultId = pointName[3:].rstrip()
-                print "pxresultId", pxresultId
+                #print "pxresultId", pxresultId
                 pxresult = self.getResult(session, pxresultId)
                 if pxresult:
                   pxresult.workunit_id = wu.id

@@ -1,6 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship, backref
+from database import login
 
 # The database is partitioned to improve performance, this means there are no primary
 # keys, but the ORM mapping of sqlalchemy needs them - doesn't seem to hurt having
@@ -28,13 +29,15 @@ class Area(Base):
     top_y        = Column(Integer)
     bottom_x     = Column(Integer)
     bottom_y     = Column(Integer)
+    
+    galaxy = relationship("Galaxy", backref=backref('areas', order_by=galaxy_id))
 
 class PixelResult(Base):
     __tablename__ = 'pixel_result'
 
     pxresult_id = Column(BigInteger, primary_key=True)
-    area_id = Column(BigInteger)
-    galaxy_id = Column(BigInteger)
+    area_id = Column(BigInteger, ForeignKey('area.area_id'))
+    galaxy_id = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
     x = Column(Integer)
     y = Column(Integer)
     workunit_id = Column(Integer)
@@ -62,24 +65,27 @@ class PixelResult(Base):
     dmstar = Column(Float)
     dfmu_aux = Column(Float)
     dz = Column(Float)
+    
+    galaxy = relationship("Galaxy", backref=backref('pixelResults', order_by=galaxy_id))
+    area = relationship("Area", backref=backref('pixelResults', order_by=area_id))
 
 class PixelFilter(Base):
     __tablename__ = 'pixel_filter'
 
-    pxfilter_id = Column(Integer, primary_key=True)
-    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
+    pxfilter_id = Column(BigInteger, primary_key=True)
+    pxresult_id = Column(BigInteger, ForeignKey('pixel_result.pxresult_id'))
     filter_name = Column(String(100))
     observed_flux = Column(Float)
     observational_uncertainty = Column(Float)
     flux_bfm = Column(Float)
 
-    work_unit = relationship("PixelResult", backref=backref('filters', order_by=pxfilter_id))
+    result = relationship("PixelResult", backref=backref('filters', order_by=pxfilter_id))
 
 class PixelParameter(Base):
     __tablename__ = 'pixel_parameter'
 
-    pxparameter_id = Column(Integer, primary_key=True)
-    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
+    pxparameter_id = Column(BigInteger, primary_key=True)
+    pxresult_id = Column(BigInteger, ForeignKey('pixel_result.pxresult_id'))
     parameter_name = Column(String(100))
     percentile2_5 = Column(Float)
     percentile16 = Column(Float)
@@ -87,14 +93,14 @@ class PixelParameter(Base):
     percentile84 = Column(Float)
     percentile97_5 = Column(Float)
 
-    work_unit = relationship("PixelResult", backref=backref('parameters', order_by=pxparameter_id))
+    result = relationship("PixelResult", backref=backref('parameters', order_by=pxparameter_id))
 
 class PixelHistogram(Base):
     __tablename__ = 'pixel_histogram'
 
-    pxhistogram_id = Column(Integer, primary_key=True)
-    pxparameter_id = Column(Integer, ForeignKey('pixel_parameter.pxparameter_id'))
-    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
+    pxhistogram_id = Column(BigInteger, primary_key=True)
+    pxparameter_id = Column(BigInteger, ForeignKey('pixel_parameter.pxparameter_id'))
+    pxresult_id = Column(BigInteger, ForeignKey('pixel_result.pxresult_id'))
     x_axis = Column(Float)
     hist_value = Column(Float)
 
@@ -103,9 +109,10 @@ class PixelHistogram(Base):
 class PixelUser(Base):
     __tablename__ = 'pixel_user'
 
-    pxuser_id = Column(Integer, primary_key=True)
-    pxresult_id = Column(Integer, ForeignKey('pixel_result.pxresult_id'))
+    pxuser_id = Column(BigInteger, primary_key=True)
+    pxresult_id = Column(BigInteger, ForeignKey('pixel_result.pxresult_id'))
     userid = Column(Integer)
     create_time = Column(TIMESTAMP)
 
-    work_unit = relationship("PixelResult", backref=backref('users', order_by=pxuser_id))
+    result = relationship("PixelResult", backref=backref('users', order_by=pxuser_id))
+
