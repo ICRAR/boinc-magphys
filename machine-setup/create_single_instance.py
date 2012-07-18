@@ -58,6 +58,7 @@ PUBLIC_IP       = '23.21.160.71'
 use_elastic_ip = query_yes_no('Do you want to assign the Elastic IP [{0}] to this instance'.format(PUBLIC_IP), 'no')
 ops_username = raw_input('Ops area username: ')
 ops_password = getpass.getpass('Password: ')
+instance_name = raw_input('Instance name: ')
 
 # Create the EC2 instance
 print 'Starting an EC2 instance of type {0} with image {1}'.format(INSTANCE_TYPE, IMAGE)
@@ -90,6 +91,8 @@ time.sleep(10)
 
 # Load the new instance data as the dns_name may have changed
 instance.update(True)
+conn.create_tags([instance.id], {"Name": instance_name})
+
 print 'Current DNS name is {0} after associating the Elastic IP'.format(instance.dns_name)
 
 # The instance is started, but not useable (yet)
@@ -164,10 +167,10 @@ run_command('sudo yum --assumeyes install puppet git')
 run_command('git clone git://github.com/ICRAR/boinc-magphys.git')
 
 # Now run the rest of the setup
-run_command('cd ~/boinc-magphys/machine-setup')
+run_command('cd ~/boinc-magphys/machine-setup/single_instance')
 run_command('chmod +x amazon_linux_boinc_server_install_*.sh')
 run_command('./amazon_linux_boinc_server_install_01.sh')
-#run_command('./amazon_linux_boinc_server_install_02.sh')
+run_command('./amazon_linux_boinc_server_install_02.sh')
 
 for user in list_of_users:
     run_command('sudo useradd {0}'.format(user))

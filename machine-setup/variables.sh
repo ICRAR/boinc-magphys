@@ -6,6 +6,6 @@ MY_HOSTNAME=`curl -s --fail http://169.254.169.254/latest/meta-data/public-hostn
 BASE_URL="http://$MY_HOSTNAME"
 
 DB_USER=root
-#DB_HOST=
-#DB_NAME=
-#DB_PASSWD=
+DB_HOST=
+DB_NAME=
+DB_PASSWD=

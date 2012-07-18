@@ -7,7 +7,7 @@ cd /home/ec2-user/boinc-magphys/server/src/Validator
 make
 
 # Move to the magphys area and start configuring
-cd /home/ec2-user/boinc-magphys/machine-setup
+cd /home/ec2-user/boinc-magphys/machine-setup/single_instance
 
 # setup_website
 sudo rake setup_website
@@ -20,14 +20,14 @@ chmod ug+w /home/ec2-user/projects/pogs/log_*
 chmod ug+wx /home/ec2-user/projects/pogs/upload
 
 # Edit the files
-cd /home/ec2-user/boinc-magphys/machine-setup
-python2.7 file_editor.py
+cd /home/ec2-user/boinc-magphys/machine-setup/single_instance
+python2.7 file_editor_single.py
 
 # Setup the forums
 cd /home/ec2-user/projects/pogs/html/ops
 php create_forums.php
 
 # Copy files into place
-cd /home/ec2-user/boinc-magphys/machine-setup
+cd /home/ec2-user/boinc-magphys/machine-setup/single_instance
 rake update_versions
 rake start_daemons

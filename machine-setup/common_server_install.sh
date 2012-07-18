@@ -5,13 +5,9 @@
 # Puppet and git should be installed by the python
 sudo puppet boinc-magphys.pp
 
-# Is the DB here - if so activate it
-if [[ -z "$DB_HOST" ]]; then
+# Activate the DB
 sudo mysql_install_db
 sudo chown -R mysql:mysql /var/lib/mysql/*
-
-echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet apply
-fi
 
 # Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-07-10
 svn co http://boinc.berkeley.edu/svn/trunk/boinc /home/ec2-user/boinc
@@ -27,11 +23,7 @@ make
 # Make the POGS project
 cd /home/ec2-user/boinc/tools
 
-if [[ -z "$DB_HOST" ]]; then
 yes | ./make_project -v --url_base $BASE_URL --db_user $DB_USER pogs
-else
-yes | ./make_project -v --url_base $BASE_URL --db_user $DB_USER --db_host $DB_HOST --db_name $DB_NAME -db_passwd $DB_PASSWD pogs
-fi
 
 # Setup the crontab job to keep things ticking
 crontab -l > /tmp/crontab.txt
@@ -39,12 +31,7 @@ echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/pogs 
 crontab /tmp/crontab.txt
 
 # Setup the database for recording WU's
-if [[ -z "$DB_HOST" ]]; then
-#Local setup
 mysql --user=$DB_USER < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql
-else
-mysql --user=$DB_USER --password=$DB_PASSWD --host=$DB_HOST < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql
-fi
 
 # Setup the pythonpath
 echo ' ' >> ~/.bash_profile

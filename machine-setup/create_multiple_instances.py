@@ -53,8 +53,10 @@ INSTANCE_TYPE   = 't1.micro'
 SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH
 KEY_FILE        = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 PUBLIC_KEYS     = os.path.expanduser('~/Documents/Keys')
-PUBLIC_IP       = '23.21.160.71'
 
+db_host_name = raw_input('DB Host name: ')
+db_user = raw_input('DB username: ')
+db_password = getpass.getpass('Password: ')
 use_elastic_ip = query_yes_no('Do you want to assign the Elastic IP [{0}] to this instance'.format(PUBLIC_IP), 'no')
 ops_username = raw_input('Ops area username: ')
 ops_password = getpass.getpass('Password: ')
@@ -164,10 +166,12 @@ run_command('sudo yum --assumeyes install puppet git')
 run_command('git clone git://github.com/ICRAR/boinc-magphys.git')
 
 # Now run the rest of the setup
-run_command('cd ~/boinc-magphys/machine-setup')
-run_command('chmod +x amazon_linux_boinc_server_install_*.sh')
-run_command('./amazon_linux_boinc_server_install_01.sh')
-#run_command('./amazon_linux_boinc_server_install_02.sh')
+run_command('cd ~/boinc-magphys/machine-setup/multiple_instance')
+run_command('''sed -i '' 9,11D variables.sh''')
+run_command('sed ')
+run_command('sed ')
+run_command('chmod +x amazon_linux_boinc_servers_install_*.sh')
+run_command('./amazon_linux_boinc_servers_install_01.sh')
 
 for user in list_of_users:
     run_command('sudo useradd {0}'.format(user))
