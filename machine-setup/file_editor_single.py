@@ -1,5 +1,5 @@
 """
-Edit the various configuration files as required.
+Edit the various configuration files as required for a single server installation.
 
 This code uses the fact that the fileinput module can do inplace editing. When it is set up in inplace mode writing to sys.stdout is
 redirected to the file

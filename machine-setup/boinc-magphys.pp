@@ -82,12 +82,6 @@ service { 'httpd':
     require => Package['httpd'],
 }
 
-service { 'mysqld':
-    ensure => running,
-    enable => true,
-    require => Package['mysql-server'],
-}
-
 file { "/home/ec2-user/galaxies":
     ensure => "directory",
     owner  => ec2-user,

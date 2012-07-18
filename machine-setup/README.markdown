@@ -3,6 +3,6 @@ The idea is to make setting up such an instance easily reproducible by encouragi
 
 An instance of the BOINC server can be created by running
 * python ./create_single_instance.py
+* python ./create_multiple_instances.py
 
-This will create a brand new EC2 instance and run the scripts for setting up a newer version of the server,
-(amazon_linux_boinc_server_install_01.sh, amazon_linux_boinc_server_install_02.sh).
+This will create a brand new EC2 instance and run the scripts for setting up a newer version of the server.
