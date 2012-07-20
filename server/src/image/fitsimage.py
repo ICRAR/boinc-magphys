@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw
 import math
 import sys
 import os, hashlib
-from database.database_support import Galaxy, Area, AreaUser, PixelResult, PixelUser, login
+from database.database_support import Galaxy, Area, AreaUser, PixelResult, login
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 

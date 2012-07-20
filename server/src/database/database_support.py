@@ -116,13 +116,4 @@ class PixelHistogram(Base):
 
     parameter = relationship("PixelParameter", backref=backref('histograms', order_by=pxhistogram_id))
 
-class PixelUser(Base):
-    __tablename__ = 'pixel_user'
-
-    pxuser_id = Column(BigInteger, primary_key=True)
-    pxresult_id = Column(BigInteger, ForeignKey('pixel_result.pxresult_id'))
-    userid = Column(Integer)
-    create_time = Column(TIMESTAMP)
-
-    result = relationship("PixelResult", backref=backref('users', order_by=pxuser_id))
 

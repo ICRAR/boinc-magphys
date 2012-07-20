@@ -5,7 +5,7 @@ import os
 import boinc_path_config
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
-from database.database_support import PixelResult, PixelUser, PixelFilter, PixelParameter, PixelHistogram, login
+from database.database_support import Area, AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram, login
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
