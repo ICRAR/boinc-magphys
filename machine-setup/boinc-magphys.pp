@@ -70,6 +70,12 @@ package { 'rubygem-rake':
 package { 'mysql-server':
     ensure => installed,
 }
+package { 'mod_fcgid':
+    ensure => installed,
+}
+package { 'php-fpm':
+    ensure => installed,
+}
 
 user { 'apache':
   ensure  => present,
