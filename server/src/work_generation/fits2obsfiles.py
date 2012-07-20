@@ -4,7 +4,7 @@ import logging
 import math
 import pyfits
 import sys
-from database.database_support import Galaxy, Area, PixelResult
+from database.database_support import Galaxy, Area, PixelResult, login
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from work_generation import FILTER_BANDS
@@ -45,7 +45,7 @@ END_X = HDULIST[0].data.shape[1]
 LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':END_X,'y':END_Y,'z':LAYER_COUNT,'pix':END_X*END_Y/1000000.0})
 
 # Connect to the database
-login = "mysql://root:@localhost/magphys"
+#login = "mysql://root:@localhost/magphys"
 engine = create_engine(login)
 Session = sessionmaker(bind=engine)
 session = Session()
