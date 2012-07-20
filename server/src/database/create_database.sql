@@ -118,14 +118,3 @@ PARTITIONS 16;
 
 CREATE INDEX pxhistogram_pxresult_ix ON pixel_histogram(pxresult_id);
 
-CREATE TABLE pixel_user (
-  pxuser_id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  pxresult_id                BIGINT UNSIGNED NOT NULL,
-  userid                     INTEGER NOT NULL,
-  create_time                TIMESTAMP,
-  KEY (pxuser_id)
-) CHARACTER SET utf8 ENGINE=InnoDB
-PARTITION BY KEY (pxresult_id)
-PARTITIONS 16;
-
-CREATE INDEX pxuser_pxresult_ix ON pixel_user(pxresult_id);
