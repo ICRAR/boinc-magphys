@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw
 import math
 import sys
 import os
-from database.database_support import Galaxy, Area, PixelResult, PixelUser, login
+from database.database_support import Galaxy, Area, AreaUser, PixelResult, PixelUser, login
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, aliased
 
@@ -244,17 +244,19 @@ class FitsImage:
         image = Image.open(inImageFileName, "r").convert("RGBA")
         
         #pixels = session.query(PixelResult).filter("galaxy_id=:galaxyId", "user_id=:userId").params(galaxyId=galaxyId).all()
-        pixels = session.query(PixelUser, PixelResult).filter(PixelUser.userid == userid)\
-          .filter(PixelResult.pxresult_id == PixelUser.pxresult_id)\
-          .filter(PixelResult.galaxy_id == galaxy_id)\
-          .order_by(PixelResult.x, PixelResult.y).all()
-        print 'Pixels', len(pixels)
-        for pxuser in pixels:
-            px = pxuser.PixelResult;
+        areas = session.query(Area, AreaUser).filter(AreaUser.userid == userid)\
+          .filter(Area.area_id == AreaUser.area_id)\
+          .order_by(Area.top_x, Area.top_y).all()
+        print 'Areas', len(areas)
+        for areax in areas:
+            area = areax.Area;
+            for x in range(area.top_x, area.bottom_x):
+                for y in range(area.top_y, area.bottom_y):
+                    self.markPixel(image, x, y)
             #print px, px.x, px.y
-            x = int(px.x)
-            y = int(px.y)
-            self.markPixel(image, x, y)
+            #x = int(px.x)
+            #y = int(px.y)
+            #self.markPixel(image, x, y)
         
         for x in range(140, 145):
             for y in range(80, 93):
@@ -291,7 +293,7 @@ class FitsImage:
         engine = create_engine(login)
         Session = sessionmaker(bind=engine)
         session = Session()
-        stmt = session.query(PixelResult.galaxy_id).join(PixelUser).filter(PixelUser.userid == userid).subquery()
+        stmt = session.query(Galaxy.galaxy_id).join(Area).join(AreaUser).filter(AreaUser.userid == userid).subquery()
         #print stmt
         #print session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt))
         #adalias = aliased(PixelResult, stmt);
