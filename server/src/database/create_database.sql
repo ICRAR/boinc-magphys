@@ -24,11 +24,10 @@ CREATE TABLE area (
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE area_user (
-  areauser_id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  area_id                    BIGINT UNSIGNED NOT NULL,
-  userid                     INTEGER NOT NULL,
-  create_time                TIMESTAMP,
-  KEY (areauser_id)
+  areauser_id  BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  area_id      BIGINT UNSIGNED NOT NULL,
+  userid       INTEGER NOT NULL,
+  create_time  TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE INDEX areauser_area_ix ON area_user(area_id);
