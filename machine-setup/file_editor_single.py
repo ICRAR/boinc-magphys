@@ -20,7 +20,7 @@ def edit_config_xml():
         if line.rstrip() == '  </daemons>':
             sys.stdout.write('''    <daemon>
       <cmd>
-        /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu
+        /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job
       </cmd>
     </daemon>
     <daemon>
