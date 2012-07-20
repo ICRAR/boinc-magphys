@@ -6,12 +6,14 @@ import glob
 import boto
 import os
 import time
-import sys
 
-from fabric.api import run, sudo, put, env, require, local, settings
-from fabric.contrib.files import comment, uncomment, contains, exists, append, sed
-from fabric.decorators import task
+from fabric.api import run, sudo, put, env, require
+from fabric.context_managers import cd
+from fabric.contrib.console import confirm
+from fabric.contrib.files import append, sed
+from fabric.decorators import task, roles, parallel
 from fabric.operations import prompt
+from fabric.utils import puts, abort, fastprint
 
 USERNAME = 'ec2-user' # ubuntu
 AMI_ID = 'ami-aecd60c7'
@@ -22,69 +24,90 @@ KEY_NAME = 'icrar-boinc'
 SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys')
 
-def create_instance(name, use_elastic_ip, public_ip):
+def create_instance(names, use_elastic_ip, public_ips):
+    """Create the AWS instance
+
+    :param names: the name to be used for this instance
+    :type names: list of strings
+    :param boolean use_elastic_ip: is this instance to use an Elastic IP address
+
+    :rtype: string
+    :return: The public host name of the AWS instance
+    """
+
+    puts('Creating instances {0} [{1}:{2}]'.format(names, use_elastic_ip, public_ips))
+    number_instances = len(names)
+    if number_instances != len(public_ips):
+        abort('The lists do not match in length')
+
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     conn = boto.connect_ec2()
 
     if use_elastic_ip:
         # Disassociate the public IP
-        if not conn.disassociate_address(public_ip=public_ip):
-            print 'Could not disassociate the IP {0}'.format(public_ip)
+        for public_ip in public_ips:
+            if not conn.disassociate_address(public_ip=public_ip):
+                abort('Could not disassociate the IP {0}'.format(public_ip))
 
-    reservation = conn.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
-    instance = reservation.instances[0]
+    reservations = conn.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, min_count=number_instances, max_count=number_instances)
+    instances = reservations.instances
     # Sleep so Amazon recognizes the new instance
     for i in range(4):
-        sys.stdout.write('.')
-        sys.stdout.flush()
+        fastprint('.')
         time.sleep(5)
 
     # Are we running yet?
-    while not instance.update() == 'running':
-        sys.stdout.write('.')
-        sys.stdout.flush()
-        time.sleep(5)
+    for i in range(number_instances):
+        while not instances[i].update() == 'running':
+            fastprint('.')
+            time.sleep(5)
 
     # Sleep a bit more Amazon recognizes the new instance
     for i in range(4):
-        sys.stdout.write('.')
-        sys.stdout.flush()
+        fastprint('.')
         time.sleep(5)
-    print '.'
+    puts('.')
 
     # Tag the instance
-    conn.create_tags([instance.id], {'Name': name})
+    for i in range(number_instances):
+        conn.create_tags([instances[i].id], {'Name': names[i]})
 
     # Associate the IP if needed
     if use_elastic_ip:
-        print 'Current DNS name is {0}. About to associate the Elastic IP'.format(instance.dns_name)
-        if not conn.associate_address(instance_id=instance.id, public_ip=public_ip):
-            print 'Could not associate the IP {0} to the instance {1}'.format(public_ip, instance.id)
-            sys.exit()
+        for i in range(number_instances):
+            puts('Current DNS name is {0}. About to associate the Elastic IP'.format(instances[i].dns_name))
+            if not conn.associate_address(instance_id=instances[i].id, public_ip=public_ips[i]):
+                abort('Could not associate the IP {0} to the instance {1}'.format(public_ips[i], instances[i].id))
 
     # Give AWS time to switch everything over
     time.sleep(10)
 
     # Load the new instance data as the dns_name may have changed
-    instance.update(True)
+    for i in range(number_instances):
+        instances[i].update(True)
     if use_elastic_ip:
-        print 'Current DNS name is {0} after associating the Elastic IP'.format(instance.dns_name)
+        for i in range(number_instances):
+            puts('Current DNS name is {0} after associating the Elastic IP'.format(instances[i].dns_name))
 
     # The instance is started, but not useable (yet)
-    print 'Started the instance {0}; now waiting for the SSH daemon to start.'.format(instance.dns_name)
+    puts('Started the instance(s) now waiting for the SSH daemon to start.')
     for i in range(12):
-        sys.stdout.write('.')
-        sys.stdout.flush()
+        fastprint('.')
         time.sleep(5)
-    print '.'
+    puts('.')
 
     # we have to return an ASCII string
-    return str(instance.dns_name)
+    host_names = []
+    for i in range(number_instances):
+        host_names.append(str(instances[i].dns_name))
+    return host_names
 
 
 def to_boolean(choice, default=False):
-    """
-    Convert the yes/no to true/false
+    """Convert the yes/no to true/false
+
+    :param choice: the text string input
+    :type choice: string
     """
     valid = {"yes":True,   "y":True,  "ye":True,
              "no":False,     "n":False}
@@ -95,6 +118,7 @@ def to_boolean(choice, default=False):
     return default
 
 @task
+@roles('web','upload','download')
 def copy_public_keys():
     """
     Copy the public keys to the remote servers
@@ -107,29 +131,32 @@ def copy_public_keys():
         put(file, filename)
 
 @task
+@roles('web','upload','download')
+@parallel
 def base_install():
     """
     Perform the basic install
     """
-
     # Update the AMI completely
-    sudo('yum --assumeyes update')
+    sudo('yum --assumeyes --quiet update')
 
     # Install puppet and git
-    sudo('yum --assumeyes install puppet git')
+    sudo('yum --assumeyes --quiet install puppet git')
 
     # Clone our code
     run('git clone git://github.com/ICRAR/boinc-magphys.git')
 
     # Puppet and git should be installed by the python
-    sudo('cd /home/ec2-user/boinc-magphys/machine-setup; puppet boinc-magphys.pp')
+    with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+        sudo('puppet boinc-magphys.pp')
 
     # Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-07-10
     run('svn co http://boinc.berkeley.edu/svn/trunk/boinc /home/ec2-user/boinc')
 
-    run('cd /home/ec2-user/boinc; ./_autosetup')
-    run('cd /home/ec2-user/boinc; ./configure --disable-client --disable-manager')
-    run('cd /home/ec2-user/boinc; make')
+    with cd('/home/ec2-user/boinc'):
+        run('./_autosetup')
+        run('./configure --disable-client --disable-manager')
+        run('make')
 
     # Setup the pythonpath
     append('/home/ec2-user/.bash_profile', ['', 'PYTHONPATH=$PYTHONPATH:/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src', 'export PYTHONPATH'])
@@ -162,29 +189,35 @@ def base_install():
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
 @task
+@roles('web','upload','download')
 def single_install():
-    """
-    Perform the tasks to install the whole boinc server on a single machine
+    """ Perform the tasks to install the whole BOINC server on a single machine
+
+    The web, upload and download are all
     """
     # Activate the DB
     sudo('mysql_install_db')
     sudo('chown -R mysql:mysql /var/lib/mysql/*')
     run('''echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet apply''')
+    sudo('service mysqld start')
 
     # Wait for it to start up
-    time.sleep(15)
+    time.sleep(5)
 
     # Make the POGS project
-    run('cd /home/ec2-user/boinc/tools; yes | ./make_project -v --url_base http://{0} --db_user root pogs'.format(env.hosts[0]))
+    with cd('/home/ec2-user/boinc/tools'):
+        run('yes | ./make_project -v --url_base http://{0} --db_user root pogs'.format(env.hosts[0]))
 
     # Setup the database for recording WU's
     run('mysql --user=root < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql')
 
     # Build the validator
-    run('cd /home/ec2-user/boinc-magphys/server/src/Validator; make')
+    with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
+        run('make')
 
     # setup_website
-    sudo('cd /home/ec2-user/boinc-magphys/machine-setup; rake setup_website')
+    with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+        sudo('rake setup_website')
 
     # This is needed because the files that Apache serve are inside the user's home directory.
     run('chmod 711 /home/ec2-user')
@@ -194,52 +227,111 @@ def single_install():
     run('chmod ug+wx /home/ec2-user/projects/pogs/upload')
 
     # Edit the files
-    run('cd /home/ec2-user/boinc-magphys/machine-setup; python2.7 file_editor_single.py')
+    with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+        run('python2.7 file_editor_single.py')
 
     # Setup the forums
-    run('cd /home/ec2-user/projects/pogs/html/ops; php create_forums.php')
+    with cd('/home/ec2-user/projects/pogs/html/ops'):
+        run('php create_forums.php')
 
     # Copy files into place
-    run('cd /home/ec2-user/boinc-magphys/machine-setup; rake update_versions')
-    run('cd /home/ec2-user/boinc-magphys/machine-setup; rake start_daemons')
+    with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+        run('rake update_versions')
+        run('rake start_daemons')
 
     # Setup the crontab job to keep things ticking
-    run('crontab -l > /tmp/crontab.txt')
     run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/pogs ; /home/ec2-user/projects/pogs/bin/start --cron" >> /tmp/crontab.txt')
     run('crontab /tmp/crontab.txt')
 
     # Setup the ops area password
-    run('cd /home/ec2-user/projects/pogs/html/ops; htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
+    with cd('/home/ec2-user/projects/pogs/html/ops'):
+        run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
 @task
 def test_env():
-    """
-    Configure the test environment in the AWS cloud
+    """Configure the test environment
+
+    Ask a series of questions before deploying to the cloud.
+
+    Allow the user to select if a Elastic IP address is to be used
     """
     if 'use_elastic_ip' in env:
-        use_elastic_ip = to_boolean(prompt('Do you want to assign an Elastic IP to this instance: ', default='no'))
-    else:
         use_elastic_ip = to_boolean(env.use_elastic_ip)
+    else:
+        use_elastic_ip = confirm('Do you want to assign an Elastic IP to this instance: ', False)
 
     public_ip = None
     if use_elastic_ip:
         public_ip = prompt('What is the public IP address: ', 'public_ip')
 
-    if 'ops_username' in env:
+    if 'ops_username' not in env:
         prompt('Ops area username: ', 'ops_username')
-    if 'ops_password' in env:
+    if 'ops_password' not in env:
         prompt('Password: ', 'ops_password')
-    if 'instance_name' in env:
+    if 'instance_name' not in env:
         prompt('Instance name: ', 'instance_name')
-    hostname = create_instance(env.instance_name, use_elastic_ip, public_ip)
-    env.hosts = [hostname]
+
+    # Create the instance in AWS
+    host_names = create_instance([env.instance_name], use_elastic_ip, [public_ip])
+    env.hosts = host_names
+    env.user = USERNAME
+    env.key_filename = AWS_KEY
+    env.roledefs = {
+        'web' : host_names,
+        'upload' : host_names,
+        'download' : host_names
+    }
+
+@task
+def prod_env():
+    """Configure the production environment
+
+    This will be three servers linked to a permanent DB
+    """
+    if 'server_running' not in env:
+        if not confirm("Is the DB server running?"):
+            abort('Start the DB server')
+
+    if 'db_host_name' not in env:
+        prompt('What is the hostname of the database?', 'db_host_name')
+    if 'db_username' not in env:
+        prompt('What is the username of the database?', 'db_username')
+    if 'db_password' not in env:
+        prompt('What is the password of the database?', 'db_password')
+    if 'ops_username' not in env:
+        prompt('Ops area username: ', 'ops_username')
+    if 'ops_password' not in env:
+        prompt('Password: ', 'ops_password')
+    if 'public_ip01' not in env:
+        prompt('What is the public IP address of the Web Server: ', 'public_ip01')
+    if 'instance_name01' not in env:
+        prompt('Instance name of the Web Server: ', 'instance_name01')
+    if 'public_ip02' not in env:
+        prompt('What is the public IP address of the Upload Server: ', 'public_ip02')
+    if 'instance_name02' not in env:
+        prompt('Instance name of the Upload Server: ', 'instance_name02')
+    if 'public_ip03' not in env:
+        prompt('What is the public IP address of the Download Server: ', 'public_ip03')
+    if 'instance_name03' not in env:
+        prompt('Instance name of the Download Server: ', 'instance_name03')
+
+    # Create the instance in AWS
+    host_names = create_instance([env.instance_name01, env.instance_name02, env.instance_name03], True, [env.public_ip01, env.public_ip02, env.public_ip03])
+    env.hosts = host_names
     env.user = USERNAME
     env.key_filename = AWS_KEY
 
+    env.roledefs = {
+        'web' : [host_names[0]],
+        'upload' : [host_names[1]],
+        'download' : [host_names[2]]
+    }
+
 @task
 def test_deploy():
-    """
-    Deploy the test environment in the AWS cloud
+    """Deploy the test environment
+
+    Deploy the test system in the AWS cloud with everything running on a single server
     """
     require('hosts', provided_by=[test_env])
 
@@ -249,10 +341,10 @@ def test_deploy():
 
 @task
 def prod_deploy():
-    """
-    Deploy
+    """Deploy
     """
     require('hosts', provided_by=[prod_env])
 
     copy_public_keys()
     base_install()
+
