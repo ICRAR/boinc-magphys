@@ -32,7 +32,7 @@ class CreateSingleEcsInstance(create_instance.CreateEc2Instance):
         self._run_command('''echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet apply''')
 
         # Wait for it to start up
-        time.sleep(15)
+        time.sleep(5)
 
         # Make the POGS project
         self._run_command('cd /home/ec2-user/boinc/tools')
