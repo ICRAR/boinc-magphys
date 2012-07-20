@@ -19,7 +19,8 @@ CREATE TABLE area (
   top_x        INTEGER UNSIGNED NOT NULL,
   top_y        INTEGER UNSIGNED NOT NULL,
   bottom_x     INTEGER UNSIGNED NOT NULL,
-  bottom_y     INTEGER UNSIGNED NOT NULL
+  bottom_y     INTEGER UNSIGNED NOT NULL,
+  workunit_id  BIGINT UNSIGNED
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE area_user (
@@ -42,7 +43,7 @@ CREATE TABLE pixel_result (
   galaxy_id   BIGINT UNSIGNED NOT NULL,
   x           INTEGER UNSIGNED NOT NULL,
   y           INTEGER UNSIGNED NOT NULL,
-  workunit_id INTEGER,
+  workunit_id BIGINT UNSIGNED,
   i_sfh       DOUBLE,
   i_ir        DOUBLE,
   chi2        DOUBLE,

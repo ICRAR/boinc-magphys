@@ -29,6 +29,7 @@ class Area(Base):
     top_y        = Column(Integer)
     bottom_x     = Column(Integer)
     bottom_y     = Column(Integer)
+    workunit_id = Column(BigInteger)
     
     galaxy = relationship("Galaxy", backref=backref('areas', order_by=galaxy_id))
 
@@ -50,7 +51,7 @@ class PixelResult(Base):
     galaxy_id = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
     x = Column(Integer)
     y = Column(Integer)
-    workunit_id = Column(Integer)
+    workunit_id = Column(BigInteger)
     i_sfh = Column(Float)
     i_ir = Column(Float)
     chi2 = Column(Float)

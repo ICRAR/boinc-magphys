@@ -218,6 +218,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                     session.rollback()
                 else:
                     if self.area:
+                        self.area.workunit_id = wu.id
                         #print 'Adding users'
                         for user in self.area.users:
                             session.delete(user)
