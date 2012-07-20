@@ -23,6 +23,10 @@ CREATE TABLE area (
   workunit_id  BIGINT UNSIGNED
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+ALTER TABLE area ADD CONSTRAINT area_galaxy_fk FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);
+CREATE INDEX area_galaxy_ix ON area(galaxy_id);
+CREATE UNIQUE INDEX area_ix ON area(galaxy_id, top_x, top_y, bottom_x, bottom_y);
+
 CREATE TABLE area_user (
   areauser_id  BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   area_id      BIGINT UNSIGNED NOT NULL,
@@ -30,11 +34,8 @@ CREATE TABLE area_user (
   create_time  TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+ALTER TABLE area_user ADD CONSTRAINT areauser_area_fk FOREIGN KEY(area_id) REFERENCES area(area_id);
 CREATE INDEX areauser_area_ix ON area_user(area_id);
-
-ALTER TABLE area ADD CONSTRAINT area_galaxy_fk FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);
-CREATE INDEX area_galaxy_ix ON area(galaxy_id);
-CREATE UNIQUE INDEX area_ix ON area(galaxy_id, top_x, top_y, bottom_x, bottom_y);
 
 CREATE TABLE pixel_result (
   pxresult_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
