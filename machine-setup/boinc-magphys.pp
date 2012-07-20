@@ -108,3 +108,10 @@ file { "/home/ec2-user/boinc":
     group  => ec2-user,
     mode   => 775,
 }
+
+file { "/home/ec2-user/galaxyImages":
+    ensure => "directory",
+    owner  => ec2-user,
+    group  => ec2-user,
+    mode   => 775,
+}

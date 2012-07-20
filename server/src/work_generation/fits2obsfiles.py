@@ -8,13 +8,14 @@ from database.database_support import Galaxy, Area, PixelResult, login
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from work_generation import FILTER_BANDS
+from image.fitsimage import FitsImage
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 if len(sys.argv) < 3:
-    print("usage:   %(me)s FITS_file output_directory [galaxy_name]" % {'me':sys.argv[0]})
-    print("example: %(me)s /home/ec2-user/POGS_NGC628_v3.fits /home/ec2-user/f2wu" % {'me':sys.argv[0]})
+    print("usage:   %(me)s FITS_file output_directory image_directory [galaxy_name]" % {'me':sys.argv[0]})
+    print("example: %(me)s /home/ec2-user/POGS_NGC628_v3.fits /home/ec2-user/f2wu /home/ec2-user/f2img" % {'me':sys.argv[0]})
     sys.exit(-10)
 
 status = {}
@@ -30,6 +31,7 @@ status['create__pixel'] = 0
 MIN_LIVE_CHANNELS_PER_PIXEL = 9
 INPUT_FILE = sys.argv[1]
 OUTPUT_DIR = sys.argv[2]
+IMAGE_DIR = sys.argv[3]
 SIGMA = 0.1
 GRID_SIZE = 7
 
@@ -219,8 +221,8 @@ def squarify(galaxy):
 #Here, it might be useful to assert that there are 12 input layers/channels/HDUs
 #print "List length: %(#)d" % {'#': len(HDULIST)}
 
-if len(sys.argv) > 3:
-    object_name = sys.argv[3]
+if len(sys.argv) > 4:
+    object_name = sys.argv[4]
 else:
     object_name = HDULIST[0].header['OBJECT']
 LOG.info("Work units for: %(object)s" % { "object":object_name } )
@@ -249,6 +251,8 @@ for key in sorted(status.keys()):
 if rollback:
     session.rollback()
 else:
+    image = FitsImage()
+    image.buildImage(INPUT_FILE, IMAGE_DIR, object_name, "log", False, False, False)
     session.commit()
 
 LOG.info("\nDone")

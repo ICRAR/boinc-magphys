@@ -2,17 +2,19 @@ import pyfits
 from PIL import Image, ImageDraw
 import math
 import sys
-import os
+import os, hashlib
 from database.database_support import Galaxy, Area, AreaUser, PixelResult, PixelUser, login
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, aliased
+from sqlalchemy.orm import sessionmaker
 
 class FitsImage:
     def __init__(self):
-        #fitsimage.FitsImage.__init__(self)
         pass
     
     def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug):
+        """
+        Build Three Colour Images, and optionally black and white and white and balack images for each image.
+        """
         if imageDirName[-1] != "/":
             imageDirName = imageDirName + "/"
         if os.path.isfile(imageDirName):
@@ -226,80 +228,146 @@ class FitsImage:
                     logFile.write('{0:3d} {1}\n'.format(z, valuerange[z]))
                 logFile.close()
             if createBWImages:
-                imagebw.save(imageDirName + imagePrefixName + '_' + str(file) + '_bw.jpg')
-                imagewb.save(imageDirName + imagePrefixName + '_' + str(file) + '_wb.jpg')
+                imagebw.save(self.get_bw_image_path(imageDirName, imagePrefixName, file))
+                imagewb.save(self.get_wb_image_path(imageDirName, imagePrefixName, file))
         
-        image1.save(imageDirName + imagePrefixName + "_colour_1.jpg")
-        image2.save(imageDirName + imagePrefixName + "_colour_2.jpg")
-        image3.save(imageDirName + imagePrefixName + "_colour_3.jpg")
-        image4.save(imageDirName + imagePrefixName + "_colour_4.jpg")
+        image1.save(self.get_colour_image_path(imageDirName, imagePrefixName, 1))
+        image2.save(self.get_colour_image_path(imageDirName, imagePrefixName, 2))
+        image3.save(self.get_colour_image_path(imageDirName, imagePrefixName, 3))
+        image4.save(self.get_colour_image_path(imageDirName, imagePrefixName, 4))
+        
+        #image1.save(imageDirName + imagePrefixName + "_colour_1.jpg")
+        #image2.save(imageDirName + imagePrefixName + "_colour_2.jpg")
+        #image3.save(imageDirName + imagePrefixName + "_colour_3.jpg")
+        #image4.save(imageDirName + imagePrefixName + "_colour_4.jpg")
         
         hdulist.close()
-    
-    def markImage(self, inImageFileName, outImageFileName, galaxy_id, userid):
-        engine = create_engine(login)
-        Session = sessionmaker(bind=engine)
-        session = Session()
         
+    def filename_hash(self, name, hash_fanout):
+        """
+        Accepts a filename (without path) and the hash fanout. 
+        Returns the directory bucket where the file will reside.
+        The hash fanout is typically provided by the project config file.        
+        """
+        h = hex(int(hashlib.md5(name).hexdigest()[:8], 16) % hash_fanout)[2:]
+        
+        # check for the long L suffix. It seems like it should 
+        # never be present but that isn't the case
+        if h.endswith('L'):
+            h = h[:-1]
+        return h
+
+    def get_file_path(self, dirName, fileName):
+        """
+        Accepts a directory name and file name and returns the relative path to the file.
+        This method accounts for file hashing and includes the directory 
+        bucket in the path returned.
+        """
+        fanout = 1024
+        hashed = self.filename_hash(fileName, fanout)
+        hashDirName = os.path.join(dirName,hashed)
+        if os.path.isfile(hashDirName):
+            pass
+        elif os.path.isdir(hashDirName):
+            pass
+        else:
+            os.mkdir(hashDirName)
+        return os.path.join(dirName,hashed,fileName)
+    
+    def get_colour_image_path(self, imageDirName, imagePrefixName, colour):
+        """
+        Generates the relative path to the file given the directory name, image prefix
+        and colour.  The file name is used to generate a hash to spread the files across
+        many directories to avoid having too many files in a single directory.
+        """
+        return self.get_file_path(imageDirName, imagePrefixName + "_colour_" + str(colour) + ".png")
+    
+    def get_bw_image_path(self, imageDirName, imagePrefixName, file):
+        """
+        Generates the relative path to the file given the directory name, image prefix
+        and image number for the Black and White Image.  The file name is used to generate
+        a hash to spread the files across many directories to avoid having too many files
+        in a single directory.
+        """
+        return self.get_file_path(imageDirName, imagePrefixName + "_" + str(file) + '_bw.png')
+    
+    def get_wb_image_path(self, imageDirName, imagePrefixName, file):
+        """
+        Generates the relative path to the file given the directory name, image prefix
+        and image number for the White and Black Image.  The file name is used to generate
+        a hash to spread the files across many directories to avoid having too many files
+        in a single directory.
+        """
+        return self.get_file_path(imageDirName, imagePrefixName + "_" + str(file) + '_wb.png')
+    
+    def markImage(self, session, inImageFileName, outImageFileName, galaxy_id, userid):
+        """
+        Read the image for the galaxy and generate an image that highlights the areas
+        that the specified user has generated results.
+        """
         image = Image.open(inImageFileName, "r").convert("RGBA")
         
         #pixels = session.query(PixelResult).filter("galaxy_id=:galaxyId", "user_id=:userId").params(galaxyId=galaxyId).all()
         areas = session.query(Area, AreaUser).filter(AreaUser.userid == userid)\
           .filter(Area.area_id == AreaUser.area_id)\
           .order_by(Area.top_x, Area.top_y).all()
-        print 'Areas', len(areas)
+        #print 'Areas', len(areas)
         for areax in areas:
             area = areax.Area;
             for x in range(area.top_x, area.bottom_x):
                 for y in range(area.top_y, area.bottom_y):
                     self.markPixel(image, x, y)
-            #print px, px.x, px.y
-            #x = int(px.x)
-            #y = int(px.y)
-            #self.markPixel(image, x, y)
         
         for x in range(140, 145):
             for y in range(80, 93):
                 self.markPixel(image, x, y)
         
-        for x in range(120, 125):
-            for y in range(80, 86):
+        for x in range(100, 113):
+            for y in range(80, 122):
                 self.markPixel(image, x, y)
         
         image.save(outImageFileName)
     
     def markPixel(self, image, x, y):
+        """
+        Mark the specified pixel to highlight the area where the user has
+        generated results.
+        """
         px = image.getpixel((x,y))
-        image.putpixel((x,y), (255,255,255))
+        #image.putpixel((x,y), (255,255,255))
         #image.putpixel((x,y), (px[0], px[1], px[2], 50))
-        r = px[0] * 2
-        g = px[1] * 2
-        b = px[2] * 2
+        r = int(px[0] + ((255 - px[0]) * 0.3))
+        g = int(px[1] + ((255 - px[1]) * 0.3))
+        b = int(px[2] + ((255 - px[2]) * 0.3))
+        #r = px[0] * 2
+        #g = px[1] * 2
+        #b = px[2] * 2
         if r > 255:
             r = 255
         if g > 255:
             g = 255
         if b > 255:
             b = 255
-        if r < 20:
-            r = 128
-        if g < 20:
-            g = 128
-        if b < 20:
-            b = 128
-        #image.putpixel((x,y), (r, g, b))
+        if r < 50:
+            r = 50
+        if g < 50:
+            g = 50
+        if b < 50:
+            b = 50
+        image.putpixel((x,y), (r, g, b))
         
-    def userGalaxy(self, userid):
-        engine = create_engine(login)
-        Session = sessionmaker(bind=engine)
-        session = Session()
+    def userGalaxy(self, session, userid):
+        """
+        Determines the galaxies that the selected user has generated results.  Returns an array of
+        galaxy_ids.
+        """
         stmt = session.query(Galaxy.galaxy_id).join(Area).join(AreaUser).filter(AreaUser.userid == userid).subquery()
         #print stmt
         #print session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt))
         #adalias = aliased(PixelResult, stmt);
         galaxyIds = []
         for galaxy in session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)):
-           print 'Galaxy', galaxy.name
+           #print 'Galaxy', galaxy.name
            galaxyIds.append(galaxy.galaxy_id)
         return galaxyIds;
         

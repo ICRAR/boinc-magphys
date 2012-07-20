@@ -30,8 +30,8 @@ The two latter scripts could perhaps be merged into one, eventually.
 # Example run
 
     $ cd /path/to/this/directory
-    $ mysql -u root < create_link_database.sql # DROPS THE magphys_wu SCHEMA and recreates it
-    $ python2.7 fits2obsfiles.py /home/ec2-user/galaxies/POGS_NGC628_v3.fits /home/ec2-user/f2wu NGC628
+    $ mysql -u root < create_database.sql # DROPS THE magphys SCHEMA and recreates it
+    $ python2.7 fits2obsfiles.py /home/ec2-user/galaxies/POGS_NGC628_v3.fits /home/ec2-user/f2wu /home/ec2-user/galaxyImages NGC628
     $ python2.7 obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/pogs 10
 
 Note that *obsfiles2wu* will move the observations files into the BOINC project's download hierarchy.
