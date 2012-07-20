@@ -67,8 +67,6 @@ package { 'subversion':
 package { 'rubygem-rake':
     ensure => installed,
 }
-
-# We have to install the MySQL - even though we don't necessarily need to activate - BOINC gets stroppy
 package { 'mysql-server':
     ensure => installed,
 }
@@ -81,7 +79,7 @@ user { 'apache':
 service { 'httpd':
     ensure => running,
     enable => true,
-    require => Package['httpd']
+    require => Package['httpd'],
 }
 
 file { "/home/ec2-user/galaxies":
