@@ -11,6 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 class MagphysAssimilator(assimilator.Assimilator):
+    area = None
 
     def __init__(self):
         assimilator.Assimilator.__init__(self)
@@ -51,24 +52,21 @@ class MagphysAssimilator(assimilator.Assimilator):
                 for histogram in parameter.histograms:
                     session.delete(histogram)
                 session.delete(parameter)
-            for user in pxresult.users:
-                session.delete(user)
+        self.area = pxresult.area
         pxresult.filters = []
         pxresult.parameters = []
         return pxresult
 
-    def saveResult(self, session, pxresult, results):
+    def saveResult(self, session, pxresult, results, useridSet):
         for result in results:
             if result.user and result.validate_state == boinc_db.VALIDATE_STATE_VALID:
-                usr = PixelUser()
-                usr.userid = result.user.id
-                #usr.create_time =
-                pxresult.users.append(usr)
+                if result.user_id not in useridSet:
+                    useridSet.add(result.user_id)
 
         if pxresult.pxresult_id == None and not self.noinsert:
             session.add(pxresult)
 
-    def processResult(self, session, outFile, wu, results):
+    def processResult(self, session, outFile, wu, results, useridSet):
         """
         Read the output file, add the values to the PixelResult row, and insert the filter,
         parameter and histogram rows.
@@ -86,7 +84,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
             if line.startswith(" ####### "):
                 if pxresult:
-                    self.saveResult(session, pxresult, results)
+                    self.saveResult(session, pxresult, results, useridSet)
                 values = line.split()
                 pointName = values[1]
                 #print "pointName", pointName
@@ -198,7 +196,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
         f.close()
         if pxresult:
-            self.saveResult(session, pxresult, results)
+            self.saveResult(session, pxresult, results, useridSet)
 
     def assimilate_handler(self, wu, results, canonical_result):
         """
@@ -207,16 +205,27 @@ class MagphysAssimilator(assimilator.Assimilator):
         if wu.canonical_result:
             #file_list = []
             outFile = self.get_file_path(canonical_result)
+            useridSet = set()
+            self.area = None
             #self.get_output_file_infos(canonical_result, file_list)
 
             if (outFile):
                 print "Reading File",
                 print outFile
                 session = self.Session()
-                self.processResult(session, outFile, wu, results)
+                self.processResult(session, outFile, wu, results, useridSet)
                 if self.noinsert:
                     session.rollback()
                 else:
+                    if self.area:
+                        #print 'Adding users'
+                        for user in self.area.users:
+                            session.delete(user)
+                        for userid in useridSet:
+                            usr = AreaUser()
+                            usr.userid = result.user.id
+                            #usr.create_time =
+                            area.users.append(usr)
                     session.commit()
             else:
                 self.logCritical("The output file was not found\n")

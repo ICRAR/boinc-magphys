@@ -22,6 +22,16 @@ CREATE TABLE area (
   bottom_y     INTEGER UNSIGNED NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+CREATE TABLE area_user (
+  areauser_id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  area_id                    BIGINT UNSIGNED NOT NULL,
+  userid                     INTEGER NOT NULL,
+  create_time                TIMESTAMP,
+  KEY (areauser_id)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE INDEX areauser_area_ix ON area_user(area_id);
+
 ALTER TABLE area ADD CONSTRAINT area_galaxy_fk FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);
 CREATE INDEX area_galaxy_ix ON area(galaxy_id);
 CREATE UNIQUE INDEX area_ix ON area(galaxy_id, top_x, top_y, bottom_x, bottom_y);

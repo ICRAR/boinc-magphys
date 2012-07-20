@@ -32,6 +32,16 @@ class Area(Base):
     
     galaxy = relationship("Galaxy", backref=backref('areas', order_by=galaxy_id))
 
+class AreaUser(Base):
+    __tablename__ = 'area_user'
+
+    areauser_id = Column(BigInteger, primary_key=True)
+    area_id = Column(BigInteger, ForeignKey('area.area_id'))
+    userid = Column(Integer)
+    create_time = Column(TIMESTAMP)
+
+    area = relationship("Area", backref=backref('users', order_by=areauser_id))
+
 class PixelResult(Base):
     __tablename__ = 'pixel_result'
 
