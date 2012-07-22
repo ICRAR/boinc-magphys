@@ -13,6 +13,7 @@ from fabric.contrib.console import confirm
 from fabric.contrib.files import append, sed
 from fabric.decorators import task, roles, parallel
 from fabric.operations import prompt
+from fabric.tasks import execute
 from fabric.utils import puts, abort, fastprint
 
 USERNAME = 'ec2-user' # ubuntu
@@ -211,6 +212,25 @@ def single_install():
     # Setup the database for recording WU's
     run('mysql --user=root < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql')
 
+    # Edit the files
+    sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH PROJECT NAME', 'theSkyNet POGS - the PS1 Optical Galaxy Survey')
+    sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
+    sed('/home/ec2-user/projects/pogs/html/project/project.inc', '"white.css"', '"black.css"')
+
+    sed('/home/ec2-user/projects/pogs/config.xml', '  </daemons>', '    <daemon>\n      <cmd>\n    /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\n    </cmd>\n    </daemon>\n      <daemon>\n      <cmd>\n      python2.7 /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper\n    </cmd>\n    </daemon>\n    </daemons>\n      <locality_scheduling/>\n')
+
+    sed('/home/ec2-user/projects/pogs/html/ops/create_forums.php', 'die("edit script to use your forum names, and remove the die()\n");', '')
+
+    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is a research project that uses volunteers', 'theSkyNet POGS is a research project that uses volunteers')
+    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'to do research in XXX.', 'to do research in astronomy. We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe. We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
+    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is a research project that uses Internet-connected', 'theSkyNet POGS is a research project that uses Internet-connected')
+    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'computers to do research in XXX.', 'computers to do research in astronomy. We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe. We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
+    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is based at', 'theSkyNet POGS is based at')
+    sed('/home/ec2-user/projects/pogs/html/user/index.php', '[describe your institution, with link to web page]', 'The International Centre for Radio Astronomy Research.')
+
+@task
+@roles('web','upload','download')
+def common_end_install():
     # Build the validator
     with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
         run('make')
@@ -225,10 +245,6 @@ def single_install():
     run('chmod -R oug+x /home/ec2-user/projects/pogs/html')
     run('chmod ug+w /home/ec2-user/projects/pogs/log_*')
     run('chmod ug+wx /home/ec2-user/projects/pogs/upload')
-
-    # Edit the files
-    with cd('/home/ec2-user/boinc-magphys/machine-setup'):
-        run('python2.7 file_editor_single.py')
 
     # Setup the forums
     with cd('/home/ec2-user/projects/pogs/html/ops'):
@@ -246,6 +262,31 @@ def single_install():
     # Setup the ops area password
     with cd('/home/ec2-user/projects/pogs/html/ops'):
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
+
+@task
+@roles('web')
+def web_install():
+    """Install the web site components
+
+    Install the web components only
+    """
+
+@task
+@roles('upload')
+def upload_install():
+    """Install the web site components
+
+    Install the web components only
+    """
+
+@task
+@roles('download')
+def download_install():
+    """Install the web site components
+
+    Install the web components only
+    """
+
 
 @task
 def test_env():
@@ -338,6 +379,8 @@ def test_deploy():
     copy_public_keys()
     base_install()
     single_install()
+    common_end_install()
+
 
 @task
 def prod_deploy():
@@ -347,4 +390,7 @@ def prod_deploy():
 
     copy_public_keys()
     base_install()
-
+    execute(web_install())
+    execute(upload_install())
+    execute(download_install())
+    common_end_install()
