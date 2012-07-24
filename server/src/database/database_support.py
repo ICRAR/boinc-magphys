@@ -1,7 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship, backref
-from database import login
 
 # The database is partitioned to improve performance, this means there are no primary
 # keys, but the ORM mapping of sqlalchemy needs them - doesn't seem to hurt having
@@ -30,7 +29,7 @@ class Area(Base):
     bottom_x     = Column(Integer)
     bottom_y     = Column(Integer)
     workunit_id = Column(BigInteger)
-    
+
     galaxy = relationship("Galaxy", backref=backref('areas', order_by=galaxy_id))
 
 class AreaUser(Base):
@@ -76,7 +75,7 @@ class PixelResult(Base):
     dmstar = Column(Float)
     dfmu_aux = Column(Float)
     dz = Column(Float)
-    
+
     galaxy = relationship("Galaxy", backref=backref('pixelResults', order_by=galaxy_id))
     area = relationship("Area", backref=backref('pixelResults', order_by=area_id))
 

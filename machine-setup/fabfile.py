@@ -1,5 +1,7 @@
 """
 Fabric file for installing the servers
+
+This doesn't use the role decorator as it only seems to work at the top level
 """
 import glob
 
@@ -10,13 +12,12 @@ import time
 from fabric.api import run, sudo, put, env, require
 from fabric.context_managers import cd
 from fabric.contrib.console import confirm
-from fabric.contrib.files import append, sed
-from fabric.decorators import task, roles, parallel
+from fabric.contrib.files import append, sed, comment
+from fabric.decorators import task, roles, parallel, serial
 from fabric.operations import prompt
-from fabric.tasks import execute
 from fabric.utils import puts, abort, fastprint
 
-USERNAME = 'ec2-user' # ubuntu
+USERNAME = 'ec2-user'
 AMI_ID = 'ami-aecd60c7'
 INSTANCE_TYPE = 't1.micro'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
@@ -24,6 +25,9 @@ AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
 SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys')
+WEB_HOST = 0
+UPLOAD_HOST = 1
+DOWNLOAD_HOST = 2
 
 def create_instance(names, use_elastic_ip, public_ips):
     """Create the AWS instance
@@ -119,7 +123,7 @@ def to_boolean(choice, default=False):
     return default
 
 @task
-@roles('web','upload','download')
+@parallel
 def copy_public_keys():
     """
     Copy the public keys to the remote servers
@@ -132,7 +136,6 @@ def copy_public_keys():
         put(file, filename)
 
 @task
-@roles('web','upload','download')
 @parallel
 def base_install():
     """
@@ -190,7 +193,7 @@ def base_install():
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
 @task
-@roles('web','upload','download')
+@serial
 def single_install():
     """ Perform the tasks to install the whole BOINC server on a single machine
 
@@ -207,7 +210,7 @@ def single_install():
 
     # Make the POGS project
     with cd('/home/ec2-user/boinc/tools'):
-        run('yes | ./make_project -v --url_base http://{0} --db_user root pogs'.format(env.hosts[0]))
+        run('./make_project -v --no_query --url_base http://{0} --db_user root pogs'.format(env.hosts[WEB_HOST]))
 
     # Setup the database for recording WU's
     run('mysql --user=root < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql')
@@ -217,20 +220,39 @@ def single_install():
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', '"white.css"', '"black.css"')
 
-    sed('/home/ec2-user/projects/pogs/config.xml', '  </daemons>', '    <daemon>\n      <cmd>\n    /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\n    </cmd>\n    </daemon>\n      <daemon>\n      <cmd>\n      python2.7 /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper\n    </cmd>\n    </daemon>\n    </daemons>\n      <locality_scheduling/>\n')
+    # As this goes through SED we need to be a bit careful
+    sed('/home/ec2-user/projects/pogs/config.xml',
+        '  </daemons>',
+        '    <daemon>\\n'
+        '      <cmd>\\n'
+        '        /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\\n'
+        '      </cmd>\\n'
+        '    </daemon>\\n'
+        '    <daemon>\\n'
+        '      <cmd>\\n'
+        '        python2.7 /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper\\n'
+        '      </cmd>\\n'
+        '    </daemon>\\n'
+        '  </daemons>\\n'
+        '  <locality_scheduling/>\\n')
 
-    sed('/home/ec2-user/projects/pogs/html/ops/create_forums.php', 'die("edit script to use your forum names, and remove the die()\n");', '')
+    comment('/home/ec2-user/projects/pogs/html/ops/create_forums.php', '^die', char='// ')
 
     sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is a research project that uses volunteers', 'theSkyNet POGS is a research project that uses volunteers')
-    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'to do research in XXX.', 'to do research in astronomy. We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe. We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
+    sed('/home/ec2-user/projects/pogs/html/user/index.php',
+        'to do research in XXX.',
+        'to do research in astronomy.\\n'
+        'We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe.\\n'
+        'We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
     sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is a research project that uses Internet-connected', 'theSkyNet POGS is a research project that uses Internet-connected')
-    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'computers to do research in XXX.', 'computers to do research in astronomy. We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe. We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
+    sed('/home/ec2-user/projects/pogs/html/user/index.php',
+        'computers to do research in XXX.',
+        'computers to do research in astronomy.\\n'
+        'We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe.\\n'
+        'We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
     sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is based at', 'theSkyNet POGS is based at')
-    sed('/home/ec2-user/projects/pogs/html/user/index.php', '[describe your institution, with link to web page]', 'The International Centre for Radio Astronomy Research.')
+    sed('/home/ec2-user/projects/pogs/html/user/index.php', '\[describe your institution, with link to web page\]', 'The International Centre for Radio Astronomy Research.')
 
-@task
-@roles('web','upload','download')
-def common_end_install():
     # Build the validator
     with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
         run('make')
@@ -264,31 +286,222 @@ def common_end_install():
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
 @task
-@roles('web')
+@serial
 def web_install():
-    """Install the web site components
+    """Install the web site components - these are not run in parallel
 
     Install the web components only
     """
+    if env.host_string in env.roledefs['web']:
+        # Setup the database for recording WU's
+        run('mysql --user={0} --host={1} --password={2} < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql'.format(env.db_username, env.db_host_name, env.db_password))
+
+        # Make the POGS project
+        with cd('/home/ec2-user/boinc/tools'):
+            run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} --cgi_url={4} pogs'
+                .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[UPLOAD_HOST]))
+
+        # Edit the files
+        sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH PROJECT NAME', 'theSkyNet POGS - the PS1 Optical Galaxy Survey')
+        sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
+        sed('/home/ec2-user/projects/pogs/html/project/project.inc', '"white.css"', '"black.css"')
+
+        # As this goes through SED we need to be a bit careful
+        sed('/home/ec2-user/projects/pogs/config.xml',
+            'http://.*amazonaws\.com/pogs_cgi/file_upload_handler',
+            'http://{0}/pogs_cgi/file_upload_handler'.format(env.hosts[UPLOAD_HOST]))
+        sed('/home/ec2-user/projects/pogs/config.xml',
+            'http://.*amazonaws\.com/pogs/download',
+            'http://{0}/pogs/download'.format(env.hosts[DOWNLOAD_HOST]))
+        sed('/home/ec2-user/projects/pogs/config.xml',
+            '  <daemons>((.|\\n)*)</daemons>',
+            '  <daemons></daemons>\\n'
+            '  <locality_scheduling/>\\n')
+
+        comment('/home/ec2-user/projects/pogs/html/ops/create_forums.php', '^die', char='// ')
+
+        sed('/home/ec2-user/projects/pogs/html/user/index.php',
+            'XXX is a research project that uses volunteers',
+            'theSkyNet POGS is a research project that uses volunteers')
+        sed('/home/ec2-user/projects/pogs/html/user/index.php',
+            'to do research in XXX.',
+            'to do research in astronomy.\\n'
+            'We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe.\\n'
+            'We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
+        sed('/home/ec2-user/projects/pogs/html/user/index.php',
+            'XXX is a research project that uses Internet-connected',
+            'theSkyNet POGS is a research project that uses Internet-connected')
+        sed('/home/ec2-user/projects/pogs/html/user/index.php',
+            'computers to do research in XXX.',
+            'computers to do research in astronomy.\\n'
+            'We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe.\\n'
+            'We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
+        sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is based at', 'theSkyNet POGS is based at')
+        sed('/home/ec2-user/projects/pogs/html/user/index.php', '\[describe your institution, with link to web page\]', 'The International Centre for Radio Astronomy Research.')
+
+        # setup_website - all need this
+        with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+            sudo('rake setup_website')
+
+        # This is needed because the files that Apache serve are inside the user's home directory.
+        run('chmod 711 /home/ec2-user')
+        run('chmod -R oug+r /home/ec2-user/projects/pogs')
+        run('chmod -R oug+x /home/ec2-user/projects/pogs/html')
+        run('chmod ug+w /home/ec2-user/projects/pogs/log_*')
+        run('chmod ug+wx /home/ec2-user/projects/pogs/upload')
+
+        # Setup the forums
+        with cd('/home/ec2-user/projects/pogs/html/ops'):
+            run('php create_forums.php')
+
+        # Copy files into place
+        with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+            run('rake start_daemons')
+
+        # Setup the crontab job to keep things ticking
+        run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/pogs ; /home/ec2-user/projects/pogs/bin/start --cron" >> /tmp/crontab.txt')
+        run('crontab /tmp/crontab.txt')
+
+        # Setup the ops area password
+        with cd('/home/ec2-user/projects/pogs/html/ops'):
+            run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
 @task
-@roles('upload')
+@serial
 def upload_install():
     """Install the web site components
 
     Install the web components only
     """
+    if env.host_string in env.roledefs['upload']:
+        # Make the POGS project
+        # There doesn't seem to be away build the directories and ignore the DB
+        with cd('/home/ec2-user/boinc/tools'):
+            run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} --cgi_url={4} pogs'
+                .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[UPLOAD_HOST]))
+
+        # As this goes through SED we need to be a bit careful
+        sed('/home/ec2-user/projects/pogs/config.xml',
+            'http://.*amazonaws\.com/pogs_cgi/file_upload_handler',
+            'http://{0}/pogs_cgi/file_upload_handler'.format(env.hosts[UPLOAD_HOST]))
+        sed('/home/ec2-user/projects/pogs/config.xml',
+            'http://.*amazonaws\.com/pogs/download',
+            'http://{0}/pogs/download'.format(env.hosts[DOWNLOAD_HOST]))
+        sed('/home/ec2-user/projects/pogs/config.xml',
+            '  <daemons>((.|\\n)*)</daemons>',
+            '  <daemons>\\n'
+            '    <daemon>\\n'
+            '      <cmd>\\n'
+            '        file_deleter --input_files_only -d 3\\n'
+            '      </cmd>\\n'
+            '    </daemon>\\n'
+            '    <daemon>\\n'
+            '      <cmd>\\n'
+            '        /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\\n'
+            '      </cmd>\\n'
+            '    </daemon>\\n'
+            '    <daemon>\\n'
+            '      <cmd>\\n'
+            '        python2.7 /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper\\n'
+            '      </cmd>\\n'
+            '    </daemon>\\n'
+            '  </daemons>\\n'
+            '  <locality_scheduling/>\\n')
+
+        # Build the validator
+        with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
+            run('make')
+
+        # setup_website - still need this as it is CGI
+        with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+            sudo('rake setup_website')
+
+        # This is needed because the files that Apache serve are inside the user's home directory.
+        run('chmod 711 /home/ec2-user')
+        run('chmod -R oug+r /home/ec2-user/projects/pogs')
+        run('chmod ug+w /home/ec2-user/projects/pogs/log_*')
+        run('chmod ug+wx /home/ec2-user/projects/pogs/upload')
+
+        # Remove the HTML
+        run('rm -rf /home/ec2-user/projects/pogs/html')
+
+        # Copy files into place
+        with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+            run('rake update_versions')
+            run('rake start_daemons')
+
+        # Setup the crontab job to keep things ticking
+        run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/pogs ; /home/ec2-user/projects/pogs/bin/start --cron" >> /tmp/crontab.txt')
+        run('crontab /tmp/crontab.txt')
 
 @task
-@roles('download')
+@serial
 def download_install():
     """Install the web site components
 
     Install the web components only
     """
+    if env.host_string in env.roledefs['download']:
+        # Make the POGS project
+        # There doesn't seem to be away build the directories and ignore the DB
+        with cd('/home/ec2-user/boinc/tools'):
+            run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} --cgi_url={4} pogs'
+                .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[UPLOAD_HOST]))
 
+        # As this goes through SED we need to be a bit careful
+        sed('/home/ec2-user/projects/pogs/config.xml',
+            'http://.*amazonaws\.com/pogs_cgi/file_upload_handler',
+            'http://{0}/pogs_cgi/file_upload_handler'.format(env.hosts[UPLOAD_HOST]))
+        sed('/home/ec2-user/projects/pogs/config.xml',
+            'http://.*amazonaws\.com/pogs/download',
+            'http://{0}/pogs/download'.format(env.hosts[DOWNLOAD_HOST]))
+        sed('/home/ec2-user/projects/pogs/config.xml',
+            '  <daemons>((.|\\n)*)</daemons>',
+            '  <daemons>\\n'
+            '    <daemon>\\n'
+            '      <cmd>\\n'
+            '        feeder -d 3\\n'
+            '      </cmd>\\n'
+            '    </daemon>\\n'
+            '    <daemon>\\n'
+            '      <cmd>\\n'
+            '        transitioner -d 3\\n'
+            '      </cmd>\\n'
+            '    </daemon>\\n'
+            '    <daemon>\\n'
+            '      <cmd>\\n'
+            '        file_deleter --output_files_only -d 3\\n'
+            '      </cmd>\\n'
+            '    </daemon>\\n'
+            '  </daemons>\\n'
+            '  <locality_scheduling/>\\n')
+
+        # Build the validator
+        with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
+            run('make')
+
+        # setup_website - all need this
+        with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+            sudo('rake setup_website')
+
+        # This is needed because the files that Apache serve are inside the user's home directory.
+        run('chmod 711 /home/ec2-user')
+        run('chmod -R oug+r /home/ec2-user/projects/pogs')
+        run('chmod ug+w /home/ec2-user/projects/pogs/log_*')
+
+        # Remove the HTML
+        run('rm -rf /home/ec2-user/projects/pogs/html')
+
+        # Copy files into place
+        with cd('/home/ec2-user/boinc-magphys/machine-setup'):
+            run('rake start_daemons')
+
+        # Setup the crontab job to keep things ticking
+        run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/pogs ; /home/ec2-user/projects/pogs/bin/start --cron" >> /tmp/crontab.txt')
+        run('crontab /tmp/crontab.txt')
 
 @task
+@serial
 def test_env():
     """Configure the test environment
 
@@ -324,6 +537,7 @@ def test_env():
     }
 
 @task
+@serial
 def prod_env():
     """Configure the production environment
 
@@ -363,12 +577,13 @@ def prod_env():
     env.key_filename = AWS_KEY
 
     env.roledefs = {
-        'web' : [host_names[0]],
-        'upload' : [host_names[1]],
-        'download' : [host_names[2]]
+        'web' : [host_names[WEB_HOST]],
+        'upload' : [host_names[UPLOAD_HOST]],
+        'download' : [host_names[DOWNLOAD_HOST]]
     }
 
 @task
+@serial
 def test_deploy():
     """Deploy the test environment
 
@@ -379,10 +594,9 @@ def test_deploy():
     copy_public_keys()
     base_install()
     single_install()
-    common_end_install()
-
 
 @task
+@parallel
 def prod_deploy():
     """Deploy
     """
@@ -390,7 +604,10 @@ def prod_deploy():
 
     copy_public_keys()
     base_install()
-    execute(web_install())
-    execute(upload_install())
-    execute(download_install())
-    common_end_install()
+
+    # Serial bit - the first host to finish gets this bit
+    # As I've having to create the POGS DB three times - we need to make sure
+    # I don't try to do it twice
+    web_install()
+    upload_install()
+    download_install()

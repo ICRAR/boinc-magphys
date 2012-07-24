@@ -6,8 +6,8 @@ The idea is to make setting up such an instance easily reproducible by encouragi
 The **fabfile.py** does all the heavy lifting.
 
 * fab test_env test_deploy - will deploy everything on a single server
-* fab prod_env prod_deploy - will deploy to the multi-server production environment
-* fab --conf=file.env --parallel --linewise prod_env prod_deploy - will deploy to the multi-server production environment in parallel. To make this work you must use an env file else fabric complains
+* fab prod_env prod_deploy_parallel_part prod_deploy_serial_part - will deploy to the multi-server production environment
+* fab --conf=file.env --linewise prod_env prod_deploy_parallel_part prod_deploy_serial_part - will deploy to the multi-server production environment in parallel. To make this work you must use an env file else fabric complains
 
 This will create a brand new EC2 instance and run the scripts for setting up a newer version of the server.
 
@@ -16,4 +16,3 @@ This will create a brand new EC2 instance and run the scripts for setting up a n
 To create a user and grant them privilege in MySQl do the following:
 * CREATE USER 'theskynet'@'%' IDENTIFIED BY 'Password1';
 * grant alter,create,delete,drop,index,insert,select,show databases, show view, update on *.* to 'theskynet'@'%';
-

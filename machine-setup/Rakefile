@@ -46,10 +46,10 @@ end
 desc 'update versions'
 task :update_versions => :sign_files do
   sh "cd #{PROJECT_ROOT}; yes | #{PROJECT_ROOT}/bin/update_versions"
+  sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/xadd"
 end
 
 desc 'starts the BOINC daemons'
 task :start_daemons do
- sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/xadd"
- sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/start"
+  sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/start"
 end
