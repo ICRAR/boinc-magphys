@@ -1,7 +1,7 @@
 """
 Fabric file for installing the servers
 
-This doesn't use the role decorator as it only seems to work at the top level
+This doesn't use the role decorator as it only seems to work at the top level.
 """
 import glob
 
@@ -13,7 +13,7 @@ from fabric.api import run, sudo, put, env, require
 from fabric.context_managers import cd
 from fabric.contrib.console import confirm
 from fabric.contrib.files import append, sed, comment
-from fabric.decorators import task, roles, parallel, serial
+from fabric.decorators import task, parallel, serial
 from fabric.operations import prompt
 from fabric.utils import puts, abort, fastprint
 
@@ -369,9 +369,9 @@ def web_install():
 @task
 @serial
 def upload_install():
-    """Install the web site components
+    """Install the upload components
 
-    Install the web components only
+    Install the upload components only
     """
     if env.host_string in env.roledefs['upload']:
         # Make the POGS project
@@ -427,7 +427,6 @@ def upload_install():
 
         # Copy files into place
         with cd('/home/ec2-user/boinc-magphys/machine-setup'):
-            run('rake update_versions')
             run('rake start_daemons')
 
         # Setup the crontab job to keep things ticking
@@ -437,9 +436,9 @@ def upload_install():
 @task
 @serial
 def download_install():
-    """Install the web site components
+    """Install the download components
 
-    Install the web components only
+    Install the download components only
     """
     if env.host_string in env.roledefs['download']:
         # Make the POGS project
@@ -483,14 +482,13 @@ def download_install():
         # setup_website - all need this
         with cd('/home/ec2-user/boinc-magphys/machine-setup'):
             sudo('rake setup_website')
+            run('rake update_versions')
 
         # This is needed because the files that Apache serve are inside the user's home directory.
         run('chmod 711 /home/ec2-user')
         run('chmod -R oug+r /home/ec2-user/projects/pogs')
         run('chmod ug+w /home/ec2-user/projects/pogs/log_*')
-
-        # Remove the HTML
-        run('rm -rf /home/ec2-user/projects/pogs/html')
+        run('chmod -R oug+x /home/ec2-user/projects/pogs/html')
 
         # Copy files into place
         with cd('/home/ec2-user/boinc-magphys/machine-setup'):
@@ -499,6 +497,27 @@ def download_install():
         # Setup the crontab job to keep things ticking
         run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/pogs ; /home/ec2-user/projects/pogs/bin/start --cron" >> /tmp/crontab.txt')
         run('crontab /tmp/crontab.txt')
+
+@task
+@serial
+def database_details():
+    """Install the DB details
+
+    Install the DB details onto the upload and download servers
+    """
+    if env.host_string in env.roledefs['download'] or env.host_string in env.roledefs['upload']:
+        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
+            '#databaseUserid',
+            'databaseUserid = {0}'.format(env.db_username))
+        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
+            '#databasePassword',
+            'databasePassword = {0}'.format(env.db_password))
+        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
+            '#databaseHostname',
+            'databaseHostname = {0}'.format(env.db_host_name))
+        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
+            '#databaseName',
+            'databaseName = magphys')
 
 @task
 @serial
@@ -605,9 +624,11 @@ def prod_deploy():
     copy_public_keys()
     base_install()
 
-    # Serial bit - the first host to finish gets this bit
+    # Serial bit
     # As I've having to create the POGS DB three times - we need to make sure
     # I don't try to do it twice
     web_install()
     upload_install()
     download_install()
+
+    database_details()
