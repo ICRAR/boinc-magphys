@@ -313,10 +313,9 @@ def web_install():
         sed('/home/ec2-user/projects/pogs/config.xml',
             'http://.*amazonaws\.com/pogs/download',
             'http://{0}/pogs/download'.format(env.hosts[DOWNLOAD_HOST]))
-        sed('/home/ec2-user/projects/pogs/config.xml',
-            '  <daemons>((.|\\n)*)</daemons>',
-            '  <daemons></daemons>\\n'
-            '  <locality_scheduling/>\\n')
+        run('cp /home/ec2-user/projects/pogs/config.xml /home/ec2-user/projects/pogs/config.xml.bak')
+        run('''awk '/<daemons>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "  <daemons></daemons>\\n'''
+            '''  <locality_scheduling/>"; next } 1' config.xml.bak > config.xml''')
 
         comment('/home/ec2-user/projects/pogs/html/ops/create_forums.php', '^die', char='// ')
 
@@ -387,8 +386,8 @@ def upload_install():
         sed('/home/ec2-user/projects/pogs/config.xml',
             'http://.*amazonaws\.com/pogs/download',
             'http://{0}/pogs/download'.format(env.hosts[DOWNLOAD_HOST]))
-        sed('/home/ec2-user/projects/pogs/config.xml',
-            '  <daemons>((.|\\n)*)</daemons>',
+        run('cp /home/ec2-user/projects/pogs/config.xml /home/ec2-user/projects/pogs/config.xml.bak')
+        run('''awk '/<daemons>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "'''
             '  <daemons>\\n'
             '    <daemon>\\n'
             '      <cmd>\\n'
@@ -406,7 +405,7 @@ def upload_install():
             '      </cmd>\\n'
             '    </daemon>\\n'
             '  </daemons>\\n'
-            '  <locality_scheduling/>\\n')
+            '''  <locality_scheduling/>"; next } 1' config.xml.bak > config.xml''')
 
         # Build the validator
         with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
@@ -454,8 +453,8 @@ def download_install():
         sed('/home/ec2-user/projects/pogs/config.xml',
             'http://.*amazonaws\.com/pogs/download',
             'http://{0}/pogs/download'.format(env.hosts[DOWNLOAD_HOST]))
-        sed('/home/ec2-user/projects/pogs/config.xml',
-            '  <daemons>((.|\\n)*)</daemons>',
+        run('cp /home/ec2-user/projects/pogs/config.xml /home/ec2-user/projects/pogs/config.xml.bak')
+        run('''awk '/<daemons>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "'''
             '  <daemons>\\n'
             '    <daemon>\\n'
             '      <cmd>\\n'
@@ -473,7 +472,7 @@ def download_install():
             '      </cmd>\\n'
             '    </daemon>\\n'
             '  </daemons>\\n'
-            '  <locality_scheduling/>\\n')
+            '''  <locality_scheduling/>"; next } 1' config.xml.bak > config.xml''')
 
         # Build the validator
         with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
@@ -508,16 +507,16 @@ def database_details():
     if env.host_string in env.roledefs['download'] or env.host_string in env.roledefs['upload']:
         sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
             '#databaseUserid',
-            'databaseUserid = {0}'.format(env.db_username))
+            'databaseUserid = "{0}"'.format(env.db_username))
         sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
             '#databasePassword',
-            'databasePassword = {0}'.format(env.db_password))
+            'databasePassword = "{0}"'.format(env.db_password))
         sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
             '#databaseHostname',
-            'databaseHostname = {0}'.format(env.db_host_name))
+            'databaseHostname = "{0}"'.format(env.db_host_name))
         sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
             '#databaseName',
-            'databaseName = magphys')
+            'databaseName = "magphys"')
 
 @task
 @serial
