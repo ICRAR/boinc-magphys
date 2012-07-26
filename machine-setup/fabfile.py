@@ -129,8 +129,6 @@ def to_boolean(choice, default=False):
 
     return default
 
-@task
-@parallel
 def copy_public_keys():
     """
     Copy the public keys to the remote servers
@@ -142,8 +140,6 @@ def copy_public_keys():
         env.list_of_users.append(user)
         put(file, filename)
 
-@task
-@parallel
 def base_install():
     """
     Perform the basic install
@@ -170,7 +166,7 @@ def base_install():
         run('make')
 
     # Setup the pythonpath
-    append('/home/ec2-user/.bash_profile', ['', 'PYTHONPATH=$PYTHONPATH:/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src', 'export PYTHONPATH'])
+    append('/home/ec2-user/.bash_profile', ['', 'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src', 'export PYTHONPATH'])
 
     # Setup the python
     run('wget http://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
@@ -199,28 +195,37 @@ def base_install():
         # Add them to the sudoers
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
-@task
-@serial
-def single_install():
+def single_install(with_db):
     """ Perform the tasks to install the whole BOINC server on a single machine
 
     The web, upload and download are all
     """
-    # Activate the DB
-    sudo('mysql_install_db')
-    sudo('chown -R mysql:mysql /var/lib/mysql/*')
-    run('''echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet apply''')
-    sudo('service mysqld start')
+    if with_db:
+        # Activate the DB
+        sudo('mysql_install_db')
+        sudo('chown -R mysql:mysql /var/lib/mysql/*')
+        run('''echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet apply''')
+        sudo('service mysqld start')
 
-    # Wait for it to start up
-    time.sleep(5)
+        # Wait for it to start up
+        time.sleep(5)
 
-    # Make the POGS project
-    with cd('/home/ec2-user/boinc/tools'):
-        run('./make_project -v --no_query --url_base http://{0} --db_user root pogs'.format(env.hosts[WEB_HOST]))
+    if with_db:
+        # Setup the database for recording WU's
+        run('mysql --user=root < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql')
 
-    # Setup the database for recording WU's
-    run('mysql --user=root < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql')
+        # Make the POGS project
+        with cd('/home/ec2-user/boinc/tools'):
+            run('./make_project -v --no_query --url_base http://{0} --db_user root pogs'.format(env.hosts[WEB_HOST]))
+
+    else:
+        # Setup the database for recording WU's
+        run('mysql --user={0} --host={1} --password={2} < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql'.format(env.db_username, env.db_host_name, env.db_password))
+
+        # Make the POGS project
+        with cd('/home/ec2-user/boinc/tools'):
+            run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} --cgi_url={4} pogs'
+            .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[DOWNLOAD_HOST]))
 
     # Edit the files
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH PROJECT NAME', 'theSkyNet POGS - the PS1 Optical Galaxy Survey')
@@ -285,6 +290,7 @@ def single_install():
         run('rake start_daemons')
 
     # Setup the crontab job to keep things ticking
+    run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
     run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/pogs ; /home/ec2-user/projects/pogs/bin/start --cron" >> /tmp/crontab.txt')
     run('crontab /tmp/crontab.txt')
 
@@ -306,7 +312,7 @@ def prod_deploy_stage02():
     # Make the POGS project
     with cd('/home/ec2-user/boinc/tools'):
         run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} --cgi_url={4} pogs'
-            .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[UPLOAD_HOST]))
+            .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[DOWNLOAD_HOST]))
 
     # Edit the files
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH PROJECT NAME', 'theSkyNet POGS - the PS1 Optical Galaxy Survey')
@@ -384,7 +390,7 @@ def prod_deploy_stage03():
     # There doesn't seem to be away build the directories and ignore the DB
     with cd('/home/ec2-user/boinc/tools'):
         run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} --cgi_url={4} pogs'
-            .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[UPLOAD_HOST]))
+            .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[DOWNLOAD_HOST]))
 
     # As this goes through SED we need to be a bit careful
     sed('/home/ec2-user/projects/pogs/config.xml',
@@ -451,7 +457,7 @@ def prod_deploy_stage04():
     # There doesn't seem to be away build the directories and ignore the DB
     with cd('/home/ec2-user/boinc/tools'):
         run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} --cgi_url={4} pogs'
-            .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[UPLOAD_HOST]))
+            .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[DOWNLOAD_HOST]))
 
     # As this goes through SED we need to be a bit careful
     sed('/home/ec2-user/projects/pogs/config.xml',
@@ -541,7 +547,10 @@ def test_env():
 
     public_ip = None
     if use_elastic_ip:
-        public_ip = prompt('What is the public IP address: ', 'public_ip')
+        if 'public_ip' in env:
+            public_ip = env.public_ip
+        else:
+            public_ip = prompt('What is the public IP address: ', 'public_ip')
 
     if 'ops_username' not in env:
         prompt('Ops area username: ', 'ops_username')
@@ -609,7 +618,7 @@ def prod_env():
 
 @task
 @serial
-def test_deploy():
+def test_deploy_with_db():
     """Deploy the test environment
 
     Deploy the test system in the AWS cloud with everything running on a single server
@@ -618,7 +627,20 @@ def test_deploy():
 
     copy_public_keys()
     base_install()
-    single_install()
+    single_install(True)
+
+@task
+@serial
+def test_deploy_without_db():
+    """Deploy the test environment
+
+    Deploy the test system in the AWS cloud with everything running on a single server
+    """
+    require('hosts', provided_by=[test_env])
+
+    copy_public_keys()
+    base_install()
+    single_install(False)
 
 @task
 @parallel

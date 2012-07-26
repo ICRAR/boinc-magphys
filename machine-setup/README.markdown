@@ -5,6 +5,8 @@ The idea is to make setting up such an instance easily reproducible by encouragi
 
 The **fabfile.py** does all the heavy lifting.
 
+* fab test_env test_deploy_with_db - will deploy everything on a single server including the DB
+* fab test_env test_deploy_without_db - will deploy everything on a single server without the DB
 * fab test_env test_deploy - will deploy everything on a single server
 * fab prod_env prod_env prod_deploy_stage01 prod_deploy_stage02 prod_deploy_stage03 prod_deploy_stage04 - will deploy to the multi-server production environment
 * fab --conf=file.env --linewise prod_env prod_env prod_deploy_stage01 prod_deploy_stage02 prod_deploy_stage03 prod_deploy_stage04 - will deploy to the multi-server production environment in parallel. To make this work you must use an env file else fabric complains

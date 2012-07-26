@@ -6,29 +6,29 @@ import subprocess
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-if(len(sys.argv) != 3):
-    print "usage:   %(me)s files_to_process observations_directory boinc_project_root" % {'me':sys.argv[0]}
+if len(sys.argv) != 3 and len(sys.argv) != 4:
+    print "usage:   %(me)s observations_directory boinc_project_root [files_to_process]" % {'me':sys.argv[0]}
     print "example: %(me)s /home/ec2-user/f2wu /home/ec2-user/projects/pogs 100" % {'me':sys.argv[0]}
     sys.exit(-10)
 
 APP_NAME = "magphys_wrapper"
 FILE_DIR = sys.argv[1]
 BOINC_PROJECT_ROOT = sys.argv[2]
-if len(sys.argv) > 2:
+if len(sys.argv) == 4:
     FILES_TO_PROCESS = sys.argv[3]
 else:
     FILES_TO_PROCESS = sys.maxint
 
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
-TEMPLATES_PATH = "templates"                     # In true BOINC style, this is magically relative to the project root
+TEMPLATES_PATH = "templates"                      # In true BOINC style, this is magically relative to the project root
 
-NUMBER_OF_HIGH_PRIO_WORK_UNITS = 100			 # Default number of work units to mark as high priority
+NUMBER_OF_HIGH_PRIO_WORK_UNITS = 100			  # Default number of work units to mark as high priority
 DEFAULT_HIGH_PRIORITY = "100"
-MIN_QUORUM = 2									 # Validator run when there are at least this many results for a work unit
-TARGET_NRESULTS = MIN_QUORUM+1					 # Initially create this many instances of a work unit
-DELAY_BOUND = 86400 * 30 						 # Clients must report results within a month
-FPOPS_EST_PER_PIXEL = 1.898						 # Estimated number of gigaflops per pixel
-FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	 # Maximum number of gigaflops per pixel client will allow before terminating job
+MIN_QUORUM = 2									  # Validator run when there are at least this many results for a work unit
+TARGET_NRESULTS = MIN_QUORUM+1					  # Initially create this many instances of a work unit
+DELAY_BOUND = 86400 * 30 						  # Clients must report results within a month
+FPOPS_EST_PER_PIXEL = 1.898						  # Estimated number of gigaflops per pixel
+FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	  # Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
 
 # The BOINC scripts/apps do not feel at home outside their directory
