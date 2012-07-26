@@ -2,7 +2,7 @@
 Fabric file for installing the servers
 
 Test is simple as it only runs on one server
-fab test_env test_deploy
+fab test_env test_deploy_with_db
 
 Production is more complex as we have three servers to configure.
 Each needs the BOINC project structure installed, but that means recreating the database 3 times
@@ -224,10 +224,24 @@ def single_install(with_db):
 
         # Make the POGS project
         with cd('/home/ec2-user/boinc/tools'):
-            run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} --cgi_url={4} pogs'
-            .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.hosts[DOWNLOAD_HOST]))
+            run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} pogs'
+                .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password))
 
-    # Edit the files
+        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
+                '#databaseUserid',
+                'databaseUserid = "{0}"'.format(env.db_username))
+        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
+            '#databasePassword',
+            'databasePassword = "{0}"'.format(env.db_password))
+        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
+            '#databaseHostname',
+            'databaseHostname = "{0}"'.format(env.db_host_name))
+        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
+            '#databaseName',
+            'databaseName = "magphys"')
+
+
+# Edit the files
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH PROJECT NAME', 'theSkyNet POGS - the PS1 Optical Galaxy Survey')
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', '"white.css"', '"black.css"')
