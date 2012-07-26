@@ -6,8 +6,7 @@ import boto
 from fabric.decorators import serial, task, parallel, roles
 from fabric.operations import sudo, run, require
 from fabric.state import env
-from fabric.tasks import execute
-from fabric.utils import puts, abort, fastprint
+from fabric.utils import puts, fastprint
 import time
 
 USERNAME = 'ec2-user'
@@ -82,19 +81,6 @@ def base_install():
     sudo('yum --assumeyes --quiet install puppet git')
 
 
-@task
-@serial
-def serial_install01():
-    print 'serial_install01 Host: {0} Env: {1}'.format(env.host_string, env)
-    if env.host_string in env.roledefs['role01']:
-        run('git clone git://github.com/ICRAR/boinc-magphys.git')
-
-@task
-@serial
-def serial_install02():
-    print 'serial_install02 Host: {0} Env: {1}'.format(env.host_string, env)
-    if env.host_string in env.roledefs['role02']:
-        run('git clone git://github.com/ICRAR/theSkyNet.git')
 
 @task
 @parallel
@@ -109,22 +95,45 @@ def common_end_install():
 @serial
 def get_hosts():
     # Create the instance in AWS
-    host_names = create_instance(['Test01', 'Test02'])
+    host_names = create_instance(['Test01', 'Test02', 'Test03'])
     print '{0}'.format(host_names)
     env.hosts = host_names
     env.user = USERNAME
     env.key_filename = AWS_KEY
     env.roledefs = {
-        'role01' : host_names[0],
-        'role02' : host_names[1],
+        'role01' : [host_names[0]],
+        'role02' : [host_names[1]],
+        'role03' : [host_names[2]],
         }
 
 @task
 @parallel
-def prod():
+def prod_stage1():
     require('hosts', provided_by=[get_hosts])
 
     base_install()
-    serial_install01()
-    serial_install02()
     common_end_install()
+
+@task
+@serial
+@roles('role01')
+def prod_stage2():
+    require('hosts', provided_by=[get_hosts])
+    print 'serial_install01 Host: {0} Env: {1}'.format(env.host_string, env)
+    run('git clone git://github.com/ICRAR/boinc-magphys.git')
+
+@task
+@serial
+@roles('role02')
+def prod_stage3():
+    require('hosts', provided_by=[get_hosts])
+    print 'serial_install02 Host: {0} Env: {1}'.format(env.host_string, env)
+    run('git clone git://github.com/ICRAR/theSkyNet.git')
+
+@task
+@serial
+@roles('role03')
+def prod_stage4():
+    require('hosts', provided_by=[get_hosts])
+    print 'serial_install03 Host: {0} Env: {1}'.format(env.host_string, env)
+    run('git clone git://github.com/ICRAR/machine-setup.git')
