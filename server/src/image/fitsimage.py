@@ -356,7 +356,18 @@ class FitsImage:
             b = 50
         image.putpixel((x,y), (r, g, b))
         
-    def userGalaxy(self, session, userid):
+    def userGalaxies(self, session, userid):
+        """
+        Determines the galaxies that the selected user has generated results.  Returns an array of
+        galaxy_ids.
+        """
+        stmt = session.query(Galaxy.galaxy_id).join(Area).join(AreaUser).filter(AreaUser.userid == userid).subquery()
+        #print stmt
+        #print session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt))
+        #adalias = aliased(PixelResult, stmt);
+        return session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt));
+    
+    def userGalaxyIds(self, session, userid):
         """
         Determines the galaxies that the selected user has generated results.  Returns an array of
         galaxy_ids.
