@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -14,6 +13,7 @@
 
 using namespace std;
 
+#include "gzstream.h"
 #include "error_numbers.h"
 #include "boinc_db.h"
 #include "sched_util.h"
@@ -252,9 +252,9 @@ int init_result(RESULT& result, void*& data)
         return retval;
 
     string line;
-    ifstream infile(fname.c_str());
+    igzstream infile(fname.c_str());
 
-    if (!infile.is_open())
+    if (!infile.good())
         return ERR_FOPEN;
 
     fit_file *ft = new fit_file;

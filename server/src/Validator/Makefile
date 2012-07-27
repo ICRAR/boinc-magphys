@@ -15,5 +15,5 @@ all: $(PROGS)
 wrapper: wrapper.o magphys_validator.o
 	$(CXX) $(CXXFLAGS1) -o $@ $^
 
-magphys_validator: magphys_validator.o $(BOINC_SRC_DIR)/credit.o $(BOINC_SRC_DIR)/validator.o $(BOINC_SRC_DIR)/validate_util.o $(BOINC_SRC_DIR)/validate_util2.o
+magphys_validator: magphys_validator.o $(BOINC_SRC_DIR)/credit.o $(BOINC_SRC_DIR)/validator.o $(BOINC_SRC_DIR)/validate_util.o $(BOINC_SRC_DIR)/validate_util2.o gzstream.o
 	/bin/sh $(BOINC_DIR)/libtool --tag=CXX --mode=link $(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)

@@ -3,7 +3,7 @@
         <name><OUTFILE_0/></name>
         <generated_locally/>
         <upload_when_present/>
-        <max_nbytes>1000000</max_nbytes>
+        <max_nbytes>5000000</max_nbytes>
         <url><UPLOAD_URL/></url>
         <gzip_when_done/>
     </file_info>
