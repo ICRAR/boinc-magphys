@@ -2,6 +2,7 @@
 
 import assimilator
 import boinc_path_config
+import gzip, os
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
 from database import login
@@ -50,8 +51,11 @@ class MagphysAssimilator(assimilator.Assimilator):
     def saveResult(self, session, pxresult, results, useridSet):
         for result in results:
             if result.user and result.validate_state == boinc_db.VALIDATE_STATE_VALID:
-                if result.user_id not in useridSet:
-                    useridSet.add(result.user_id)
+                userid = result.user.id
+                #self.logDebug("Userid %d\n", userid)
+                if userid not in useridSet:
+                    self.logDebug("Added Userid %d\n", userid)
+                    useridSet.add(userid)
 
         if pxresult.pxresult_id == None and not self.noinsert:
             session.add(pxresult)
@@ -61,7 +65,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         Read the output file, add the values to the PixelResult row, and insert the filter,
         parameter and histogram rows.
         """
-        f = open(outFile , "r")
+        f = gzip.open(outFile , "r")
         lineNo = 0
         pointName = None
         pxresult = None
@@ -69,6 +73,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         percentilesNext = False
         histogramNext = False
         skynetNext = False
+        resultCount = 0
         for line in f:
             lineNo = lineNo + 1
 
@@ -87,6 +92,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 percentilesNext = False;
                 histogramNext = False
                 skynetNext = False
+                resultCount = resultCount + 1
             elif pxresult:
                 if lineNo == 2:
                     filterNames = line.split()
@@ -187,40 +193,54 @@ class MagphysAssimilator(assimilator.Assimilator):
         f.close()
         if pxresult:
             self.saveResult(session, pxresult, results, useridSet)
+        return resultCount
 
     def assimilate_handler(self, wu, results, canonical_result):
         """
         Process the Results.
         """
+        self.logDebug("Start of assimilate_handler for %d\n", wu.id)
+        #self.logDebug("url: [%s]\n", login)
         if wu.canonical_result:
             #file_list = []
             outFile = self.get_file_path(canonical_result)
             useridSet = set()
             self.area = None
             #self.get_output_file_infos(canonical_result, file_list)
+            if (outFile):
+                 if os.path.isfile(outFile):
+                      pass
+                 else:
+                     self.logDebug("File [%s] not found\n", outFile)
+                     outFile = None
 
             if (outFile):
-                print "Reading File",
-                print outFile
+                self.logDebug("Reading File [%s]\n", outFile)
                 session = self.Session()
-                self.processResult(session, outFile, wu, results, useridSet)
+                resultCount = self.processResult(session, outFile, wu, results, useridSet)
                 if self.noinsert:
                     session.rollback()
                 else:
-                    if self.area:
+                    if resultCount == 0:
+                        self.logCritical("No results were found in the output file\n")
+                    if self.area == None:
+                        self.logDebug("The Area was not found\n")
+                    else:
                         self.area.workunit_id = wu.id
                         #print 'Adding users'
                         for user in self.area.users:
                             session.delete(user)
                         for userid in useridSet:
                             usr = AreaUser()
-                            usr.userid = result.user.id
+                            usr.userid = userid
                             #usr.create_time =
-                            area.users.append(usr)
+                            self.area.users.append(usr)
+                    self.logDebug("Saving %d results for workunit %d\n", resultCount, wu.id)
                     session.commit()
             else:
                 self.logCritical("The output file was not found\n")
         else:
+            self.logDebug("No canonical_result for workunit\n")
             self.report_errors(wu)
 
         return 0;
