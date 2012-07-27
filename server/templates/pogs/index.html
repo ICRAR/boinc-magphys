@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <title>POGS</title>
+  </head>
+  
+  <body>
+  {% if user_galaxy_list %}
+    <p>Below is the list of galaxies where your computer has been credited.
+    <ul>
+    {% for galaxy in user_galaxy_list %}
+        <li><a href="/pogs/UserGalaxy/{{ userid }}/{{ galaxy.galaxy_id }}">{{ galaxy.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>There are no galaxies where you have been credited.</p>
+{% endif %}
+  </body>
+</html>

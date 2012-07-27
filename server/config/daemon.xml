@@ -1,0 +1,5 @@
+    <daemon>
+      <cmd>
+        python magphys_assimiliator.py -d 3 -dont_update_db -app pogs
+      </cmd>
+    </daemon>

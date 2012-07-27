@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 
 import assimilator
-import os
 import boinc_path_config
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
-from database.database_support import Area, AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram, login
+from database import login
+from database.database_support import Area, AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -15,18 +15,8 @@ class MagphysAssimilator(assimilator.Assimilator):
 
     def __init__(self):
         assimilator.Assimilator.__init__(self)
-        #super(MagphysAssimilator, self).__init__(self)
 
-        #login = "mysql://root:@localhost/magphys"
-        #try:
-        #     f = open(os.path.expanduser("~/Magphys.Profile") , "r")
-        #     for line in f:
-        #         if line.startswith("url="):
-        #           login = line[4:]
-        #     f.close()
-        #except IOError as e:
-        #    pass
-
+        # Login is set in the database package
         engine = create_engine(login)
         self.Session = sessionmaker(bind=engine)
 

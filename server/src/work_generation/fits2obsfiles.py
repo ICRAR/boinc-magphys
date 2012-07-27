@@ -4,7 +4,8 @@ import logging
 import math
 import pyfits
 import sys
-from database.database_support import Galaxy, Area, PixelResult, login
+from database import login
+from database.database_support import Galaxy, Area, PixelResult
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from work_generation import FILTER_BANDS
@@ -13,9 +14,9 @@ from image.fitsimage import FitsImage
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-if len(sys.argv) < 3:
+if len(sys.argv) != 4 and len(sys.argv) != 5:
     print("usage:   %(me)s FITS_file output_directory image_directory [galaxy_name]" % {'me':sys.argv[0]})
-    print("example: %(me)s /home/ec2-user/POGS_NGC628_v3.fits /home/ec2-user/f2wu /home/ec2-user/f2img" % {'me':sys.argv[0]})
+    print("example: %(me)s /home/ec2-user/POGS_NGC628_v3.fits /home/ec2-user/f2wu /home/ec2-user/f2img NGC628" % {'me':sys.argv[0]})
     sys.exit(-10)
 
 status = {}
@@ -46,8 +47,7 @@ END_X = HDULIST[0].data.shape[1]
 
 LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':END_X,'y':END_Y,'z':LAYER_COUNT,'pix':END_X*END_Y/1000000.0})
 
-# Connect to the database
-#login = "mysql://root:@localhost/magphys"
+# Connect to the database - the login string is set in the database package
 engine = create_engine(login)
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -221,7 +221,7 @@ def squarify(galaxy):
 #Here, it might be useful to assert that there are 12 input layers/channels/HDUs
 #print "List length: %(#)d" % {'#': len(HDULIST)}
 
-if len(sys.argv) > 4:
+if len(sys.argv) == 5:
     object_name = sys.argv[4]
 else:
     object_name = HDULIST[0].header['OBJECT']
