@@ -67,24 +67,24 @@ bool fit_number::operator==(const fit_number &x)
 {
     // NaN is not equal to anything else
     if (isnan(this->val) || isnan(x.val))
-	return (false);
+        return (false);
 
     // Infinities are equal
     if (isinf(this->val))
-	return (isinf(x.val));
+        return (isinf(x.val));
     // this->val is finite
     if (isinf(x.val))
-	return (false);
+        return (false);
 
     // If one side is zero, allow the other side to be <= fuzz
     if (this->val == 0.0)
-	return (fabs(x.val) <= fuzz);
+        return (fabs(x.val) <= fuzz);
     if (x.val == 0.0)
-	return (fabs(this->val) <= fuzz);
+        return (fabs(this->val) <= fuzz);
 
     // Both values must have the same sign
     if (signbit(this->val) != signbit(x.val))
-	return false;
+        return false;
 
     // given X > Y, allow equal if Y > (X * (1 - fuzz))
     double a = fabs(this->val);
@@ -100,24 +100,24 @@ bool operator==(const fit_number &x, const fit_number &y)
 {
     // NaN is not equal to anything else
     if (isnan(x.val) || isnan(y.val))
-	return (false);
+        return (false);
 
     // Infinities are equal
     if (isinf(x.val))
-	return (isinf(y.val));
+        return (isinf(y.val));
     // x.val is finite
     if (isinf(y.val))
-	return (false);
+        return (false);
 
     // If one side is zero, allow the other side to be <= fuzz
     if (x.val == 0.0)
-	return (fabs(y.val) <= fit_number::fuzz);
+        return (fabs(y.val) <= fit_number::fuzz);
     if (y.val == 0.0)
-	return (fabs(x.val) <= fit_number::fuzz);
+        return (fabs(x.val) <= fit_number::fuzz);
 
     // Both values must have the same sign
     if (signbit(x.val) != signbit(y.val))
-	return false;
+        return false;
 
     // given X > Y, allow equal if Y > (X * (1 - fuzz))
     double a = fabs(x.val);
@@ -135,7 +135,7 @@ void fit_record::ident_type()
 {
     size_t pos = this->ftrec_str.find_first_not_of(" \t");
     this->ftrec_type = (pos == string::npos || this->ftrec_str[pos] == '#') ?
-		       COMMENT : DATA;
+               COMMENT : DATA;
 }
 
 // Parse the record into ftrec_num.  'len' is an estimate of the number
@@ -145,14 +145,14 @@ void fit_record::parse(size_t len)
     this->ftrec_num.reserve(len);
     const char *s = this->ftrec_str.c_str();
     while (*s) {
-	char *ep;
-	double val = strtod(s, &ep);
-	if (s == ep || (*ep != ' ' && *ep != '\t' && *ep != '\0')) {
-	    this->ftrec_num.push_back(NAN);
-	    break;
-	}
-	this->ftrec_num.push_back(val);
-	s = ep;
+        char *ep;
+        double val = strtod(s, &ep);
+        if (s == ep || (*ep != ' ' && *ep != '\t' && *ep != '\0')) {
+            this->ftrec_num.push_back(NAN);
+            break;
+        }
+        this->ftrec_num.push_back(val);
+        s = ep;
     }
 }
 
@@ -160,34 +160,36 @@ void fit_record::parse(size_t len)
 #if 1
 bool fit_record::operator==(fit_record &x)
 {
+    //log_messages.printf(MSG_DEBUG, "== \n%s\n%s\n", this->ftrec_str.c_str(), x.ftrec_str.c_str());
+
     // If one side hasn't been parsed, start with a string compare
     if ((this->ftrec_type == INIT || x.ftrec_type == INIT)
-	&& this->ftrec_str == x.ftrec_str)
-	return true;
+        && this->ftrec_str == x.ftrec_str)
+        return true;
 
     // Identify COMMENT or DATA as needed for each side
     if (this->ftrec_type == INIT)
-	this->ident_type();
+        this->ident_type();
     if (x.ftrec_type == INIT)
-	x.ident_type();
+        x.ident_type();
 
     // comment fields must compare identical
     if (this->ftrec_type == COMMENT)
-	return (x.ftrec_type == COMMENT && this->ftrec_str == x.ftrec_str);
+        return (x.ftrec_type == COMMENT && this->ftrec_str == x.ftrec_str);
 
     // At this point, 'this' is data.  'x' has to be to match
     if (x.ftrec_type != DATA && x.ftrec_type != NUMERIC)
-	return (false);
+        return (false);
 
     // Accept if bytewise identical
     if (this->ftrec_str == x.ftrec_str)
-	return (true);
+        return (true);
 
     // Parse records as necessary.
     if (this->ftrec_type == DATA)
-	this->parse(x.ftrec_num.size());
+        this->parse(x.ftrec_num.size());
     if (x.ftrec_type == DATA)
-	x.parse(this->ftrec_num.size());
+        x.parse(this->ftrec_num.size());
 
     // Do fuzzy numeric compare
     return (this->ftrec_num == x.ftrec_num);
@@ -197,32 +199,32 @@ bool operator==(fit_record &x, fit_record &y)
 {
     // If one side hasn't been parsed, start with a string compare
     if ((x.ftrec_type == fit_record::INIT || y.ftrec_type == fit_record::INIT)
-	&& x.ftrec_str == y.ftrec_str)
-	return true;
+        && x.ftrec_str == y.ftrec_str)
+        return true;
 
     // Identify COMMENT or DATA as needed for each side
     if (x.ftrec_type == fit_record::INIT)
-	x.ident_type();
+        x.ident_type();
     if (y.ftrec_type == fit_record::INIT)
-	y.ident_type();
+        y.ident_type();
 
     // comment fields must compare identical
     if (x.ftrec_type == fit_record::COMMENT)
-	return (y.ftrec_type == fit_record::COMMENT && x.ftrec_str == y.ftrec_str);
+        return (y.ftrec_type == fit_record::COMMENT && x.ftrec_str == y.ftrec_str);
 
     // At this point, 'this' is data.  'x' has to be to match
     if (y.ftrec_type != fit_record::DATA && y.ftrec_type != fit_record::NUMERIC)
-	return (false);
+        return (false);
 
     // Accept if bytewise identical
     if (x.ftrec_str == y.ftrec_str)
-	return (true);
+        return (true);
 
     // Parse records as necessary.
     if (x.ftrec_type == fit_record::DATA)
-	x.parse(y.ftrec_num.size());
+        x.parse(y.ftrec_num.size());
     if (y.ftrec_type == fit_record::DATA)
-	y.parse(x.ftrec_num.size());
+        y.parse(x.ftrec_num.size());
 
     // Do fuzzy numeric compare
     return (x.ftrec_num == y.ftrec_num);
@@ -247,13 +249,13 @@ int init_result(RESULT& result, void*& data)
 
     retval = get_output_file_path(result, fname);
     if (retval)
-	return retval;
+        return retval;
 
     string line;
     ifstream infile(fname.c_str());
 
     if (!infile.is_open())
-	return ERR_FOPEN;
+        return ERR_FOPEN;
 
     fit_file *ft = new fit_file;
 

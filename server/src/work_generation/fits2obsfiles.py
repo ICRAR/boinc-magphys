@@ -1,4 +1,5 @@
 from __future__ import print_function
+import json
 
 import logging
 import math
@@ -108,11 +109,10 @@ def create_output_file(galaxy, area, pixels):
         Write an output file for this area
     """
     pixels_in_area = len(pixels)
+    data = [{'galaxy':galaxy.name, 'area_id':area.area_id, 'pixels':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,}]
     filename = '%(output_dir)s/%(galaxy)s__wu%(area)s' % { 'galaxy':galaxy.name, 'output_dir':OUTPUT_DIR, 'area':area.area_id}
     outfile = open(filename, 'w')
-    outfile.write('#  This workunit contains observations for galaxy %(galaxy)s. ' % { 'galaxy':galaxy.name })
-    outfile.write('Area %(area)s (%(top_x)s,%(top_y)s) to (%(bottom_x)s,%(bottom_y)s) contains %(count)s pixels with above-threshold observations.\n' % {
-        'area':area.area_id, 'count':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,})
+    outfile.write('#  %(data)s\n' % { 'data': json.dumps(data) })
 
     row_num = 0
     for pixel in pixels:

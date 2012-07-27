@@ -1,3 +1,5 @@
+from collections import defaultdict
+import json
 import logging
 import sys
 import os
@@ -15,14 +17,15 @@ APP_NAME = "magphys_wrapper"
 FILE_DIR = sys.argv[1]
 BOINC_PROJECT_ROOT = sys.argv[2]
 if len(sys.argv) == 4:
+    USE_PRIORITY = False
     FILES_TO_PROCESS = sys.argv[3]
 else:
+    USE_PRIORITY = True
     FILES_TO_PROCESS = sys.maxint
 
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates"                      # In true BOINC style, this is magically relative to the project root
 
-NUMBER_OF_HIGH_PRIO_WORK_UNITS = 100			  # Default number of work units to mark as high priority
 DEFAULT_HIGH_PRIORITY = "100"
 MIN_QUORUM = 2									  # Validator run when there are at least this many results for a work unit
 TARGET_NRESULTS = MIN_QUORUM+1					  # Initially create this many instances of a work unit
@@ -35,11 +38,20 @@ FPOPS_EXP = "e12"
 os.chdir(BOINC_PROJECT_ROOT)
 file_list = os.listdir(FILE_DIR)
 
+# Build the file groups
+file_groups = defaultdict(list)
+for file_name in file_list:
+    if file_name[0] == '.':
+        continue	# Process everything but dot-files
+
+    split = file_name.partition('__')
+    file_groups[split[0]].append(file_name)
+
 def create_job_xml(file_name, pixels_in_file):
     new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()
     file = open(new_full_path, 'wb')
     file.write('<job_desc>\n')
-    for i in range(1, pixels_in_file):
+    for i in range(1, pixels_in_file + 1):
         file.write('''   <task>
       <application>fit_sed</application>
       <command_line>{0} filters.dat observations.dat</command_line>
@@ -50,50 +62,68 @@ def create_job_xml(file_name, pixels_in_file):
     file.write('</job_desc>\n')
     file.close()
 
+def file_details(filename):
+    f = open(filename, 'rb')
+    line = f.readline()
+    f.close()
+    list = json.loads(line[1:])
+    data = list[0]
+
+    return data['pixels'], data['area_id']
+
 files_processed = 0
-for file_name in file_list:
-    if file_name[0] == '.':
-        continue	# Process everything but dot-files
+for key, value in file_groups.iteritems():
+    if value is None:
+        continue
 
-    # Create the job file
-    file_name_job = file_name + '.job.xml'
+    high_priority_files_processed = 0
+    if USE_PRIORITY:
+        number_high_priority_units = len(value) / 5
+    else:
+        number_high_priority_units = 0
 
-    pixels_in_file = sum(1 for line in open(FILE_DIR + "/" + file_name))-1
-    LOG.info("Creating work unit from observations file %(file)s: %(pixels)d pixels" % {'file':file_name, 'pixels':pixels_in_file})
+    for file_name in value:
+        # Create the job file
+        file_name_job = file_name + '.job.xml'
 
-    args_params = [
-        "--appname",         APP_NAME,
-        "--min_quorum",      "%(min_quorum)s" % {'min_quorum':MIN_QUORUM},
-        "--delay_bound",     "%(delay_bound)s" % {'delay_bound':DELAY_BOUND},
-        "--target_nresults", "%(target_nresults)s" % {'target_nresults':TARGET_NRESULTS},
-        "--wu_name",         file_name,
-        "--wu_template",     TEMPLATES_PATH + "/fitsed_wu.xml",
-        "--result_template", TEMPLATES_PATH + "/fitsed_result.xml",
-        "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
-        "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
-        "--additional_xml", "<credit>%(pixels)d</credit>" % {'pixels':pixels_in_file},
-    ]
-    args_files = [file_name, file_name_job]
+        pixels_in_file, area_id = file_details(FILE_DIR + "/" + file_name)
+        LOG.info("Creating work unit from observations file %(file)s: area_id %(area_id)s: %(pixels)d pixels " % {'file':file_name, 'pixels':pixels_in_file, 'area_id': area_id})
 
-    cmd_create_work = [
-        BIN_PATH + "/create_work"
-    ]
-    cmd_create_work.extend(args_params)
-    if files_processed <= NUMBER_OF_HIGH_PRIO_WORK_UNITS:
-        cmd_create_work.extend(["--priority", DEFAULT_HIGH_PRIORITY])
-    cmd_create_work.extend(args_files)
+        args_params = [
+            "--appname",         APP_NAME,
+            "--min_quorum",      "%(min_quorum)s" % {'min_quorum':MIN_QUORUM},
+            "--delay_bound",     "%(delay_bound)s" % {'delay_bound':DELAY_BOUND},
+            "--target_nresults", "%(target_nresults)s" % {'target_nresults':TARGET_NRESULTS},
+            "--wu_name",         file_name,
+            "--wu_template",     TEMPLATES_PATH + "/fitsed_wu.xml",
+            "--result_template", TEMPLATES_PATH + "/fitsed_result.xml",
+            "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
+            "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
+            "--additional_xml", "<credit>%(pixels)d</credit>" % {'pixels':pixels_in_file},
+            "--opaque",   str(area_id)
+        ]
+        args_files = [file_name, file_name_job]
 
-    # Copy file into BOINC's download hierarchy
-    new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()
-    os.rename(FILE_DIR + "/" + file_name, new_full_path)
+        cmd_create_work = [
+            BIN_PATH + "/create_work"
+        ]
+        cmd_create_work.extend(args_params)
+        if high_priority_files_processed < number_high_priority_units:
+            cmd_create_work.extend(["--priority", DEFAULT_HIGH_PRIORITY])
+        cmd_create_work.extend(args_files)
 
-    create_job_xml(file_name_job, pixels_in_file)
+        # Copy file into BOINC's download hierarchy
+        new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()
+        os.rename(FILE_DIR + "/" + file_name, new_full_path)
 
-    # And "create work" = create the work unit
-    if subprocess.call(cmd_create_work):
-        LOG.error("Something went wrong; sorry")
+        create_job_xml(file_name_job, pixels_in_file)
 
-    files_processed += 1
+        # And "create work" = create the work unit
+        if subprocess.call(cmd_create_work):
+            LOG.error("Something went wrong; sorry")
 
-    if files_processed >= FILES_TO_PROCESS:
-        break
+        files_processed += 1
+        high_priority_files_processed += 1
+
+        if files_processed >= FILES_TO_PROCESS:
+            break
