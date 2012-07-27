@@ -48,19 +48,11 @@ class MagphysAssimilator(assimilator.Assimilator):
         pxresult.parameters = []
         return pxresult
 
-    def saveResult(self, session, pxresult, results, useridSet):
-        for result in results:
-            if result.user and result.validate_state == boinc_db.VALIDATE_STATE_VALID:
-                userid = result.user.id
-                #self.logDebug("Userid %d\n", userid)
-                if userid not in useridSet:
-                    self.logDebug("Added Userid %d\n", userid)
-                    useridSet.add(userid)
-
+    def saveResult(self, session, pxresult, results):
         if pxresult.pxresult_id == None and not self.noinsert:
             session.add(pxresult)
 
-    def processResult(self, session, outFile, wu, results, useridSet):
+    def processResult(self, session, outFile, wu, results):
         """
         Read the output file, add the values to the PixelResult row, and insert the filter,
         parameter and histogram rows.
@@ -79,7 +71,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
             if line.startswith(" ####### "):
                 if pxresult:
-                    self.saveResult(session, pxresult, results, useridSet)
+                    self.saveResult(session, pxresult, results)
                 values = line.split()
                 pointName = values[1]
                 #print "pointName", pointName
@@ -192,7 +184,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
         f.close()
         if pxresult:
-            self.saveResult(session, pxresult, results, useridSet)
+            self.saveResult(session, pxresult, results)
         return resultCount
 
     def assimilate_handler(self, wu, results, canonical_result):
@@ -204,7 +196,6 @@ class MagphysAssimilator(assimilator.Assimilator):
         if wu.canonical_result:
             #file_list = []
             outFile = self.get_file_path(canonical_result)
-            useridSet = set()
             self.area = None
             #self.get_output_file_infos(canonical_result, file_list)
             if (outFile):
@@ -217,7 +208,7 @@ class MagphysAssimilator(assimilator.Assimilator):
             if (outFile):
                 self.logDebug("Reading File [%s]\n", outFile)
                 session = self.Session()
-                resultCount = self.processResult(session, outFile, wu, results, useridSet)
+                resultCount = self.processResult(session, outFile, wu, results)
                 if self.noinsert:
                     session.rollback()
                 else:
@@ -227,6 +218,16 @@ class MagphysAssimilator(assimilator.Assimilator):
                         self.logDebug("The Area was not found\n")
                     else:
                         self.area.workunit_id = wu.id
+                        useridSet = set()
+                        for result in results:
+                            #if result.user:
+                            #    self.logDebug("Result: %d Userid: %d State: %d\n", result.id, result.user.id, result.validate_state)
+                            if result.user and result.validate_state == boinc_db.VALIDATE_STATE_VALID:
+                                userid = result.user.id
+                                #self.logDebug("Userid %d\n", userid)
+                                if userid not in useridSet:
+                                    #self.logDebug("Added Userid %d\n", userid)
+                                    useridSet.add(userid)
                         #print 'Adding users'
                         for user in self.area.users:
                             session.delete(user)
