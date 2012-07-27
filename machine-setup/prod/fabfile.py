@@ -179,6 +179,7 @@ def base_install():
     sudo('pip-2.7 install Numpy')
     sudo('pip-2.7 install pyfits')
     sudo('pip-2.7 install pil')
+    sudo('pip-2.7 install django')
 
     # Used by BOINC in the assimilator
     sudo('pip-2.7 install MySQL-python')

@@ -76,6 +76,9 @@ package { 'mod_fcgid':
 package { 'php-fpm':
     ensure => installed,
 }
+package { 'mod_wsgi':
+    ensure => installed,
+}
 
 user { 'apache':
   ensure  => present,
