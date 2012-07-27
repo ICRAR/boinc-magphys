@@ -1,9 +1,8 @@
 import pyfits
 from PIL import Image, ImageDraw
 import math
-import sys
-import os, hashlib
-from database.database_support import Galaxy, Area, AreaUser, PixelResult, login
+import sys, os, hashlib
+from database.database_support import Galaxy, Area, AreaUser, login
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -13,7 +12,7 @@ class FitsImage:
     
     def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug):
         """
-        Build Three Colour Images, and optionally black and white and white and balack images for each image.
+        Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
         if imageDirName[-1] != "/":
             imageDirName = imageDirName + "/"
