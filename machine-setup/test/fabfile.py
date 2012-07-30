@@ -248,8 +248,23 @@ def single_install(with_db):
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', '"white.css"', '"black.css"')
 
     # As this goes through SED we need to be a bit careful
-    sed('/home/ec2-user/projects/pogs/config.xml',
-        '  </daemons>',
+    run('''awk '/<daemons>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "'''
+        '  <daemons>\\n'
+        '    <daemon>\\n'
+        '      <cmd>\\n'
+        '        feeder -d 2\\n'
+        '      </cmd>\\n'
+        '    </daemon>\\n'
+        '    <daemon>\\n'
+        '      <cmd>\\n'
+        '        transitioner -d 2\\n'
+        '      </cmd>\\n'
+        '    </daemon>\\n'
+        '    <daemon>\\n'
+        '      <cmd>\\n'
+        '        file_deleter -d 2\\n'
+        '      </cmd>\\n'
+        '    </daemon>\\n'
         '    <daemon>\\n'
         '      <cmd>\\n'
         '        /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\\n'
@@ -261,7 +276,10 @@ def single_install(with_db):
         '      </cmd>\\n'
         '    </daemon>\\n'
         '  </daemons>\\n'
-        '  <locality_scheduling/>\\n')
+        '  <locality_scheduling/>\\n'
+        '  <one_result_per_user_per_wu/>\\n'
+        '  <one_result_per_host_per_wu/>\\n'
+    )
 
     comment('/home/ec2-user/projects/pogs/html/ops/create_forums.php', '^die', char='// ')
 

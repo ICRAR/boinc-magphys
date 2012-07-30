@@ -167,12 +167,18 @@ c     save parameters
       save flux_obs,sigma,dist
       save mdust
 
+
 c     ---------------------------------------------------------------------------
 c     Are we in skynet mode
 c     ---------------------------------------------------------------------------
       integer numargs
       character*80 arg
       logical skynet
+      integer ios
+      character*100 buffer1, buffer2
+      logical found_old_entry
+      integer gal_number_found
+
       numargs = iargc ( )
       if (numargs .eq. 0) then
 c     Do nothing as this is the normal model
@@ -296,8 +302,26 @@ c     --------------------------------------------------------------------------
 c     ---------------------------------------------------------------------------
       else
           outfile1='output.fit'
-	      open (31, file=outfile1, status='unknown', access='append')
-	      write(31,*) '####### ',gal_name(i_gal)
+	      open (31, file=outfile1, status='unknown', access='sequential', action='readwrite')
+
+          write(buffer2, *) '####### ',gal_name(i_gal)
+          write(*,*) 'buffer2:',buffer2,':'
+          found_old_entry = .FALSE.
+          ios = 0
+          do while (ios .eq. 0 .and. found_old_entry .eqv. .FALSE.)
+              read(31, '(A)', iostat=ios) buffer1
+              if (ios .eq. 0) then
+                  write(*,*) 'buffer1:',buffer1,':'
+                  if (buffer1 .eq. buffer2) then
+                      found_old_entry = .TRUE.
+                      write(*,*) 'Restarting output from ',i_gal
+                  endif
+              endif
+          enddo
+
+          if (found_old_entry .eqv. .FALSE.) then
+	          write(31,*) '####### ',gal_name(i_gal)
+	      endif
       endif
 
 c     Choose libraries according to the redshift of the source

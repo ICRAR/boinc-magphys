@@ -15,7 +15,7 @@ INSTANCE_TYPE = 't1.micro'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
-SECURITY_GROUPS = ['icrar-boinc-server','gluster-test'] # Security group allows SSH
+SECURITY_GROUPS = ['gluster-test'] # Security group allows SSH
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys')
 
 def create_instance(names):
