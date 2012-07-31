@@ -25,7 +25,7 @@ def galaxiesx(request):
     #})
     #return HttpResponse(t.render(c))
     
-    user_galaxy_list = Galaxy.objects.using("magphys").all();
+    user_galaxy_list = Galaxy.objects.all();
     return render_to_response('pogs/index.html', {'user_galaxy_list': user_galaxy_list})
 
 def galaxies(request):
