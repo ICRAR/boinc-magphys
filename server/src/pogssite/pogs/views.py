@@ -28,15 +28,15 @@ def galaxiesx(request):
     user_galaxy_list = Galaxy.objects.all();
     return render_to_response('pogs/index.html', {'user_galaxy_list': user_galaxy_list})
 
-def galaxies(request):
+def userGalaxies(request, userid):
     session = PogsSession();
     image = fitsimage.FitsImage();
-    user_galaxy_list = image.userGalaxies(session, 2);
+    user_galaxy_list = image.userGalaxies(session, userid);
      
     t = loader.get_template('pogs/index.html');
     c = Context({
         'user_galaxy_list': user_galaxy_list,
-        'userid':           2,
+        'userid':           userid,
     })
     return HttpResponse(t.render(c));
 
@@ -53,7 +53,8 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     file = tmp[0];
     os.close(file);
     
-    imageDirName = "/Users/rob/magphys/POGS_NGC1209";
+    #imageDirName = "/Users/rob/magphys/POGS_NGC1209";
+    imageDirName = "/home/ec2-user/galaxyImages";
     
     outImageFileName = tmp[1];
     

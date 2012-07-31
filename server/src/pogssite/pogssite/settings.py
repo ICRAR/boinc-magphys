@@ -13,10 +13,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'magphys',                      # Or path to database file if using sqlite3.
-        'USER': 'root',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '3306',                      # Set to empty string for default. Not used with sqlite3.
+        'USER': 'theskynet',                    # Not used with sqlite3.
+        'PASSWORD': 'n8i5aq2ZU0Gh1dPP',         # Not used with sqlite3.
+        'HOST': 'theskynet-boinc.cxulwz0ochjg.us-east-1.rds.amazonaws.com',                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '3306',                         # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -27,7 +27,7 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'Australia/Perth'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
