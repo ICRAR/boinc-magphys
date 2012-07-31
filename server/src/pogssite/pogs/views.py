@@ -31,8 +31,11 @@ def galaxiesx(request):
 def userGalaxies(request, userid):
     session = PogsSession();
     image = fitsimage.FitsImage();
-    user_galaxy_list = image.userGalaxies(session, userid);
-     
+    
+    user_galaxy_list = []
+    for galaxy in image.userGalaxies(session, userid):
+       user_galaxy_list.append(galaxy)
+    
     t = loader.get_template('pogs/index.html');
     c = Context({
         'user_galaxy_list': user_galaxy_list,
