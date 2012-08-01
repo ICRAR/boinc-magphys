@@ -6,7 +6,7 @@ require 'rake'
 PROJECT_NAME="pogs"
 PROJECT_ROOT="/home/ec2-user/projects/#{PROJECT_NAME}"
 APP_NAME="magphys_wrapper"
-APP_VERSION=1.000
+APP_VERSION=1
 PLATFORMS=["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu"]
 PLATFORM_DIR = "#{PROJECT_ROOT}/apps/#{APP_NAME}/#{APP_VERSION}"
 BOINC_TOOLS_DIR="/home/ec2-user/boinc/tools"

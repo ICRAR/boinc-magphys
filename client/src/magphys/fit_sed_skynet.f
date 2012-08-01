@@ -302,26 +302,33 @@ c     --------------------------------------------------------------------------
 c     ---------------------------------------------------------------------------
       else
           outfile1='output.fit'
-	      open (31, file=outfile1, status='unknown', access='sequential', action='readwrite')
 
-          write(buffer2, *) '####### ',gal_name(i_gal)
-          write(*,*) 'buffer2:',buffer2,':'
-          found_old_entry = .FALSE.
-          ios = 0
-          do while (ios .eq. 0 .and. found_old_entry .eqv. .FALSE.)
-              read(31, '(A)', iostat=ios) buffer1
-              if (ios .eq. 0) then
-                  write(*,*) 'buffer1:',buffer1,':'
-                  if (buffer1 .eq. buffer2) then
-                      found_old_entry = .TRUE.
-                      write(*,*) 'Restarting output from ',i_gal
-                  endif
-              endif
-          enddo
-
-          if (found_old_entry .eqv. .FALSE.) then
+          if (i_gal .eq. 1) then
+              open (31, file=outfile1, status='unknown', access='append')
 	          write(31,*) '####### ',gal_name(i_gal)
-	      endif
+          else
+              open (31, file=outfile1, status='unknown', access='sequential', action='readwrite')
+
+              write(buffer2, *) '####### ',gal_name(i_gal)
+              found_old_entry = .FALSE.
+              ios = 0
+              do while (ios .eq. 0)
+                  read(31, '(A)', iostat=ios) buffer1
+                  if (ios .eq. 0) then
+                      if (buffer1 .eq. buffer2) then
+                          found_old_entry = .TRUE.
+                          ios = -1
+                          write(*,*) 'Restarting output from ',i_gal
+                      endif
+                  endif
+              enddo
+
+              if (found_old_entry .eqv. .FALSE.) then
+                  close(31)
+                  open (31, file=outfile1, status='unknown', access='append')
+                  write(31,*) '####### ',gal_name(i_gal)
+              endif
+          endif
       endif
 
 c     Choose libraries according to the redshift of the source

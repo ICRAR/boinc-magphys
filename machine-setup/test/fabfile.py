@@ -180,6 +180,7 @@ def base_install():
     sudo('pip-2.7 install pyfits')
     sudo('pip-2.7 install pil')
     sudo('pip-2.7 install django')
+    sudo('pip-2.7 install fabric')
 
     # Used by BOINC in the assimilator
     sudo('pip-2.7 install MySQL-python')
@@ -247,7 +248,8 @@ def single_install(with_db):
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', '"white.css"', '"black.css"')
 
-    # As this goes through SED we need to be a bit careful
+    # As this goes through AWK we need to be a bit careful
+    run('cp /home/ec2-user/projects/pogs/config.xml /home/ec2-user/projects/pogs/config.xml.bak')
     run('''awk '/<daemons>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "'''
         '  <daemons>\\n'
         '    <daemon>\\n'
@@ -275,11 +277,12 @@ def single_install(with_db):
         '        python2.7 /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper\\n'
         '      </cmd>\\n'
         '    </daemon>\\n'
-        '  </daemons>\\n'
-        '  <locality_scheduling/>\\n'
-        '  <one_result_per_user_per_wu/>\\n'
-        '  <one_result_per_host_per_wu/>\\n'
-    )
+        '''  </daemons>"; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
+    run('cp /home/ec2-user/projects/pogs/config.xml /home/ec2-user/projects/pogs/config.xml.bak')
+    run('''awk '/<one_result_per_user_per_wu>/,/<\/one_result_per_user_per_wu>/ {if ( $0 ~ /<\/one_result_per_user_per_wu>/ ) print "'''
+        '    <locality_scheduling/>\\n'
+        '    <one_result_per_user_per_wu/>\\n'
+        '''  <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
 
     comment('/home/ec2-user/projects/pogs/html/ops/create_forums.php', '^die', char='// ')
 

@@ -180,6 +180,7 @@ def base_install():
     sudo('pip-2.7 install pyfits')
     sudo('pip-2.7 install pil')
     sudo('pip-2.7 install django')
+    sudo('pip-2.7 install fabric')
 
     # Used by BOINC in the assimilator
     sudo('pip-2.7 install MySQL-python')
@@ -382,10 +383,12 @@ def prod_deploy_stage04():
         '        file_deleter -d 2\\n'
         '      </cmd>\\n'
         '    </daemon>\\n'
-        '  </daemons>\\n'
-        '  <one_result_per_user_per_wu/>\\n'
-        '  <one_result_per_host_per_wu/>\\n'
-        '''  <locality_scheduling/>"; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
+        '''  </daemons>"; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
+    run('cp /home/ec2-user/projects/pogs/config.xml /home/ec2-user/projects/pogs/config.xml.bak')
+    run('''awk '/<one_result_per_user_per_wu>/,/<\/one_result_per_user_per_wu>/ {if ( $0 ~ /<\/one_result_per_user_per_wu>/ ) print "'''
+        '    <locality_scheduling/>\\n'
+        '    <one_result_per_user_per_wu/>\\n'
+        '''  <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
 
     # Build the validator
     with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
