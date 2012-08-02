@@ -2,13 +2,19 @@
 Define how to connect to the database
 """
 
-#databaseUserid
-#databasePassword
-#databaseHostname
-#databaseName
+from path import isfile
+from configobj import ConfigObj
 
-login = "mysql://root:@localhost/magphys"
-try:
-    login = "mysql://" + databaseUserid + ":" + databasePassword + "@" + databaseHostname + "/" + databaseName;
-except NameError as e:
+if isfile('database.settings'):
+    try:
+        config = ConfigObj('database.settings')
+        userid = config['databaseUserid']
+        password = config['databasePassword']
+        hostname = config['databaseHostname']
+        database_name = config['databaseName']
+        login = "mysql://" + userid + ":" + password + "@" + hostname + "/" + database_name;
+    except NameError as e:
+        login = "mysql://root:@localhost/magphys"
+
+else:
     login = "mysql://root:@localhost/magphys"

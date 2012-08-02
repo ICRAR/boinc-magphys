@@ -181,6 +181,7 @@ def base_install():
     sudo('pip-2.7 install pil')
     sudo('pip-2.7 install django')
     sudo('pip-2.7 install fabric')
+    sudo('pip-2.7 install configobj')
 
     # Used by BOINC in the assimilator
     sudo('pip-2.7 install MySQL-python')
@@ -229,19 +230,10 @@ def single_install(with_db):
             run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} pogs'
                 .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password))
 
-        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
-                '#databaseUserid',
-                'databaseUserid = "{0}"'.format(env.db_username))
-        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
-            '#databasePassword',
-            'databasePassword = "{0}"'.format(env.db_password))
-        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
-            '#databaseHostname',
-            'databaseHostname = "{0}"'.format(env.db_host_name))
-        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
-            '#databaseName',
-            'databaseName = "magphys"')
-
+        run('echo databaseUserid = "{0}" > /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_username))
+        run('echo databasePassword = "{0}" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_password))
+        run('echo databaseHostname = "{0}" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_host_name))
+        run('echo databaseName = "magphys" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings')
 
 # Edit the files
     sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH PROJECT NAME', 'theSkyNet POGS - the PS1 Optical Galaxy Survey')
@@ -269,7 +261,7 @@ def single_install(with_db):
         '    </daemon>\\n'
         '    <daemon>\\n'
         '      <cmd>\\n'
-        '        /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\\n'
+        '        /home/ec2-user/boinc-magphys/server/src/magphys_validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\\n'
         '      </cmd>\\n'
         '    </daemon>\\n'
         '    <daemon>\\n'
@@ -302,12 +294,12 @@ def single_install(with_db):
     sed('/home/ec2-user/projects/pogs/html/user/index.php', '\[describe your institution, with link to web page\]', 'The International Centre for Radio Astronomy Research.')
 
     # Build the validator
-    with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
+    with cd ('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
         run('make')
 
     # setup_website
-    with cd('/home/ec2-user/boinc-magphys/machine-setup'):
-        sudo('rake setup_website')
+    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+        sudo('fab setup_website')
 
     # This is needed because the files that Apache serve are inside the user's home directory.
     run('chmod 711 /home/ec2-user')
@@ -321,9 +313,9 @@ def single_install(with_db):
         run('php create_forums.php')
 
     # Copy files into place
-    with cd('/home/ec2-user/boinc-magphys/machine-setup'):
-        run('rake update_versions')
-        run('rake start_daemons')
+    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+        run('fab create_first_version')
+        run('fab start_daemons')
 
     # Setup the crontab job to keep things ticking
     run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')

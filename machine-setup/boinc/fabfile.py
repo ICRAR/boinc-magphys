@@ -1,59 +1,70 @@
 """
 Fabric to be run on the BOINC server to configure things
 """
-from fabric.decorators import task, parallel, serial, roles
+from glob import glob
+from os.path import splitext
+from fabric.context_managers import cd
+from fabric.decorators import task
+from fabric.operations import local
 
-PROJECT_NAME="pogs"
-PROJECT_ROOT="/home/ec2-user/projects/#{PROJECT_NAME}"
 APP_NAME="magphys_wrapper"
-APP_VERSION=1
 PLATFORMS=["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu"]
-PLATFORM_DIR = "#{PROJECT_ROOT}/apps/#{APP_NAME}/#{APP_VERSION}"
-BOINC_TOOLS_DIR="/home/ec2-user/boinc/tools"
-SOURCE_DIR="/home/ec2-user/boinc-magphys"
 
-desc 'setup project website'
-task :setup_website do
-sh "cp #{PROJECT_ROOT}/#{PROJECT_NAME}.httpd.conf /etc/httpd/conf.d"
-sh "/etc/init.d/httpd restart"
-end
+def copy_files(app_version = 1):
+    """Copy the application files
 
-desc 'copy to apps/platform directory'
-task :copy_files do
-cp_r "#{SOURCE_DIR}/server/config/templates", "#{PROJECT_ROOT}"
+    Copy the application files to where they need to live
+    """
+    for platform in PLATFORMS:
+        local('mkdir -p /home/ec2-user/projects/pogs/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform))
 
-PLATFORMS.each { |platform|
-               mkdir_p "#{PLATFORM_DIR}/#{platform}"
-cp FileList["#{SOURCE_DIR}/client/platforms/#{platform}/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
-cp FileList["#{SOURCE_DIR}/client/platforms/common/*"], "#{PLATFORM_DIR}/#{platform}", :preserve => true
-}
+        for file in glob.glob('/home/ec2-user/boinc-magphys/client/platforms/{0}/*'.format(platform)):
+            local('cp {0} /home/ec2-user/projects/pogs/apps/{1}/{2}/{3}'.format(file, APP_NAME, app_version, platform))
+        for file in glob.glob('/home/ec2-user/boinc-magphys/client/platforms/common/*'):
+            local('cp {0} /home/ec2-user/projects/pogs/apps/{1}/{2}/{3}'.format(file, APP_NAME, app_version, platform))
 
-cp "#{SOURCE_DIR}/server/config/project.xml", "#{PROJECT_ROOT}", :preserve => true
+def sign_files():
+    """Sign the files
 
-# Now added
-sh "#{PROJECT_ROOT}/bin/xadd"
-end
-
-desc 'sign files'
-task :sign_files => :copy_files do
-PLATFORMS.each { |platform|
-    FileList["#{PLATFORM_DIR}/#{platform}/*"].exclude("#{PLATFORM_DIR}/#{platform}/version.xml", "#{PLATFORM_DIR}/#{platform}/*.sig").to_a().each { |f|
-            sh "#{BOINC_TOOLS_DIR}/sign_executable #{f} #{PROJECT_ROOT}/keys/code_sign_private | tee #{f}.sig"
-}
-}
-end
-
-desc 'update versions'
-task :update_versions => :sign_files do
-sh "cd #{PROJECT_ROOT}; yes | #{PROJECT_ROOT}/bin/update_versions"
-sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/xadd"
-end
-
-desc 'starts the BOINC daemons'
-task :start_daemons do
-sh "cd #{PROJECT_ROOT}; #{PROJECT_ROOT}/bin/start"
-end
+    Sign the application files
+    """
+    copy_files()
+    for platform in PLATFORMS:
+        for file in glob('/home/ec2-user/projects/pogs/apps/{0}/{1}/{2}/*'.format(APP_NAME, app_version, platform)):
+            path_ext = splitext(file)
+            if len(path_ext) == 2 and (path_ext[1] == '.sig' or path_ext[1] == '.xml'):
+                # Ignore this one
+                pass
+            else:
+                local('/home/ec2-user/boinc/tools/sign_executable {0} /home/ec2-user/projects/pogs/keys/code_sign_private | tee {0}.sig'.format(file))
 
 @task
-def start_daemons:
-    with cd('')
+def setup_website():
+    """Setup the website
+
+    Copy the config files and restart the httpd daemon
+    """
+    local('sudo cp /home/ec2-user/projects/pogs/pogs.httpd.conf /etc/httpd/conf.d')
+    local('sudo /etc/init.d/httpd restart')
+
+@task
+def create_first_version():
+    """Create the first version
+
+    Create the first versions of the files
+    """
+    local('cp -R /home/ec2-user/boinc-magphys/server/config/templates /home/ec2-user/projects/pogs')
+    local('cp -R /home/ec2-user/boinc-magphys/server/config/project.xml /home/ec2-user/projects/pogs')
+    sign_files()
+    with cd('/home/ec2-user/projects/pogs'):
+        local('yes | bin/update_versions')
+        local('bin/xadd')
+
+@task
+def start_daemons():
+    """Start the BOINC daemons
+
+    Run the BOINC script to start the daemons
+    """
+    with cd('/home/ec2-user/projects/pogs'):
+        local('bin/start')

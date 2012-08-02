@@ -181,6 +181,7 @@ def base_install():
     sudo('pip-2.7 install pil')
     sudo('pip-2.7 install django')
     sudo('pip-2.7 install fabric')
+    sudo('pip-2.7 install configobj')
 
     # Used by BOINC in the assimilator
     sudo('pip-2.7 install MySQL-python')
@@ -308,7 +309,7 @@ def prod_deploy_stage03():
         '    </daemon>\\n'
         '    <daemon>\\n'
         '      <cmd>\\n'
-        '        /home/ec2-user/boinc-magphys/server/src/Validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\\n'
+        '        /home/ec2-user/boinc-magphys/server/src/magphys_validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\\n'
         '      </cmd>\\n'
         '    </daemon>\\n'
         '    <daemon>\\n'
@@ -320,7 +321,7 @@ def prod_deploy_stage03():
         '''  <locality_scheduling/>"; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
 
     # Build the validator
-    with cd ('/home/ec2-user/boinc-magphys/server/src/Validator'):
+    with cd ('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
         run('make')
 
     # setup_website - still need this as it is CGI
@@ -421,18 +422,10 @@ def database_details():
     Install the DB details onto the upload and download servers
     """
     if env.host_string in env.roledefs['download'] or env.host_string in env.roledefs['upload']:
-        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
-            '#databaseUserid',
-            'databaseUserid = "{0}"'.format(env.db_username))
-        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
-            '#databasePassword',
-            'databasePassword = "{0}"'.format(env.db_password))
-        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
-            '#databaseHostname',
-            'databaseHostname = "{0}"'.format(env.db_host_name))
-        sed('/home/ec2-user/boinc-magphys/server/src/database/__init__.py',
-            '#databaseName',
-            'databaseName = "magphys"')
+        run('echo databaseUserid = "{0}" > /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_username))
+        run('echo databasePassword = "{0}" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_password))
+        run('echo databaseHostname = "{0}" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_host_name))
+        run('echo databaseName = "magphys" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings')
 
 @task
 @serial
