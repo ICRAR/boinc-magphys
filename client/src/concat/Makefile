@@ -1,4 +1,7 @@
 
+.c.o:
+	gcc -std=c99 -c -o $@ $<
+
 concat_x86_64-pc-linux-gnu: concat.o
 	gcc -g -O2 -o $@ $^
 
