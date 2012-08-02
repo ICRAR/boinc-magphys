@@ -269,12 +269,12 @@ def single_install(with_db):
         '        python2.7 /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper\\n'
         '      </cmd>\\n'
         '    </daemon>\\n'
-        '''  </daemons>"; next } 1' /home/ec2-user/projects/{0}/config.xml.bak > /home/ec2-user/projects/{0}/config.xml'''.format(env.project_name))
+        '''  </daemons>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml'''% { 'name' : env.project_name})
     run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
     run('''awk '/<one_result_per_user_per_wu>/,/<\/one_result_per_user_per_wu>/ {if ( $0 ~ /<\/one_result_per_user_per_wu>/ ) print "'''
         '    <locality_scheduling/>\\n'
         '    <one_result_per_user_per_wu/>\\n'
-        '''  <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/{0}/config.xml.bak > /home/ec2-user/projects/{0}/config.xml'''.format(env.project_name))
+        '''  <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})
 
     comment('/home/ec2-user/projects/{0}/html/ops/create_forums.php'.format(env.project_name), '^die', char='// ')
 
@@ -299,7 +299,7 @@ def single_install(with_db):
 
     # setup_website
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        sudo('fab setup_website')
+        sudo('fab --set project_name={0} setup_website'.format(env.project_name))
 
     # This is needed because the files that Apache serve are inside the user's home directory.
     run('chmod 711 /home/ec2-user')
@@ -314,8 +314,8 @@ def single_install(with_db):
 
     # Copy files into place
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        run('fab create_first_version')
-        run('fab start_daemons')
+        run('fab --set project_name={0} create_first_version'.format(env.project_name))
+        run('fab --set project_name={0} start_daemons'.format(env.project_name))
 
     # Setup the crontab job to keep things ticking
     run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')

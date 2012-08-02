@@ -55,7 +55,7 @@ c     ==========================================================================
       integer nfilt,filt_id(nmax),fit(nmax),ifilt
       parameter(nmod=50001,nprop_sfh=24,nprop_ir=8)
       character*12 filt_name(nmax)
-      character*10 outfile1,outfile2
+      character*100 outfile1,outfile2
       character*500 filter_header
       character*30 gal_name(galmax),aux_name
       character*6 numz
@@ -301,9 +301,9 @@ c     --------------------------------------------------------------------------
 	      open (31, file=outfile1, status='unknown')
 c     ---------------------------------------------------------------------------
       else
-          outfile1= i_gal // '.fit'
+          write(outfile1, '(I0,a)') i_gal, '.fit'
           open (31, file=outfile1, status='unknown', access='append')
-          write(31,*) '####### ',gal_name(i_gal)
+          write(31, *) '####### ',gal_name(i_gal)
       endif
 
 c     Choose libraries according to the redshift of the source
