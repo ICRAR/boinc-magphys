@@ -20,7 +20,7 @@ from fabric.api import run, sudo, put, env, require
 from fabric.context_managers import cd
 from fabric.contrib.console import confirm
 from fabric.contrib.files import append, sed, comment
-from fabric.decorators import task, parallel, serial, roles
+from fabric.decorators import task, serial
 from fabric.operations import prompt
 from fabric.utils import puts, abort, fastprint
 
@@ -326,6 +326,20 @@ def single_install(with_db):
     with cd('/home/ec2-user/projects/pogs/html/ops'):
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
+def build_mod_wsgi():
+    run('mkdir -p /home/ec2-user/build')
+
+    with cd('/home/ec2-user/build'):
+        run('wget http://modwsgi.googlecode.com/files/mod_wsgi-3.3.tar.gz')
+        run('tar -xvf mod_wsgi-3.3.tar.gz')
+    with cd('/home/ec2-user/build/mod_wsgi-3.3'):
+        run('./configure --with-python=/usr/bin/python2.7')
+        run('make')
+        sudo('make install')
+
+    # Clean up
+    sudo('rm -rf /home/ec2-user/build')
+
 @task
 @serial
 def test_env():
@@ -376,6 +390,7 @@ def test_deploy_with_db():
 
     copy_public_keys()
     base_install()
+    build_mod_wsgi()
     single_install(True)
 
 @task
@@ -389,5 +404,6 @@ def test_deploy_without_db():
 
     copy_public_keys()
     base_install()
+    build_mod_wsgi()
     single_install(False)
 

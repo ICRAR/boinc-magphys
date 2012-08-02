@@ -1,6 +1,9 @@
 package { 'httpd':
     ensure => installed,
 }
+package { 'httpd-devel':
+    ensure => installed,
+}
 package { 'autoconf':
     ensure => installed,
 }
@@ -74,9 +77,6 @@ package { 'mod_fcgid':
     ensure => installed,
 }
 package { 'php-fpm':
-    ensure => installed,
-}
-package { 'mod_wsgi':
     ensure => installed,
 }
 

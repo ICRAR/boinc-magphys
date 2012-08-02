@@ -2,10 +2,10 @@
 Define how to connect to the database
 """
 
-from path import isfile
+from os.path import exists
 from configobj import ConfigObj
 
-if isfile('database.settings'):
+if exists('database.settings'):
     try:
         config = ConfigObj('database.settings')
         userid = config['databaseUserid']

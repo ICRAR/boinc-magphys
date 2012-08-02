@@ -18,17 +18,17 @@ def copy_files(app_version = 1):
     for platform in PLATFORMS:
         local('mkdir -p /home/ec2-user/projects/pogs/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform))
 
-        for file in glob.glob('/home/ec2-user/boinc-magphys/client/platforms/{0}/*'.format(platform)):
+        for file in glob('/home/ec2-user/boinc-magphys/client/platforms/{0}/*'.format(platform)):
             local('cp {0} /home/ec2-user/projects/pogs/apps/{1}/{2}/{3}'.format(file, APP_NAME, app_version, platform))
-        for file in glob.glob('/home/ec2-user/boinc-magphys/client/platforms/common/*'):
+        for file in glob('/home/ec2-user/boinc-magphys/client/platforms/common/*'):
             local('cp {0} /home/ec2-user/projects/pogs/apps/{1}/{2}/{3}'.format(file, APP_NAME, app_version, platform))
 
-def sign_files():
+def sign_files(app_version = 1):
     """Sign the files
 
     Sign the application files
     """
-    copy_files()
+    copy_files(app_version)
     for platform in PLATFORMS:
         for file in glob('/home/ec2-user/projects/pogs/apps/{0}/{1}/{2}/*'.format(APP_NAME, app_version, platform)):
             path_ext = splitext(file)
@@ -56,9 +56,10 @@ def create_first_version():
     local('cp -R /home/ec2-user/boinc-magphys/server/config/templates /home/ec2-user/projects/pogs')
     local('cp -R /home/ec2-user/boinc-magphys/server/config/project.xml /home/ec2-user/projects/pogs')
     sign_files()
-    with cd('/home/ec2-user/projects/pogs'):
-        local('yes | bin/update_versions')
-        local('bin/xadd')
+
+    # Not sure why, but the with cd() doesn't work
+    local('cd /home/ec2-user/projects/pogs; yes | bin/update_versions')
+    local('cd /home/ec2-user/projects/pogs; bin/xadd')
 
 @task
 def start_daemons():
@@ -66,5 +67,4 @@ def start_daemons():
 
     Run the BOINC script to start the daemons
     """
-    with cd('/home/ec2-user/projects/pogs'):
-        local('bin/start')
+    local('cd /home/ec2-user/projects/pogs; bin/start')
