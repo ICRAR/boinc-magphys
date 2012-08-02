@@ -59,6 +59,15 @@ def create_job_xml(file_name, pixels_in_file):
       <stderr_filename>stderr_file</stderr_filename>
    </task>
 '''.format(i))
+
+    file.write('''   <task>
+      <application>concat</application>
+      <command_line>{0} output.fits</command_line>
+      <stdout_filename>stdout_file</stdout_filename>
+      <stderr_filename>stderr_file</stderr_filename>
+   </task>
+'''.format(pixels_in_file))
+
     file.write('</job_desc>\n')
     file.close()
 

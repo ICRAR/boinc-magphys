@@ -13,6 +13,12 @@
         <gzip/>
     </file>
     <file>
+        <physical_name>concat_x86_64-pc-linux-gnu</physical_name>
+        <copy_file/>
+        <logical_name>concat</logical_name>
+        <gzip/>
+    </file>
+    <file>
         <physical_name>filters.dat</physical_name>
         <copy_file/>
         <logical_name>filters.dat</logical_name>

@@ -1,0 +1,15 @@
+
+concat_x86_64-pc-linux-gnu: concat.o
+	gcc -g -O2 -o $@ $^
+
+concat_i686-pc-linux-gnu: concat.o
+	gcc -g -O2 -o $@ $^
+
+concat_x86_64-apple-darwin: concat.o
+	gcc -g -O2 -o $@ $^
+
+concat_windows_x86_64: concat.o
+	gcc -g -O2 -o $@ $^
+
+concat_windows_intelx86: concat.o
+	gcc -g -O2 -o $@ $^

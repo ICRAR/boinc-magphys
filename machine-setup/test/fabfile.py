@@ -217,18 +217,18 @@ def single_install(with_db):
         # Setup the database for recording WU's
         run('mysql --user=root < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql')
 
-        # Make the POGS project
+        # Make the BOINC project
         with cd('/home/ec2-user/boinc/tools'):
-            run('./make_project -v --no_query --url_base http://{0} --db_user root pogs'.format(env.hosts[WEB_HOST]))
+            run('./make_project -v --no_query --url_base http://{0} --db_user root {1}'.format(env.hosts[WEB_HOST], env.project_name))
 
     else:
         # Setup the database for recording WU's
         run('mysql --user={0} --host={1} --password={2} < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql'.format(env.db_username, env.db_host_name, env.db_password))
 
-        # Make the POGS project
+        # Make the BOINC project
         with cd('/home/ec2-user/boinc/tools'):
-            run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} pogs'
-                .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password))
+            run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'
+                .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.project_name))
 
         run('echo databaseUserid = "{0}" > /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_username))
         run('echo databasePassword = "{0}" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_password))
@@ -236,12 +236,12 @@ def single_install(with_db):
         run('echo databaseName = "magphys" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings')
 
 # Edit the files
-    sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH PROJECT NAME', 'theSkyNet POGS - the PS1 Optical Galaxy Survey')
-    sed('/home/ec2-user/projects/pogs/html/project/project.inc', 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
-    sed('/home/ec2-user/projects/pogs/html/project/project.inc', '"white.css"', '"black.css"')
+    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH PROJECT NAME', 'theSkyNet {0} - the PS1 Optical Galaxy Survey'.format(env.project_name.upper()))
+    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
+    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), '"white.css"', '"black.css"')
 
     # As this goes through AWK we need to be a bit careful
-    run('cp /home/ec2-user/projects/pogs/config.xml /home/ec2-user/projects/pogs/config.xml.bak')
+    run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
     run('''awk '/<daemons>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "'''
         '  <daemons>\\n'
         '    <daemon>\\n'
@@ -269,29 +269,29 @@ def single_install(with_db):
         '        python2.7 /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper\\n'
         '      </cmd>\\n'
         '    </daemon>\\n'
-        '''  </daemons>"; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
-    run('cp /home/ec2-user/projects/pogs/config.xml /home/ec2-user/projects/pogs/config.xml.bak')
+        '''  </daemons>"; next } 1' /home/ec2-user/projects/{0}/config.xml.bak > /home/ec2-user/projects/{0}/config.xml'''.format(env.project_name))
+    run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
     run('''awk '/<one_result_per_user_per_wu>/,/<\/one_result_per_user_per_wu>/ {if ( $0 ~ /<\/one_result_per_user_per_wu>/ ) print "'''
         '    <locality_scheduling/>\\n'
         '    <one_result_per_user_per_wu/>\\n'
-        '''  <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
+        '''  <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/{0}/config.xml.bak > /home/ec2-user/projects/{0}/config.xml'''.format(env.project_name))
 
-    comment('/home/ec2-user/projects/pogs/html/ops/create_forums.php', '^die', char='// ')
+    comment('/home/ec2-user/projects/{0}/html/ops/create_forums.php'.format(env.project_name), '^die', char='// ')
 
-    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is a research project that uses volunteers', 'theSkyNet POGS is a research project that uses volunteers')
-    sed('/home/ec2-user/projects/pogs/html/user/index.php',
+    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), 'XXX is a research project that uses volunteers', 'theSkyNet {0} is a research project that uses volunteers'.format(env.project_name.upper))
+    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name),
         'to do research in XXX.',
         'to do research in astronomy.\\n'
         'We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe.\\n'
         'We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
-    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is a research project that uses Internet-connected', 'theSkyNet POGS is a research project that uses Internet-connected')
-    sed('/home/ec2-user/projects/pogs/html/user/index.php',
+    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), 'XXX is a research project that uses Internet-connected', 'theSkyNet {0} is a research project that uses Internet-connected'.format(env.project_name.upper()))
+    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name),
         'computers to do research in XXX.',
         'computers to do research in astronomy.\\n'
         'We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe.\\n'
         'We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
-    sed('/home/ec2-user/projects/pogs/html/user/index.php', 'XXX is based at', 'theSkyNet POGS is based at')
-    sed('/home/ec2-user/projects/pogs/html/user/index.php', '\[describe your institution, with link to web page\]', 'The International Centre for Radio Astronomy Research.')
+    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), 'XXX is based at', 'theSkyNet {0} is based at'.format(env.project_name.upper()))
+    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), '\[describe your institution, with link to web page\]', 'The International Centre for Radio Astronomy Research.')
 
     # Build the validator
     with cd ('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
@@ -303,13 +303,13 @@ def single_install(with_db):
 
     # This is needed because the files that Apache serve are inside the user's home directory.
     run('chmod 711 /home/ec2-user')
-    run('chmod -R oug+r /home/ec2-user/projects/pogs')
-    run('chmod -R oug+x /home/ec2-user/projects/pogs/html')
-    run('chmod ug+w /home/ec2-user/projects/pogs/log_*')
-    run('chmod ug+wx /home/ec2-user/projects/pogs/upload')
+    run('chmod -R oug+r /home/ec2-user/projects/{0}'.format(env.project_name))
+    run('chmod -R oug+x /home/ec2-user/projects/{0}/html'.format(env.project_name))
+    run('chmod ug+w /home/ec2-user/projects/{0}/log_*'.format(env.project_name))
+    run('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(env.project_name))
 
     # Setup the forums
-    with cd('/home/ec2-user/projects/pogs/html/ops'):
+    with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('php create_forums.php')
 
     # Copy files into place
@@ -319,11 +319,11 @@ def single_install(with_db):
 
     # Setup the crontab job to keep things ticking
     run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
-    run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/pogs ; /home/ec2-user/projects/pogs/bin/start --cron" >> /tmp/crontab.txt')
+    run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
     run('crontab /tmp/crontab.txt')
 
     # Setup the ops area password
-    with cd('/home/ec2-user/projects/pogs/html/ops'):
+    with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
 def build_mod_wsgi():
@@ -366,7 +366,10 @@ def test_env():
     if 'ops_password' not in env:
         prompt('Password: ', 'ops_password')
     if 'instance_name' not in env:
-        prompt('Instance name: ', 'instance_name')
+        prompt('AWS Instance name: ', 'instance_name')
+    if 'project_name' not in env:
+        prompt('BOINC project name: ', 'project_name')
+
 
     # Create the instance in AWS
     host_names = create_instance([env.instance_name], use_elastic_ip, [public_ip])
