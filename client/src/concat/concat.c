@@ -3,7 +3,8 @@
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        fprintf(stderr, "usage: concat number output_file");
+        fprintf(stderr, "usage: concat number output_file\n");
+        exit(1);
     }
 
     int number = atoi(argv[1]);
@@ -11,7 +12,7 @@ int main(int argc, char *argv[]) {
     FILE *fp1, *fp2;
     fp1 = fopen(argv[2], "a");
     if (fp1 == NULL) {
-        fprintf(stderr, "Unable to open the file %s", argv[2]);
+        fprintf(stderr, "Unable to open the file %s\n", argv[2]);
         exit(1);
     }
 
@@ -22,7 +23,7 @@ int main(int argc, char *argv[]) {
         sprintf(buffer1, "%d.fit", i);
         fp2 = fopen(buffer1, "r");
         if (fp2 == NULL) {
-            fprintf(stderr, "Unable to open the file %s", buffer1);
+            fprintf(stderr, "Unable to open the file %s\n", buffer1);
             exit(1);
         }
         char *string;
