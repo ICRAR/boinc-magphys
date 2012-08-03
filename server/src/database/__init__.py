@@ -5,9 +5,9 @@ Define how to connect to the database
 from os.path import exists
 from configobj import ConfigObj
 
-if exists('database.settings'):
+if exists('../settings/database.settings'):
     try:
-        config = ConfigObj('database.settings')
+        config = ConfigObj('../settings/database.settings')
         userid = config['databaseUserid']
         password = config['databasePassword']
         hostname = config['databaseHostname']

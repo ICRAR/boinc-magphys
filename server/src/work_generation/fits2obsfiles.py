@@ -20,14 +20,13 @@ if len(sys.argv) != 4 and len(sys.argv) != 5:
     print("example: %(me)s /home/ec2-user/POGS_NGC628_v3.fits /home/ec2-user/f2wu /home/ec2-user/f2img NGC628" % {'me':sys.argv[0]})
     sys.exit(-10)
 
-status = {}
-status['calls__get_pixels'] = 0
-status['get_pixels_get_attempts'] = 0 		# Number of attempts to retrieve (x,y) pixels
-status['get_pixels_get_successful'] = 0 	# Number of pixels where more than MIN_LIVE_CHANNELS_PER_PIXEL contained data
-status['get_pixels_values_returned'] = 0 	# Number of individual pixel values returned
-status['calls__create_area'] = 0
-status['create__area'] = 0
-status['create__pixel'] = 0
+status = {'calls__get_pixels': 0,
+          'get_pixels_get_attempts': 0,
+          'get_pixels_get_successful': 0,
+          'get_pixels_values_returned': 0,
+          'calls__create_area': 0,
+          'create__area': 0,
+          'create__pixel': 0}
 
 # This value was suggested by David Thilker on 2012-06-05 as a starting point.
 MIN_LIVE_CHANNELS_PER_PIXEL = 9

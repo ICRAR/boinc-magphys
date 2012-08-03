@@ -1,0 +1,3 @@
+"""
+The Settings directory
+"""

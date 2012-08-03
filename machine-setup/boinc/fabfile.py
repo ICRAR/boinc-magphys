@@ -59,8 +59,8 @@ def create_first_version():
     sign_files()
 
     # Not sure why, but the with cd() doesn't work
-    local('cd /home/ec2-user/projects/{0}; yes | bin/update_versions'.format(env.project_name))
     local('cd /home/ec2-user/projects/{0}; bin/xadd'.format(env.project_name))
+    local('cd /home/ec2-user/projects/{0}; bin/update_versions --force'.format(env.project_name))
 
 @task
 def start_daemons():
