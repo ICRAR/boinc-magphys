@@ -9,14 +9,36 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+from os.path import exists
+from configobj import ConfigObj
+
+if exists('../../database/database.settings'):
+    try:
+        config = ConfigObj('database.settings')
+        userid = config['databaseUserid']
+        password = config['databasePassword']
+        hostname = config['databaseHostname']
+        database_name = config['databaseName']
+    except NameError as e:
+        userid = "root"
+        password = ""
+        hostname = "localhost"
+        database_name = "magphys"
+
+else:
+    userid = "root"
+    password = ""
+    hostname = "localhost"
+    database_name = "magphys"
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'magphys',                      # Or path to database file if using sqlite3.
-        'USER': 'theskynet',                    # Not used with sqlite3.
-        'PASSWORD': 'n8i5aq2ZU0Gh1dPP',         # Not used with sqlite3.
-        'HOST': 'theskynet-boinc.cxulwz0ochjg.us-east-1.rds.amazonaws.com',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '3306',                         # Set to empty string for default. Not used with sqlite3.
+        'NAME': database_name,                # Or path to database file if using sqlite3.
+        'USER': userid,                       # Not used with sqlite3.
+        'PASSWORD': password,                 # Not used with sqlite3.
+        'HOST': hostname,                     # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '3306',                       # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -109,6 +131,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    '/home/ec2-user/boinc-magphys/server/src/templates',
     '/Users/rob/development/boinc-magphys/server/src/templates',
 )
 
