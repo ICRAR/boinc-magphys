@@ -5,7 +5,7 @@ import boinc_path_config
 import gzip, os
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
-from database import login
+from config import db_login
 from database.database_support import Area, AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram
 
 from sqlalchemy import create_engine
@@ -18,7 +18,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         assimilator.Assimilator.__init__(self)
 
         # Login is set in the database package
-        engine = create_engine(login)
+        engine = create_engine(db_login)
         self.Session = sessionmaker(bind=engine)
 
     def get_output_file_infos(self, result, list):

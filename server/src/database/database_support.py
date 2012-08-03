@@ -1,7 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship, backref
-from database import login
 
 # The database is partitioned to improve performance, this means there are no primary
 # keys, but the ORM mapping of sqlalchemy needs them - doesn't seem to hurt having

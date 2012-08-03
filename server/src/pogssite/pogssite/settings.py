@@ -1,4 +1,5 @@
 # Django settings for pogssite project.
+from config import db_name, db_hostname, db_password, db_userid, django_template_dir
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -9,35 +10,13 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-from os.path import exists
-from configobj import ConfigObj
-
-if exists('../../database/database.settings'):
-    try:
-        config = ConfigObj('database.settings')
-        userid = config['databaseUserid']
-        password = config['databasePassword']
-        hostname = config['databaseHostname']
-        database_name = config['databaseName']
-    except NameError as e:
-        userid = "root"
-        password = ""
-        hostname = "localhost"
-        database_name = "magphys"
-
-else:
-    userid = "root"
-    password = ""
-    hostname = "localhost"
-    database_name = "magphys"
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': database_name,                # Or path to database file if using sqlite3.
-        'USER': userid,                       # Not used with sqlite3.
-        'PASSWORD': password,                 # Not used with sqlite3.
-        'HOST': hostname,                     # Set to empty string for localhost. Not used with sqlite3.
+        'NAME': db_name,                      # Or path to database file if using sqlite3.
+        'USER': db_userid,                    # Not used with sqlite3.
+        'PASSWORD': db_password,              # Not used with sqlite3.
+        'HOST': db_hostname,                  # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '3306',                       # Set to empty string for default. Not used with sqlite3.
     }
 }
@@ -131,8 +110,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    '/home/ec2-user/boinc-magphys/server/src/templates',
-    '/Users/rob/development/boinc-magphys/server/src/templates',
+    django_template_dir,
 )
 
 INSTALLED_APPS = (

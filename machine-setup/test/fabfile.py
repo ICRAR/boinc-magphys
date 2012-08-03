@@ -230,12 +230,16 @@ def single_install(with_db):
             run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'
                 .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.project_name))
 
-        run('echo databaseUserid = "{0}" > /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_username))
-        run('echo databasePassword = "{0}" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_password))
-        run('echo databaseHostname = "{0}" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings'.format(env.db_host_name))
-        run('echo databaseName = "magphys" >> /home/ec2-user/boinc-magphys/server/src/database/database.settings')
+        run('echo databaseUserid = "{0}" > /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.db_username))
+        run('echo databasePassword = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.db_password))
+        run('echo databaseHostname = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.db_host_name))
+        run('echo databaseName = "magphys" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings')
 
-# Edit the files
+    # Setup Django files
+    run('echo template_dir = "/home/ec2-user/boinc-magphys/server/src/templates" > /home/ec2-user/boinc-magphys/server/src/config/django.settings')
+    run('echo image_dir = "/home/ec2-user/galaxyImages" >> /home/ec2-user/boinc-magphys/server/src/config/django.settings')
+
+    # Edit the files
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH PROJECT NAME', 'theSkyNet {0} - the PS1 Optical Galaxy Survey'.format(env.project_name.upper()))
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), '"white.css"', '"black.css"')
