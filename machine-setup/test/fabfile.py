@@ -276,6 +276,7 @@ def single_install(with_db):
         '''  </daemons>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml'''% { 'name' : env.project_name})
     run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
     run('''awk '/<one_result_per_user_per_wu>/,/<\/one_result_per_user_per_wu>/ {if ( $0 ~ /<\/one_result_per_user_per_wu>/ ) print "'''
+        '    <delete_delay_hours>48</delete_delay_hours>\\n'
         '    <locality_scheduling/>\\n'
         '    <one_result_per_user_per_wu/>\\n'
         '''  <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})
