@@ -37,7 +37,7 @@ INPUT_FILE = sys.argv[1]
 OUTPUT_DIR = sys.argv[2]
 IMAGE_DIR = sys.argv[3]
 SIGMA = 0.1
-GRID_SIZE = 7
+ROW_HEIGHT = 10
 
 HDULIST = pyfits.open(INPUT_FILE, memmap=True)
 LAYER_COUNT = len(HDULIST)
@@ -137,12 +137,9 @@ def get_pixels(pix_x, pix_y):
 
     result = []
     max_x = pix_x
-    max_y = pix_y
-    for x in range(pix_x, pix_x + GRID_SIZE):
-        if x >= END_X:
-            # Have we moved off the edge
-            continue
-        for y in range(pix_y, pix_y + GRID_SIZE):
+    x = pix_x
+    while x < END_X:
+        for y in range(pix_y, pix_y + ROW_HEIGHT):
             # Have we moved off the edge
             if y >= END_Y:
                 continue
@@ -167,20 +164,23 @@ def get_pixels(pix_x, pix_y):
                 status['get_pixels_get_successful'] += 1
                 status['get_pixels_values_returned'] += live_pixels
                 result.append(Pixel(x, y, pixels))
-                if x > max_x:
-                    max_x = x
-                if y > max_y:
-                    max_y = y
 
-    return max_x, max_y, result
+        max_x = x
+        if len(result) > 40:
+            break
 
-def create_area(galaxy, pix_y):
+        x += 1
+
+    return max_x, result
+
+def create_areas(galaxy, pix_y):
     """
     Create a area - we try to make them squares, but they aren't as the images have dead zones
     """
     status['calls__create_area'] += 1
-    for pix_x in range(START_X, END_X, GRID_SIZE):
-        max_x, max_y, pixels = get_pixels(pix_x, pix_y)
+    pix_x = 0
+    while pix_x < END_X:
+        max_x, pixels = get_pixels(pix_x,pix_y)
         if len(pixels) > 0:
             status['create__area'] += 1
             area = Area()
@@ -188,7 +188,7 @@ def create_area(galaxy, pix_y):
             area.top_x = pix_x
             area.top_y = pix_y
             area.bottom_x = max_x
-            area.bottom_y = max_y
+            area.bottom_y = pix_y + ROW_HEIGHT
             session.add(area)
             session.flush()
 
@@ -207,12 +207,14 @@ def create_area(galaxy, pix_y):
             # Write the pixels
             create_output_file(galaxy, area, pixels)
 
-def squarify(galaxy):
-    for pix_y in range(START_Y, END_Y, GRID_SIZE):
+        pix_x = max_x + 1
+
+def break_up_galaxy(galaxy):
+    for pix_y in range(START_Y, END_Y, ROW_HEIGHT):
         str = "Scanned %(pct_done)3d%% of image" % { 'pct_done':100*(pix_y-START_Y)/(END_Y-START_Y) }
         print(str, end="\r")
         sys.stdout.flush()
-        create_area(galaxy, pix_y)
+        create_areas(galaxy, pix_y)
 
 ## ######################################################################## ##
 ##
@@ -244,7 +246,7 @@ session.flush()
 LOG.info("Wrote %(object)s to database" % { 'object':galaxy.name })
 
 LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
-squarify(galaxy)
+break_up_galaxy(galaxy)
 
 LOG.info("\nRun status")
 for key in sorted(status.keys()):
