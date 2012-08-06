@@ -70,9 +70,9 @@ def copy_files(app_version):
         local('mkdir -p /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
 
         for file in glob('/home/ec2-user/boinc-magphys/client/platforms/{0}/*'.format(platform)):
-            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}'.format(file, APP_NAME, app_version, platform, env.project_name))
+            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{0}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name))
         for file in glob('/home/ec2-user/boinc-magphys/client/platforms/common/*'):
-            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}'.format(file, APP_NAME, app_version, platform, env.project_name))
+            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{0}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name))
         create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
 
 def sign_files(app_version):
@@ -121,6 +121,7 @@ def create_new_version():
     Create a new version of the application
     """
     app_version = prompt('Application version: ')
+    prompt('BOINC project name: ', 'project_name')
     copy_files(app_version)
     sign_files(app_version)
 
