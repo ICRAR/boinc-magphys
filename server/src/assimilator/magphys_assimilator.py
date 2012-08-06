@@ -6,7 +6,7 @@ import gzip, os
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
 from config import db_login
-from database.database_support import Area, AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram
+from database.database_support import AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -32,7 +32,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         else:
             pxresult = session.query(PixelResult).filter("pxresult_id=:pxresultId").params(pxresultId=pxresultId).first()
         #doAdd = False
-        if pxresult == None:
+        if pxresult is None:
             print "Pixel Result row not found for pxresultId of", pxresultId
             return None
             #pxresult = PixelResult()
@@ -49,7 +49,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         return pxresult
 
     def saveResult(self, session, pxresult, results):
-        if pxresult.pxresult_id == None and not self.noinsert:
+        if pxresult.pxresult_id is None and not self.noinsert:
             session.add(pxresult)
 
     def processResult(self, session, outFile, wu, results):
@@ -81,7 +81,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 if pxresult:
                   pxresult.workunit_id = wu.id
                 lineNo = 0
-                percentilesNext = False;
+                percentilesNext = False
                 histogramNext = False
                 skynetNext = False
                 resultCount = resultCount + 1
@@ -145,17 +145,17 @@ class MagphysAssimilator(assimilator.Assimilator):
                         parts = line.split('...')
                         parameterName = parts[1].strip()
                         parameter = PixelParameter()
-                        parameter.parameter_name = parameterName;
+                        parameter.parameter_name = parameterName
                         pxresult.parameters.append(parameter)
-                        percentilesNext = False;
+                        percentilesNext = False
                         histogramNext = True
                         skynetNext = False
                     elif line.startswith("#....percentiles of the PDF......") and parameter != None:
-                        percentilesNext = True;
+                        percentilesNext = True
                         histogramNext = False
                         skynetNext = False
                     elif line.startswith(" #...theSkyNet"):
-                        percentilesNext = False;
+                        percentilesNext = False
                         histogramNext = False
                         skynetNext = True
                     elif percentilesNext:
@@ -165,7 +165,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                         parameter.percentile50 = float(values[2])
                         parameter.percentile84 = float(values[3])
                         parameter.percentile97_5 = float(values[4])
-                        percentilesNext = False;
+                        percentilesNext = False
                     elif histogramNext:
                         hist = PixelHistogram()
                         hist.pxresult_id = pxresult.pxresult_id
@@ -198,14 +198,14 @@ class MagphysAssimilator(assimilator.Assimilator):
             outFile = self.get_file_path(canonical_result)
             self.area = None
             #self.get_output_file_infos(canonical_result, file_list)
-            if (outFile):
+            if outFile:
                  if os.path.isfile(outFile):
                       pass
                  else:
                      self.logDebug("File [%s] not found\n", outFile)
                      outFile = None
 
-            if (outFile):
+            if outFile:
                 self.logDebug("Reading File [%s]\n", outFile)
                 session = self.Session()
                 resultCount = self.processResult(session, outFile, wu, results)
@@ -214,7 +214,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 else:
                     if resultCount == 0:
                         self.logCritical("No results were found in the output file\n")
-                    if self.area == None:
+                    if self.area is None:
                         self.logDebug("The Area was not found\n")
                     else:
                         self.area.workunit_id = wu.id
@@ -244,7 +244,7 @@ class MagphysAssimilator(assimilator.Assimilator):
             self.logDebug("No canonical_result for workunit\n")
             self.report_errors(wu)
 
-        return 0;
+        return 0
 
 if __name__ == '__main__':
     asm = MagphysAssimilator()

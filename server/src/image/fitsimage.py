@@ -1,10 +1,8 @@
 import pyfits
-from PIL import Image, ImageDraw
+from PIL import Image
 import math
-import sys, os, hashlib
+import os, hashlib
 from database.database_support import Galaxy, Area, AreaUser
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 class FitsImage:
     def __init__(self):

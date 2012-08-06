@@ -3,15 +3,65 @@ Fabric to be run on the BOINC server to configure things
 """
 from glob import glob
 from os.path import splitext
-from fabric.context_managers import cd
 from fabric.decorators import task
-from fabric.operations import local
+from fabric.operations import local, prompt
 from fabric.state import env
 
 APP_NAME="magphys_wrapper"
 PLATFORMS=["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu"]
 
-def copy_files(app_version = 1):
+def create_version_xml(platform, app_version, directory):
+    """
+    Create the version.xml file
+    """
+    outfile = open(directory + '/version.xml', 'w')
+    outfile.write('''<version>
+    <file>
+        <physical_name>wrapper_{0}_{1}</physical_name>
+        <main_program/>
+        <copy_file/>
+        <logical_name>wrapper</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>fit_sed_{0}_{1}</physical_name>
+        <copy_file/>
+        <logical_name>fit_sed</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>concat_{0}_{1}</physical_name>
+        <copy_file/>
+        <logical_name>concat</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>filters.dat_{1}</physical_name>
+        <copy_file/>
+        <logical_name>filters.dat</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>infrared_dce08_z0.0000.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>infrared_dce08_z0.0000.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>starformhist_cb07_z0.0000.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>starformhist_cb07_z0.0000.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>zlibs.dat_{1}</physical_name>
+        <copy_file/>
+        <logical_name>zlibs.dat</logical_name>
+    </file>
+</version>'''.format(platform, app_version))
+    outfile.close()
+
+def copy_files(app_version):
     """Copy the application files
 
     Copy the application files to where they need to live
@@ -23,13 +73,13 @@ def copy_files(app_version = 1):
             local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}'.format(file, APP_NAME, app_version, platform, env.project_name))
         for file in glob('/home/ec2-user/boinc-magphys/client/platforms/common/*'):
             local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}'.format(file, APP_NAME, app_version, platform, env.project_name))
+        create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
 
-def sign_files(app_version = 1):
+def sign_files(app_version):
     """Sign the files
 
     Sign the application files
     """
-    copy_files(app_version)
     for platform in PLATFORMS:
         for file in glob('/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}/*'.format(APP_NAME, app_version, platform, env.project_name)):
             path_ext = splitext(file)
@@ -56,11 +106,26 @@ def create_first_version():
     """
     local('cp -R /home/ec2-user/boinc-magphys/server/config/templates /home/ec2-user/projects/{0}'.format(env.project_name))
     local('cp -R /home/ec2-user/boinc-magphys/server/config/project.xml /home/ec2-user/projects/{0}'.format(env.project_name))
-    sign_files()
+
+    copy_files(1)
+    sign_files(1)
 
     # Not sure why, but the with cd() doesn't work
     local('cd /home/ec2-user/projects/{0}; bin/xadd'.format(env.project_name))
-    local('cd /home/ec2-user/projects/{0}; bin/update_versions --force'.format(env.project_name))
+    local('cd /home/ec2-user/projects/{0}; yes | bin/update_versions'.format(env.project_name))
+
+@task
+def create_new_version():
+    """Create a new version
+
+    Create a new version of the application
+    """
+    app_version = prompt('Application version: ')
+    copy_files(app_version)
+    sign_files(app_version)
+
+    # Not sure why, but the with cd() doesn't work
+    local('cd /home/ec2-user/projects/{0}; yes | bin/update_versions'.format(env.project_name))
 
 @task
 def start_daemons():

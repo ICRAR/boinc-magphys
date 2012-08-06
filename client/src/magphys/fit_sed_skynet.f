@@ -302,7 +302,7 @@ c     --------------------------------------------------------------------------
 c     ---------------------------------------------------------------------------
       else
           write(outfile1, '(I0,a)') i_gal, '.fit'
-          open (31, file=outfile1, status='unknown', access='append')
+          open (31, file=outfile1, status='unknown')
           write(31, *) '####### ',gal_name(i_gal)
       endif
 
@@ -1117,7 +1117,7 @@ c     --------------------------------------------------------------------------
 c     ---------------------------------------------------------------------------
          if (skynet .eqv. .TRUE.) then
             write(31,*) '#...theSkyNet parameters of this model'
-            write(31,*) indx(sfh_sav),ir_sav,a_sav,fmu_sfh(sfh_sav),redshift(i_gal)
+            write(31,'(2I15,E20.6,E20.4,E10.2)') indx(sfh_sav),ir_sav,a_sav,fmu_sfh(sfh_sav),redshift(i_gal)
             close (31)
          else
 c     ---------------------------------------------------------------------------

@@ -12,7 +12,6 @@ FILTER_BANDS = [
     'SDSSi',
     'SDSSz',
     'WISEW1',
-    'IRAC2',    # Bogus one for testing
     'WISEW2',
     'WISEW3',
     'WISEW4',
