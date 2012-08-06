@@ -2,7 +2,7 @@
 Fabric to be run on the BOINC server to configure things
 """
 from glob import glob
-from os.path import splitext
+from os.path import splitext, split
 from fabric.decorators import task
 from fabric.operations import local, prompt
 from fabric.state import env
@@ -70,9 +70,11 @@ def copy_files(app_version):
         local('mkdir -p /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
 
         for file in glob('/home/ec2-user/boinc-magphys/client/platforms/{0}/*'.format(platform)):
-            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{0}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name))
+            head, tail = split(file)
+            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name, tail))
         for file in glob('/home/ec2-user/boinc-magphys/client/platforms/common/*'):
-            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{0}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name))
+            head, tail = split(file)
+            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name, tail))
         create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
 
 def sign_files(app_version):
