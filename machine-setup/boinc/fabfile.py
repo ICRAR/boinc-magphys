@@ -9,28 +9,29 @@ from fabric.state import env
 
 APP_NAME="magphys_wrapper"
 PLATFORMS=["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu"]
+WINDOWS_PLATFORMS=["windows_x86_64", "windows_intelx86"]
 
-def create_version_xml(platform, app_version, directory):
+def create_version_xml(platform, app_version, directory, exe):
     """
     Create the version.xml file
     """
     outfile = open(directory + '/version.xml', 'w')
     outfile.write('''<version>
     <file>
-        <physical_name>wrapper_{0}_{1}</physical_name>
+        <physical_name>wrapper_{0}{2}_{1}</physical_name>
         <main_program/>
         <copy_file/>
         <logical_name>wrapper</logical_name>
         <gzip/>
     </file>
     <file>
-        <physical_name>fit_sed_{0}_{1}</physical_name>
+        <physical_name>fit_sed_{0}{2}_{1}</physical_name>
         <copy_file/>
         <logical_name>fit_sed</logical_name>
         <gzip/>
     </file>
     <file>
-        <physical_name>concat_{0}_{1}</physical_name>
+        <physical_name>concat_{0}{2}_{1}</physical_name>
         <copy_file/>
         <logical_name>concat</logical_name>
         <gzip/>
@@ -58,7 +59,7 @@ def create_version_xml(platform, app_version, directory):
         <copy_file/>
         <logical_name>zlibs.dat</logical_name>
     </file>
-</version>'''.format(platform, app_version))
+</version>'''.format(platform, app_version, exe))
     outfile.close()
 
 def copy_files(app_version):
@@ -75,7 +76,10 @@ def copy_files(app_version):
         for file in glob('/home/ec2-user/boinc-magphys/client/platforms/common/*'):
             head, tail = split(file)
             local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name, tail))
-        create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
+        if platform in WINDOWS_PLATFORMS:
+            create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name), '.exe')
+        else:
+            create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name), '')
 
 def sign_files(app_version):
     """Sign the files
