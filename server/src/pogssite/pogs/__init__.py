@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.database_support import login
+from config import db_login
 
-pogsEngine = create_engine(login)
+pogsEngine = create_engine(db_login)
 PogsSession = sessionmaker(bind=pogsEngine)

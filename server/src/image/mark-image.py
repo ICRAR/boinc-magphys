@@ -2,6 +2,7 @@ from PIL import Image, ImageDraw
 import sys
 import os
 from database.database_support import Galaxy, AreaUser, Area, PixelResult, login
+from config import db_login
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, aliased
 
@@ -20,7 +21,7 @@ magphysDir = "/Users/rob/magphys/"
 outputDir = magphysDir + dirName + "/"
 fileName = magphysDir + fileName
 
-engine = create_engine(login)
+engine = create_engine(db_login)
 Session = sessionmaker(bind=engine)
 session = Session()
 

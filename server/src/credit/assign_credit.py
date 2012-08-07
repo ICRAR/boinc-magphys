@@ -4,7 +4,7 @@ import os, re, sys
 import boinc_path_config
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages, db_base
 
-from database import login
+from config import db_login
 from database.database_support import Area, AreaUser
 from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import sessionmaker
@@ -16,7 +16,7 @@ and to remove the rows from "credited_job" table once they have been assigned to
 class AssignCredit:
     def __init__(self):
         # Login is set in the database package
-        engine = create_engine(login)
+        engine = create_engine(db_login)
         self.Session = sessionmaker(bind=engine)
         
     def parse_args(self, args):

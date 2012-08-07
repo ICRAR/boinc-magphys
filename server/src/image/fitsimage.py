@@ -126,16 +126,17 @@ class FitsImage:
                     hiCut = 0.444458113518    
                 maxorigvalue = hiCut
             
-                if method == 'atan':
-                    maxvalue = math.atan(maxorigvalue)
-                elif method == 'log':
-                    maxvalue = math.log(maxorigvalue)
-                elif method == 'log10':
-                    maxvalue = math.log(maxorigvalue, 10)
-                elif method == 'asinh':
-                    maxvalue = math.asinh(maxorigvalue * self.sigma)
-                elif method == 'linear':
-                    maxvalue = maxorigvalue
+                maxvalue = self.applyFunc(maxorigvalue, method)
+                #if method == 'atan':
+                #    maxvalue = math.atan(maxorigvalue)
+                #elif method == 'log':
+                #    maxvalue = math.log(maxorigvalue)
+                #elif method == 'log10':
+                #    maxvalue = math.log(maxorigvalue, 10)
+                #elif method == 'asinh':
+                #    maxvalue = math.asinh(maxorigvalue * self.sigma)
+                #elif method == 'linear':
+                #    maxvalue = maxorigvalue
                 
                 mult = 255.0 / (maxvalue - minvalue)
             else:
@@ -157,26 +158,27 @@ class FitsImage:
                             if value == 0:
                                 zerocount = zerocount + 1
                                 continue
-                            if method == 'atan':
-                                value = math.atan(value)
-                            elif method == 'log':
-                                #if value < 0.001:
-                                #    value = 0.001;
-                                value = math.log(value)
-                            elif method == 'log10':
-                                #if value < 0.001:
-                                #    value = 0.001;
-                                value = math.log(value, 10)
-                            elif method == 'asinh':
-                                #if value < 0.001:
-                                #    value = 0.001;
-                                value = math.asinh(value * self.sigma)
-                                #pass
-                            elif method == 'linear':
-                                if value < 0.0:
-                                    value = 0.0
-                                #if value > math.pi/2:
-                                #    value = math.pi/2
+                            value = self.applyFunc(value, method)
+                            #if method == 'atan':
+                            #    value = math.atan(value)
+                            #elif method == 'log':
+                            #    #if value < 0.001:
+                            #    #    value = 0.001;
+                            #    value = math.log(value)
+                            #elif method == 'log10':
+                            #    #if value < 0.001:
+                            #    #    value = 0.001;
+                            #    value = math.log(value, 10)
+                            #elif method == 'asinh':
+                            #    #if value < 0.001:
+                            #    #    value = 0.001;
+                            #    value = math.asinh(value * self.sigma)
+                            #    #pass
+                            #elif method == 'linear':
+                            #    if value < 0.0:
+                            #        value = 0.0
+                            #    #if value > math.pi/2:
+                            #    #    value = math.pi/2
     
                             sum = sum + value
                             sumsq = sumsq + (value*value)
@@ -213,21 +215,22 @@ class FitsImage:
                     topIdx += 1
                     
                 hiCut = topValue
-                if method == 'atan':
-                    #minvalue = math.atan(bottomValue)
-                    maxvalue = math.atan(topValue)
-                elif method == 'log':
-                    #minvalue = math.log(bottomValue)
-                    maxvalue = math.log(topValue)
-                elif method == 'log10':
-                    #minvalue = math.log(bottomValue, 10)
-                    maxvalue = math.log(topValue, 10)
-                elif method == 'asinh':
-                    #minvalue = math.asinh(bottomValue * self.sigma)
-                    maxvalue = math.asinh(topValue * self.sigma)
-                elif method == 'linear':
-                    #minvalue = bottomValue
-                    maxvalue = topValue
+                maxvalue = self.applyFunc(topValue, method)
+                #if method == 'atan':
+                #    #minvalue = math.atan(bottomValue)
+                #    maxvalue = math.atan(topValue)
+                #elif method == 'log':
+                #    #minvalue = math.log(bottomValue)
+                #    maxvalue = math.log(topValue)
+                #elif method == 'log10':
+                #    #minvalue = math.log(bottomValue, 10)
+                #    maxvalue = math.log(topValue, 10)
+                #elif method == 'asinh':
+                #    #minvalue = math.asinh(bottomValue * self.sigma)
+                #    maxvalue = math.asinh(topValue * self.sigma)
+                #elif method == 'linear':
+                #    #minvalue = bottomValue
+                #    maxvalue = topValue
 
                 if method == 'linear':
                     minvalue = 0.0
@@ -266,27 +269,28 @@ class FitsImage:
                     if not math.isnan(value):
                         #if value < 0:
                         #    value = 0
-                        if method == 'atan':
-                            value = math.atan(value)
-                        elif method == 'log':
-                            if value == 0:
-                                continue
-                            #if value < 0.001:
-                            #    value = 0.001;
-                            value = math.log(value)
-                        elif method == 'log10':
-                            if value == 0:
-                                continue
-                            #if value < 0.001:
-                            #    value = 0.001;
-                            value = math.log(value, 10)
-                        elif method == 'asinh':
-                            #if value < 0.001:
-                            #    value = 0.001;
-                            value = math.asinh(value * self.sigma)
-                        elif method == 'linear':
-                            if value < 0.0:
-                                value = 0.0
+                        value = self.applyFunc(value, method)
+                        #if method == 'atan':
+                        #    value = math.atan(value)
+                        #elif method == 'log':
+                        #    if value == 0:
+                        #        continue
+                        #    #if value < 0.001:
+                        #    #    value = 0.001;
+                        #    value = math.log(value)
+                        #elif method == 'log10':
+                        #    if value == 0:
+                        #        continue
+                        #    #if value < 0.001:
+                        #    #    value = 0.001;
+                        #    value = math.log(value, 10)
+                        #elif method == 'asinh':
+                        #    #if value < 0.001:
+                        #    #    value = 0.001;
+                        #    value = math.asinh(value * self.sigma)
+                        #elif method == 'linear':
+                        #    if value < 0.0:
+                        #        value = 0.0
                         adjvalue = value - minvalue
                         value = int(adjvalue*mult)
                         #value = int(value*256)
@@ -350,6 +354,21 @@ class FitsImage:
         #image4.save(imageDirName + imagePrefixName + "_colour_4.jpg")
 
         hdulist.close()
+        
+    def applyFunc(self, value, method):
+        if method == 'atan':
+            return math.atan(value)
+        elif method == 'log':
+            if value == 0:
+                return 0;
+            else:
+                return math.log(value)
+        elif method == 'log10':
+            return math.log(value, 10)
+        elif method == 'asinh':
+            return math.asinh(value * self.sigma)
+        else:
+           return maxorigvalue
 
     def filename_hash(self, name, hash_fanout):
         """

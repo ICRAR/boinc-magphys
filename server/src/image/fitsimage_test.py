@@ -5,10 +5,11 @@ from config import db_login
 
 image = fitsimage.FitsImage()
 
+fitsName = "POGS_NGC2500"
 magphysDir = "/Users/rob/magphys/"
-fitsFileName = magphysDir + "POGS_NGC2500.fits"
-imageDirName = magphysDir + "POGS_NGC2500"
-imagePrefixName = "POGS_NGC2500"
+fitsFileName = magphysDir + fitsName + ".fits"
+imageDirName = magphysDir + fitsName
+imagePrefixName = fitsName
 
 #inImageFileName = imageDirName + "/" + imagePrefixName + "_colour_1.jpg"
 inImageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, 1)
