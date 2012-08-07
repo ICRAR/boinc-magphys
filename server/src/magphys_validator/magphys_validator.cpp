@@ -166,12 +166,14 @@ void fit_record::parse(size_t len)
 #if 1
 bool fit_record::operator==(fit_record &x)
 {
-    //log_messages.printf(MSG_DEBUG, "== \n%s\n%s\n", this->ftrec_str.c_str(), x.ftrec_str.c_str());
+    log_messages.printf(MSG_DEBUG, "'%s' == '%s'\n", this->ftrec_str.c_str(), x.ftrec_str.c_str());
 
     // If one side hasn't been parsed, start with a string compare
     if ((this->ftrec_type == INIT || x.ftrec_type == INIT)
-        && this->ftrec_str == x.ftrec_str)
+        && this->ftrec_str == x.ftrec_str) {
+        log_messages.printf(MSG_DEBUG, "Match 01\n");
         return true;
+    }
 
     // Identify COMMENT or DATA as needed for each side
     if (this->ftrec_type == INIT)
@@ -180,16 +182,22 @@ bool fit_record::operator==(fit_record &x)
         x.ident_type();
 
     // comment fields must compare identical
-    if (this->ftrec_type == COMMENT)
+    if (this->ftrec_type == COMMENT) {
+        log_messages.printf(MSG_DEBUG, "Match 02\n");
         return (x.ftrec_type == COMMENT && this->ftrec_str == x.ftrec_str);
+    }
 
     // At this point, 'this' is data.  'x' has to be to match
-    if (x.ftrec_type != DATA && x.ftrec_type != NUMERIC)
+    if (x.ftrec_type != DATA && x.ftrec_type != NUMERIC) {
+        log_messages.printf(MSG_DEBUG, "Match 03\n");
         return (false);
+    }
 
     // Accept if bytewise identical
-    if (this->ftrec_str == x.ftrec_str)
+    if (this->ftrec_str == x.ftrec_str) {
+        log_messages.printf(MSG_DEBUG, "Match 04\n");
         return (true);
+    }
 
     // Parse records as necessary.
     if (this->ftrec_type == DATA)
@@ -198,6 +206,7 @@ bool fit_record::operator==(fit_record &x)
         x.parse(this->ftrec_num.size());
 
     // Do fuzzy numeric compare
+    log_messages.printf(MSG_DEBUG, "Match 05\n");
     return (this->ftrec_num == x.ftrec_num);
 }
 #else
