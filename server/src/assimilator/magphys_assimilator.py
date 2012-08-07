@@ -15,18 +15,18 @@ def is_gzip(outFile):
     """
     Test if the file is a gzip file by opening it
     """
-    gzip = True
-    f = outFile.open(outFile , "r")
+    isgzip = True
+    f = gzip.open(outFile , "r")
     try:
         for line in f:
             break
     except IOError:
-        gzip = False
+        isgzip = False
     except:
-        gzip = False
+        isgzip = False
     else:
         f.close()
-    return gzip
+    return isgzip
 
 class MagphysAssimilator(assimilator.Assimilator):
     area = None
