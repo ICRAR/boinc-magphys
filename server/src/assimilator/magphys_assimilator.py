@@ -19,6 +19,7 @@ def is_gzip(outFile):
     f = gzip.open(outFile , "r")
     try:
         for line in f:
+            print line
             break
     except IOError:
         isgzip = False
