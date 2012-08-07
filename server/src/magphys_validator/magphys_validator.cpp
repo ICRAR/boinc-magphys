@@ -20,11 +20,15 @@ using namespace std;
 #include "validate_util.h"
 #include "sched_msgs.h"
 
-static inline std::string &rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-    return s;
-}
+const std::string whiteSpaces( " \f\n\r\t\v" );
 
+
+void trimRight( std::string& str,
+      const std::string& trimChars = whiteSpaces )
+{
+    std::string::size_type pos = str.find_last_not_of( trimChars );
+    str.erase( pos + 1 );
+}
 
 class fit_number {
 private:
@@ -276,7 +280,8 @@ int init_result(RESULT& result, void*& data)
 
     while (infile.good()) {
       getline(infile, line);
-      ft->push_back(rtrim(line));
+      trimRight(line);
+      ft->push_back(line);
     }
     infile.close();
 
