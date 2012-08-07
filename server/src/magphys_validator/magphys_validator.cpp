@@ -20,6 +20,12 @@ using namespace std;
 #include "validate_util.h"
 #include "sched_msgs.h"
 
+static inline std::string &rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
+
+
 class fit_number {
 private:
     double val;
@@ -261,7 +267,7 @@ int init_result(RESULT& result, void*& data)
 
     while (infile.good()) {
       getline(infile, line);
-      ft->push_back(line);
+      ft->push_back(rtrim(line));
     }
     infile.close();
 

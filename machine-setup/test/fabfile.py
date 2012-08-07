@@ -26,7 +26,7 @@ from fabric.utils import puts, abort, fastprint
 
 USERNAME = 'ec2-user'
 AMI_ID = 'ami-aecd60c7'
-INSTANCE_TYPE = 't1.micro'
+INSTANCE_TYPE = 'm1.small'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
@@ -278,8 +278,8 @@ def single_install(with_db):
     run('''awk '/<one_result_per_user_per_wu>/,/<\/one_result_per_user_per_wu>/ {if ( $0 ~ /<\/one_result_per_user_per_wu>/ ) print "'''
         '    <delete_delay_hours>48</delete_delay_hours>\\n'
         '    <locality_scheduling/>\\n'
-        '    <one_result_per_user_per_wu/>\\n'
-        '''  <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})
+        '    <prefer_primary_platform>1</prefer_primary_platform>\\n'
+        '''    <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})
 
     comment('/home/ec2-user/projects/{0}/html/ops/create_forums.php'.format(env.project_name), '^die', char='// ')
 
