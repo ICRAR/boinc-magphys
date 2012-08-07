@@ -16,7 +16,7 @@ def is_gzip(outFile):
     Test if the file is a gzip file by opening it
     """
     gzip = True
-    f = gzip.open(outFile , "r")
+    f = outFile.open(outFile , "r")
     try:
         for line in f:
             break
