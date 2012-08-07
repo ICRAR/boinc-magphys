@@ -1,7 +1,7 @@
 """
 The configuration directory
 """
-from os.path import exists, realpath, dirname
+from os.path import exists, dirname
 from configobj import ConfigObj
 
 
@@ -12,7 +12,7 @@ db_hostname = None
 db_name = None
 db_login = None
 
-db_file_name = dirname(realpath(__file__)) + '/database.settings'
+db_file_name = dirname(__file__) + '/database.settings'
 if exists(db_file_name):
     config = ConfigObj(db_file_name)
     db_userid = config['databaseUserid']
@@ -32,7 +32,7 @@ else:
 
 django_template_dir = None
 django_image_dir = None
-django_file_name = dirname(realpath(__file__)) + '/django.settings'
+django_file_name = dirname(__file__) + '/django.settings'
 if exists(django_file_name):
     config = ConfigObj(django_file_name)
     django_template_dir = config['template_dir']
