@@ -11,6 +11,23 @@ from database.database_support import AreaUser, PixelResult, PixelFilter, PixelP
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+def is_gzip(outFile):
+    """
+    Test if the file is a gzip file by opening it
+    """
+    gzip = True
+    f = gzip.open(outFile , "r")
+    try:
+        for line in f:
+            break
+    except IOError:
+        gzip = False
+    except:
+        gzip = False
+    else:
+        f.close()
+    return gzip
+
 class MagphysAssimilator(assimilator.Assimilator):
     area = None
 
@@ -57,7 +74,10 @@ class MagphysAssimilator(assimilator.Assimilator):
         Read the output file, add the values to the PixelResult row, and insert the filter,
         parameter and histogram rows.
         """
-        f = gzip.open(outFile , "r")
+        if is_gzip(outFile):
+            f = gzip.open(outFile , "r")
+        else:
+            f = open(outFile, "r")
         lineNo = 0
         pointName = None
         pxresult = None
