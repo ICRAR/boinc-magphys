@@ -75,8 +75,10 @@ class MagphysAssimilator(assimilator.Assimilator):
         parameter and histogram rows.
         """
         if is_gzip(outFile):
+            print 'Is GZIP'
             f = gzip.open(outFile , "r")
         else:
+            print 'Is not GZIP'
             f = open(outFile, "r")
         lineNo = 0
         pointName = None
