@@ -5,7 +5,7 @@ import boinc_path_config
 import gzip, os
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
-from assimilator.assimilator_utils import is_gzip
+from assimilator_utils import is_gzip
 from config import db_login
 from database.database_support import AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram
 
