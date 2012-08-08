@@ -188,7 +188,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             pxresult.dz = float(values[4])
                             skynetNext = False
         except IOError:
-            self.logCritical('IOError after %d lines', lineNo)
+            self.logCritical('IOError after %d lines\n', lineNo)
         finally:
             f.close()
         if pxresult:
