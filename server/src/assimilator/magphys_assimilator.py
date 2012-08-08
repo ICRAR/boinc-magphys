@@ -5,29 +5,12 @@ import boinc_path_config
 import gzip, os
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
+from assimilator.assimilator_utils import is_gzip
 from config import db_login
 from database.database_support import AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-def is_gzip(outFile):
-    """
-    Test if the file is a gzip file by opening it
-    """
-    isgzip = True
-    f = gzip.open(outFile , "r")
-    try:
-        for line in f:
-            print line
-            break
-    except IOError:
-        isgzip = False
-    except:
-        isgzip = False
-    else:
-        f.close()
-    return isgzip
 
 class MagphysAssimilator(assimilator.Assimilator):
     area = None
@@ -76,10 +59,10 @@ class MagphysAssimilator(assimilator.Assimilator):
         parameter and histogram rows.
         """
         if is_gzip(outFile):
-            print 'Is GZIP'
+            self.logDebug('Is GZIP')
             f = gzip.open(outFile , "r")
         else:
-            print 'Is not GZIP'
+            self.logDebug('Is not GZIP')
             f = open(outFile, "r")
         lineNo = 0
         pointName = None
