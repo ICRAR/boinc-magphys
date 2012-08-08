@@ -60,7 +60,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         """
         if is_gzip(outFile):
             self.logDebug('Is GZIP\n')
-            f = gzip.open(outFile , "r")
+            f = gzip.open(outFile , "rb")
         else:
             self.logDebug('Is not GZIP\n')
             f = open(outFile, "r")
@@ -71,123 +71,126 @@ class MagphysAssimilator(assimilator.Assimilator):
         histogramNext = False
         skynetNext = False
         resultCount = 0
-        for line in f:
-            lineNo += 1
+        try:
+            for line in f:
+                lineNo += 1
 
-            if line.startswith(" ####### "):
-                if pxresult:
-                    self.saveResult(session, pxresult)
-                values = line.split()
-                pointName = values[1]
-                #print "pointName", pointName
-                pxresultId = pointName[3:].rstrip()
-                #print "pxresultId", pxresultId
-                pxresult = self.getResult(session, pxresultId)
-                if pxresult:
-                  pxresult.workunit_id = wu.id
-                lineNo = 0
-                percentilesNext = False
-                histogramNext = False
-                skynetNext = False
-                resultCount += 1
-            elif pxresult:
-                if lineNo == 2:
-                    filterNames = line.split()
-                    for filterName in filterNames:
-                        if filterName != '#':
-                            filter = PixelFilter()
-                            filter.filter_name = filterName
-                            pxresult.filters.append(filter)
-                elif lineNo == 3:
-                    idx = 0
+                if line.startswith(" ####### "):
+                    if pxresult:
+                        self.saveResult(session, pxresult)
                     values = line.split()
-                    for value in values:
-                        filter = pxresult.filters[idx]
-                        filter.observed_flux = float(value)
-                        idx += 1
-                elif lineNo == 4:
-                    idx = 0
-                    values = line.split()
-                    for value in values:
-                        filter = pxresult.filters[idx]
-                        filter.observational_uncertainty = float(value)
-                        idx += 1
-                elif lineNo == 9:
-                    values = line.split()
-                    pxresult.i_sfh = float(values[0])
-                    pxresult.i_ir = float(values[1])
-                    pxresult.chi2 = float(values[2])
-                    pxresult.redshift = float(values[3])
-                    #for value in values:
-                    #    print value
-                elif lineNo == 11:
-                    values = line.split()
-                    pxresult.fmu_sfh = float(values[0])
-                    pxresult.fmu_ir = float(values[1])
-                    pxresult.mu = float(values[2])
-                    pxresult.tauv = float(values[3])
-                    pxresult.s_sfr = float(values[4])
-                    pxresult.m = float(values[5])
-                    pxresult.ldust = float(values[6])
-                    pxresult.t_w_bc = float(values[7])
-                    pxresult.t_c_ism = float(values[8])
-                    pxresult.xi_c_tot = float(values[9])
-                    pxresult.xi_pah_tot = float(values[10])
-                    pxresult.xi_mir_tot = float(values[11])
-                    pxresult.x_w_tot = float(values[12])
-                    pxresult.tvism = float(values[13])
-                    pxresult.mdust = float(values[14])
-                    pxresult.sfr = float(values[15])
-                elif lineNo == 13:
-                    idx = 0
-                    values = line.split()
-                    for value in values:
-                        filter = pxresult.filters[idx]
-                        filter.flux_bfm = float(value)
-                        idx += 1
-                elif lineNo > 13:
-                    if line.startswith("# ..."):
-                        parts = line.split('...')
-                        parameterName = parts[1].strip()
-                        parameter = PixelParameter()
-                        parameter.parameter_name = parameterName
-                        pxresult.parameters.append(parameter)
-                        percentilesNext = False
-                        histogramNext = True
-                        skynetNext = False
-                    elif line.startswith("#....percentiles of the PDF......") and parameter is not None:
-                        percentilesNext = True
-                        histogramNext = False
-                        skynetNext = False
-                    elif line.startswith(" #...theSkyNet"):
-                        percentilesNext = False
-                        histogramNext = False
-                        skynetNext = True
-                    elif percentilesNext:
+                    pointName = values[1]
+                    #print "pointName", pointName
+                    pxresultId = pointName[3:].rstrip()
+                    #print "pxresultId", pxresultId
+                    pxresult = self.getResult(session, pxresultId)
+                    if pxresult:
+                      pxresult.workunit_id = wu.id
+                    lineNo = 0
+                    percentilesNext = False
+                    histogramNext = False
+                    skynetNext = False
+                    resultCount += 1
+                elif pxresult:
+                    if lineNo == 2:
+                        filterNames = line.split()
+                        for filterName in filterNames:
+                            if filterName != '#':
+                                filter = PixelFilter()
+                                filter.filter_name = filterName
+                                pxresult.filters.append(filter)
+                    elif lineNo == 3:
+                        idx = 0
                         values = line.split()
-                        parameter.percentile2_5 = float(values[0])
-                        parameter.percentile16 = float(values[1])
-                        parameter.percentile50 = float(values[2])
-                        parameter.percentile84 = float(values[3])
-                        parameter.percentile97_5 = float(values[4])
-                        percentilesNext = False
-                    elif histogramNext:
-                        hist = PixelHistogram()
-                        hist.pxresult_id = pxresult.pxresult_id
+                        for value in values:
+                            filter = pxresult.filters[idx]
+                            filter.observed_flux = float(value)
+                            idx += 1
+                    elif lineNo == 4:
+                        idx = 0
                         values = line.split()
-                        hist.x_axis = float(values[0])
-                        hist.hist_value = float(values[1])
-                        parameter.histograms.append(hist)
-                    elif skynetNext:
+                        for value in values:
+                            filter = pxresult.filters[idx]
+                            filter.observational_uncertainty = float(value)
+                            idx += 1
+                    elif lineNo == 9:
                         values = line.split()
-                        pxresult.i_opt = float(values[0])
+                        pxresult.i_sfh = float(values[0])
                         pxresult.i_ir = float(values[1])
-                        pxresult.dmstar = float(values[2])
-                        pxresult.dfmu_aux = float(values[3])
-                        pxresult.dz = float(values[4])
-                        skynetNext = False
-
-        f.close()
+                        pxresult.chi2 = float(values[2])
+                        pxresult.redshift = float(values[3])
+                        #for value in values:
+                        #    print value
+                    elif lineNo == 11:
+                        values = line.split()
+                        pxresult.fmu_sfh = float(values[0])
+                        pxresult.fmu_ir = float(values[1])
+                        pxresult.mu = float(values[2])
+                        pxresult.tauv = float(values[3])
+                        pxresult.s_sfr = float(values[4])
+                        pxresult.m = float(values[5])
+                        pxresult.ldust = float(values[6])
+                        pxresult.t_w_bc = float(values[7])
+                        pxresult.t_c_ism = float(values[8])
+                        pxresult.xi_c_tot = float(values[9])
+                        pxresult.xi_pah_tot = float(values[10])
+                        pxresult.xi_mir_tot = float(values[11])
+                        pxresult.x_w_tot = float(values[12])
+                        pxresult.tvism = float(values[13])
+                        pxresult.mdust = float(values[14])
+                        pxresult.sfr = float(values[15])
+                    elif lineNo == 13:
+                        idx = 0
+                        values = line.split()
+                        for value in values:
+                            filter = pxresult.filters[idx]
+                            filter.flux_bfm = float(value)
+                            idx += 1
+                    elif lineNo > 13:
+                        if line.startswith("# ..."):
+                            parts = line.split('...')
+                            parameterName = parts[1].strip()
+                            parameter = PixelParameter()
+                            parameter.parameter_name = parameterName
+                            pxresult.parameters.append(parameter)
+                            percentilesNext = False
+                            histogramNext = True
+                            skynetNext = False
+                        elif line.startswith("#....percentiles of the PDF......") and parameter is not None:
+                            percentilesNext = True
+                            histogramNext = False
+                            skynetNext = False
+                        elif line.startswith(" #...theSkyNet"):
+                            percentilesNext = False
+                            histogramNext = False
+                            skynetNext = True
+                        elif percentilesNext:
+                            values = line.split()
+                            parameter.percentile2_5 = float(values[0])
+                            parameter.percentile16 = float(values[1])
+                            parameter.percentile50 = float(values[2])
+                            parameter.percentile84 = float(values[3])
+                            parameter.percentile97_5 = float(values[4])
+                            percentilesNext = False
+                        elif histogramNext:
+                            hist = PixelHistogram()
+                            hist.pxresult_id = pxresult.pxresult_id
+                            values = line.split()
+                            hist.x_axis = float(values[0])
+                            hist.hist_value = float(values[1])
+                            parameter.histograms.append(hist)
+                        elif skynetNext:
+                            values = line.split()
+                            pxresult.i_opt = float(values[0])
+                            pxresult.i_ir = float(values[1])
+                            pxresult.dmstar = float(values[2])
+                            pxresult.dfmu_aux = float(values[3])
+                            pxresult.dz = float(values[4])
+                            skynetNext = False
+        except IOError:
+            self.logCritical('IOError after %d lines', lineNo)
+        finally:
+            f.close()
         if pxresult:
             self.saveResult(session, pxresult)
         return resultCount
