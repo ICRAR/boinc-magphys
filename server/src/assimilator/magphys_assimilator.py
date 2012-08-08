@@ -59,10 +59,10 @@ class MagphysAssimilator(assimilator.Assimilator):
         parameter and histogram rows.
         """
         if is_gzip(outFile):
-            self.logDebug('Is GZIP')
+            self.logDebug('Is GZIP\n')
             f = gzip.open(outFile , "r")
         else:
-            self.logDebug('Is not GZIP')
+            self.logDebug('Is not GZIP\n')
             f = open(outFile, "r")
         lineNo = 0
         pxresult = None
