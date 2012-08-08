@@ -49,11 +49,11 @@ class MagphysAssimilator(assimilator.Assimilator):
         pxresult.parameters = []
         return pxresult
 
-    def saveResult(self, session, pxresult, results):
+    def saveResult(self, session, pxresult):
         if pxresult.pxresult_id is None and not self.noinsert:
             session.add(pxresult)
 
-    def processResult(self, session, outFile, wu, results):
+    def processResult(self, session, outFile, wu):
         """
         Read the output file, add the values to the PixelResult row, and insert the filter,
         parameter and histogram rows.
@@ -65,7 +65,6 @@ class MagphysAssimilator(assimilator.Assimilator):
             self.logDebug('Is not GZIP')
             f = open(outFile, "r")
         lineNo = 0
-        pointName = None
         pxresult = None
         parameter = None
         percentilesNext = False
@@ -73,11 +72,11 @@ class MagphysAssimilator(assimilator.Assimilator):
         skynetNext = False
         resultCount = 0
         for line in f:
-            lineNo = lineNo + 1
+            lineNo += 1
 
             if line.startswith(" ####### "):
                 if pxresult:
-                    self.saveResult(session, pxresult, results)
+                    self.saveResult(session, pxresult)
                 values = line.split()
                 pointName = values[1]
                 #print "pointName", pointName
@@ -90,7 +89,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 percentilesNext = False
                 histogramNext = False
                 skynetNext = False
-                resultCount = resultCount + 1
+                resultCount += 1
             elif pxresult:
                 if lineNo == 2:
                     filterNames = line.split()
@@ -105,14 +104,14 @@ class MagphysAssimilator(assimilator.Assimilator):
                     for value in values:
                         filter = pxresult.filters[idx]
                         filter.observed_flux = float(value)
-                        idx = idx + 1
+                        idx += 1
                 elif lineNo == 4:
                     idx = 0
                     values = line.split()
                     for value in values:
                         filter = pxresult.filters[idx]
                         filter.observational_uncertainty = float(value)
-                        idx = idx + 1
+                        idx += 1
                 elif lineNo == 9:
                     values = line.split()
                     pxresult.i_sfh = float(values[0])
@@ -145,7 +144,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                     for value in values:
                         filter = pxresult.filters[idx]
                         filter.flux_bfm = float(value)
-                        idx = idx + 1
+                        idx += 1
                 elif lineNo > 13:
                     if line.startswith("# ..."):
                         parts = line.split('...')
@@ -156,7 +155,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                         percentilesNext = False
                         histogramNext = True
                         skynetNext = False
-                    elif line.startswith("#....percentiles of the PDF......") and parameter != None:
+                    elif line.startswith("#....percentiles of the PDF......") and parameter is not None:
                         percentilesNext = True
                         histogramNext = False
                         skynetNext = False
@@ -190,7 +189,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
         f.close()
         if pxresult:
-            self.saveResult(session, pxresult, results)
+            self.saveResult(session, pxresult)
         return resultCount
 
     def assimilate_handler(self, wu, results, canonical_result):
@@ -214,7 +213,7 @@ class MagphysAssimilator(assimilator.Assimilator):
             if outFile:
                 self.logDebug("Reading File [%s]\n", outFile)
                 session = self.Session()
-                resultCount = self.processResult(session, outFile, wu, results)
+                resultCount = self.processResult(session, outFile, wu)
                 if self.noinsert:
                     session.rollback()
                 else:
