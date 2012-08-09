@@ -20,16 +20,13 @@ APP_NAME = "magphys_wrapper"
 FILE_DIR = sys.argv[1]
 BOINC_PROJECT_ROOT = sys.argv[2]
 if len(sys.argv) == 4:
-    USE_PRIORITY = False
     FILES_TO_PROCESS = sys.argv[3]
 else:
-    USE_PRIORITY = True
     FILES_TO_PROCESS = sys.maxint
 
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates"                    # In true BOINC style, this is magically relative to the project root
 
-DEFAULT_HIGH_PRIORITY = "100"
 MIN_QUORUM = 2									# Validator run when there are at least this many results for a work unit
 TARGET_NRESULTS = MIN_QUORUM 					# Initially create this many instances of a work unit
 DELAY_BOUND = 86400 * 7 						# Clients must report results within a week
@@ -89,12 +86,6 @@ for key, value in file_groups.iteritems():
     if value is None:
         continue
 
-    high_priority_files_processed = 0
-    if USE_PRIORITY:
-        number_high_priority_units = len(value) * 0.05
-    else:
-        number_high_priority_units = 0
-
     for file_name in value:
         # Create the job file
         file_name_job = file_name + '.job.xml'
@@ -121,8 +112,6 @@ for key, value in file_groups.iteritems():
             BIN_PATH + "/create_work"
         ]
         cmd_create_work.extend(args_params)
-        if high_priority_files_processed < number_high_priority_units:
-            cmd_create_work.extend(["--priority", DEFAULT_HIGH_PRIORITY])
         cmd_create_work.extend(args_files)
 
         # Copy file into BOINC's download hierarchy
@@ -136,7 +125,6 @@ for key, value in file_groups.iteritems():
             LOG.error("Something went wrong; sorry")
 
         files_processed += 1
-        high_priority_files_processed += 1
 
         if files_processed >= FILES_TO_PROCESS:
             break
