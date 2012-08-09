@@ -20,6 +20,15 @@ class Galaxy(Base):
     def __repr__(self):
         return 'galaxy: {galaxy_id : {0}, name : {1}}'.format(self.galaxy_id, self.name)
 
+class FitsHeader(Base):
+    __tablename__ = 'fits_header'
+    fitsheader_id = Column(BigInteger, primary_key=True)
+    galaxy_id     = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
+    keyword       = Column(String(128))
+    value         = Column(String(128))
+
+    galaxy = relationship("Galaxy", backref=backref('fits_headers', order_by=galaxy_id))
+
 class Area(Base):
     __tablename__ = 'area'
     area_id      = Column(BigInteger, primary_key=True)

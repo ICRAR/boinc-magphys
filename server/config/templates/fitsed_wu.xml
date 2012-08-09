@@ -19,6 +19,6 @@
             <open_name>job.xml</open_name>
             <copy_file/>
         </file_ref>
-        <rsc_disk_bound>5000000000</rsc_disk_bound>
+        <rsc_disk_bound>500000000</rsc_disk_bound>
     </workunit>
 </input_template>

@@ -182,8 +182,6 @@ def base_install():
     sudo('pip-2.7 install django')
     sudo('pip-2.7 install fabric')
     sudo('pip-2.7 install configobj')
-
-    # Used by BOINC in the assimilator
     sudo('pip-2.7 install MySQL-python')
 
     for user in env.list_of_users:

@@ -13,6 +13,15 @@ CREATE TABLE galaxy (
 
 CREATE UNIQUE INDEX galaxy_name_ix ON galaxy(name);
 
+CREATE TABLE fits_header (
+  fitsheader_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  galaxy_id     BIGINT UNSIGNED NOT NULL,
+  keyword       VARCHAR(128) NOT NULL,
+  value         VARCHAR(128) NOT NULL
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE INDEX fits_header_galaxy_ix ON fits_header(galaxy_id);
+
 CREATE TABLE area (
   area_id      BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   galaxy_id    BIGINT UNSIGNED NOT NULL,

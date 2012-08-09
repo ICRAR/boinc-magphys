@@ -6,10 +6,11 @@ import json
 
 import logging
 import math
+import re
 import pyfits
 import sys
 from config import db_login
-from database.database_support import Galaxy, Area, PixelResult
+from database.database_support import Galaxy, Area, PixelResult, FitsHeader
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from work_generation import FILTER_BANDS
@@ -38,6 +39,17 @@ OUTPUT_DIR = sys.argv[2]
 IMAGE_DIR = sys.argv[3]
 SIGMA = 0.1
 ROW_HEIGHT = 10
+
+HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
+                   re.compile('CROTA[0-9]+'),
+                   re.compile('CRPIX[0-9]+'),
+                   re.compile('CRVAL[0-9]+'),
+                   re.compile('CTYPE[0-9]+'),
+                   re.compile('EQUINOX'),
+                   re.compile('EPOCH'),
+                   re.compile('RA_CENT'),
+                   re.compile('DEC_CENT'),
+                   ]
 
 HDULIST = pyfits.open(INPUT_FILE, memmap=True)
 LAYER_COUNT = len(HDULIST)
@@ -71,6 +83,20 @@ class Pixel:
         self.y = y
         self.pixels = pixels
         self.pixel_id = None
+
+def store_fits_header(hdulist, galaxy_id):
+    """
+    Store the FITS headers we need to remember
+    """
+    header = hdulist[0].header
+    for keyword in header:
+        for pattern in HEADER_PATTERNS:
+            if pattern.search(keyword):
+                fh = FitsHeader()
+                fh.galaxy_id = galaxy_id
+                fh.keyword = keyword
+                fh.value = header[keyword]
+                session.add(fh)
 
 def sort_layers(hdu_list, layer_count):
     """
@@ -245,6 +271,8 @@ session.flush()
 
 LOG.info("Wrote %(object)s to database" % { 'object':galaxy.name })
 
+# Store the fits header
+store_fits_header(HDULIST, galaxy.galaxy_id)
 LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
 break_up_galaxy(galaxy)
 
