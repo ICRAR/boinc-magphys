@@ -367,6 +367,7 @@ class FitsImage:
         #pixels = session.query(PixelResult).filter("galaxy_id=:galaxyId", "user_id=:userId").params(galaxyId=galaxyId).all()
         areas = session.query(Area, AreaUser).filter(AreaUser.userid == userid)\
           .filter(Area.area_id == AreaUser.area_id)\
+          .filter(Area.galaxy_id == galaxy_id)\
           .order_by(Area.top_x, Area.top_y).all()
         #print 'Areas', len(areas)
         for areax in areas:
