@@ -36,6 +36,7 @@ def userGalaxies(request, userid):
     user_galaxy_list = []
     for galaxy in image.userGalaxies(session, userid):
        user_galaxy_list.append(galaxy)
+    session.close()
 
     t = loader.get_template('pogs/index.html')
     c = Context({
@@ -70,6 +71,7 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     image = fitsimage.FitsImage()
     inImageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, colour)
     image.markImage(session, inImageFileName, outImageFileName, galaxy_id, userid)
+    session.close()
 
     sizeBytes = os.path.getsize(outImageFileName)
     file = open(outImageFileName, "rb")
