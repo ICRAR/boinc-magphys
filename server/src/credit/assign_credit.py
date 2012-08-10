@@ -74,6 +74,7 @@ class AssignCredit:
            
         conn.commit() 
         database.close()
+        session.close()
         print userCount, 'Users', creditCount, 'Credited'
 
 if __name__ == '__main__':
