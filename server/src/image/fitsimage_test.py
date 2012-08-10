@@ -2,10 +2,19 @@ import fitsimage
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from config import db_login
+import sys
 
 image = fitsimage.FitsImage()
+image.includeHash = False
 
 fitsName = "POGS_NGC2500"
+method = "asinh"
+
+if len(sys.argv) > 1:
+    fitsName = sys.argv[1]
+if len(sys.argv) > 2:
+    method = sys.argv[2]
+    
 magphysDir = "/Users/rob/magphys/"
 fitsFileName = magphysDir + fitsName + ".fits"
 imageDirName = magphysDir + fitsName
@@ -21,7 +30,7 @@ userid = 2
 #Session = sessionmaker(bind=engine)
 #session = Session()
 
-image.buildImage(fitsFileName, imageDirName, imagePrefixName, "log", False, True, False)
+image.buildImage(fitsFileName, imageDirName, imagePrefixName, method, False, True, False)
 #image.markImage(session, inImageFileName, outImageFileName, galaxy_id, userid)
 #galaxyIds = image.userGalaxyIds(session, userid)
 #for galaxyId in galaxyIds:

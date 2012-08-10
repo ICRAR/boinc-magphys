@@ -6,7 +6,8 @@ from database.database_support import Galaxy, Area, AreaUser
 
 class FitsImage:
     useHighCut = False
-    sigma = 6
+    includeHash = True
+    sigma = 0.000001
     
     def __init__(self):
         pass
@@ -32,7 +33,6 @@ class FitsImage:
         blackRGB = (0, 0, 0)
         black = (0)
         white = (255)
-        sigma = 6
 
         hdu = hdulist[0]
         width = hdu.header['NAXIS1']
@@ -95,6 +95,7 @@ class FitsImage:
             valuerange = []
             avg = 0
             stddev = 0
+            loCut = 0
             hiCut = 0
             for z in range(0, 256):
                 valuerange.append(0)
@@ -127,121 +128,76 @@ class FitsImage:
                 maxorigvalue = hiCut
             
                 maxvalue = self.applyFunc(maxorigvalue, method)
-                #if method == 'atan':
-                #    maxvalue = math.atan(maxorigvalue)
-                #elif method == 'log':
-                #    maxvalue = math.log(maxorigvalue)
-                #elif method == 'log10':
-                #    maxvalue = math.log(maxorigvalue, 10)
-                #elif method == 'asinh':
-                #    maxvalue = math.asinh(maxorigvalue * self.sigma)
-                #elif method == 'linear':
-                #    maxvalue = maxorigvalue
-                
                 mult = 255.0 / (maxvalue - minvalue)
             else:
                 values = []
                 for x in range(0, width-1):
                     for y in range(0, height-1):
                         value =  hdu.data[y + xoffset,x + xoffset]
-                        if not math.isnan(value):
+                        if not math.isnan(value) and value >= 0:
                             if value > 0:
                                 values.append(value)
-                            #if value > hiCut:
-                            #    value = hiCut
                             if value < minorigvalue:
                                 minorigvalue = value
                             if value > maxorigvalue:
                                 maxorigvalue = value
-                            #if value < 0:
-                            #    value = 0
                             if value == 0:
                                 zerocount = zerocount + 1
                                 continue
                             value = self.applyFunc(value, method)
-                            #if method == 'atan':
-                            #    value = math.atan(value)
-                            #elif method == 'log':
-                            #    #if value < 0.001:
-                            #    #    value = 0.001;
-                            #    value = math.log(value)
-                            #elif method == 'log10':
-                            #    #if value < 0.001:
-                            #    #    value = 0.001;
-                            #    value = math.log(value, 10)
-                            #elif method == 'asinh':
-                            #    #if value < 0.001:
-                            #    #    value = 0.001;
-                            #    value = math.asinh(value * self.sigma)
-                            #    #pass
-                            #elif method == 'linear':
-                            #    if value < 0.0:
-                            #        value = 0.0
-                            #    #if value > math.pi/2:
-                            #    #    value = math.pi/2
-    
-                            sum = sum + value
-                            sumsq = sumsq + (value*value)
-                            count = count + 1
-                            if value < minvalue:
-                                minvalue = value
-                            if value > maxvalue:
-                                maxvalue = value
-                avg = sum / count
-                if debug:
-                     print sumsq, count, avg
+                            if not math.isnan(value) and value > 0:
+                                sum = sum + value
+                                sumsq = sumsq + (value*value)
+                                count = count + 1
+                avg = 0
+                if count > 0:
+                    avg = sum / count
+                #if debug:
+                #    print sumsq, count, avg
                 stddev=0.0
-                try:
-                    stddev = math.sqrt((sumsq/count) - (avg*avg))
-                except ValueError:
-                    stddev=0.0
+                #if count > 0:
+                #    stddev = math.sqrt((sumsq/count) - (avg*avg))
                    
-                #bottomIdx = 0
-                #bottomValue = 0; 
+                bottomIdx = 0
+                bottomValue = 0; 
                 values.sort()
-                #for val in values:
-                #    bottomValue = val
-                #    if bottomIdx > 20:
-                #        break
-                #    bottomIdx += 1
+                for val in values:
+                    bottomValue = val
+                    if bottomIdx > 20:
+                        break
+                    bottomIdx += 1
+                loCut = bottomValue
                     
                 topIdx = 0
                 topValue = 0;
                 values.reverse()
                 for val in values:
                     topValue = val
-                    if topIdx > 100:
+                    if topIdx > 200:
                         break
                     topIdx += 1
                     
                 hiCut = topValue
+                minvalue = self.applyFunc(bottomValue, method)
                 maxvalue = self.applyFunc(topValue, method)
-                #if method == 'atan':
-                #    #minvalue = math.atan(bottomValue)
-                #    maxvalue = math.atan(topValue)
-                #elif method == 'log':
-                #    #minvalue = math.log(bottomValue)
-                #    maxvalue = math.log(topValue)
-                #elif method == 'log10':
-                #    #minvalue = math.log(bottomValue, 10)
-                #    maxvalue = math.log(topValue, 10)
-                #elif method == 'asinh':
-                #    #minvalue = math.asinh(bottomValue * self.sigma)
-                #    maxvalue = math.asinh(topValue * self.sigma)
-                #elif method == 'linear':
-                #    #minvalue = bottomValue
-                #    maxvalue = topValue
 
-                if method == 'linear':
-                    minvalue = 0.0
-                    #hiCut = avg + (15*stddev)
-                    #if hiCut > maxvalue:
-                    #    maxvalue = hiCut
+                #if method == 'linear':
+                #    minvalue = 0.0
+                #    #hiCut = avg + (15*stddev)
+                #    #if hiCut > maxvalue:
+                #    #    maxvalue = hiCut
+                #if method == 'log':
+                #    minvalue = 0.0
+                #    
+                #minvalue = 0.0
                     
-                if method == 'asinh':
-                    minvalue = 0.0
+                #if method == 'asinh':
+                #    minvalue = 0.0
 
-                mult = 255.0 / (maxvalue - minvalue)
+                if maxvalue == minvalue:
+                    mult = 255.0
+                else:
+                    mult = 255.0 / (maxvalue - minvalue)
                 
             sminvalue = 99999999
             smaxvalue = 0
@@ -266,31 +222,8 @@ class FitsImage:
             for x in range(0, width-1):
                 for y in range(0, height-1):
                     value =  hdu.data[y + xoffset,x + xoffset]
-                    if not math.isnan(value):
-                        #if value < 0:
-                        #    value = 0
+                    if not math.isnan(value) and value > 0:
                         value = self.applyFunc(value, method)
-                        #if method == 'atan':
-                        #    value = math.atan(value)
-                        #elif method == 'log':
-                        #    if value == 0:
-                        #        continue
-                        #    #if value < 0.001:
-                        #    #    value = 0.001;
-                        #    value = math.log(value)
-                        #elif method == 'log10':
-                        #    if value == 0:
-                        #        continue
-                        #    #if value < 0.001:
-                        #    #    value = 0.001;
-                        #    value = math.log(value, 10)
-                        #elif method == 'asinh':
-                        #    #if value < 0.001:
-                        #    #    value = 0.001;
-                        #    value = math.asinh(value * self.sigma)
-                        #elif method == 'linear':
-                        #    if value < 0.0:
-                        #        value = 0.0
                         adjvalue = value - minvalue
                         value = int(adjvalue*mult)
                         #value = int(value*256)
@@ -298,7 +231,8 @@ class FitsImage:
                             value = 0
                         if value > 255:
                             value = 255
-                        #print math.atan(value)
+                        #if value > 0:
+                        #    value += 50
                         if value < sminvalue:
                             sminvalue = value
                         if value > smaxvalue:
@@ -323,8 +257,6 @@ class FitsImage:
             if debug:
                 print 'Scaled: Min', sminvalue, 'Max', smaxvalue
                 print 'Pixel Count', pixelcount
-            #print 'Count', count, 'Avg', avg, 'Std Dev', stddev
-            #print 'LoCut', avg - (10*stddev), 'HiCut', avg + (15*stddev)
 
             if createLog:
                 logFile = open(imageDirName + imagePrefixName + '_' + str(file) + '.txt', 'w')
@@ -332,8 +264,9 @@ class FitsImage:
                 self.printCardsToFile(logFile, hdu.header, cards)
                 logFile.write('\n')
                 logFile.write('Count {} Avg {} StdDev {} Pixels {} PercentWithValue {}\n'.format(count, avg, stddev, width*height, ((count-zerocount)*100.0)/(width*height)))
-                logFile.write('Possible LoCut {} HiCut {}\n'.format(avg - (10*stddev), avg + (15*stddev)))
-                logFile.write('Min-Orig {} Max-Orig {} Min-Adj {} Max-Adj {} Multiplier {} Zeroes {} HiCut {}\n'.format(minorigvalue, maxorigvalue, minvalue, maxvalue, mult, zerocount, hiCut))
+                #logFile.write('Possible LoCut {} HiCut {}\n'.format(avg - (10*stddev), avg + (15*stddev)))
+                logFile.write('Min-Orig {} Max-Orig {} Min-Adj {} Max-Adj {} Zeroes {}\n'.format(minorigvalue, maxorigvalue, minvalue, maxvalue, zerocount))
+                logFile.write('LoCut {} HiCut {} Multiplier {}\n'.format(loCut, hiCut, mult))
                 logFile.write('\n')
 
                 for z in range(0, 256):
@@ -348,27 +281,21 @@ class FitsImage:
         image3.save(self.get_colour_image_path(imageDirName, imagePrefixName, 3))
         image4.save(self.get_colour_image_path(imageDirName, imagePrefixName, 4))
 
-        #image1.save(imageDirName + imagePrefixName + "_colour_1.jpg")
-        #image2.save(imageDirName + imagePrefixName + "_colour_2.jpg")
-        #image3.save(imageDirName + imagePrefixName + "_colour_3.jpg")
-        #image4.save(imageDirName + imagePrefixName + "_colour_4.jpg")
-
         hdulist.close()
         
     def applyFunc(self, value, method):
         if method == 'atan':
-            return math.atan(value)
+            return math.atan(value / self.sigma)
         elif method == 'log':
-            if value == 0:
-                return 0;
-            else:
-                return math.log(value)
+            return math.log((value / self.sigma) + 1.0)
+        elif method == 'log-old':
+            return math.log(value)
         elif method == 'log10':
-            return math.log(value, 10)
+            return math.log(value, 10.0)
         elif method == 'asinh':
-            return math.asinh(value * self.sigma)
+            return math.asinh(value / self.sigma)
         else:
-           return maxorigvalue
+           return value
 
     def filename_hash(self, name, hash_fanout):
         """
@@ -390,16 +317,19 @@ class FitsImage:
         This method accounts for file hashing and includes the directory
         bucket in the path returned.
         """
-        fanout = 1024
-        hashed = self.filename_hash(fileName, fanout)
-        hashDirName = os.path.join(dirName,hashed)
-        if os.path.isfile(hashDirName):
-            pass
-        elif os.path.isdir(hashDirName):
-            pass
+        if self.includeHash:
+            fanout = 1024
+            hashed = self.filename_hash(fileName, fanout)
+            hashDirName = os.path.join(dirName,hashed)
+            if os.path.isfile(hashDirName):
+                pass
+            elif os.path.isdir(hashDirName):
+                pass
+            else:
+                os.mkdir(hashDirName) 
+            return os.path.join(dirName,hashed,fileName)
         else:
-            os.mkdir(hashDirName)
-        return os.path.join(dirName,hashed,fileName)
+            return os.path.join(dirName,fileName)
 
     def get_colour_image_path(self, imageDirName, imagePrefixName, colour):
         """

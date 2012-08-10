@@ -284,7 +284,7 @@ if rollback:
     session.rollback()
 else:
     image = FitsImage()
-    image.buildImage(INPUT_FILE, IMAGE_DIR, object_name, "log", False, False, False)
+    image.buildImage(INPUT_FILE, IMAGE_DIR, object_name, "asinh", False, False, False)
     session.commit()
 
 LOG.info("\nDone")
