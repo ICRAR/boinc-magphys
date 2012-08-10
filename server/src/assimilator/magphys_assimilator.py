@@ -246,6 +246,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             self.area.users.append(usr)
                     self.logDebug("Saving %d results for workunit %d\n", resultCount, wu.id)
                     session.commit()
+                session.close()
             else:
                 self.logCritical("The output file was not found\n")
         else:
