@@ -79,6 +79,13 @@ package { 'mod_fcgid':
 package { 'php-fpm':
     ensure => installed,
 }
+package { 'postfix':
+    ensure => installed,
+}
+
+package { 'ca-certificates':
+    ensure => installed,
+}
 
 user { 'apache':
   ensure  => present,

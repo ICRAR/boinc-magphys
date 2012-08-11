@@ -90,7 +90,7 @@ for galaxy in galaxies:
         hdu = pyfits.PrimaryHDU(array[:,:,name_count])
         hdu_list = pyfits.HDUList([hdu])
         # Write the header
-        hdu_list[0].header.update('MAGPHYST', name + ' /MAGPHYS Parameter')
+        hdu_list[0].header.update('MAGPHYST', name, 'MAGPHYS Parameter')
         hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
         for key, value in header.items():
             hdu_list[0].header.update(key, value)

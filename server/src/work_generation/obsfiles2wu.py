@@ -30,7 +30,7 @@ TEMPLATES_PATH = "templates"                    # In true BOINC style, this is m
 MIN_QUORUM = 2									# Validator run when there are at least this many results for a work unit
 TARGET_NRESULTS = MIN_QUORUM 					# Initially create this many instances of a work unit
 DELAY_BOUND = 86400 * 7 						# Clients must report results within a week
-FPOPS_EST_PER_PIXEL = 2.312						# Estimated number of gigaflops per pixel
+FPOPS_EST_PER_PIXEL = 3.312						# Estimated number of gigaflops per pixel
 FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	# Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
 COBBLESTONE_SCALING_FACTOR = 8.2
@@ -91,7 +91,7 @@ for key, value in file_groups.iteritems():
         file_name_job = file_name + '.job.xml'
 
         pixels_in_file, area_id = file_details(FILE_DIR + "/" + file_name)
-        LOG.info("Creating work unit from observations file %(file)s: area_id %(area_id)s: %(pixels)d pixels " % {'file':file_name, 'pixels':pixels_in_file, 'area_id': area_id})
+        LOG.info("Creating work unit from observations file %(file)s: %(pixels)d pixels " % {'file':file_name, 'pixels':pixels_in_file})
 
         args_params = [
             "--appname",         APP_NAME,

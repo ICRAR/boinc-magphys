@@ -157,6 +157,28 @@ def base_install():
     with cd('/home/ec2-user/boinc-magphys/machine-setup'):
         sudo('puppet boinc-magphys.pp')
 
+    # Setup postfix
+    sudo('service sendmail stop')
+    sudo('service postfix stop')
+    sudo('chkconfig sendmail off')
+    sudo('chkconfig sendmail --del')
+
+    sudo('chkconfig postfix --add')
+    sudo('chkconfig postfix on')
+
+    sudo('service postfix start')
+
+    sudo('echo "relayhost = [smtp.gmail.com]:587" >> /etc/postfix/main.cf')
+    sudo('echo "smtp_sasl_auth_enable = yes" >> /etc/postfix/main.cf')
+    sudo('echo "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd" >> /etc/postfix/main.cf')
+    sudo('echo "smtp_sasl_security_options = noanonymous" >> /etc/postfix/main.cf')
+    sudo('echo "smtp_tls_CAfile = /etc/postfix/cacert.pem" >> /etc/postfix/main.cf')
+    sudo('echo "smtp_use_tls = yes" >> /etc/postfix/main.cf')
+
+    sudo('echo "[smtp.gmail.com]:587 {0}@gmail.com:{1}" > /etc/postfix/sasl_passwd'.format(env.gmail_account, env.gmail_password))
+    sudo('chmod 400 /etc/postfix/sasl_passwd')
+    sudo('postmap /etc/postfix/sasl_passwd')
+
     # Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-07-10
     run('svn co http://boinc.berkeley.edu/svn/trunk/boinc /home/ec2-user/boinc')
 
@@ -241,6 +263,7 @@ def single_install(with_db):
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH PROJECT NAME', 'theSkyNet {0} - the PS1 Optical Galaxy Survey'.format(env.project_name.upper()))
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), '"white.css"', '"black.css"')
+    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'define\("FORUM_QA_MERGED_MODE", false\);', 'define("FORUM_QA_MERGED_MODE", true);')
 
     # As this goes through AWK we need to be a bit careful
     run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
@@ -274,11 +297,10 @@ def single_install(with_db):
         '''  </daemons>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml'''% { 'name' : env.project_name})
     run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
     run('''awk '/<one_result_per_user_per_wu>/,/<\/one_result_per_user_per_wu>/ {if ( $0 ~ /<\/one_result_per_user_per_wu>/ ) print "'''
-        '    <delete_delay_hours>48</delete_delay_hours>\\n'
-        '    <locality_scheduling/>\\n'
-        '    <prefer_primary_platform>1</prefer_primary_platform>\\n'
-        '    <one_result_per_user_per_wu/>\\n'
-        '''    <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})
+        '      <delete_delay_hours>48</delete_delay_hours>\\n'
+        '      <prefer_primary_platform>1</prefer_primary_platform>\\n'
+        '      <one_result_per_user_per_wu/>\\n'
+        '''      <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})
 
     comment('/home/ec2-user/projects/{0}/html/ops/create_forums.php'.format(env.project_name), '^die', char='// ')
 
@@ -373,7 +395,10 @@ def test_env():
         prompt('AWS Instance name: ', 'instance_name')
     if 'project_name' not in env:
         prompt('BOINC project name: ', 'project_name')
-
+    if 'gmail_account' not in env:
+        prompt('GMail Account', 'gmail_account')
+    if 'gmail_password' not in env:
+        prompt('GMail Password', 'gmail_password')
 
     # Create the instance in AWS
     host_names = create_instance([env.instance_name], use_elastic_ip, [public_ip])

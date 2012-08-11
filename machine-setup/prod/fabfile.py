@@ -226,7 +226,7 @@ def prod_deploy_stage02():
         'http://{0}/pogs/download'.format(env.hosts[DOWNLOAD_HOST]))
     run('cp /home/ec2-user/projects/pogs/config.xml /home/ec2-user/projects/pogs/config.xml.bak')
     run('''awk '/<daemons>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "  <daemons></daemons>\\n'''
-        '''  <locality_scheduling/>"; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
+        '''  "; next } 1' /home/ec2-user/projects/pogs/config.xml.bak > /home/ec2-user/projects/pogs/config.xml''')
 
     comment('/home/ec2-user/projects/pogs/html/ops/create_forums.php', '^die', char='// ')
 

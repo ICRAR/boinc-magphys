@@ -138,7 +138,7 @@ def create_output_file(galaxy, area, pixels):
     """
     pixels_in_area = len(pixels)
     data = [{'galaxy':galaxy.name, 'area_id':area.area_id, 'pixels':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,}]
-    filename = '%(output_dir)s/%(galaxy)s__area%(area)s' % { 'galaxy':galaxy.name, 'output_dir':OUTPUT_DIR, 'area':area.area_id}
+    filename = '%(output_dir)s/%(galaxy)s_area%(area)s' % { 'galaxy':galaxy.name, 'output_dir':OUTPUT_DIR, 'area':area.area_id}
     outfile = open(filename, 'w')
     outfile.write('#  %(data)s\n' % { 'data': json.dumps(data) })
 
@@ -192,7 +192,7 @@ def get_pixels(pix_x, pix_y):
                 result.append(Pixel(x, y, pixels))
 
         max_x = x
-        if len(result) > 40:
+        if len(result) > 30:
             break
 
         x += 1
