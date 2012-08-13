@@ -104,8 +104,8 @@ for key, value in file_groups.iteritems():
             "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
             "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
             "--additional_xml", "<credit>%(credit)d</credit>" % {'credit':pixels_in_file*COBBLESTONE_SCALING_FACTOR},
-            "--opaque",   str(area_id),
-            "--priority", "10"
+            "--opaque",   str(area_id)
+        #    "--priority", "10"
         ]
         args_files = [file_name, file_name_job]
         cmd_create_work = [
