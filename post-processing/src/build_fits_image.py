@@ -68,7 +68,8 @@ IMAGE_NAMES = [ 'fmu_sfh',
                 'sfr',
               ]
 
-PNG_IMAGE_NAMES = [ 'm',
+PNG_IMAGE_NAMES = [ 'mu',
+                'm',
                 'ldust',
                 'sfr',
               ]
@@ -163,7 +164,9 @@ for galaxy in galaxies:
         height = galaxy.dimension_x
         width = galaxy.dimension_y
         idx = 0
-        if name == 'm':
+        if name == 'mu':
+            idx = 2
+        elif name == 'm':
             idx = 5
         elif name == 'ldust':
             idx = 6
