@@ -8,8 +8,9 @@ import numpy
 class ImageBuilder:
     """
     This class scales each colour such that the median is centered on 1, and them applies the
-    asinh() function to the value.  The hiCut is set to truncate the top 200 valuies.
+    asinh() function to the value.  The hiCut is set to truncate the top 200 values.
     """
+    debug = False
     imageFileName = ""
     image = None
     redFilter = 0
@@ -18,9 +19,6 @@ class ImageBuilder:
     redData = None
     blueData = None
     greenData = None
-    #redScale = 1
-    #blueScale = 1
-    #greenScale = 1
     width = 0
     height = 0
     blackRGB = (0, 0, 0)
@@ -32,18 +30,15 @@ class ImageBuilder:
     blueHiCut = math.pi/2
     blueMedian = 0
     
-    def __init__(self, imageFileName, redFilter, greenFilter, blueFilter, width, height):
+    def __init__(self, imageFileName, redFilter, greenFilter, blueFilter, width, height, debug):
         self.imageFileName = imageFileName
         self.redFilter = redFilter
         self.greenFilter = greenFilter
         self.blueFilter = blueFilter
         self.width = width
         self.height = height
+        self.debug = debug
         self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
-        
-        #self.redScale = filterScale[self.redFilter]
-        #self.greenScale = filterScale[self.greenFilter]
-        #self.blueScale = filterScale[self.blueFilter]
         
     def setData(self, filter, data):
         values = []
@@ -77,28 +72,15 @@ class ImageBuilder:
             return True
             
     def saveImage(self, imageDirName, imagePrefixName):
-        #maxMedian = self.redMedian
-        #if self.greenMedian > maxMedian:
-        #    maxMedian = self.greenMedian
-        #if self.blueMedian > maxMedian:
-        #    maxMedian = self.blueMedian
-        #self.redScale = maxMedian/self.redMedian
-        #self.greenScale = maxMedian/self.greenMedian
-        #self.blueScale = maxMedian/self.blueMedian
-        #self.sigma = 0.0001
-        #mult = 255.0 / math.asinh(self.hiCut / self.sigma)
-        
         centre = 1
         redSigma = centre / self.redMedian
         greenSigma = centre / self.greenMedian
         blueSigma = centre / self.blueMedian
-        #print 'Red', self.redMedian, self.redHiCut, self.redScale, redSigma
-        #print 'Green', self.greenMedian, self.greenHiCut, self.greenScale, greenSigma
-        #print 'Blue', self.blueMedian, self.blueHiCut, self.blueScale, blueSigma
+        if self.debug:
+            print 'Red', self.redMedian, self.redHiCut, self.redScale, redSigma
+            print 'Green', self.greenMedian, self.greenHiCut, self.greenScale, greenSigma
+            print 'Blue', self.blueMedian, self.blueHiCut, self.blueScale, blueSigma
         
-        #redMult = 255.0 / math.asinh(self.redHiCut / self.sigma)
-        #greenMult = 255.0 / math.asinh(self.greenHiCut / self.sigma)
-        #blueMult = 255.0 / math.asinh(self.blueHiCut / self.sigma)
         redMult = 255.0 / math.asinh(self.redHiCut * redSigma)
         greenMult = 255.0 / math.asinh(self.greenHiCut * greenSigma)
         blueMult = 255.0 / math.asinh(self.blueHiCut * blueSigma)
@@ -123,16 +105,9 @@ class ImageBuilder:
                 if math.isnan(blue):
                     blue = 0
                 if red > 0 or green > 0 or blue > 0:
-                    #red = red * self.redScale
-                    #green = green * self.greenScale
-                    #blue = blue * self.blueScale
-                    
                     red = math.asinh(red * redSigma) * redMult
                     green = math.asinh(green * greenSigma) * greenMult
                     blue = math.asinh(blue * blueSigma) * blueMult
-                    #red = math.asinh(red / self.sigma) * redMult
-                    #green = math.asinh(green / self.sigma) * greenMult
-                    #blue = math.asinh(blue / self.sigma) * blueMult
                     if red < 0:
                         red = 0
                     elif red > 255:
@@ -154,8 +129,9 @@ class ImageBuilder:
                     blueValuerange[blue] = blueValuerange[blue] + 1
                     self.image.putpixel((x,self.width-y-1), (red, green, blue))
         self.image.save(self.imageFileName)
-        #for z in range(0, 256):
-        #    print z, redValuerange[z], greenValuerange[z], blueValuerange[z]
+        if self.debug:
+            for z in range(0, 256):
+                print z, redValuerange[z], greenValuerange[z], blueValuerange[z]
         
 class FitsImage:
     useHighCut = False
@@ -192,10 +168,10 @@ class FitsImage:
         height = hdu.header['NAXIS2']
 
         # Create Three Colour Images
-        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1), 118, 117, 116, width, height) # i, r, g
-        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2), 117, 116, 124, width, height) # r, g, NUV
-        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3), 280, 116, 124, width, height) # 3.6, g, NUV
-        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4), 283, 117, 124, width, height) # 22, r, NUV
+        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1), 118, 117, 116, width, height, debug) # i, r, g
+        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2), 117, 116, 124, width, height, debug) # r, g, NUV
+        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3), 280, 116, 124, width, height, debug) # 3.6, g, NUV
+        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4), 283, 117, 124, width, height, debug) # 22, r, NUV
         images = [image1, image2, image3, image4]
         
         file = 0
