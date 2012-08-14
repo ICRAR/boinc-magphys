@@ -3,7 +3,160 @@ from PIL import Image
 import math
 import os, hashlib
 from database.database_support import Galaxy, Area, AreaUser
+import numpy
 
+class ImageBuilder:
+    """
+    This class scales each colour such that the median is centered on 1, and them applies the
+    asinh() function to the value.  The hiCut is set to truncate the top 200 valuies.
+    """
+    imageFileName = ""
+    image = None
+    redFilter = 0
+    greenFilter = 0
+    blueFilter = 0
+    redData = None
+    blueData = None
+    greenData = None
+    #redScale = 1
+    #blueScale = 1
+    #greenScale = 1
+    width = 0
+    height = 0
+    blackRGB = (0, 0, 0)
+    
+    redHiCut = math.pi/2
+    redMedian = 0
+    greenHiCut = math.pi/2
+    greenMedian = 0
+    blueHiCut = math.pi/2
+    blueMedian = 0
+    
+    def __init__(self, imageFileName, redFilter, greenFilter, blueFilter, width, height):
+        self.imageFileName = imageFileName
+        self.redFilter = redFilter
+        self.greenFilter = greenFilter
+        self.blueFilter = blueFilter
+        self.width = width
+        self.height = height
+        self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
+        
+        #self.redScale = filterScale[self.redFilter]
+        #self.greenScale = filterScale[self.greenFilter]
+        #self.blueScale = filterScale[self.blueFilter]
+        
+    def setData(self, filter, data):
+        values = []
+        for x in range(0, self.width-1):
+            for y in range(0, self.height-1):
+                value = data[y, x]
+                if not math.isnan(value) and value >= 0:
+                    values.append(value)
+        
+        values.sort()
+        topValue = values[len(values)-200]
+        medianvalue = values[int(len(values)/2)]
+                
+        if self.redFilter == filter:
+            self.redData = numpy.copy(data)
+            self.redHiCut = topValue
+            self.redMedian = medianvalue
+        elif self.greenFilter == filter:
+            self.greenData = numpy.copy(data)
+            self.greenHiCut = topValue
+            self.greenMedian = medianvalue
+        elif self.blueFilter == filter:
+            self.blueData = numpy.copy(data)
+            self.blueHiCut = topValue
+            self.blueMedian = medianvalue
+            
+    def isValid(self):
+        if self.redData == None or self.greenData == None or self.blueData == None:
+            return False
+        else:
+            return True
+            
+    def saveImage(self, imageDirName, imagePrefixName):
+        #maxMedian = self.redMedian
+        #if self.greenMedian > maxMedian:
+        #    maxMedian = self.greenMedian
+        #if self.blueMedian > maxMedian:
+        #    maxMedian = self.blueMedian
+        #self.redScale = maxMedian/self.redMedian
+        #self.greenScale = maxMedian/self.greenMedian
+        #self.blueScale = maxMedian/self.blueMedian
+        #self.sigma = 0.0001
+        #mult = 255.0 / math.asinh(self.hiCut / self.sigma)
+        
+        centre = 1
+        redSigma = centre / self.redMedian
+        greenSigma = centre / self.greenMedian
+        blueSigma = centre / self.blueMedian
+        #print 'Red', self.redMedian, self.redHiCut, self.redScale, redSigma
+        #print 'Green', self.greenMedian, self.greenHiCut, self.greenScale, greenSigma
+        #print 'Blue', self.blueMedian, self.blueHiCut, self.blueScale, blueSigma
+        
+        #redMult = 255.0 / math.asinh(self.redHiCut / self.sigma)
+        #greenMult = 255.0 / math.asinh(self.greenHiCut / self.sigma)
+        #blueMult = 255.0 / math.asinh(self.blueHiCut / self.sigma)
+        redMult = 255.0 / math.asinh(self.redHiCut * redSigma)
+        greenMult = 255.0 / math.asinh(self.greenHiCut * greenSigma)
+        blueMult = 255.0 / math.asinh(self.blueHiCut * blueSigma)
+        #print 'HiCut', self.hiCut, 'Multiplier', mult, self.redScale, self.greenScale, self.blueScale, self.redMedian/self.sigma, self.greenMedian/self.sigma, self.blueMedian/self.sigma
+        redValuerange = []
+        greenValuerange = []
+        blueValuerange = []
+        for z in range(0, 256):
+            redValuerange.append(0)
+            greenValuerange.append(0)
+            blueValuerange.append(0)
+                
+        for x in range(0, self.width-1):
+            for y in range(0, self.height-1):
+                red = self.redData[y,x]
+                green = self.greenData[y,x]
+                blue = self.blueData[y,x]
+                if math.isnan(red):
+                    red = 0
+                if math.isnan(green):
+                    green = 0
+                if math.isnan(blue):
+                    blue = 0
+                if red > 0 or green > 0 or blue > 0:
+                    #red = red * self.redScale
+                    #green = green * self.greenScale
+                    #blue = blue * self.blueScale
+                    
+                    red = math.asinh(red * redSigma) * redMult
+                    green = math.asinh(green * greenSigma) * greenMult
+                    blue = math.asinh(blue * blueSigma) * blueMult
+                    #red = math.asinh(red / self.sigma) * redMult
+                    #green = math.asinh(green / self.sigma) * greenMult
+                    #blue = math.asinh(blue / self.sigma) * blueMult
+                    if red < 0:
+                        red = 0
+                    elif red > 255:
+                        red = 255
+                    if green < 0:
+                        green = 0
+                    elif green > 255:
+                        green = 255
+                    if blue < 0:
+                        blue = 0
+                    elif blue > 255:
+                        blue = 255
+                    red = int(red)
+                    green = int(green)
+                    blue = int(blue)
+                    
+                    redValuerange[red] = redValuerange[red] + 1
+                    greenValuerange[green] = greenValuerange[green] + 1
+                    blueValuerange[blue] = blueValuerange[blue] + 1
+                    self.image.putpixel((x,self.width-y-1), (red, green, blue))
+        self.image.save(self.imageFileName)
+        #for z in range(0, 256):
+        #    print z, redValuerange[z], greenValuerange[z], blueValuerange[z]
+        
 class FitsImage:
     useHighCut = False
     includeHash = True
@@ -11,11 +164,71 @@ class FitsImage:
     
     def __init__(self):
         pass
+    
+    def buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug):
+        """
+        Build Three Colour Images using the asinh() function.
+        """
+        if imageDirName[-1] != "/":
+            imageDirName = imageDirName + "/"
+        if os.path.isfile(imageDirName):
+            print 'Directory ', imageDirName , 'exists'
+            return 1
+        elif os.path.isdir(imageDirName):
+            pass
+        else:
+            os.mkdir(imageDirName)
+
+        hdulist = pyfits.open(fitsFileName, memmap=True)
+        if debug:
+            hdulist.info()
+
+        blackRGB = (0, 0, 0)
+        black = (0)
+        white = (255)
+
+        hdu = hdulist[0]
+        width = hdu.header['NAXIS1']
+        height = hdu.header['NAXIS2']
+
+        # Create Three Colour Images
+        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1), 118, 117, 116, width, height) # i, r, g
+        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2), 117, 116, 124, width, height) # r, g, NUV
+        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3), 280, 116, 124, width, height) # 3.6, g, NUV
+        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4), 283, 117, 124, width, height) # 22, r, NUV
+        images = [image1, image2, image3, image4]
+        
+        file = 0
+        for hdu in hdulist:
+            file = file + 1
+            if debug:
+                print hdu,
+                print file
+
+            width = hdu.header['NAXIS1']
+            height = hdu.header['NAXIS2']
+            filter = hdu.header['MAGPHYSI']
+            for image in images:
+                image.setData(filter, hdu.data)
+        
+        for image in images:
+            if image.isValid():
+                image.saveImage(imageDirName, imagePrefixName)
+            else:
+                print 'not valid'
+
+        hdulist.close()
 
     def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
+        
+        if method == "asinh":
+            # Use the new asinh algorithm.
+            self.buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug)
+            return;
+        
         if imageDirName[-1] != "/":
             imageDirName = imageDirName + "/"
         if os.path.isfile(imageDirName):
