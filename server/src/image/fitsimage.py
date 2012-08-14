@@ -595,9 +595,9 @@ class FitsImage:
         px = image.getpixel((x,y))
         #image.putpixel((x,y), (255,255,255))
         #image.putpixel((x,y), (px[0], px[1], px[2], 50))
-        r = int(px[0] + ((255 - px[0]) * 0.4))
-        g = int(px[1] + ((255 - px[1]) * 0.4))
-        b = int(px[2] + ((255 - px[2]) * 0.4))
+        r = int(px[0] + ((255 - px[0]) * 0.5))
+        g = int(px[1] + ((255 - px[1]) * 0.5))
+        b = int(px[2] + ((255 - px[2]) * 0.5))
         #r = px[0] * 2
         #g = px[1] * 2
         #b = px[2] * 2
@@ -607,12 +607,12 @@ class FitsImage:
             g = 255
         if b > 255:
             b = 255
-        if r < 60:
-            r = 60
-        if g < 60:
-            g = 60
-        if b < 60:
-            b = 60
+        if r < 85:
+            r = 85
+        if g < 85:
+            g = 85
+        if b < 85:
+            b = 85
         image.putpixel((x,y), (r, g, b))
 
     def userGalaxies(self, session, userid):
