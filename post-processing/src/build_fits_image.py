@@ -1,8 +1,9 @@
 """
 Build a fits image from the data in the database
 """
+import argparse
 import logging
-import sys
+import os
 from datetime import datetime
 import numpy
 import pyfits
@@ -14,26 +15,35 @@ from database.database_support import Galaxy, PixelResult, FitsHeader
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-if len(sys.argv) != 2 and len(sys.argv) != 3:
-    print("usage:   %(me)s output_dir [galaxy_name]" % {'me':sys.argv[0]})
-    print("example: %(me)s /tmp NGC628" % {'me':sys.argv[0]})
-    sys.exit(-10)
+class writeable_dir(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if len(values) != 1:
+            raise argparse.ArgumentTypeError("writeable_dir:{0} is not a valid path".format(values))
+        prospective_dir=values[0]
+        if not os.path.isdir(prospective_dir):
+            raise argparse.ArgumentTypeError("writeable_dir:{0} is not a valid path".format(prospective_dir))
+        if os.access(prospective_dir, os.W_OK):
+            setattr(namespace,self.dest,prospective_dir)
+        else:
+            raise argparse.ArgumentTypeError("writeable_dir:{0} is not a writeable dir".format(prospective_dir))
 
-output_directory = sys.argv[1]
+parser = argparse.ArgumentParser('Build images from the POGS results')
+parser.add_argument('-o','--output_dir', action=writeable_dir, nargs=1, help='where the images will be written')
+parser.add_argument('names', nargs='*', help='optional the name of tha galaxies to produce')
+args = vars(parser.parse_args())
 
-if len(sys.argv) == 3:
-    LOG.debug('Building FITS files for the galaxy %s\n', sys.argv[2])
-else:
-    LOG.debug('Building FITS files for all the galaxies\n')
+output_directory = args['output_dir']
 
 # First check the galaxy exists in the database
 engine = create_engine(db_login)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-if len(sys.argv) == 3:
-    query = session.query(Galaxy).filter(Galaxy.name == sys.argv[2])
+if len(args['names']) > 0:
+    LOG.info('Building FITS files for the galaxies {0}\n'.format(args['names']))
+    query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
 else:
+    LOG.info('Building FITS files for all the galaxies\n')
     query = session.query(Galaxy)
 
 galaxies = query.all()
@@ -57,7 +67,7 @@ IMAGE_NAMES = [ 'fmu_sfh',
               ]
 
 for galaxy in galaxies:
-    LOG.debug('Working on galaxy %s\n', galaxy.name)
+    LOG.info('Working on galaxy %s\n', galaxy.name)
     array = numpy.empty((galaxy.dimension_x, galaxy.dimension_y, len(IMAGE_NAMES)), dtype=numpy.float)
     array.fill(numpy.NaN)
 

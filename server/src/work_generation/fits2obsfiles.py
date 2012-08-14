@@ -34,6 +34,8 @@ status = {'calls__get_pixels': 0,
 
 # This value was suggested by David Thilker on 2012-06-05 as a starting point.
 MIN_LIVE_CHANNELS_PER_PIXEL = 9
+
+
 INPUT_FILE = sys.argv[1]
 OUTPUT_DIR = sys.argv[2]
 IMAGE_DIR = sys.argv[3]
@@ -276,9 +278,9 @@ store_fits_header(HDULIST, galaxy.galaxy_id)
 LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
 break_up_galaxy(galaxy)
 
-LOG.info("\nRun status")
+LOG.info("\nRun status\n")
 for key in sorted(status.keys()):
-    print("%(key)30s %(val)s" % { 'key':key, 'val':status[key] })
+    LOG.info("%(key)30s %(val)s" % { 'key':key, 'val':status[key] })
 
 if rollback:
     session.rollback()
