@@ -45,12 +45,24 @@ class ImageBuilder:
         for x in range(0, self.width-1):
             for y in range(0, self.height-1):
                 value = data[y, x]
-                if not math.isnan(value) and value >= 0:
+                if not math.isnan(value) and value > 0:
                     values.append(value)
         
         values.sort()
-        topValue = values[len(values)-200]
-        medianvalue = values[int(len(values)/2)]
+        if len(values) > 2000:
+            topValue = values[len(values)-200]
+        elif len(values) > 1000:
+            topValue = values[len(values)-100]
+        elif len(values) > 0:
+            topValue = values[len(values)-1]
+        else:
+            topValue = 1
+        if len(values) > 1:
+            medianvalue = values[int(len(values)/2)]
+        elif len(values) > 0:
+            medianvalue = values[0]
+        else:
+            medianvalue = 1
                 
         if self.redFilter == filter:
             self.redData = numpy.copy(data)

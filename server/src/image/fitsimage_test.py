@@ -14,8 +14,9 @@ if len(sys.argv) > 1:
     fitsName = sys.argv[1]
 if len(sys.argv) > 2:
     method = sys.argv[2]
-    
-magphysDir = "/Users/rob/magphys/"
+
+print fitsName
+magphysDir = "/Users/rob/magphys/POGStest_v2/"
 fitsFileName = magphysDir + fitsName + ".fits"
 imageDirName = magphysDir + fitsName
 imagePrefixName = fitsName
