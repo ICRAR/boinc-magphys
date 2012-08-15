@@ -49,10 +49,9 @@ class ImageBuilder:
                     values.append(value)
         
         values.sort()
-        if len(values) > 2000:
-            topValue = values[len(values)-200]
-        elif len(values) > 1000:
-            topValue = values[len(values)-100]
+        if len(values) > 1000:
+            topCount = int(len(values)*0.005)
+            topValue = values[len(values)-topCount]
         elif len(values) > 0:
             topValue = values[len(values)-1]
         else:
