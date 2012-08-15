@@ -16,6 +16,7 @@ class Galaxy(Base):
     dimension_y = Column(Integer)
     dimension_z = Column(Integer)
     redshift = Column(Float)
+    create_time = Column(TIMESTAMP)
 
     def __repr__(self):
         return 'galaxy: {galaxy_id : {0}, name : {1}}'.format(self.galaxy_id, self.name)

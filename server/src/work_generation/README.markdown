@@ -1,8 +1,8 @@
 # Generation of work units: overview
 
-*fits2pixels.py* takes a FITS file as input and cuts it up into squares which are inserted into a database.
-This database is then queried by *pixels2obsfiles.py* which creates a specified number of observations files (one file per square).
-The third script, which will move observations files into the BOINC project's download hierarchy and call **create_work**, is not yet written.
+*fits2obs.py* takes a FITS file as input and cuts it up into squares which are inserted into a database.
+This database is then queried to create a specified number of observations files (one file per square).
+The second script, which will move observations files into the BOINC project's download hierarchy and call **create_work**, is not yet written.
 
 # Prerequisites
 
@@ -31,7 +31,7 @@ The two latter scripts could perhaps be merged into one, eventually.
 
     $ cd /path/to/this/directory
     $ mysql -u root < create_database.sql # DROPS THE magphys SCHEMA and recreates it
-    $ python2.7 fits2obsfiles.py /home/ec2-user/galaxies/POGS_NGC628_v3.fits /home/ec2-user/f2wu /home/ec2-user/galaxyImages NGC628
+    $ python2.7 fits2obsfiles.py /home/ec2-user/galaxies/POGS_NGC628_v3.fits 0.001 /home/ec2-user/f2wu /home/ec2-user/galaxyImages NGC628
     $ python2.7 obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/pogs 10
 
 Note that *obsfiles2wu* will move the observations files into the BOINC project's download hierarchy.

@@ -1,26 +1,31 @@
 """
 Convert observations into WU
 """
+import argparse
 from collections import defaultdict
 import json
 import logging
 import sys
 import os
 import subprocess
+from utils.readable_dir import ReadableDir
+from utils.writeable_dir import WriteableDir
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-if len(sys.argv) != 3 and len(sys.argv) != 4:
-    print "usage:   %(me)s observations_directory boinc_project_root [files_to_process]" % {'me':sys.argv[0]}
-    print "example: %(me)s /home/ec2-user/f2wu /home/ec2-user/projects/pogs 100" % {'me':sys.argv[0]}
-    sys.exit(-10)
+parser = argparse.ArgumentParser()
+parser.add_argument('observations_directory', action=ReadableDir, nargs=1, help='where observation files will be read from')
+parser.add_argument('boinc_project_root', action=WriteableDir, nargs=1, help='where the WU will be written too')
+parser.add_argument('files_to_process', help='the number of files to process')
+parser.add_argument('-p', '--priority', help='the priority of the WUs')
+args = vars(parser.parse_args())
 
 APP_NAME = "magphys_wrapper"
-FILE_DIR = sys.argv[1]
-BOINC_PROJECT_ROOT = sys.argv[2]
-if len(sys.argv) == 4:
-    FILES_TO_PROCESS = sys.argv[3]
+FILE_DIR = args['observations_directory']
+BOINC_PROJECT_ROOT = args['boinc_project_root']
+if args['files_to_process'] is not None:
+    FILES_TO_PROCESS = args['files_to_process']
 else:
     FILES_TO_PROCESS = sys.maxint
 
@@ -105,13 +110,16 @@ for key, value in file_groups.iteritems():
             "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
             "--additional_xml", "<credit>%(credit)d</credit>" % {'credit':pixels_in_file*COBBLESTONE_SCALING_FACTOR},
             "--opaque",   str(area_id)
-        #    "--priority", "10"
         ]
         args_files = [file_name, file_name_job]
         cmd_create_work = [
             BIN_PATH + "/create_work"
         ]
         cmd_create_work.extend(args_params)
+
+        if args['priority'] is not None:
+            cmd_create_work.extend(["--priority", args['priority']])
+
         cmd_create_work.extend(args_files)
 
         # Copy file into BOINC's download hierarchy

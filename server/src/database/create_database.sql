@@ -8,10 +8,11 @@ CREATE TABLE galaxy (
   dimension_x INTEGER UNSIGNED NOT NULL,
   dimension_y INTEGER UNSIGNED NOT NULL,
   dimension_z INTEGER UNSIGNED NOT NULL,
-  redshift    FLOAT NOT NULL
+  redshift    FLOAT NOT NULL,
+  create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE UNIQUE INDEX galaxy_name_ix ON galaxy(name);
+CREATE INDEX galaxy_name_ix ON galaxy(name);
 
 CREATE TABLE fits_header (
   fitsheader_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,

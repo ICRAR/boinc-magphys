@@ -2,27 +2,35 @@
 Create Observation files from the fits
 """
 from __future__ import print_function
+import argparse
 import json
 
 import logging
 import math
 import re
+import datetime
 import pyfits
 import sys
 from config import db_login
 from database.database_support import Galaxy, Area, PixelResult, FitsHeader
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from utils.writeable_dir import WriteableDir
 from work_generation import FILTER_BANDS
 from image.fitsimage import FitsImage
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-if len(sys.argv) != 4 and len(sys.argv) != 5:
-    print("usage:   %(me)s FITS_file output_directory image_directory [galaxy_name]" % {'me':sys.argv[0]})
-    print("example: %(me)s /home/ec2-user/POGS_NGC628.fits /home/ec2-user/f2wu /home/ec2-user/f2img NGC628" % {'me':sys.argv[0]})
-    sys.exit(-10)
+parser = argparse.ArgumentParser()
+parser.add_argument('FITS_file', type=file, nargs=1, help='the input FITS file containing the galaxy')
+parser.add_argument('redshift', type=float, nargs=1, help='the redshift of the galaxy')
+parser.add_argument('output_directory', action=WriteableDir, nargs=1, help='where observation files will be written to')
+parser.add_argument('image_directory', action=WriteableDir, nargs=1, help='where the images will be written too')
+parser.add_argument('galaxy_name', help='the name of the galaxy')
+parser.add_argument('-rh', '--row_height', type=int, default=10, help='the row height')
+parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=30, help='the minimum number of pixels in the file')
+args = vars(parser.parse_args())
 
 status = {'calls__get_pixels': 0,
           'get_pixels_get_attempts': 0,
@@ -35,12 +43,14 @@ status = {'calls__get_pixels': 0,
 # This value was suggested by David Thilker on 2012-06-05 as a starting point.
 MIN_LIVE_CHANNELS_PER_PIXEL = 9
 
-
-INPUT_FILE = sys.argv[1]
-OUTPUT_DIR = sys.argv[2]
-IMAGE_DIR = sys.argv[3]
+REDSHIFT = args['redshift']
+INPUT_FILE = args['FITS_file']
+OUTPUT_DIR = args['output_directory']
+IMAGE_DIR = args['image_directory']
+ROW_HEIGHT = int(args['row_height'])
+MIN_PIXELS_PER_FILE = args['min_pixels_per_file']
+GALAXY_NAME = args['galaxy_name']
 SIGMA = 0.1
-ROW_HEIGHT = 10
 
 HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
                    re.compile('CROTA[0-9]+'),
@@ -55,7 +65,6 @@ HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
 
 HDULIST = pyfits.open(INPUT_FILE, memmap=True)
 LAYER_COUNT = len(HDULIST)
-HARD_CODED_REDSHIFT = 0.0
 
 START_X = 0
 START_Y = 0
@@ -194,7 +203,7 @@ def get_pixels(pix_x, pix_y):
                 result.append(Pixel(x, y, pixels))
 
         max_x = x
-        if len(result) > 30:
+        if len(result) > MIN_PIXELS_PER_FILE:
             break
 
         x += 1
@@ -253,8 +262,8 @@ def break_up_galaxy(galaxy):
 #Here, it might be useful to assert that there are 12 input layers/channels/HDUs
 #print "List length: %(#)d" % {'#': len(HDULIST)}
 
-if len(sys.argv) == 5:
-    object_name = sys.argv[4]
+if GALAXY_NAME is not None:
+    object_name = GALAXY_NAME
 else:
     object_name = HDULIST[0].header['OBJECT']
 LOG.info("Work units for: %(object)s" % { "object":object_name } )
@@ -265,7 +274,8 @@ galaxy.name = object_name
 galaxy.dimension_x = END_X
 galaxy.dimension_y = END_Y
 galaxy.dimension_z = LAYER_COUNT
-galaxy.redshift = HARD_CODED_REDSHIFT
+galaxy.redshift = REDSHIFT
+galaxy.create_time = datetime.datetime
 session.add(galaxy)
 
 # Flush to the DB so we can get the id
