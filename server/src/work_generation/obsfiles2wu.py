@@ -18,8 +18,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 parser = argparse.ArgumentParser()
 parser.add_argument('observations_directory', action=ReadableDir, nargs=1, help='where observation files will be read from')
 parser.add_argument('boinc_project_root', action=WriteableDir, nargs=1, help='where the WU will be written too')
-parser.add_argument('files_to_process', help='the number of files to process')
-parser.add_argument('-p', '--priority', help='the priority of the WUs')
+parser.add_argument('-fp', '--files_to_process', type=int, help='the number of files to process')
+parser.add_argument('-p', '--priority', type=int, help='the priority of the WUs')
 args = vars(parser.parse_args())
 
 APP_NAME = "magphys_wrapper"
