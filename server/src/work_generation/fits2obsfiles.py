@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('FITS_file', type=file, nargs=1, help='the input FITS file containing the galaxy')
+parser.add_argument('FITS_file', nargs=1, help='the input FITS file containing the galaxy')
 parser.add_argument('redshift', type=float, nargs=1, help='the redshift of the galaxy')
 parser.add_argument('output_directory', action=WriteableDir, nargs=1, help='where observation files will be written to')
 parser.add_argument('image_directory', action=WriteableDir, nargs=1, help='where the images will be written too')
@@ -45,7 +45,7 @@ status = {'calls__get_pixels': 0,
 MIN_LIVE_CHANNELS_PER_PIXEL = 9
 
 REDSHIFT = args['redshift'][0]
-INPUT_FILE = args['FITS_file'][0]
+INPUT_FILE = args['FITS_file']
 OUTPUT_DIR = args['output_directory']
 IMAGE_DIR = args['image_directory']
 ROW_HEIGHT = int(args['row_height'])
