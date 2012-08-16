@@ -45,7 +45,7 @@ status = {'calls__get_pixels': 0,
 MIN_LIVE_CHANNELS_PER_PIXEL = 9
 
 REDSHIFT = args['redshift'][0]
-INPUT_FILE = args['FITS_file']
+INPUT_FILE = args['FITS_file'][0]
 OUTPUT_DIR = args['output_directory']
 IMAGE_DIR = args['image_directory']
 ROW_HEIGHT = int(args['row_height'])
