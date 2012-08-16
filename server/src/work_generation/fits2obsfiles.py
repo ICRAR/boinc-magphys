@@ -276,7 +276,7 @@ galaxy.dimension_x = END_X
 galaxy.dimension_y = END_Y
 galaxy.dimension_z = LAYER_COUNT
 galaxy.redshift = REDSHIFT
-galaxy.create_time = datetime.datetime
+galaxy.create_time = datetime.datetime.now()
 session.add(galaxy)
 
 # Flush to the DB so we can get the id
