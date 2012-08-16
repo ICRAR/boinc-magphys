@@ -1,3 +1,4 @@
+#! /usr/bin/env python2.7
 """
 Build a fits image from the data in the database
 """

@@ -1,3 +1,4 @@
+#! /usr/bin/env python2.7
 """
 Create Observation files from the fits
 """

@@ -1,0 +1,249 @@
+<?xml version="1.0" ?>
+<boinc>
+  <config>
+    <upload_dir>
+      /home/ec2-user/projects/pogs/upload
+    </upload_dir>
+    <send_result_abort>
+      1
+    </send_result_abort>
+    <long_name>
+      pogs
+    </long_name>
+    <cgi_url>
+      http://ec2-23-23-126-96.compute-1.amazonaws.com/pogs_cgi/
+    </cgi_url>
+    <sched_debug_level>
+      3
+    </sched_debug_level>
+    <upload_url>
+      http://ec2-23-23-126-96.compute-1.amazonaws.com/pogs_cgi/file_upload_handler
+    </upload_url>
+    <disable_account_creation>
+      0
+    </disable_account_creation>
+    <uldl_dir_fanout>
+      1024
+    </uldl_dir_fanout>
+    <download_url>
+      http://ec2-23-23-126-96.compute-1.amazonaws.com/pogs/download
+    </download_url>
+    <db_user>
+      theskynet
+    </db_user>
+    <log_dir>
+      /home/ec2-user/projects/pogs/log_ip-10-245-226-172
+    </log_dir>
+    <app_dir>
+      /home/ec2-user/projects/pogs/apps
+    </app_dir>
+    <download_dir>
+      /home/ec2-user/projects/pogs/download
+    </download_dir>
+    <fuh_debug_level>
+      3
+    </fuh_debug_level>
+    <master_url>
+      http://ec2-23-23-126-96.compute-1.amazonaws.com/pogs/
+    </master_url>
+    <host>
+      ip-10-98-134-10
+    </host>
+    <db_name>
+      pogs
+    </db_name>
+    <shmem_key>
+      0x11112525
+    </shmem_key>
+    <show_results>
+      1
+    </show_results>
+    <key_dir>
+      /home/ec2-user/projects/pogs/keys/
+    </key_dir>
+    <dont_generate_upload_certificates>
+      1
+    </dont_generate_upload_certificates>
+    <ignore_upload_certificates>
+      1
+    </ignore_upload_certificates>
+    <db_passwd>
+      n8i5aq2ZU0Gh1dPP
+    </db_passwd>
+    <min_sendwork_interval>
+      6
+    </min_sendwork_interval>
+    <db_host>
+      theskynet-boinc.cxulwz0ochjg.us-east-1.rds.amazonaws.com
+    </db_host>
+    <daily_result_quota>
+      500
+    </daily_result_quota>
+    <max_wus_to_send>
+      10
+    </max_wus_to_send>
+  <one_result_per_user_per_wu/>
+  <one_result_per_host_per_wu/>
+  <prefer_primary_platform>1</prefer_primary_platform>
+  <debug_assignment/>
+  <debug_version_select/>
+  <debug_quota/>
+  <delete_delay_hours>48</delete_delay_hours>
+  </config>
+  <tasks>
+    <task>
+      <cmd>
+        antique_file_deleter -d 2
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        antique_file_deleter.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        db_dump -d 2 --dump_spec ../db_dump_spec.xml
+      </cmd>
+      <period>
+        12 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        db_dump.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./update_uotd.php
+      </cmd>
+      <period>
+        1 days
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_uotd.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./update_forum_activities.php
+      </cmd>
+      <period>
+        1 hour
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_forum_activities.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        update_stats
+      </cmd>
+      <period>
+        12 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_stats.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./update_profile_pages.php
+      </cmd>
+      <period>
+        48 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_profile_pages.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./team_import.php
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        1
+      </disabled>
+      <output>
+        team_import.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        run_in_ops ./notify.php
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        1
+      </disabled>
+      <output>
+        notify.out
+      </output>
+    </task>
+    <task>
+      <cmd>
+        /home/ec2-user/boinc-magphys/server/src/credit/assign_credit.py -app magphys_wrapper
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        assign_credit.out
+      </output>
+    </task>
+  </tasks>
+  <daemons>
+    <daemon>
+      <cmd>
+        feeder -d 3 --priority_order
+      </cmd>
+    </daemon>
+    <daemon>
+      <cmd>
+        transitioner -d 3
+      </cmd>
+    </daemon>
+    <daemon>
+      <cmd>
+        file_deleter -d 2
+      </cmd>
+    </daemon>
+    <daemon>
+      <cmd>
+        /home/ec2-user/boinc-magphys/server/src/magphys_validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job
+      </cmd>
+    </daemon>
+    <daemon>
+      <cmd>
+        /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper
+      </cmd>
+    </daemon>
+  </daemons>
+</boinc>
+

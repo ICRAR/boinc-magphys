@@ -1,3 +1,4 @@
+#! /usr/bin/env python2.7
 """
 Build a PNG image from the data in the database
 """

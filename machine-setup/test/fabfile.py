@@ -267,7 +267,135 @@ def single_install(with_db):
 
     # As this goes through AWK we need to be a bit careful
     run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
-    run('''awk '/<daemons>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "'''
+    run('''awk '/<tasks>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "'''
+        '  <tasks>\\n'
+        '    <task>\\n'
+        '      <cmd>\\n'
+        '        antique_file_deleter -d 2\\n'
+        '      </cmd>\\n'
+        '      <period>\\n'
+        '        24 hours\\n'
+        '      </period>\\n'
+        '      <disabled>\\n'
+        '        0\\n'
+        '      </disabled>\\n'
+        '      <output>\\n'
+        '        antique_file_deleter.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
+        '    <task>\\n'
+        '      <cmd>\\n'
+        '        db_dump -d 2 --dump_spec ../db_dump_spec.xml\\n'
+        '      </cmd>\\n'
+        '      <period>\\n'
+        '        12 hours\\n'
+        '      </period>\\n'
+        '      <disabled>\\n'
+        '        0\\n'
+        '      </disabled>\\n'
+        '      <output>\\n'
+        '        db_dump.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
+        '    <task>\\n'
+        '      <cmd>\\n'
+        '        run_in_ops ./update_uotd.php\\n'
+        '      </cmd>\\n'
+        '      <period>\\n'
+        '        1 days\\n'
+        '      </period>\\n'
+        '      <disabled>\\n'
+        '        0\\n'
+        '      </disabled>\\n'
+        '      <output>\\n'
+        '        update_uotd.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
+        '    <task>\\n'
+        '      <cmd>\\n'
+        '        run_in_ops ./update_forum_activities.php\\n'
+        '      </cmd>\\n'
+        '      <period>\\n'
+        '        1 hour\\n'
+        '      </period>\\n'
+        '      <disabled>\\n'
+        '        0\\n'
+        '      </disabled>\\n'
+        '      <output>\\n'
+        '        update_forum_activities.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
+        '    <task>\\n'
+        '      <cmd>\\n'
+        '        update_stats\\n'
+        '      </cmd>\\n'
+        '      <period>\\n'
+        '        12 hours\\n'
+        '      </period>\\n'
+        '      <disabled>\\n'
+        '        0\\n'
+        '      </disabled>\\n'
+        '      <output>\\n'
+        '        update_stats.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
+        '    <task>\\n'
+        '      <cmd>\\n'
+        '        run_in_ops ./update_profile_pages.php\\n'
+        '      </cmd>\\n'
+        '      <period>\\n'
+        '        48 hours\\n'
+        '      </period>\\n'
+        '      <disabled>\\n'
+        '        0\\n'
+        '      </disabled>\\n'
+        '      <output>\\n'
+        '        update_profile_pages.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
+        '    <task>\\n'
+        '      <cmd>\\n'
+        '        run_in_ops ./team_import.php\\n'
+        '      </cmd>\\n'
+        '      <period>\\n'
+        '        24 hours\\n'
+        '      </period>\\n'
+        '      <disabled>\\n'
+        '        1\\n'
+        '      </disabled>\\n'
+        '      <output>\\n'
+        '        team_import.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
+        '    <task>\\n'
+        '      <cmd>\\n'
+        '        run_in_ops ./notify.php\\n'
+        '      </cmd>\\n'
+        '      <period>\\n'
+        '        24 hours\\n'
+        '      </period>\\n'
+        '      <disabled>\\n'
+        '        1\\n'
+        '      </disabled>\\n'
+        '      <output>\\n'
+        '        notify.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
+        '    <task>\\n'
+        '      <cmd>\\n'
+        '        /home/ec2-user/boinc-magphys/server/src/credit/assign_credit.py -app magphys_wrapper\\n'
+        '      </cmd>\\n'
+        '      <period>\\n'
+        '        24 hours\\n'
+        '      </period>\\n'
+        '      <disabled>\\n'
+        '        0\\n'
+        '      </disabled>\\n'
+        '      <output>\\n'
+        '        assign_credit.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
+        '  </tasks>\\n'
         '  <daemons>\\n'
         '    <daemon>\\n'
         '      <cmd>\\n'
@@ -291,7 +419,7 @@ def single_install(with_db):
         '    </daemon>\\n'
         '    <daemon>\\n'
         '      <cmd>\\n'
-        '        python2.7 /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper\\n'
+        '        /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper\\n'
         '      </cmd>\\n'
         '    </daemon>\\n'
         '''  </daemons>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml'''% { 'name' : env.project_name})
@@ -301,6 +429,12 @@ def single_install(with_db):
         '      <prefer_primary_platform>1</prefer_primary_platform>\\n'
         '      <one_result_per_user_per_wu/>\\n'
         '''      <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})
+
+    # Copy the config files
+    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
+    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/index.php /home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name))
+    run('mkdir -p /home/ec2-user/projects/{0}/html/stats_archive'.format(env.project_name))
+    run('mkdir -p /home/ec2-user/projects/{0}/html/stats_tmp'.format(env.project_name))
 
     comment('/home/ec2-user/projects/{0}/html/ops/create_forums.php'.format(env.project_name), '^die', char='// ')
 
@@ -348,9 +482,19 @@ def single_install(with_db):
     run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
     run('crontab /tmp/crontab.txt')
 
+    # Mark the python scripts as executable
+    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py')
+    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/work_generation/fits2obsfiles.py')
+    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/work_generation/obsfiles2wu.py')
+    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/credit/assign_credit.py')
+    run('chmod oug+x /home/ec2-user/boinc-magphys/post-processing/src/build_fits_image.py')
+    run('chmod oug+x /home/ec2-user/boinc-magphys/post-processing/src/build_png_image.py')
+
     # Setup the ops area password
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
+
+
 
 def build_mod_wsgi():
     run('mkdir -p /home/ec2-user/build')
@@ -396,9 +540,9 @@ def test_env():
     if 'project_name' not in env:
         prompt('BOINC project name: ', 'project_name')
     if 'gmail_account' not in env:
-        prompt('GMail Account', 'gmail_account')
+        prompt('GMail Account:', 'gmail_account')
     if 'gmail_password' not in env:
-        prompt('GMail Password', 'gmail_password')
+        prompt('GMail Password:', 'gmail_password')
 
     # Create the instance in AWS
     host_names = create_instance([env.instance_name], use_elastic_ip, [public_ip])

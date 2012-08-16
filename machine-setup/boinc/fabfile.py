@@ -55,6 +55,30 @@ def create_version_xml(platform, app_version, directory, exe):
         <gzip/>
     </file>
     <file>
+        <physical_name>infrared_dce08_z0.0100.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>infrared_dce08_z0.0100.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>starformhist_cb07_z0.0100.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>starformhist_cb07_z0.0100.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>infrared_dce08_z0.0200.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>infrared_dce08_z0.0200.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>starformhist_cb07_z0.0200.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>starformhist_cb07_z0.0200.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
         <physical_name>zlibs.dat_{1}</physical_name>
         <copy_file/>
         <logical_name>zlibs.dat</logical_name>
