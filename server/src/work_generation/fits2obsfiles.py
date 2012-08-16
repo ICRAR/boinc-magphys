@@ -30,7 +30,7 @@ parser.add_argument('output_directory', action=WriteableDir, nargs=1, help='wher
 parser.add_argument('image_directory', action=WriteableDir, nargs=1, help='where the images will be written too')
 parser.add_argument('galaxy_name', help='the name of the galaxy')
 parser.add_argument('-rh', '--row_height', type=int, default=10, help='the row height')
-parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=30, help='the minimum number of pixels in the file')
+parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=15, help='the minimum number of pixels in the file')
 args = vars(parser.parse_args())
 
 status = {'calls__get_pixels': 0,
