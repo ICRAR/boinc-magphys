@@ -20,7 +20,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the images will be written')
-parser.add_argument('names', nargs='*', help='optional the name of tha galaxies to produce')
+parser.add_argument('names', nargs='*', help='optional the name of the galaxies to produce')
+parser.add_argument('-all', help='build images for all the galaxies')
 args = vars(parser.parse_args())
 
 #output_directory = args['output_dir']
@@ -34,9 +35,14 @@ session = Session()
 if len(args['names']) > 0:
     LOG.info('Building PNG files for the galaxies {0}\n'.format(args['names']))
     query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
-else:
+elif len(args['all']) > 0:
     LOG.info('Building PNG files for all the galaxies\n')
     query = session.query(Galaxy)
+else:
+    LOG.info('Building PNG files for updated galaxies\n')
+    query = session.query(Galaxy)
+    query = session.query(Galaxy, Area).filter(Area.galaxy_id == Galaxy.galaxy_id)\
+        .filter(Area.update_time >= Galaxy.image_time).all()
 
 galaxies = query.all()
 
@@ -186,7 +192,7 @@ for galaxy in galaxies:
                     green = FIRE_G[value]
                     blue = FIRE_B[value]
                     image.putpixel((width-y-1,x), (red, green, blue))
-        outname = fimage.get_file_path(output_directory, '{0}_{1}.png'.format(galaxy.name, name))
+        outname = fimage.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name))
         image.save(outname)
 
 
