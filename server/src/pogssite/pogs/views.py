@@ -35,6 +35,8 @@ def userGalaxy(request, userid, galaxy_id):
     galaxy_id = int(galaxy_id)
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
     galaxy_name = galaxy.name
+    galaxy_height = galaxy.dimension_x;
+    galaxy_width = galaxy.dimension_y;
     session.close()
     
     t = loader.get_template('pogs/user_images.html')
@@ -42,6 +44,8 @@ def userGalaxy(request, userid, galaxy_id):
         'userid': userid,
         'galaxy_id': galaxy_id,
         'galaxy_name': galaxy_name,
+        'galaxy_width': galaxy_width,
+        'galaxy_height': galaxy_height,
     })
     return HttpResponse(t.render(c))
 
@@ -91,7 +95,7 @@ def userFitsImage(request, userid, galaxy_id, name):
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
 
     image = fitsimage.FitsImage()
-    imageFileName = '{0}_{1}.png'.format(galaxy.name, name);
+    imageFileName = '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name);
     filename = image.get_file_path(imageDirName, imageFileName)
     inImageFileName = image.get_file_path(imageDirName, filename)
     session.close()
