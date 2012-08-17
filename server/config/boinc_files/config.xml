@@ -217,6 +217,20 @@
         assign_credit.out
       </output>
     </task>
+    <task>
+      <cmd>
+        /home/ec2-user/boinc-magphys/post-processing/src/build_png_image.py
+      </cmd>
+      <period>
+        1 hour
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        build_png_image.out
+      </output>
+    </task>
   </tasks>
   <daemons>
     <daemon>
