@@ -2,7 +2,7 @@
 
 import assimilator
 import boinc_path_config
-import gzip, os, sys, traceback
+import gzip, os, sys, traceback, datetime
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
 from assimilator_utils import is_gzip
@@ -230,6 +230,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             self.logDebug("The Area was not found\n")
                         else:
                             self.area.workunit_id = wu.id
+                            self.area.update_time = datetime.datetime.now()
                             useridSet = set()
                             for result in results:
                                 #if result.user:

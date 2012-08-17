@@ -13,22 +13,6 @@ from pogs import PogsSession
 from database import database_support
 import os, io, datetime, tempfile
 
-
-def galaxiesx(request):
-    #Session = sessionmaker()
-    #session = Session(bind=connection)
-    #image = fitsimage.FitsImage()
-    #user_galaxy_list = image.userGalaxies(session, 2);
-    #
-    #t = loader.get_template('pogs/index.html')
-    #c = Context({
-    #    'user_galaxy_list': user_galaxy_list,
-    #})
-    #return HttpResponse(t.render(c))
-
-    user_galaxy_list = Galaxy.objects.all()
-    return render_to_response('pogs/index.html', {'user_galaxy_list': user_galaxy_list})
-
 def userGalaxies(request, userid):
     session = PogsSession()
     image = fitsimage.FitsImage()
@@ -46,10 +30,18 @@ def userGalaxies(request, userid):
     return HttpResponse(t.render(c))
 
 def userGalaxy(request, userid, galaxy_id):
+    session = PogsSession()
+    userid = int(userid)
+    galaxy_id = int(galaxy_id)
+    galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
+    galaxy_name = galaxy.name
+    session.close()
+    
     t = loader.get_template('pogs/user_images.html')
     c = Context({
         'userid': userid,
         'galaxy_id': galaxy_id,
+        'galaxy_name': galaxy_name,
     })
     return HttpResponse(t.render(c))
 

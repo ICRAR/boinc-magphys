@@ -9,10 +9,12 @@ CREATE TABLE galaxy (
   dimension_y INTEGER UNSIGNED NOT NULL,
   dimension_z INTEGER UNSIGNED NOT NULL,
   redshift    FLOAT NOT NULL,
-  create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  image_time  TIMESTAMP,
+  version_number INTEGER UNSIGNED NOT NULL DEFAULT 1
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE INDEX galaxy_name_ix ON galaxy(name);
+CREATE INDEX galaxy_name_ix ON galaxy(name, version_number);
 
 CREATE TABLE fits_header (
   fitsheader_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -30,7 +32,8 @@ CREATE TABLE area (
   top_y        INTEGER UNSIGNED NOT NULL,
   bottom_x     INTEGER UNSIGNED NOT NULL,
   bottom_y     INTEGER UNSIGNED NOT NULL,
-  workunit_id  BIGINT UNSIGNED
+  workunit_id  BIGINT UNSIGNED,
+  update_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 ALTER TABLE area ADD CONSTRAINT area_galaxy_fk FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);

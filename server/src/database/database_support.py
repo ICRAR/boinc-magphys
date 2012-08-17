@@ -17,6 +17,8 @@ class Galaxy(Base):
     dimension_z = Column(Integer)
     redshift = Column(Float)
     create_time = Column(TIMESTAMP)
+    image_time  = Column(TIMESTAMP)
+    version_number = Column(Integer)
 
     def __repr__(self):
         return 'galaxy: {galaxy_id : {0}, name : {1}}'.format(self.galaxy_id, self.name)
@@ -38,7 +40,8 @@ class Area(Base):
     top_y        = Column(Integer)
     bottom_x     = Column(Integer)
     bottom_y     = Column(Integer)
-    workunit_id = Column(BigInteger)
+    workunit_id  = Column(BigInteger)
+    update_time  = Column(TIMESTAMP)
 
     galaxy = relationship("Galaxy", backref=backref('areas', order_by=galaxy_id))
 
