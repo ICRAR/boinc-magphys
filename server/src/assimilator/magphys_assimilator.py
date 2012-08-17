@@ -2,7 +2,7 @@
 
 import assimilator
 import boinc_path_config
-import gzip, os
+import gzip, os, sys, traceback
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
 from assimilator_utils import is_gzip
@@ -14,6 +14,7 @@ from sqlalchemy.orm import sessionmaker
 
 class MagphysAssimilator(assimilator.Assimilator):
     area = None
+    error_wu_id = None
 
     def __init__(self):
         assimilator.Assimilator.__init__(self)
@@ -202,58 +203,69 @@ class MagphysAssimilator(assimilator.Assimilator):
         Process the Results.
         """
         self.logDebug("Start of assimilate_handler for %d\n", wu.id)
-        #self.logDebug("url: [%s]\n", login)
-        if wu.canonical_result:
-            #file_list = []
-            outFile = self.get_file_path(canonical_result)
-            self.area = None
-            #self.get_output_file_infos(canonical_result, file_list)
-            if outFile:
-                 if os.path.isfile(outFile):
-                      pass
-                 else:
-                     self.logDebug("File [%s] not found\n", outFile)
-                     outFile = None
-
-            if outFile:
-                self.logDebug("Reading File [%s]\n", outFile)
-                session = self.Session()
-                resultCount = self.processResult(session, outFile, wu)
-                if self.noinsert:
-                    session.rollback()
-                else:
-                    if resultCount == 0:
-                        self.logCritical("No results were found in the output file\n")
-                    if self.area is None:
-                        self.logDebug("The Area was not found\n")
+        try:
+            #self.logDebug("url: [%s]\n", login)
+            if wu.canonical_result:
+                #file_list = []
+                outFile = self.get_file_path(canonical_result)
+                self.area = None
+                #self.get_output_file_infos(canonical_result, file_list)
+                if outFile:
+                     if os.path.isfile(outFile):
+                          pass
+                     else:
+                         self.logDebug("File [%s] not found\n", outFile)
+                         outFile = None
+    
+                if outFile:
+                    self.logDebug("Reading File [%s]\n", outFile)
+                    session = self.Session()
+                    resultCount = self.processResult(session, outFile, wu)
+                    if self.noinsert:
+                        session.rollback()
                     else:
-                        self.area.workunit_id = wu.id
-                        useridSet = set()
-                        for result in results:
-                            #if result.user:
-                            #    self.logDebug("Result: %d Userid: %d State: %d\n", result.id, result.user.id, result.validate_state)
-                            if result.user and result.validate_state == boinc_db.VALIDATE_STATE_VALID:
-                                userid = result.user.id
-                                #self.logDebug("Userid %d\n", userid)
-                                if userid not in useridSet:
-                                    #self.logDebug("Added Userid %d\n", userid)
-                                    useridSet.add(userid)
-                        #print 'Adding users'
-                        for user in self.area.users:
-                            session.delete(user)
-                        for userid in useridSet:
-                            usr = AreaUser()
-                            usr.userid = userid
-                            #usr.create_time =
-                            self.area.users.append(usr)
-                    self.logDebug("Saving %d results for workunit %d\n", resultCount, wu.id)
-                    session.commit()
-                session.close()
+                        if resultCount == 0:
+                            self.logCritical("No results were found in the output file\n")
+                        if self.area is None:
+                            self.logDebug("The Area was not found\n")
+                        else:
+                            self.area.workunit_id = wu.id
+                            useridSet = set()
+                            for result in results:
+                                #if result.user:
+                                #    self.logDebug("Result: %d Userid: %d State: %d\n", result.id, result.user.id, result.validate_state)
+                                if result.user and result.validate_state == boinc_db.VALIDATE_STATE_VALID:
+                                    userid = result.user.id
+                                    #self.logDebug("Userid %d\n", userid)
+                                    if userid not in useridSet:
+                                        #self.logDebug("Added Userid %d\n", userid)
+                                        useridSet.add(userid)
+                            #print 'Adding users'
+                            for user in self.area.users:
+                                session.delete(user)
+                            for userid in useridSet:
+                                usr = AreaUser()
+                                usr.userid = userid
+                                #usr.create_time =
+                                self.area.users.append(usr)
+                        self.logDebug("Saving %d results for workunit %d\n", resultCount, wu.id)
+                        session.commit()
+                    session.close()
+                else:
+                    self.logCritical("The output file was not found\n")
             else:
-                self.logCritical("The output file was not found\n")
-        else:
-            self.logDebug("No canonical_result for workunit\n")
-            self.report_errors(wu)
+                self.logDebug("No canonical_result for workunit\n")
+                self.report_errors(wu)
+        except:
+            print "Unexpected error:", sys.exc_info()[0]
+            if wu.id == self.error_wu_id:
+                self.logCritical("Unexpected error occurred, stop after second attempt\n")
+                raise
+            else:
+                traceback.print_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
+                self.error_wu_id = wu.id
+                self.logCritical("Unexpected error occurred, retrying...\n")
+                return -1
 
         return 0
 
