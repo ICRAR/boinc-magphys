@@ -64,7 +64,7 @@ We will measure physical parameters (such as stellar mass surface density, star 
         theSkyNet POGS is based at 
         The International Centre for Radio Astronomy Research.
         <ul>
-	<li><a href=\"../pogssite/pogs/".$user->id."\">Images you have processed</a> (you must be logged in for this to work at the moment)
+	<li><a href=\"../pogssite/pogs/".$user->id."\">Images you have processed</a>
         <li> [Link to page describing your research in detail]
         <li> [Link to page listing project personnel, and an email address]
         </ul>
