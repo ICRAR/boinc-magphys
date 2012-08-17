@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 parser = argparse.ArgumentParser('Build images from the POGS results')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the images will be written')
 parser.add_argument('names', nargs='*', help='optional the name of the galaxies to produce')
-parser.add_argument('-all', help='build images for all the galaxies')
+parser.add_argument('-all', action='store_true', help='build images for all the galaxies')
 args = vars(parser.parse_args())
 
 #output_directory = args['output_dir']
@@ -35,7 +35,7 @@ session = Session()
 if len(args['names']) > 0:
     LOG.info('Building PNG files for the galaxies {0}\n'.format(args['names']))
     query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
-elif len(args['all']) > 0:
+elif args['all']:
     LOG.info('Building PNG files for all the galaxies\n')
     query = session.query(Galaxy)
 else:
@@ -194,6 +194,8 @@ for galaxy in galaxies:
                     image.putpixel((width-y-1,x), (red, green, blue))
         outname = fimage.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name))
         image.save(outname)
+        galaxy.image_time = datetime.datetime.now()
+        session.commit()
 
 
 
