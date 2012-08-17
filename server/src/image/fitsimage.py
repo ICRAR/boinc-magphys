@@ -179,10 +179,10 @@ class FitsImage:
         height = hdu.header['NAXIS2']
 
         # Create Three Colour Images
-        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1), 118, 117, 116, width, height, debug) # i, r, g
-        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2), 117, 116, 124, width, height, debug) # r, g, NUV
-        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3), 280, 116, 124, width, height, debug) # 3.6, g, NUV
-        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4), 283, 117, 124, width, height, debug) # 22, r, NUV
+        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, true), 118, 117, 116, width, height, debug) # i, r, g
+        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, true), 117, 116, 124, width, height, debug) # r, g, NUV
+        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, true), 280, 116, 124, width, height, debug) # 3.6, g, NUV
+        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, true), 283, 117, 124, width, height, debug) # 22, r, NUV
         images = [image1, image2, image3, image4]
         
         file = 0
@@ -473,13 +473,13 @@ class FitsImage:
                     logFile.write('{0:3d} {1}\n'.format(z, valuerange[z]))
                 logFile.close()
             if createBWImages:
-                imagebw.save(self.get_bw_image_path(imageDirName, imagePrefixName, file))
-                imagewb.save(self.get_wb_image_path(imageDirName, imagePrefixName, file))
+                imagebw.save(self.get_bw_image_path(imageDirName, imagePrefixName, file, true))
+                imagewb.save(self.get_wb_image_path(imageDirName, imagePrefixName, file, true))
 
-        image1.save(self.get_colour_image_path(imageDirName, imagePrefixName, 1))
-        image2.save(self.get_colour_image_path(imageDirName, imagePrefixName, 2))
-        image3.save(self.get_colour_image_path(imageDirName, imagePrefixName, 3))
-        image4.save(self.get_colour_image_path(imageDirName, imagePrefixName, 4))
+        image1.save(self.get_colour_image_path(imageDirName, imagePrefixName, 1, true))
+        image2.save(self.get_colour_image_path(imageDirName, imagePrefixName, 2, true))
+        image3.save(self.get_colour_image_path(imageDirName, imagePrefixName, 3, true))
+        image4.save(self.get_colour_image_path(imageDirName, imagePrefixName, 4, true))
 
         hdulist.close()
         
@@ -511,7 +511,7 @@ class FitsImage:
             h = h[:-1]
         return h
 
-    def get_file_path(self, dirName, fileName):
+    def get_file_path(self, dirName, fileName, create):
         """
         Accepts a directory name and file name and returns the relative path to the file.
         This method accounts for file hashing and includes the directory
@@ -525,37 +525,37 @@ class FitsImage:
                 pass
             elif os.path.isdir(hashDirName):
                 pass
-            else:
+            elif create:
                 os.mkdir(hashDirName) 
             return os.path.join(dirName,hashed,fileName)
         else:
             return os.path.join(dirName,fileName)
 
-    def get_colour_image_path(self, imageDirName, imagePrefixName, colour):
+    def get_colour_image_path(self, imageDirName, imagePrefixName, colour, create):
         """
         Generates the relative path to the file given the directory name, image prefix
         and colour.  The file name is used to generate a hash to spread the files across
         many directories to avoid having too many files in a single directory.
         """
-        return self.get_file_path(imageDirName, imagePrefixName + "_colour_" + str(colour) + ".png")
+        return self.get_file_path(imageDirName, imagePrefixName + "_colour_" + str(colour) + ".png", create)
 
-    def get_bw_image_path(self, imageDirName, imagePrefixName, file):
+    def get_bw_image_path(self, imageDirName, imagePrefixName, file, create):
         """
         Generates the relative path to the file given the directory name, image prefix
         and image number for the Black and White Image.  The file name is used to generate
         a hash to spread the files across many directories to avoid having too many files
         in a single directory.
         """
-        return self.get_file_path(imageDirName, imagePrefixName + "_" + str(file) + '_bw.png')
+        return self.get_file_path(imageDirName, imagePrefixName + "_" + str(file) + '_bw.png', create)
 
-    def get_wb_image_path(self, imageDirName, imagePrefixName, file):
+    def get_wb_image_path(self, imageDirName, imagePrefixName, file, create):
         """
         Generates the relative path to the file given the directory name, image prefix
         and image number for the White and Black Image.  The file name is used to generate
         a hash to spread the files across many directories to avoid having too many files
         in a single directory.
         """
-        return self.get_file_path(imageDirName, imagePrefixName + "_" + str(file) + '_wb.png')
+        return self.get_file_path(imageDirName, imagePrefixName + "_" + str(file) + '_wb.png', create)
 
     def markImage(self, session, inImageFileName, outImageFileName, galaxy_id, userid):
         """

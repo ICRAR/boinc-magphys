@@ -65,7 +65,7 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     imagePrefixName = galaxy.name
 
     image = fitsimage.FitsImage()
-    inImageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, colour)
+    inImageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, colour, false)
     image.markImage(session, inImageFileName, outImageFileName, galaxy_id, userid)
     session.close()
 
@@ -96,8 +96,7 @@ def userFitsImage(request, userid, galaxy_id, name):
 
     image = fitsimage.FitsImage()
     imageFileName = '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name);
-    filename = image.get_file_path(imageDirName, imageFileName)
-    inImageFileName = image.get_file_path(imageDirName, filename)
+    filename = image.get_file_path(imageDirName, imageFileName, false)
     session.close()
 
     sizeBytes = os.path.getsize(filename)
