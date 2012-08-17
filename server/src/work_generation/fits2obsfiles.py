@@ -31,6 +31,7 @@ parser.add_argument('image_directory', action=WriteableDir, nargs=1, help='where
 parser.add_argument('galaxy_name', help='the name of the galaxy')
 parser.add_argument('-rh', '--row_height', type=int, default=10, help='the row height')
 parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=15, help='the minimum number of pixels in the file')
+parser.add_argument('-append', action='store_true', help='add a new version of the galaxy')
 args = vars(parser.parse_args())
 
 status = {'calls__get_pixels': 0,
@@ -269,14 +270,23 @@ else:
     object_name = HDULIST[0].header['OBJECT']
 LOG.info("Work units for: %(object)s" % { "object":object_name } )
 
+# Get the Version Number
+version_number = 1;
+if args['append']:
+    galaxies = session.query(database_support.Galaxy).filter("name=:name").params(name=object_name).order_by(Galaxy.version_number).all()
+    for gal in galaxies:
+        version_number = gal.version_number + 1
+
 # Create and save the object
 galaxy = Galaxy()
 galaxy.name = object_name
+galaxy.version_number = version_number
 galaxy.dimension_x = END_X
 galaxy.dimension_y = END_Y
 galaxy.dimension_z = LAYER_COUNT
 galaxy.redshift = REDSHIFT
 galaxy.create_time = datetime.datetime.now()
+galaxy.image_time = datetime.datetime.now()
 session.add(galaxy)
 
 # Flush to the DB so we can get the id
