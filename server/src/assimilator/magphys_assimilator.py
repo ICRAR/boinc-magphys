@@ -176,9 +176,11 @@ class MagphysAssimilator(assimilator.Assimilator):
                             hist = PixelHistogram()
                             hist.pxresult_id = pxresult.pxresult_id
                             values = line.split()
-                            hist.x_axis = float(values[0])
-                            hist.hist_value = float(values[1])
-                            parameter.histograms.append(hist)
+                            hist_value = float(values[1])
+                            if hist_value != 0:
+                                hist.x_axis = float(values[0])
+                                hist.hist_value = hist_value
+                                parameter.histograms.append(hist)
                         elif skynetNext:
                             values = line.split()
                             pxresult.i_opt = float(values[0])
