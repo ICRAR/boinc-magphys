@@ -258,11 +258,11 @@ class MagphysAssimilator(assimilator.Assimilator):
                 self.report_errors(wu)
         except:
             print "Unexpected error:", sys.exc_info()[0]
+            traceback.print_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
             if wu.id == self.error_wu_id:
                 self.logCritical("Unexpected error occurred, stop after second attempt\n")
                 raise
             else:
-                traceback.print_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
                 self.error_wu_id = wu.id
                 self.logCritical("Unexpected error occurred, retrying...\n")
                 return -1
