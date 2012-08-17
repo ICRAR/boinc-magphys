@@ -156,7 +156,7 @@ class Assimilator():
         # assimilate_state==ASSIMILATE_READY
         for wu in units:
             # if the user has turned on the WU mod flag, adhere to it
-            if self.wu_id_mod > 0 and self.wu_id_remainder > 0:
+            if self.wu_id_mod > 0:
                 if wu.id % self.wu_id_mod != self.wu_id_remainder:
                     continue
             
