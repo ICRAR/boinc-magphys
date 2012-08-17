@@ -9,6 +9,8 @@ import numpy
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from config import db_login
+from config import django_image_dir
+from image import fitsimage
 from database.database_support import Galaxy, PixelResult
 from PIL import Image
 from utils.writeable_dir import WriteableDir
@@ -21,7 +23,8 @@ parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='whe
 parser.add_argument('names', nargs='*', help='optional the name of tha galaxies to produce')
 args = vars(parser.parse_args())
 
-output_directory = args['output_dir']
+#output_directory = args['output_dir']
+output_directory = django_image_dir
 
 # First check the galaxy exists in the database
 engine = create_engine(db_login)
@@ -103,6 +106,8 @@ FIRE_B = [0,7,15,22,30,38,45,53,61,65,69,74,78,
        152,160,167,175,183,191,199,207,215,223,227,231,235,239,243,247,251,255,
        255,255,255,255,255,255,255]
 
+fimage = fitsimage.FitsImage()
+
 for galaxy in galaxies:
     LOG.info('Working on galaxy %s\n', galaxy.name)
     array = numpy.empty((galaxy.dimension_x, galaxy.dimension_y, len(IMAGE_NAMES)), dtype=numpy.float)
@@ -181,7 +186,8 @@ for galaxy in galaxies:
                     green = FIRE_G[value]
                     blue = FIRE_B[value]
                     image.putpixel((width-y-1,x), (red, green, blue))
-        image.save('{0}/{1}_{2}.png'.format(output_directory, galaxy.name, name))
+        outname = fimage.get_file_path(output_directory, '{0}_{1}.png'.format(galaxy.name, name))
+        image.save(outname)
 
 
 
