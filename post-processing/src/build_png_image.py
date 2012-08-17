@@ -192,7 +192,7 @@ for galaxy in galaxies:
                     green = FIRE_G[value]
                     blue = FIRE_B[value]
                     image.putpixel((width-y-1,x), (red, green, blue))
-        outname = fimage.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name), true)
+        outname = fimage.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name), True)
         image.save(outname)
         galaxy.image_time = datetime.datetime.now()
         session.commit()

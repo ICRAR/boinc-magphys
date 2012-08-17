@@ -179,10 +179,10 @@ class FitsImage:
         height = hdu.header['NAXIS2']
 
         # Create Three Colour Images
-        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, true), 118, 117, 116, width, height, debug) # i, r, g
-        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, true), 117, 116, 124, width, height, debug) # r, g, NUV
-        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, true), 280, 116, 124, width, height, debug) # 3.6, g, NUV
-        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, true), 283, 117, 124, width, height, debug) # 22, r, NUV
+        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True), 118, 117, 116, width, height, debug) # i, r, g
+        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), 117, 116, 124, width, height, debug) # r, g, NUV
+        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), 280, 116, 124, width, height, debug) # 3.6, g, NUV
+        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), 283, 117, 124, width, height, debug) # 22, r, NUV
         images = [image1, image2, image3, image4]
         
         file = 0
@@ -473,8 +473,8 @@ class FitsImage:
                     logFile.write('{0:3d} {1}\n'.format(z, valuerange[z]))
                 logFile.close()
             if createBWImages:
-                imagebw.save(self.get_bw_image_path(imageDirName, imagePrefixName, file, true))
-                imagewb.save(self.get_wb_image_path(imageDirName, imagePrefixName, file, true))
+                imagebw.save(self.get_bw_image_path(imageDirName, imagePrefixName, file, True))
+                imagewb.save(self.get_wb_image_path(imageDirName, imagePrefixName, file, True))
 
         image1.save(self.get_colour_image_path(imageDirName, imagePrefixName, 1, true))
         image2.save(self.get_colour_image_path(imageDirName, imagePrefixName, 2, true))
