@@ -197,5 +197,5 @@ for galaxy in galaxies:
         galaxy.image_time = datetime.datetime.now()
         session.commit()
 
-
+LOG.info('Built images for %d galaxy %s\n', len(galaxies))
 
