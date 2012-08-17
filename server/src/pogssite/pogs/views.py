@@ -91,31 +91,23 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     return response
 
 def userFitsImage(request, userid, galaxy_id, name):
-    #tmp = tempfile.mkstemp(".png", "pogs", None, False)
-    #file = tmp[0]
-    #os.close(file)
-
     imageDirName = django_image_dir
-
-    #outImageFileName = tmp[1]
 
     session = PogsSession()
     userid = int(userid)
     galaxy_id = int(galaxy_id)
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
-    #imagePrefixName = galaxy.name
 
     image = fitsimage.FitsImage()
-    filename = '{0}_{1}.png'.format(galaxy.name, name)
+    imageFileName = '{0}_{1}.png'.format(galaxy.name, name);
+    filename = image.get_file_path(imageDirName, imageFileName)
     inImageFileName = image.get_file_path(imageDirName, filename)
-    #image.markImage(session, inImageFileName, outImageFileName, galaxy_id, userid)
     session.close()
 
     sizeBytes = os.path.getsize(filename)
     file = open(filename, "rb")
     myImage = file.read(sizeBytes)
     file.close()
-    #os.remove(outImageFileName)
 
     DELTA = datetime.timedelta(minutes=10)
     DELTA_SECONDS = DELTA.days * 86400 + DELTA.seconds
@@ -123,10 +115,11 @@ def userFitsImage(request, userid, galaxy_id, name):
     expires = (datetime.datetime.now()+DELTA).strftime(EXPIRATION_MASK)
 
     response = HttpResponse(myImage, content_type='image/png')
-    response['Content-Disposition'] = 'filename=\"' + imagePrefixName + '_' + colour + '.png\"'
+    response['Content-Disposition'] = 'filename=\"' + imageFileName + '\"'
     response['Expires'] = expires
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
+
 
 
 

@@ -8,5 +8,5 @@ urlpatterns = patterns('',
     url(r'^(?P<userid>\d+)$', 'pogs.views.userGalaxies'),
     url(r'^UserGalaxy/(?P<userid>\d+)/(?P<galaxy_id>\d+)$', 'pogs.views.userGalaxy'),
     url(r'^UserGalaxyImage/(?P<userid>\d+)/(?P<galaxy_id>\d+)/(?P<colour>\d+)$', 'pogs.views.userGalaxyImage'),
-    url(r'^UserFitsImage/(?P<userid>\d+)/(?P<galaxy_id>\d+)/(?P<name>\d+)$', 'pogs.views.userFitsImage'),
+    url(r'^UserFitsImage/(?P<userid>\d+)/(?P<galaxy_id>\d+)/(?P<name>\w+)$', 'pogs.views.userFitsImage'),
 )
