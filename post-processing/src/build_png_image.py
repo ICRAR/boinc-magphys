@@ -6,12 +6,13 @@ import argparse
 import logging
 import math
 import numpy
+import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from config import db_login
 from config import django_image_dir
 from image import fitsimage
-from database.database_support import Galaxy, PixelResult
+from database.database_support import Galaxy, Area, PixelResult
 from PIL import Image
 from utils.writeable_dir import WriteableDir
 
@@ -40,9 +41,8 @@ elif args['all']:
     query = session.query(Galaxy)
 else:
     LOG.info('Building PNG files for updated galaxies\n')
-    query = session.query(Galaxy)
-    query = session.query(Galaxy, Area).filter(Area.galaxy_id == Galaxy.galaxy_id)\
-        .filter(Area.update_time >= Galaxy.image_time).all()
+    query = session.query(Galaxy).filter(Area.galaxy_id == Galaxy.galaxy_id)\
+        .filter(Area.update_time >= Galaxy.image_time)
 
 galaxies = query.all()
 
