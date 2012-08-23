@@ -1,0 +1,21 @@
+# Build the wrapper for a Mac
+
+BOINC_DIR = ../..
+BOINC_API_DIR = $(BOINC_DIR)/api
+BOINC_LIB_DIR = $(BOINC_DIR)/lib
+BOINC_BUILD_DIR = $(BOINC_DIR)/mac_build/build/Deployment
+BOINC_CONFIG_DIR =  $(BOINC_DIR)/clientgui/mac
+
+CXXFLAGS = $(VARIANTFLAGS) \
+	-g \
+    -I$(BOINC_CONFIG_DIR) \
+    -I$(BOINC_DIR) \
+    -I$(BOINC_LIB_DIR) \
+    -I$(BOINC_API_DIR) \
+    -L$(BOINC_API_DIR) \
+    -L$(BOINC_LIB_DIR) \
+    -L$(BOINC_BUILD_DIR) \
+    -L.
+
+FC = /usr/local/bin/gfortran -std=legacy -ffixed-line-length-none -static-libgfortran
+
