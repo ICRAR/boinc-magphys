@@ -5,6 +5,7 @@ Build a fits image from the data in the database
 import argparse
 import logging
 from datetime import datetime
+import os
 import numpy
 import pyfits
 from sqlalchemy.engine import create_engine
@@ -29,10 +30,10 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 if len(args['names']) > 0:
-    LOG.info('Building FITS files for the galaxies {0}\n'.format(args['names']))
+    LOG.info('Building FITS files for the galaxies {0}'.format(args['names']))
     query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
 else:
-    LOG.info('Building FITS files for all the galaxies\n')
+    LOG.info('Building FITS files for all the galaxies')
     query = session.query(Galaxy)
 
 galaxies = query.all()
@@ -56,7 +57,7 @@ IMAGE_NAMES = [ 'fmu_sfh',
               ]
 
 for galaxy in galaxies:
-    LOG.info('Working on galaxy %s\n', galaxy.name)
+    LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
     array = numpy.empty((galaxy.dimension_x, galaxy.dimension_y, len(IMAGE_NAMES)), dtype=numpy.float)
     array.fill(numpy.NaN)
 
@@ -84,6 +85,15 @@ for galaxy in galaxies:
         array[row.x, row.y, 14] = row.mdust
         array[row.x, row.y, 15] = row.sfr
 
+    # Create the directory to hold the fits files
+    if galaxy.version_number == 1:
+        directory = '{0}/{1}'.format(output_directory, galaxy.name)
+    else:
+        directory = '{0}/{1}_V{2}'.format(output_directory, galaxy.name, galaxy.version_number)
+
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
     name_count = 0
     for name in IMAGE_NAMES:
         hdu = pyfits.PrimaryHDU(array[:,:,name_count])
@@ -91,8 +101,15 @@ for galaxy in galaxies:
         # Write the header
         hdu_list[0].header.update('MAGPHYST', name, 'MAGPHYS Parameter')
         hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
+        hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
+        hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
+        hdu_list[0].header.update('REDSHIFT', galaxy.redshift, 'The POGS Galaxy redshift')
+
         for key, value in header.items():
             hdu_list[0].header.update(key, value)
 
-        hdu_list.writeto('{0}/{1}_{2}.fits'.format(output_directory, galaxy.name, name), clobber=True)
+        if galaxy.version_number == 1:
+            hdu_list.writeto('{0}/{1}_{2}.fits'.format(directory, galaxy.name, name), clobber=True)
+        else:
+            hdu_list.writeto('{0}/{1}_V{3}_{2}.fits'.format(directory, galaxy.name, name, galaxy.version_number), clobber=True)
         name_count += 1
