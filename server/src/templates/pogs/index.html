@@ -11,11 +11,30 @@
     
   {% if user_galaxy_list %}
     <p>Below is the list of galaxies where your computer has been credited.
-    <ul>
-    {% for galaxy in user_galaxy_list %}
-        <li><a href="UserGalaxy/{{ userid }}/{{ galaxy.galaxy_id }}">{{ galaxy.name }}</a></li>
+    <table>
+      <tr>
+        <th>Galaxy</th>
+        <th>Redshift</th>
+        <th>Galaxy</th>
+        <th>Redshift</th>
+        <th>Galaxy</th>
+        <th>Redshift</th>
+        <th>Galaxy</th>
+        <th>Redshift</th>
+      </tr>
+    {% for line in user_galaxy_list %}
+      <tr>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.id1 }}">{{ line.name1 }}</a></td>
+        <td>{{ line.redshift1 }}</td>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.id2 }}">{{ line.name2 }}</a></td>
+        <td>{{ line.redshift2 }}</td>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.id3 }}">{{ line.name3 }}</a></td>
+        <td>{{ line.redshift3 }}</td>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.id4 }}">{{ line.name4 }}</a></td>
+        <td>{{ line.redshift4 }}</td>
+      </tr>
     {% endfor %}
-    </ul>
+    </table>
 {% else %}
     <p>There are no galaxies where you have been credited.</p>
 {% endif %}
