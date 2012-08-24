@@ -43,7 +43,7 @@ def userGalaxies(request, userid):
     for galaxy in image.userGalaxies(session, userid):
         name = galaxy.name
         if galaxy.version_number > 1:
-            name = galaxy.name + "[" + galaxy.version_number + "]"
+            name = galaxy.name + "[" + str(galaxy.version_number) + "]"
         if idx == 0:
             galaxy_line = GalaxyLine()
             galaxy_line.name1 = name
