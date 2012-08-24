@@ -174,6 +174,9 @@ def base_install():
     sudo('echo "smtp_sasl_security_options = noanonymous" >> /etc/postfix/main.cf')
     sudo('echo "smtp_tls_CAfile = /etc/postfix/cacert.pem" >> /etc/postfix/main.cf')
     sudo('echo "smtp_use_tls = yes" >> /etc/postfix/main.cf')
+    sudo('echo "" >> /etc/postfix/main.cf')
+    sudo('echo "# smtp_generic_maps" >> /etc/postfix/main.cf')
+    sudo('echo "smtp_generic_maps = hash:/etc/postfix/generic" >> /etc/postfix/main.cf')
 
     sudo('echo "[smtp.gmail.com]:587 {0}@gmail.com:{1}" > /etc/postfix/sasl_passwd'.format(env.gmail_account, env.gmail_password))
     sudo('chmod 400 /etc/postfix/sasl_passwd')
@@ -264,6 +267,8 @@ def single_install(with_db):
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), '"white.css"', '"black.css"')
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'define\("FORUM_QA_MERGED_MODE", false\);', 'define("FORUM_QA_MERGED_MODE", true);')
+    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'admin\@\$master_url', 'theskynet.boinc@gmail.com')
+    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'moderator1\@\$master_url\|moderator2\@\$master_url', 'theskynet.boinc@gmail.com')
 
     # As this goes through AWK we need to be a bit careful
     run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
@@ -491,6 +496,7 @@ def single_install(with_db):
 
     # Copy files into place
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+        run('fab --set project_name={0} setup_relocated'.format(env.project_name))
         run('fab --set project_name={0} create_first_version'.format(env.project_name))
         run('fab --set project_name={0} start_daemons'.format(env.project_name))
 
@@ -599,4 +605,3 @@ def test_deploy_without_db():
     base_install()
     build_mod_wsgi()
     single_install(False)
-

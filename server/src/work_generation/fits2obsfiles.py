@@ -191,6 +191,8 @@ def get_pixels(pix_x, pix_y):
                     # The layer is missing
                     pixels.append(0)
                 else:
+                    # A vagary of NumPy is the order of the indexes is reversed
+                    # See page 4 of the PyFITS Uuser Guide
                     pixel = HDULIST[layer].data[y, x]
                     if math.isnan(pixel):
                         # A zero tells MAGPHYS - we have no value here

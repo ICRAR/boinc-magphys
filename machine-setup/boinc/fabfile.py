@@ -4,8 +4,9 @@ Fabric to be run on the BOINC server to configure things
 from glob import glob
 from os.path import splitext, split
 from fabric.decorators import task
-from fabric.operations import local, prompt
+from fabric.operations import local, prompt, sudo
 from fabric.state import env
+import socket
 
 APP_NAME="magphys_wrapper"
 PLATFORMS=["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu"]
@@ -118,6 +119,18 @@ def sign_files(app_version):
                 pass
             else:
                 local('/home/ec2-user/boinc/tools/sign_executable {0} /home/ec2-user/projects/{1}/keys/code_sign_private | tee {0}.sig'.format(file, env.project_name))
+
+@task
+def setup_relocated():
+    """Setup the relocated file
+
+    The relocated file needs the hostname
+    """
+    host_name = socket.gethostname()
+    sudo('echo "ec2-user@{0}.ec2.internal  theskynet.boinc@gmail.com" >> /etc/postfix/generic'.format(host_name))
+    sudo('echo "root@{0}.ec2.internal      theskynet.boinc@gmail.com" >> /etc/postfix/generic'.format(host_name))
+    sudo('echo "apache@{0}.ec2.internal    theskynet.boinc@gmail.com" >> /etc/postfix/generic'.format(host_name))
+    sudo('sudo postmap /etc/postfix/generic')
 
 @task
 def setup_website():
