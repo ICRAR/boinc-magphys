@@ -38,7 +38,7 @@ if len(args['names']) > 0:
     query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
 elif args['all']:
     LOG.info('Building PNG files for all the galaxies\n')
-    query = session.query(Galaxy)
+    query = session.query(Galaxy).sort_by(Galaxy.name)
 else:
     LOG.info('Building PNG files for updated galaxies\n')
     query = session.query(Galaxy).filter(Area.galaxy_id == Galaxy.galaxy_id)\
@@ -183,7 +183,7 @@ for galaxy in galaxies:
         image = Image.new("RGB", (width, height), blackRGB)
         for x in range(0, width-1):
             for y in range(0, height-1):
-                value = array[x, y, idx]
+                value = array[y, x, idx]
                 if not math.isnan(value) and value > 0:
                     value = int(math.asinh(value * sigma) * mult)
                     if value > 255:
