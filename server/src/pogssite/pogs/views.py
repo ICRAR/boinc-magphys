@@ -36,6 +36,7 @@ def userGalaxies(request, userid):
     galaxy_line = GalaxyLine()
     for galaxy in image.userGalaxies(session, userid):
         if idx == 0:
+            galaxy_line = GalaxyLine()
             galaxy_line.name1 = galaxy.name
             galaxy_line.id1 = galaxy.galaxy_id
             galaxy_line.redshift1 = str(galaxy.redshift)
@@ -55,7 +56,7 @@ def userGalaxies(request, userid):
             galaxy_line.name4 = galaxy.name
             galaxy_line.id4 = galaxy.galaxy_id
             galaxy_line.redshift4 = str(galaxy.redshift)
-            idx = 1
+            idx = 0
     session.close()
 
     t = loader.get_template('pogs/index.html')
