@@ -563,8 +563,7 @@ class FitsImage:
         that the specified user has generated results.
         """
         image = Image.open(inImageFileName, "r").convert("RGBA")
-        size = image.size()
-        width, height = size
+        width, height = image.size
 
         #pixels = session.query(PixelResult).filter("galaxy_id=:galaxyId", "user_id=:userId").params(galaxyId=galaxyId).all()
         areas = session.query(Area, AreaUser).filter(AreaUser.userid == userid)\
