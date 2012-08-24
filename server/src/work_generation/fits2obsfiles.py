@@ -12,6 +12,7 @@ import re
 import datetime
 import pyfits
 import sys
+import shutil
 from config import db_login
 from database.database_support import Galaxy, Area, PixelResult, FitsHeader
 from sqlalchemy.orm import sessionmaker
@@ -275,6 +276,9 @@ LOG.info("Work units for: %(object)s" % { "object":object_name } )
 
 version_number = get_version_number(object_name)
 
+filePrefixName = object_name + "_" + str(version_number)
+fitsFileName = filePrefixName + ".fits"
+
 # Create and save the object
 galaxy = Galaxy()
 galaxy.name = object_name
@@ -306,7 +310,9 @@ if rollback:
     session.rollback()
 else:
     image = FitsImage()
-    image.buildImage(INPUT_FILE, IMAGE_DIR, object_name, "asinh", False, False, False)
+    image.buildImage(INPUT_FILE, IMAGE_DIR, filePrefixName, "asinh", False, False, False)
+
+    shutil.copyfile(INPUT_FILE, image.get_file_path(IMAGE_DIR, fitsFileName, True))
     session.commit()
 
 LOG.info("\nDone")
