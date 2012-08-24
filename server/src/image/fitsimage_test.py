@@ -22,7 +22,7 @@ imageDirName = magphysDir + fitsName
 imagePrefixName = fitsName
 
 #inImageFileName = imageDirName + "/" + imagePrefixName + "_colour_1.jpg"
-inImageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, 1)
+inImageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, 1, False)
 outImageFileName = imageDirName + "/" + imagePrefixName + "_colour_1_mark.png"
 galaxy_id = 1;
 userid = 2

@@ -476,10 +476,10 @@ class FitsImage:
                 imagebw.save(self.get_bw_image_path(imageDirName, imagePrefixName, file, True))
                 imagewb.save(self.get_wb_image_path(imageDirName, imagePrefixName, file, True))
 
-        image1.save(self.get_colour_image_path(imageDirName, imagePrefixName, 1, true))
-        image2.save(self.get_colour_image_path(imageDirName, imagePrefixName, 2, true))
-        image3.save(self.get_colour_image_path(imageDirName, imagePrefixName, 3, true))
-        image4.save(self.get_colour_image_path(imageDirName, imagePrefixName, 4, true))
+        image1.save(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True))
+        image2.save(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True))
+        image3.save(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True))
+        image4.save(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True))
 
         hdulist.close()
         
