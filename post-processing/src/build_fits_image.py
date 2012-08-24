@@ -68,22 +68,22 @@ for galaxy in galaxies:
 
     # Return the rows
     for row in session.query(PixelResult).filter(PixelResult.galaxy_id == galaxy.galaxy_id).all():
-        array[row.x, row.y, 0] = row.fmu_sfh
-        array[row.x, row.y, 1] = row.fmu_ir
-        array[row.x, row.y, 2] = row.mu
-        array[row.x, row.y, 3] = row.tauv
-        array[row.x, row.y, 4] = row.s_sfr
-        array[row.x, row.y, 5] = row.m
-        array[row.x, row.y, 6] = row.ldust
-        array[row.x, row.y, 7] = row.t_w_bc
-        array[row.x, row.y, 8] = row.t_c_ism
-        array[row.x, row.y, 9] = row.xi_c_tot
-        array[row.x, row.y, 10] = row.xi_pah_tot
-        array[row.x, row.y, 11] = row.xi_mir_tot
-        array[row.x, row.y, 12] = row.x_w_tot
-        array[row.x, row.y, 13] = row.tvism
-        array[row.x, row.y, 14] = row.mdust
-        array[row.x, row.y, 15] = row.sfr
+        array[row.y, row.x, 0] = row.fmu_sfh
+        array[row.y, row.x, 1] = row.fmu_ir
+        array[row.y, row.x, 2] = row.mu
+        array[row.y, row.x, 3] = row.tauv
+        array[row.y, row.x, 4] = row.s_sfr
+        array[row.y, row.x, 5] = row.m
+        array[row.y, row.x, 6] = row.ldust
+        array[row.y, row.x, 7] = row.t_w_bc
+        array[row.y, row.x, 8] = row.t_c_ism
+        array[row.y, row.x, 9] = row.xi_c_tot
+        array[row.y, row.x, 10] = row.xi_pah_tot
+        array[row.y, row.x, 11] = row.xi_mir_tot
+        array[row.y, row.x, 12] = row.x_w_tot
+        array[row.y, row.x, 13] = row.tvism
+        array[row.y, row.x, 14] = row.mdust
+        array[row.y, row.x, 15] = row.sfr
 
     # Create the directory to hold the fits files
     if galaxy.version_number == 1:

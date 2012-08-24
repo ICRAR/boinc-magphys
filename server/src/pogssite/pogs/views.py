@@ -91,6 +91,8 @@ def userGalaxy(request, userid, galaxy_id):
     galaxy_id = int(galaxy_id)
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
     galaxy_name = galaxy.name
+    if galaxy.version_number > 1:
+        galaxy_name = galaxy.name + "[" + str(galaxy.version_number) + "]"
     galaxy_height = galaxy.dimension_x;
     galaxy_width = galaxy.dimension_y;
     session.close()
