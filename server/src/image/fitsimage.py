@@ -624,7 +624,7 @@ class FitsImage:
         #print stmt
         #print session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt))
         #adalias = aliased(PixelResult, stmt);
-        return session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)).order_by(Galaxy.name);
+        return session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)).order_by(Galaxy.name, Galaxy.version_number);
 
     def userGalaxyIds(self, session, userid):
         """
