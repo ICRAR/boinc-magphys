@@ -563,6 +563,8 @@ class FitsImage:
         that the specified user has generated results.
         """
         image = Image.open(inImageFileName, "r").convert("RGBA")
+        size = image.size()
+        width, height = size
 
         #pixels = session.query(PixelResult).filter("galaxy_id=:galaxyId", "user_id=:userId").params(galaxyId=galaxyId).all()
         areas = session.query(Area, AreaUser).filter(AreaUser.userid == userid)\
@@ -574,7 +576,7 @@ class FitsImage:
             area = areax.Area;
             for x in range(area.top_x, area.bottom_x):
                 for y in range(area.top_y, area.bottom_y):
-                    self.markPixel(image, x, y)
+                    self.markPixel(image, x, width-y-1)
 
         #for x in range(140, 145):
         #    for y in range(80, 93):
