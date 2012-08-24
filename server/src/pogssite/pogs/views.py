@@ -41,12 +41,12 @@ def userGalaxies(request, userid):
             galaxy_line.id1 = galaxy.galaxy_id
             galaxy_line.redshift1 = str(galaxy.redshift)
             user_galaxy_list.append(galaxy_line)
-            idx = 2
+            idx = 1
         elif idx == 1:
             galaxy_line.name2 = galaxy.name
             galaxy_line.id2 = galaxy.galaxy_id
             galaxy_line.redshift2 = str(galaxy.redshift)
-            idx = 3
+            idx = 2
         elif idx == 2:
             galaxy_line.name3 = galaxy.name
             galaxy_line.id3 = galaxy.galaxy_id
