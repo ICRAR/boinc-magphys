@@ -18,14 +18,20 @@ class GalaxyLine:
     name2 = ""
     name3 = ""
     name4 = ""
+    name5 = ""
+    name6 = ""
     id1 = ""
     id2 = ""
     id3 = ""
     id4 = ""
+    id5 = ""
+    id6 = ""
     redshift1 = ""
     redshift2 = ""
     redshift3 = ""
     redshift4 = ""
+    redshift5 = ""
+    redshift6 = ""
 
 def userGalaxies(request, userid):
     session = PogsSession()
@@ -35,27 +41,40 @@ def userGalaxies(request, userid):
     idx = 0
     galaxy_line = GalaxyLine()
     for galaxy in image.userGalaxies(session, userid):
+        name = galaxy.name
+        if galaxy.version_number > 1:
+            name = galaxy.name + "[" + galaxy.version_number + "]"
         if idx == 0:
             galaxy_line = GalaxyLine()
-            galaxy_line.name1 = galaxy.name
+            galaxy_line.name1 = name
             galaxy_line.id1 = galaxy.galaxy_id
             galaxy_line.redshift1 = str(galaxy.redshift)
             user_galaxy_list.append(galaxy_line)
             idx = 1
         elif idx == 1:
-            galaxy_line.name2 = galaxy.name
+            galaxy_line.name2 = name
             galaxy_line.id2 = galaxy.galaxy_id
             galaxy_line.redshift2 = str(galaxy.redshift)
             idx = 2
         elif idx == 2:
-            galaxy_line.name3 = galaxy.name
+            galaxy_line.name3 = name
             galaxy_line.id3 = galaxy.galaxy_id
             galaxy_line.redshift3 = str(galaxy.redshift)
             idx = 3
         elif idx == 3:
-            galaxy_line.name4 = galaxy.name
+            galaxy_line.name4 = name
             galaxy_line.id4 = galaxy.galaxy_id
             galaxy_line.redshift4 = str(galaxy.redshift)
+            idx = 4
+        elif idx == 4:
+            galaxy_line.name5 = name
+            galaxy_line.id5 = galaxy.galaxy_id
+            galaxy_line.redshift5 = str(galaxy.redshift)
+            idx = 5
+        elif idx == 5:
+            galaxy_line.name6 = name
+            galaxy_line.id6 = galaxy.galaxy_id
+            galaxy_line.redshift6 = str(galaxy.redshift)
             idx = 0
     session.close()
 
