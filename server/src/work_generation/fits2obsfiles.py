@@ -191,7 +191,7 @@ def get_pixels(pix_x, pix_y):
                     # The layer is missing
                     pixels.append(0)
                 else:
-                    pixel = HDULIST[layer].data[x, y]
+                    pixel = HDULIST[layer].data[y, x]
                     if math.isnan(pixel):
                         # A zero tells MAGPHYS - we have no value here
                         pixels.append(0)
