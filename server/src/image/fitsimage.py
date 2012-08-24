@@ -637,7 +637,7 @@ class FitsImage:
         #print session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt))
         #adalias = aliased(PixelResult, stmt);
         galaxyIds = []
-        for galaxy in session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)):
+        for galaxy in session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)).order_by(Galaxy.name):
            #print 'Galaxy', galaxy.name
            galaxyIds.append(galaxy.galaxy_id)
         return galaxyIds;
