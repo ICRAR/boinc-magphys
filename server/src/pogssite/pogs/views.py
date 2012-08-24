@@ -62,7 +62,7 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     userid = int(userid)
     galaxy_id = int(galaxy_id)
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
-    imagePrefixName = galaxy.name
+    imagePrefixName = galaxy.name + "_" + str(galaxy.version_number)
 
     image = fitsimage.FitsImage()
     inImageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
