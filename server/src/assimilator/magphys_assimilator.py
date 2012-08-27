@@ -216,7 +216,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                      else:
                          self.logDebug("File [%s] not found\n", outFile)
                          outFile = None
-    
+
                 if outFile:
                     self.logDebug("Reading File [%s]\n", outFile)
                     session = self.Session()

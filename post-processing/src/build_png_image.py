@@ -116,7 +116,7 @@ fimage = fitsimage.FitsImage()
 
 for galaxy in galaxies:
     LOG.info('Working on galaxy %s\n', galaxy.name)
-    array = numpy.empty((galaxy.dimension_x, galaxy.dimension_y, len(IMAGE_NAMES)), dtype=numpy.float)
+    array = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
     array.fill(numpy.NaN)
 
     # Return the rows
@@ -143,8 +143,8 @@ for galaxy in galaxies:
     blackRGB = (0, 0, 0)
     for name in PNG_IMAGE_NAMES:
         value = 0
-        height = galaxy.dimension_x
-        width = galaxy.dimension_y
+        height = galaxy.dimension_y
+        width = galaxy.dimension_x
         idx = 0
         if name == 'mu':
             idx = 2

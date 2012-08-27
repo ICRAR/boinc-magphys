@@ -177,6 +177,7 @@ def base_install():
     sudo('echo "" >> /etc/postfix/main.cf')
     sudo('echo "# smtp_generic_maps" >> /etc/postfix/main.cf')
     sudo('echo "smtp_generic_maps = hash:/etc/postfix/generic" >> /etc/postfix/main.cf')
+    sudo('echo "default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf')
 
     sudo('echo "[smtp.gmail.com]:587 {0}@gmail.com:{1}" > /etc/postfix/sasl_passwd'.format(env.gmail_account, env.gmail_password))
     sudo('chmod 400 /etc/postfix/sasl_passwd')
