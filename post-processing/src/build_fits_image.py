@@ -165,11 +165,11 @@ for galaxy in galaxies:
 
     # If the medians are required produce them
     if args['median'] and array_median is not None:
-        for tuple in PARAMETER_NAMES.items():
+        for k, tuple in PARAMETER_NAMES.iteritems():
             hdu = pyfits.PrimaryHDU(array_median[:,:,tuple[1]])
             hdu_list = pyfits.HDUList([hdu])
             # Write the header
-            hdu_list[0].header.update('MAGPHYST', tuple[1], 'MAGPHYS Parameter Median')
+            hdu_list[0].header.update('MAGPHYST', k, 'MAGPHYS Parameter Median')
             hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
             hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
             hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
