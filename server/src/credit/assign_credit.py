@@ -62,7 +62,7 @@ class AssignCredit:
             if areauser == None:
                 area = session.query(Area).filter(Area.area_id == areaid).first()
                 if area == None:
-                    print 'Area', areaid, 'not found, User', userid, ' not Credited'
+                    print 'Area', areaid, 'not found, User', userid, 'not Credited'
                 else:
                     areauser = AreaUser()
                     areauser.userid = userid
@@ -71,8 +71,8 @@ class AssignCredit:
                     session.commit()
                     print 'User', userid, 'Credited for Area', areaid
                     creditCount += 1
-            else:
-                print 'User', userid, 'already Credited for Area', areaid
+            #else:
+            #    print 'User', userid, 'already Credited for Area', areaid
 
             delCursor.execute("delete from credited_job where userid = " + str(userid) + "  and workunitid = " + str(areaid))
 
