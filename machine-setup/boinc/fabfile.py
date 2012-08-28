@@ -121,16 +121,16 @@ def sign_files(app_version):
                 local('/home/ec2-user/boinc/tools/sign_executable {0} /home/ec2-user/projects/{1}/keys/code_sign_private | tee {0}.sig'.format(file, env.project_name))
 
 @task
-def setup_relocated():
+def setup_postfix():
     """Setup the relocated file
 
     The relocated file needs the hostname
     """
     host_name = socket.gethostname()
-    sudo('echo "ec2-user@{0}.ec2.internal  theskynet.boinc@gmail.com" >> /etc/postfix/generic'.format(host_name))
-    sudo('echo "root@{0}.ec2.internal      theskynet.boinc@gmail.com" >> /etc/postfix/generic'.format(host_name))
-    sudo('echo "apache@{0}.ec2.internal    theskynet.boinc@gmail.com" >> /etc/postfix/generic'.format(host_name))
-    sudo('sudo postmap /etc/postfix/generic')
+    local('sudo echo "ec2-user@{0}.ec2.internal  theskynet.boinc@gmail.com" >> /etc/postfix/generic'.format(host_name))
+    local('sudo echo "root@{0}.ec2.internal      theskynet.boinc@gmail.com" >> /etc/postfix/generic'.format(host_name))
+    local('sudo echo "apache@{0}.ec2.internal    theskynet.boinc@gmail.com" >> /etc/postfix/generic'.format(host_name))
+    local('sudo postmap /etc/postfix/generic')
 
 @task
 def setup_website():

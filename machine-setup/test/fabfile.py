@@ -497,7 +497,7 @@ def single_install(with_db):
 
     # Copy files into place
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        run('fab --set project_name={0} setup_relocated'.format(env.project_name))
+        run('fab --set project_name={0} setup_postfix'.format(env.project_name))
         run('fab --set project_name={0} create_first_version'.format(env.project_name))
         run('fab --set project_name={0} start_daemons'.format(env.project_name))
 
