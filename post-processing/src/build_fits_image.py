@@ -13,7 +13,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import sys
 from config import db_login
-from database.database_support import Galaxy, PixelResult, FitsHeader
+from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter
 from utils.writeable_dir import WriteableDir
 
 LOG = logging.getLogger(__name__)
@@ -130,7 +130,7 @@ for galaxy in galaxies:
         array_best_fit[row.y, row.x, 15] = row.sfr
 
         if args['median'] and array_median is not None:
-            for pixel_parameter in row.parameters:
+            for pixel_parameter in session.query(PixelParameter).filter(PixelParameter.pxresult_id == row.pxresult_id).all():
                 index = get_index(pixel_parameter.parameter_name)
                 array_median[row.y, row.x, index] = pixel_parameter.percentile50
 
@@ -165,11 +165,11 @@ for galaxy in galaxies:
 
     # If the medians are required produce them
     if args['median'] and array_median is not None:
-        for tuple in PARAMETER_NAMES.items():
+        for k, tuple in PARAMETER_NAMES.iteritems():
             hdu = pyfits.PrimaryHDU(array_median[:,:,tuple[1]])
             hdu_list = pyfits.HDUList([hdu])
             # Write the header
-            hdu_list[0].header.update('MAGPHYST', tuple[1], 'MAGPHYS Parameter Median')
+            hdu_list[0].header.update('MAGPHYST', k, 'MAGPHYS Parameter Median')
             hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
             hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
             hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
