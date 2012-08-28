@@ -133,3 +133,7 @@ PARTITIONS 16;
 CREATE INDEX pxhistogram_pxresult_ix ON pixel_histogram(pxresult_id);
 CREATE INDEX pxhistogram_pxparameter_ix ON pixel_histogram(pxparameter_id);
 
+CREATE TABLE user_pixel (userid BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    pixel_count INTEGER
+) CHARACTER SET utf8 ENGINE=InnoDB;
+

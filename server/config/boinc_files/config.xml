@@ -219,6 +219,20 @@
     </task>
     <task>
       <cmd>
+        /home/ec2-user/boinc-magphys/server/src/credit/update_credit.py -app magphys_wrapper
+      </cmd>
+      <period>
+        24 hours
+      </period>
+      <disabled>
+        0
+      </disabled>
+      <output>
+        update_credit.out
+      </output>
+    </task>
+    <task>
+      <cmd>
         /home/ec2-user/boinc-magphys/post-processing/src/build_png_image.py
       </cmd>
       <period>
