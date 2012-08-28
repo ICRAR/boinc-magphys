@@ -127,9 +127,9 @@ def setup_postfix():
     The relocated file needs the hostname
     """
     host_name = socket.gethostname()
-    local('''sudo su -l root -c 'echo "ec2-user@{0}.ec2.internal  theskynet.boinc@gmail.com" >> /etc/postfix/generic'''.format(host_name))
-    local('''sudo su -l root -c 'echo "root@{0}.ec2.internal      theskynet.boinc@gmail.com" >> /etc/postfix/generic'''.format(host_name))
-    local('''sudo su -l root -c 'echo "apache@{0}.ec2.internal    theskynet.boinc@gmail.com" >> /etc/postfix/generic'''.format(host_name))
+    local('''sudo su -l root -c 'echo "ec2-user@{0}.ec2.internal  theskynet.boinc@gmail.com" >> /etc/postfix/generic' '''.format(host_name))
+    local('''sudo su -l root -c 'echo "root@{0}.ec2.internal      theskynet.boinc@gmail.com" >> /etc/postfix/generic' '''.format(host_name))
+    local('''sudo su -l root -c 'echo "apache@{0}.ec2.internal    theskynet.boinc@gmail.com" >> /etc/postfix/generic' '''.format(host_name))
     local('sudo postmap /etc/postfix/generic')
 
 @task
