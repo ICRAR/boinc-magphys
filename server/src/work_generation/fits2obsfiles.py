@@ -34,16 +34,7 @@ parser.add_argument('-rh', '--row_height', type=int, default=10, help='the row h
 parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=15, help='the minimum number of pixels in the file')
 args = vars(parser.parse_args())
 
-status = {'calls__get_pixels': 0,
-          'get_pixels_get_attempts': 0,
-          'get_pixels_get_successful': 0,
-          'get_pixels_values_returned': 0,
-          'calls__create_area': 0,
-          'create__area': 0,
-          'create__pixel': 0}
-
 MIN_LIVE_CHANNELS_PER_PIXEL = 2
-
 REDSHIFT = args['redshift'][0]
 INPUT_FILE = args['FITS_file'][0]
 OUTPUT_DIR = args['output_directory']
@@ -171,8 +162,6 @@ def get_pixels(pix_x, pix_y):
         MIN_LIVE_CHANNELS_PER_PIXEL channels. Pixels are retrieved in the order specified in
         the global LAYER_ORDER list.
     """
-    status['calls__get_pixels'] += 1
-
     result = []
     max_x = pix_x
     x = pix_x
@@ -182,7 +171,6 @@ def get_pixels(pix_x, pix_y):
             if y >= END_Y:
                 continue
 
-            status['get_pixels_get_attempts'] += 1
             live_pixels = 0
             pixels = []
             for layer in LAYER_ORDER:
@@ -201,8 +189,6 @@ def get_pixels(pix_x, pix_y):
                         pixels.append(pixel)
 
             if live_pixels >= MIN_LIVE_CHANNELS_PER_PIXEL:
-                status['get_pixels_get_successful'] += 1
-                status['get_pixels_values_returned'] += live_pixels
                 result.append(Pixel(x, y, pixels))
 
         max_x = x
@@ -217,12 +203,10 @@ def create_areas(galaxy, pix_y):
     """
     Create a area - we try to make them squares, but they aren't as the images have dead zones
     """
-    status['calls__create_area'] += 1
     pix_x = 0
     while pix_x < END_X:
         max_x, pixels = get_pixels(pix_x,pix_y)
         if len(pixels) > 0:
-            status['create__area'] += 1
             area = Area()
             area.galaxy_id = galaxy.galaxy_id
             area.top_x = pix_x
@@ -233,7 +217,6 @@ def create_areas(galaxy, pix_y):
             session.flush()
 
             for pixel in pixels:
-                status['create__pixel'] += 1
                 pixel_result = PixelResult()
                 pixel_result.galaxy_id = galaxy.galaxy_id
                 pixel_result.area_id = area.area_id
@@ -303,17 +286,14 @@ store_fits_header(HDULIST, galaxy.galaxy_id)
 LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
 break_up_galaxy(galaxy)
 
-LOG.info("\nRun status\n")
-for key in sorted(status.keys()):
-    LOG.info("%(key)30s %(val)s" % { 'key':key, 'val':status[key] })
-
 if rollback:
     session.rollback()
 else:
+    LOG.info('Building the image')
     image = FitsImage()
     image.buildImage(INPUT_FILE, IMAGE_DIR, filePrefixName, "asinh", False, False, False)
 
     shutil.copyfile(INPUT_FILE, image.get_file_path(IMAGE_DIR, fitsFileName, True))
     session.commit()
 
-LOG.info("\nDone")
+LOG.info("Done")
