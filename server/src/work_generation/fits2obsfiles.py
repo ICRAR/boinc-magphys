@@ -42,8 +42,7 @@ status = {'calls__get_pixels': 0,
           'create__area': 0,
           'create__pixel': 0}
 
-# This value was suggested by David Thilker on 2012-06-05 as a starting point.
-MIN_LIVE_CHANNELS_PER_PIXEL = 9
+MIN_LIVE_CHANNELS_PER_PIXEL = 2
 
 REDSHIFT = args['redshift'][0]
 INPUT_FILE = args['FITS_file'][0]
@@ -194,7 +193,7 @@ def get_pixels(pix_x, pix_y):
                     # A vagary of PyFits/NumPy is the order of the x & y indexes is reversed
                     # See page 13 of the PyFITS User Guide
                     pixel = HDULIST[layer].data[y, x]
-                    if math.isnan(pixel):
+                    if math.isnan(pixel) or pixel == 0.0:
                         # A zero tells MAGPHYS - we have no value here
                         pixels.append(0)
                     else:
