@@ -35,7 +35,10 @@ if args['threshold'] is not None:
     count = session.query(Result).filter(Result.server_state == 2).count()
     session.close()
 
-    LOG.info('Checking pending = %d : threshold = %d : files = %d', count, args['threshold'], args['files_to_process'])
+    if args['files_to_process'] is None:
+        LOG.info('Checking pending = %d : threshold = %d', count, args['threshold'])
+    else:
+        LOG.info('Checking pending = %d : threshold = %d : files = %d', count, args['threshold'], args['files_to_process'])
 
     if count >= args['threshold']:
         LOG.info('Nothing to do')
