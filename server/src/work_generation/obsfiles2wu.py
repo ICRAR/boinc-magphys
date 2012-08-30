@@ -37,7 +37,8 @@ if args['threshold'] is not None:
 
     LOG.info('Checking pending = %d : threshold = %d : files = %d', count, args['threshold'], args['files_to_process'])
 
-    if count < args['threshold'] or args['files_to_process'] is None:
+    if count >= args['threshold'] or args['files_to_process'] is None:
+        LOG.info('Nothing to do')
         exit(0)
 
 APP_NAME = "magphys_wrapper"
