@@ -245,6 +245,12 @@ def single_install(with_db):
         with cd('/home/ec2-user/boinc/tools'):
             run('./make_project -v --no_query --url_base http://{0} --db_user root {1}'.format(env.hosts[WEB_HOST], env.project_name))
 
+        run('echo databaseUserid = "root" > /home/ec2-user/boinc-magphys/server/src/config/database.settings')
+        run('echo databasePassword = "" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings')
+        run('echo databaseHostname = "localhost" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings')
+        run('echo databaseName = "magphys" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings')
+        run('echo boincDatabaseName = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.project_name))
+
     else:
         # Setup the database for recording WU's
         run('mysql --user={0} --host={1} --password={2} < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql'.format(env.db_username, env.db_host_name, env.db_password))
@@ -258,6 +264,7 @@ def single_install(with_db):
         run('echo databasePassword = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.db_password))
         run('echo databaseHostname = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.db_host_name))
         run('echo databaseName = "magphys" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings')
+        run('echo boincDatabaseName = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.project_name))
 
     # Setup Django files
     run('echo template_dir = "/home/ec2-user/boinc-magphys/server/src/templates" > /home/ec2-user/boinc-magphys/server/src/config/django.settings')
@@ -505,6 +512,9 @@ def single_install(with_db):
     sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), 'XXX is based at', 'theSkyNet {0} is based at'.format(env.project_name.upper()))
     sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), '\[describe your institution, with link to web page\]', 'The International Centre for Radio Astronomy Research.')
 
+    run('mkdir -p /home/ec2-user/projects/{0}/html/user/logos'.format(env.project_name))
+    run('cp /home/ec2-user/boinc-magphys/server/logos/* /home/ec2-user/projects/{0}/html/user/logos/'.format(env.project_name))
+
     # Build the validator
     with cd ('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
         run('make')
@@ -547,7 +557,17 @@ def single_install(with_db):
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
-
+    # Setup the logrotation
+    sudo('echo "/home/ec2-user/projects/{0}/log_*/*.log" > /etc/logrotate.d/boinc'.format(env.project_name))
+    sudo('echo "/home/ec2-user/projects/{0}/log_*/*.out" >> /etc/logrotate.d/boinc'.format(env.project_name))
+    sudo('echo "{" >> /etc/logrotate.d/boinc')
+    sudo('echo "  notifempty" >> /etc/logrotate.d/boinc')
+    sudo('echo "  daily" >> /etc/logrotate.d/boinc')
+    sudo('echo "  compress" >> /etc/logrotate.d/boinc')
+    sudo('echo "  rotate 10" >> /etc/logrotate.d/boinc')
+    sudo('echo "  dateext" >> /etc/logrotate.d/boinc')
+    sudo('echo "  copytruncate" >> /etc/logrotate.d/boinc')
+    sudo('echo "}" >> /etc/logrotate.d/boinc')
 
 def build_mod_wsgi():
     run('mkdir -p /home/ec2-user/build')

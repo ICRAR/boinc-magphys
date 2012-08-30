@@ -8,6 +8,10 @@ import logging
 import sys
 import os
 import subprocess
+from sqlalchemy.engine import create_engine
+from sqlalchemy.orm.session import sessionmaker
+from config import boinc_db_login
+from database.boinc_database_support import Result
 from utils.readable_dir import ReadableDir
 from utils.writeable_dir import WriteableDir
 
@@ -19,7 +23,20 @@ parser.add_argument('observations_directory', action=ReadableDir, nargs=1, help=
 parser.add_argument('boinc_project_root', action=WriteableDir, nargs=1, help='where the WU will be written too')
 parser.add_argument('-fp', '--files_to_process', type=int, help='the number of files to process')
 parser.add_argument('-p', '--priority', type=int, help='the priority of the WUs')
+parser.add_argument('-t', '--threshold', type=int, help='if the number is less than this threshold add records')
 args = vars(parser.parse_args())
+
+# Do we need to run this
+if args['threshold'] is not None:
+    # select count(*) from result where server_state = 2
+    engine = create_engine(boinc_db_login)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    count = session.query(Result).filter(Result.server_state == 2).count()
+    session.close()
+
+    if count < args['threshold']:
+        exit(0)
 
 APP_NAME = "magphys_wrapper"
 FILE_DIR = args['observations_directory']

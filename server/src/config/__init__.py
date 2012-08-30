@@ -10,7 +10,9 @@ db_userid = None
 db_password = None
 db_hostname = None
 db_name = None
+boinc_db_name = None
 db_login = None
+boinc_db_login = None
 
 db_file_name = dirname(__file__) + '/database.settings'
 if exists(db_file_name):
@@ -19,7 +21,9 @@ if exists(db_file_name):
     db_password = config['databasePassword']
     db_hostname = config['databaseHostname']
     db_name = config['databaseName']
-    db_login = "mysql://" + db_userid + ":" + db_password + "@" + db_hostname + "/" + db_name;
+    boinc_db_name = config['boincDatabaseName']
+    db_login = "mysql://" + db_userid + ":" + db_password + "@" + db_hostname + "/" + db_name
+    boinc_db_login = "mysql://" + db_userid + ":" + db_password + "@" + db_hostname + "/" + boinc_db_name
 
 else:
     db_login = "mysql://root:@localhost/magphys"
@@ -27,6 +31,8 @@ else:
     db_password = ''
     db_hostname = 'localhost'
     db_name = 'magphys'
+    boincDatabaseName = 'pogs'
+    boinc_db_login = "mysql://root:@localhost/pogs"
 
 ############### Django Settings ###############
 
