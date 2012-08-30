@@ -35,7 +35,9 @@ if args['threshold'] is not None:
     count = session.query(Result).filter(Result.server_state == 2).count()
     session.close()
 
-    if count < args['threshold']:
+    LOG.info('Checking pending = %d : threshold = %d : files = %d', count, args['threshold'], args['files_to_process'])
+
+    if count < args['threshold'] or args['files_to_process'] is None:
         exit(0)
 
 APP_NAME = "magphys_wrapper"
