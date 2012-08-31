@@ -12,12 +12,12 @@ from database import database_support
 import os, io, datetime, tempfile
 
 class GalaxyLine:
-    name1 = None
-    name2 = None
-    name3 = None
-    name4 = None
-    name5 = None
-    name6 = None
+    name1 = ""
+    name2 = ""
+    name3 = ""
+    name4 = ""
+    name5 = ""
+    name6 = ""
     id1 = ""
     id2 = ""
     id3 = ""
