@@ -65,7 +65,7 @@ We will measure physical parameters (such as stellar mass surface density, star 
         The International Centre for Radio Astronomy Research.
         <ul>
         <li><a href=\"../pogssite/pogs/".$user->id."\">Images you have processed</a>
-	      <li><a href=\"../pogssite/pogs/GalaxyList/1\">List all the Galaxies used in the survey</a>
+	      <li><a href=\"../pogssite/pogs/GalaxyList/1\">Images for all the Galaxies used in the survey</a>
         <li> [Link to page describing your research in detail]
         <li> [Link to page listing project personnel, and an email address]
         </ul>
