@@ -114,7 +114,10 @@ def userGalaxy(request, userid, galaxy_id):
     galaxy_width = galaxy.dimension_y;
     session.close()
     
-    referer = request.COOKIES['pogs_referer']
+    try:
+        referer = request.COOKIES['pogs_referer']
+    except KeyError as e:
+        referer = None
     if referer == '' or referer == None:
         referer = 'pogs'
     t = loader.get_template('pogs/user_images.html')
