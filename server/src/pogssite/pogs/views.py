@@ -30,18 +30,41 @@ class GalaxyLine:
     redshift4 = ""
     redshift5 = ""
     redshift6 = ""
-    width1 = 200
-    width2 = 200
-    width3 = 200
-    width4 = 200
-    width5 = 200
-    width6 = 200
-    height1 = 200
-    height2 = 200
-    height3 = 200
-    height4 = 200
-    height5 = 200
-    height6 = 200
+    width1 = 100
+    width2 = 100
+    width3 = 100
+    width4 = 100
+    width5 = 100
+    width6 = 100
+    height1 = 100
+    height2 = 100
+    height3 = 100
+    height4 = 100
+    height5 = 100
+    height6 = 100
+    
+def getReferer(request):
+    try:
+        referer = request.META['HTTP_REFERER']
+    except KeyError as e:
+        referer = None
+        
+    if referer == '' or referer == None:
+        referer = 'pogs'
+    else:
+        parts = referer.split('/')
+        referer = parts[3]
+    request.COOKIES['pogs_referer'] = referer
+    return referer
+
+def getRefererFromCookie(request):
+    try:
+        referer = request.COOKIES['pogs_referer']
+    except KeyError as e:
+        referer = None
+    if referer == '' or referer == None:
+        referer = 'pogs'
+    return referer;
 
 def userGalaxies(request, userid):
     session = PogsSession()
@@ -87,24 +110,7 @@ def userGalaxies(request, userid):
             galaxy_line.redshift6 = str(galaxy.redshift)
             idx = 0
     session.close()
-    try:
-        referer = request.META['HTTP_REFERER']
-    except KeyError as e:
-        referer = None
-        
-    if referer == '' or referer == None:
-        referer = 'pogs'
-    else:
-        parts = referer.split('/')
-        last = parts[-1]
-        last2 = parts[-2]
-        if last == '':
-            last = parts[-2]
-            last2 = parts[-3]
-        referer = last
-        if referer.find('.') >= 0:
-            referer = last2
-    request.COOKIES['pogs_referer'] = referer
+    referer = getReferer(request)
 
     t = loader.get_template('pogs/index.html')
     c = Context({
@@ -126,12 +132,8 @@ def userGalaxy(request, userid, galaxy_id):
     galaxy_width = galaxy.dimension_y;
     session.close()
     
-    try:
-        referer = request.COOKIES['pogs_referer']
-    except KeyError as e:
-        referer = None
-    if referer == '' or referer == None:
-        referer = 'pogs'
+    referer = getRefererFromCookie(request)
+    
     t = loader.get_template('pogs/user_images.html')
     c = Context({
         'userid': userid,
@@ -273,25 +275,7 @@ def galaxyList(request, page):
             galaxy_line.width5 = galaxy.dimension_y
             idx = 0
     session.close()
-    try:
-        referer = request.META['HTTP_REFERER']
-    except KeyError as e:
-        referer = None
-        
-    if referer == '' or referer == None:
-        referer = 'pogs'
-    else:
-        parts = referer.split('/')
-        last = parts[-1]
-        last2 = parts[-2]
-        if last == '':
-            last = parts[-2]
-            last2 = parts[-3]
-        referer = last
-        if referer.find('.') >= 0:
-            referer = last2
-    referer = 'pogs1'
-    request.COOKIES['pogs_referer'] = referer
+    referer = getReferer(request)
 
     t = loader.get_template('pogs/galaxy_list.html')
     c = Context({
@@ -329,11 +313,3 @@ def galaxyImage(request, galaxy_id, colour):
     response['Expires'] = expires
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
-
-
-
-
-
-
-
-

@@ -9,6 +9,7 @@
   <body>
     <div class=page_title>theSkyNet POGS - the PS1 Optical Galaxy Survey</div>
     
+{% if galaxy_list %}
     <table>
       <tr>
         <td colspan="3">Below is the list of Galaxies used for this survey.</td>
@@ -34,9 +35,9 @@
       </tr>
     {% endfor %}
     </table>
-    
-    {% if prev_page %}<a href='../GalaxyList/{{ prev_page }}'>Previous Page</a>{% endif %}
-    {% if next_page %}<a href='../GalaxyList/{{ next_page }}'>Next Page</a>{% endif %}
+{% else %}
+    <p>There are currently no galaxies in this survey.</p>
+{% endif %}
     
     <table width="100%">
       <tr>
