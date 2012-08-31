@@ -76,13 +76,18 @@ def userGalaxies(request, userid):
             idx = 0
     session.close()
     referer = request.META['HTTP_REFERER']
-    if referer == '':
+    if referer == '' or referer == None:
         referer = 'pogs'
     else:
         parts = referer.split('/')
-        referer = parts[-1]
-        if referer == '':
-            referer = parts[-2]
+        last = parts[-1]
+        last2 = parts[-2]
+        if last == '':
+            last = parts[-2]
+            last2 = parts[-3]
+        referer = last
+        if referer.find('.') >= 0:
+            referer = last2
     request.COOKIES['pogs_referer'] = referer
 
     t = loader.get_template('pogs/index.html')
