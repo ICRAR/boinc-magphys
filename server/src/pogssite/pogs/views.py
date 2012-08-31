@@ -1,9 +1,7 @@
 from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
-from django.template import RequestContext
-from django.http import HttpResponse
-from django.template import Context, loader
+from django.template import RequestContext, Context, loader
 from config import django_image_dir
 from image import fitsimage
 from sqlalchemy.orm import sessionmaker
@@ -77,11 +75,21 @@ def userGalaxies(request, userid):
             galaxy_line.redshift6 = str(galaxy.redshift)
             idx = 0
     session.close()
+    referer = request.META['HTTP_REFERER']
+    if referer == '':
+        referer = 'pogs'
+    else:
+        parts = referer.split('/')
+        referer = parts[-1]
+        if referer == '':
+            referer = parts[-2]
+    request.COOKIES['pogs_referer'] = referer
 
     t = loader.get_template('pogs/index.html')
     c = Context({
         'user_galaxy_list': user_galaxy_list,
         'userid':           userid,
+        'referer':          referer,
     })
     return HttpResponse(t.render(c))
 
@@ -97,6 +105,9 @@ def userGalaxy(request, userid, galaxy_id):
     galaxy_width = galaxy.dimension_y;
     session.close()
     
+    referer = request.COOKIES['pogs_referer']
+    if referer == '' or referer == None:
+        referer = 'pogs'
     t = loader.get_template('pogs/user_images.html')
     c = Context({
         'userid': userid,
@@ -104,6 +115,7 @@ def userGalaxy(request, userid, galaxy_id):
         'galaxy_name': galaxy_name,
         'galaxy_width': galaxy_width,
         'galaxy_height': galaxy_height,
+        'referer':          referer,
     })
     return HttpResponse(t.render(c))
 
@@ -159,6 +171,35 @@ def userFitsImage(request, userid, galaxy_id, name):
 
     sizeBytes = os.path.getsize(filename)
     file = open(filename, "rb")
+    myImage = file.read(sizeBytes)
+    file.close()
+
+    DELTA = datetime.timedelta(minutes=10)
+    DELTA_SECONDS = DELTA.days * 86400 + DELTA.seconds
+    EXPIRATION_MASK = "%a, %d %b %Y %H:%M:%S %Z"
+    expires = (datetime.datetime.now()+DELTA).strftime(EXPIRATION_MASK)
+
+    response = HttpResponse(myImage, content_type='image/png')
+    response['Content-Disposition'] = 'filename=\"' + imageFileName + '\"'
+    response['Expires'] = expires
+    response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
+    return response
+
+def galaxyImage(request, galaxy_id, colour):
+    imageDirName = django_image_dir
+
+    session = PogsSession()
+    userid = int(userid)
+    galaxy_id = int(galaxy_id)
+    galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
+
+    image = fitsimage.FitsImage()
+    imagePrefixName = '{0}_{1}'.format(galaxy.name, galaxy.version_number);
+    imageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
+    session.close()
+
+    sizeBytes = os.path.getsize(imageFileName)
+    file = open(imageFileName, "rb")
     myImage = file.read(sizeBytes)
     file.close()
 
