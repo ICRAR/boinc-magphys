@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <title>theSkyNet POGS - the PS1 Optical Galaxy Survey</title>
+    <link rel="stylesheet" type="text/css" href="/{{ referer }}/main.css" media="all" />
+    <link rel="stylesheet" type="text/css" href="/{{ referer }}/black.css">
+  </head>
+  
+  <body>
+    <div class=page_title>theSkyNet POGS - the PS1 Optical Galaxy Survey</div>
+    
+    <p>List of Galaxies.
+    <table>
+      {% for line in galaxy_list %}
+      <tr>
+        <td>{{ line.name1 }}</td>
+        <td>{{ line.name2 }}</td>
+        <td>{{ line.name3 }}</td>
+        <td>{{ line.name4 }}</td>
+        <td>{{ line.name5 }}</td>
+      </tr>
+      <tr>
+        <td valign='top' style="border-color:white; border-width:1px;"><img src="../GalaxyImage/{{ line.id1 }}/1" width="{{ line.width1 }}px" height="{{ line.height1 }}px"></td>
+        <td valign='top' style="border-color:white; border-width:1px;"><img src="../GalaxyImage/{{ line.id2 }}/1" width="{{ line.idth2 }}px" height="{{ line.height2 }}px"></td>
+        <td valign='top' style="border-color:white; border-width:1px;"><img src="../GalaxyImage/{{ line.id3 }}/1" width="{{ line.width3 }}px" height="{{ line.height3 }}px"></td>
+        <td valign='top' style="border-color:white; border-width:1px;"><img src="../GalaxyImage/{{ line.id4 }}/1" width="{{ line.width4 }}px" height="{{ line.height4 }}px"></td>
+        <td valign='top' style="border-color:white; border-width:1px;"><img src="../GalaxyImage/{{ line.id5 }}/1" width="{{ line.width5 }}px" height="{{ line.height5 }}px"></td>
+      </tr>
+    {% endfor %}
+    </table>
+    
+    {% if prev_page %}<a href='../GalaxyList/{{ prev_page }}'>Previous Page</a>{% endif %}
+    {% if next_page %}<a href='../GalaxyList/{{ next_page }}'>Next Page</a>{% endif %}
+    
+    <table width="100%">
+      <tr>
+        <td>
+          <hr noshade size=1><br>
+          <center>
+          <a href=/{{ referer }}/index.php>Main page</a> &middot; <a href=/{{ referer }}/home.php>Your account</a> &middot; <a href=/{{ referer }}/forum_index.php>Message boards</a>
+          <br><br><br>Copyright &copy; 2012 The International Centre for Radio Astronomy Research
+          </center>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

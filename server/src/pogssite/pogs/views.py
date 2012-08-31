@@ -30,6 +30,18 @@ class GalaxyLine:
     redshift4 = ""
     redshift5 = ""
     redshift6 = ""
+    width1 = 200
+    width2 = 200
+    width3 = 200
+    width4 = 200
+    width5 = 200
+    width6 = 200
+    height1 = 200
+    height2 = 200
+    height3 = 200
+    height4 = 200
+    height5 = 200
+    height6 = 200
 
 def userGalaxies(request, userid):
     session = PogsSession()
@@ -196,6 +208,99 @@ def userFitsImage(request, userid, galaxy_id, name):
     response['Expires'] = expires
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
+
+def galaxyList(request, page):
+    lines_per_page = 3
+    galaxies_per_line = 5
+    page = int(page)
+    start = (page-1) * lines_per_page * galaxies_per_line
+    next_page = None
+    if page == 1:
+        prev_page = None
+    else:
+        prev_page = page - 1
+    session = PogsSession()
+    galaxies = session.query(database_support.Galaxy).order_by(database_support.Galaxy.name, database_support.Galaxy.version_number).all()
+    galaxy_list = []
+    idx = 0
+    count = 0
+    galaxy_line = None
+    for galaxy in galaxies:
+        count = count + 1
+        name = galaxy.name
+        if galaxy.version_number > 1:
+            name = galaxy.name + "[" + str(galaxy.version_number) + "]"
+        if count < start:
+            pass
+        elif idx == 0:
+            if len(galaxy_list) >= lines_per_page:
+                next_page = page + 1
+                break
+            galaxy_line = GalaxyLine()
+            galaxy_line.name1 = name
+            galaxy_line.id1 = galaxy.galaxy_id
+            galaxy_line.redshift1 = str(galaxy.redshift)
+            galaxy_line.height1 = galaxy.dimension_x
+            galaxy_line.width1 = galaxy.dimension_y
+            galaxy_list.append(galaxy_line)
+            idx = 1
+        elif idx == 1:
+            galaxy_line.name2 = name
+            galaxy_line.id2 = galaxy.galaxy_id
+            galaxy_line.redshift2 = str(galaxy.redshift)
+            galaxy_line.height2 = galaxy.dimension_x
+            galaxy_line.width2 = galaxy.dimension_y
+            idx = 2
+        elif idx == 2:
+            galaxy_line.name3 = name
+            galaxy_line.id3 = galaxy.galaxy_id
+            galaxy_line.redshift3 = str(galaxy.redshift)
+            galaxy_line.height3 = galaxy.dimension_x
+            galaxy_line.width3 = galaxy.dimension_y
+            idx = 3
+        elif idx == 3:
+            galaxy_line.name4 = name
+            galaxy_line.id4 = galaxy.galaxy_id
+            galaxy_line.redshift4 = str(galaxy.redshift)
+            galaxy_line.height4 = galaxy.dimension_x
+            galaxy_line.width4 = galaxy.dimension_y
+            idx = 4
+        elif idx == 4:
+            galaxy_line.name5 = name
+            galaxy_line.id5 = galaxy.galaxy_id
+            galaxy_line.redshift5 = str(galaxy.redshift)
+            galaxy_line.height5 = galaxy.dimension_x
+            galaxy_line.width5 = galaxy.dimension_y
+            idx = 0
+    session.close()
+    try:
+        referer = request.META['HTTP_REFERER']
+    except KeyError as e:
+        referer = None
+        
+    if referer == '' or referer == None:
+        referer = 'pogs'
+    else:
+        parts = referer.split('/')
+        last = parts[-1]
+        last2 = parts[-2]
+        if last == '':
+            last = parts[-2]
+            last2 = parts[-3]
+        referer = last
+        if referer.find('.') >= 0:
+            referer = last2
+    referer = 'pogs1'
+    request.COOKIES['pogs_referer'] = referer
+
+    t = loader.get_template('pogs/galaxy_list.html')
+    c = Context({
+        'galaxy_list':      galaxy_list,
+        'prev_page':        prev_page,
+        'next_page':        next_page,
+        'referer':          referer,
+    })
+    return HttpResponse(t.render(c))
 
 def galaxyImage(request, galaxy_id, colour):
     imageDirName = django_image_dir
