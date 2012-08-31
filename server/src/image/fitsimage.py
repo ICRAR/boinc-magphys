@@ -575,7 +575,7 @@ class FitsImage:
             area = areax.Area;
             for x in range(area.top_x, area.bottom_x):
                 for y in range(area.top_y, area.bottom_y):
-                    if x < width and y < height:
+                    if x < height and y < width:
                         self.markPixel(image, x, width-y-1)
 
         #for x in range(140, 145):
