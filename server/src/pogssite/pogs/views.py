@@ -54,6 +54,8 @@ def getReferer(request):
     else:
         parts = referer.split('/')
         referer = parts[3]
+    if referer == 'pogssite':
+        referer = getRefererFromCookie(request)
     request.COOKIES['pogs_referer'] = referer
     return referer
 
@@ -215,6 +217,8 @@ def galaxyList(request, page):
     lines_per_page = 3
     galaxies_per_line = 5
     page = int(page)
+    if page < 1:
+        page = 1
     start = (page-1) * lines_per_page * galaxies_per_line
     next_page = None
     if page == 1:
@@ -303,7 +307,7 @@ def galaxyImage(request, galaxy_id, colour):
     myImage = file.read(sizeBytes)
     file.close()
 
-    DELTA = datetime.timedelta(minutes=10)
+    DELTA = datetime.timedelta(minutes=100)
     DELTA_SECONDS = DELTA.days * 86400 + DELTA.seconds
     EXPIRATION_MASK = "%a, %d %b %Y %H:%M:%S %Z"
     expires = (datetime.datetime.now()+DELTA).strftime(EXPIRATION_MASK)
