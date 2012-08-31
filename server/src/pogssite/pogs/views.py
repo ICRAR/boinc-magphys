@@ -199,7 +199,6 @@ def galaxy(request, galaxy_id):
     
     t = loader.get_template('pogs/galaxy_images.html')
     c = Context({
-        'userid': userid,
         'galaxy_id': galaxy_id,
         'galaxy_name': galaxy_name,
         'galaxy_width': galaxy_width,
