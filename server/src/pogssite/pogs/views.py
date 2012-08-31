@@ -78,7 +78,7 @@ def userGalaxies(request, userid):
     try:
         referer = request.META['HTTP_REFERER']
     except KeyError as e:
-        referer = 'pogs'
+        referer = None
         
     if referer == '' or referer == None:
         referer = 'pogs'
