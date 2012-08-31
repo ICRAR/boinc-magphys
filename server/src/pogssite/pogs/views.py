@@ -201,7 +201,6 @@ def galaxyImage(request, galaxy_id, colour):
     imageDirName = django_image_dir
 
     session = PogsSession()
-    userid = int(userid)
     galaxy_id = int(galaxy_id)
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
 

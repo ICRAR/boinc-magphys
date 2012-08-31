@@ -9,4 +9,5 @@ urlpatterns = patterns('',
     url(r'^UserGalaxy/(?P<userid>\d+)/(?P<galaxy_id>\d+)$', 'pogs.views.userGalaxy'),
     url(r'^UserGalaxyImage/(?P<userid>\d+)/(?P<galaxy_id>\d+)/(?P<colour>\d+)$', 'pogs.views.userGalaxyImage'),
     url(r'^UserFitsImage/(?P<userid>\d+)/(?P<galaxy_id>\d+)/(?P<name>\w+)$', 'pogs.views.userFitsImage'),
+    url(r'^GalaxyImage/(?P<galaxy_id>\d+)/(?P<colour>\d+)$', 'pogs.views.galaxyImage'),
 )
