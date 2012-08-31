@@ -75,7 +75,11 @@ def userGalaxies(request, userid):
             galaxy_line.redshift6 = str(galaxy.redshift)
             idx = 0
     session.close()
-    referer = request.META['HTTP_REFERER']
+    try:
+        referer = request.META['HTTP_REFERER']
+    except KeyError as e:
+        referer = 'pogs'
+        
     if referer == '' or referer == None:
         referer = 'pogs'
     else:
