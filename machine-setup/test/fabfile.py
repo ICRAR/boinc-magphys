@@ -269,6 +269,10 @@ def single_install(with_db):
     # Setup Django files
     run('echo template_dir = "/home/ec2-user/boinc-magphys/server/src/templates" > /home/ec2-user/boinc-magphys/server/src/config/django.settings')
     run('echo image_dir = "/home/ec2-user/galaxyImages" >> /home/ec2-user/boinc-magphys/server/src/config/django.settings')
+    
+    # Setup Apache for Django.
+    sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/wsgi.conf /etc/httpd/conf.d/')
+    sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/pogs.django.conf /etc/httpd/conf.d/')
 
     # Edit the files
     sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH PROJECT NAME', 'theSkyNet {0} - the PS1 Optical Galaxy Survey'.format(env.project_name.upper()))
