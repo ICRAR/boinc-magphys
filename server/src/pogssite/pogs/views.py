@@ -12,12 +12,12 @@ from database import database_support
 import os, io, datetime, tempfile
 
 class GalaxyLine:
-    name1 = ""
-    name2 = ""
-    name3 = ""
-    name4 = ""
-    name5 = ""
-    name6 = ""
+    name1 = None
+    name2 = None
+    name3 = None
+    name4 = None
+    name5 = None
+    name6 = None
     id1 = ""
     id2 = ""
     id3 = ""
@@ -184,34 +184,29 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
 
-def userFitsImage(request, userid, galaxy_id, name):
-    imageDirName = django_image_dir
-
+def galaxy(request, galaxy_id):
     session = PogsSession()
-    userid = int(userid)
     galaxy_id = int(galaxy_id)
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
-
-    image = fitsimage.FitsImage()
-    imageFileName = '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name);
-    filename = image.get_file_path(imageDirName, imageFileName, False)
+    galaxy_name = galaxy.name
+    if galaxy.version_number > 1:
+        galaxy_name = galaxy.name + "[" + str(galaxy.version_number) + "]"
+    galaxy_height = galaxy.dimension_x;
+    galaxy_width = galaxy.dimension_y;
     session.close()
-
-    sizeBytes = os.path.getsize(filename)
-    file = open(filename, "rb")
-    myImage = file.read(sizeBytes)
-    file.close()
-
-    DELTA = datetime.timedelta(minutes=10)
-    DELTA_SECONDS = DELTA.days * 86400 + DELTA.seconds
-    EXPIRATION_MASK = "%a, %d %b %Y %H:%M:%S %Z"
-    expires = (datetime.datetime.now()+DELTA).strftime(EXPIRATION_MASK)
-
-    response = HttpResponse(myImage, content_type='image/png')
-    response['Content-Disposition'] = 'filename=\"' + imageFileName + '\"'
-    response['Expires'] = expires
-    response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
-    return response
+    
+    referer = getRefererFromCookie(request)
+    
+    t = loader.get_template('pogs/galaxy_images.html')
+    c = Context({
+        'userid': userid,
+        'galaxy_id': galaxy_id,
+        'galaxy_name': galaxy_name,
+        'galaxy_width': galaxy_width,
+        'galaxy_height': galaxy_height,
+        'referer':          referer,
+    })
+    return HttpResponse(t.render(c))
 
 def galaxyList(request, page):
     lines_per_page = 3
@@ -308,6 +303,34 @@ def galaxyImage(request, galaxy_id, colour):
     file.close()
 
     DELTA = datetime.timedelta(minutes=100)
+    DELTA_SECONDS = DELTA.days * 86400 + DELTA.seconds
+    EXPIRATION_MASK = "%a, %d %b %Y %H:%M:%S %Z"
+    expires = (datetime.datetime.now()+DELTA).strftime(EXPIRATION_MASK)
+
+    response = HttpResponse(myImage, content_type='image/png')
+    response['Content-Disposition'] = 'filename=\"' + imageFileName + '\"'
+    response['Expires'] = expires
+    response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
+    return response
+
+def galaxyParameterImage(request, galaxy_id, name):
+    imageDirName = django_image_dir
+
+    session = PogsSession()
+    galaxy_id = int(galaxy_id)
+    galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
+
+    image = fitsimage.FitsImage()
+    imageFileName = '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name);
+    filename = image.get_file_path(imageDirName, imageFileName, False)
+    session.close()
+
+    sizeBytes = os.path.getsize(filename)
+    file = open(filename, "rb")
+    myImage = file.read(sizeBytes)
+    file.close()
+
+    DELTA = datetime.timedelta(minutes=10)
     DELTA_SECONDS = DELTA.days * 86400 + DELTA.seconds
     EXPIRATION_MASK = "%a, %d %b %Y %H:%M:%S %Z"
     expires = (datetime.datetime.now()+DELTA).strftime(EXPIRATION_MASK)
