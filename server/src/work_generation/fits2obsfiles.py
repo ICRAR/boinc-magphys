@@ -212,7 +212,7 @@ def create_areas(galaxy, pix_y):
             area.top_x = pix_x
             area.top_y = pix_y
             area.bottom_x = max_x
-            area.bottom_y = pix_y + ROW_HEIGHT
+            area.bottom_y = min(pix_y + ROW_HEIGHT, END_Y)
             session.add(area)
             session.flush()
 
