@@ -457,6 +457,13 @@ boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
         '        obsfiles2wu.out\\n'
         '      </output>\\n'
         '    </task>\\n'
+        '    <task>\\n'
+        '      <cmd>census</cmd>\\n'
+        '      <period>1 day</period>\\n'
+        '      <output>\\n'
+        '        census.out\\n'
+        '      </output>\\n'
+        '    </task>\\n'
         '  </tasks>\\n'
         '  <daemons>\\n'
         '    <daemon>\\n'
@@ -509,11 +516,14 @@ boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
         '      <homogeneous_redundancy>2</homogeneous_redundancy>\\n'
         '      <one_result_per_user_per_wu/>\\n'
         '      <max_wus_in_progress>10</max_wus_in_progress>\\n'
+        '      <matchmaker>1</matchmaker>\\n'
+        '      <job_size_matching>1</job_size_matching>\\n'
         '''      <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})
 
     # Copy the config files
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/index.php /home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name))
+    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/hr_info.txt /home/ec2-user/projects/{0}/hr_info.txt'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_archive'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_tmp'.format(env.project_name))
 
