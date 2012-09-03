@@ -168,16 +168,16 @@ def base_install():
 
     sudo('service postfix start')
 
-    sudo('echo "relayhost = [smtp.gmail.com]:587" >> /etc/postfix/main.cf')
-    sudo('echo "smtp_sasl_auth_enable = yes" >> /etc/postfix/main.cf')
-    sudo('echo "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd" >> /etc/postfix/main.cf')
-    sudo('echo "smtp_sasl_security_options = noanonymous" >> /etc/postfix/main.cf')
-    sudo('echo "smtp_tls_CAfile = /etc/postfix/cacert.pem" >> /etc/postfix/main.cf')
-    sudo('echo "smtp_use_tls = yes" >> /etc/postfix/main.cf')
-    sudo('echo "" >> /etc/postfix/main.cf')
-    sudo('echo "# smtp_generic_maps" >> /etc/postfix/main.cf')
-    sudo('echo "smtp_generic_maps = hash:/etc/postfix/generic" >> /etc/postfix/main.cf')
-    sudo('echo "default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf')
+    sudo('''echo "relayhost = [smtp.gmail.com]:587
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_tls_CAfile = /etc/postfix/cacert.pem
+smtp_use_tls = yes
+
+# smtp_generic_maps
+smtp_generic_maps = hash:/etc/postfix/generic
+default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
 
     sudo('echo "[smtp.gmail.com]:587 {0}@gmail.com:{1}" > /etc/postfix/sasl_passwd'.format(env.gmail_account, env.gmail_password))
     sudo('chmod 400 /etc/postfix/sasl_passwd')
@@ -192,7 +192,10 @@ def base_install():
         run('make')
 
     # Setup the pythonpath
-    append('/home/ec2-user/.bash_profile', ['', 'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src', 'export PYTHONPATH'])
+    append('/home/ec2-user/.bash_profile',
+        ['',
+         'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src',
+         'export PYTHONPATH'])
 
     # Setup the python
     run('wget http://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
@@ -245,11 +248,11 @@ def single_install(with_db):
         with cd('/home/ec2-user/boinc/tools'):
             run('./make_project -v --no_query --url_base http://{0} --db_user root {1}'.format(env.hosts[WEB_HOST], env.project_name))
 
-        run('echo databaseUserid = "root" > /home/ec2-user/boinc-magphys/server/src/config/database.settings')
-        run('echo databasePassword = "" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings')
-        run('echo databaseHostname = "localhost" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings')
-        run('echo databaseName = "magphys" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings')
-        run('echo boincDatabaseName = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.project_name))
+        run('''echo 'databaseUserid = "root"
+databasePassword = ""
+databaseHostname = "localhost"
+databaseName = "magphys"
+boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'''.format(env.project_name))
 
     else:
         # Setup the database for recording WU's
@@ -269,7 +272,7 @@ def single_install(with_db):
     # Setup Django files
     run('echo template_dir = "/home/ec2-user/boinc-magphys/server/src/templates" > /home/ec2-user/boinc-magphys/server/src/config/django.settings')
     run('echo image_dir = "/home/ec2-user/galaxyImages" >> /home/ec2-user/boinc-magphys/server/src/config/django.settings')
-    
+
     # Setup Apache for Django.
     sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/wsgi.conf /etc/httpd/conf.d/')
     sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/pogs.django.conf /etc/httpd/conf.d/')
@@ -458,7 +461,7 @@ def single_install(with_db):
         '  <daemons>\\n'
         '    <daemon>\\n'
         '      <cmd>\\n'
-        '        feeder -d 2 --priority_order\\n'
+        '        feeder -d 2 --priority_order_create_time\\n'
         '      </cmd>\\n'
         '    </daemon>\\n'
         '    <daemon>\\n'
@@ -503,6 +506,7 @@ def single_install(with_db):
     run('''awk '/<one_result_per_user_per_wu>/,/<\/one_result_per_user_per_wu>/ {if ( $0 ~ /<\/one_result_per_user_per_wu>/ ) print "'''
         '      <delete_delay_hours>48</delete_delay_hours>\\n'
         '      <prefer_primary_platform>1</prefer_primary_platform>\\n'
+        '      <homogeneous_redundancy>2</homogeneous_redundancy>\\n'
         '      <one_result_per_user_per_wu/>\\n'
         '      <max_wus_in_progress>10</max_wus_in_progress>\\n'
         '''      <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})

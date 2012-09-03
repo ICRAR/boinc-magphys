@@ -70,8 +70,6 @@ def create_instance(names):
         host_names.append(str(instances[i].dns_name))
     return host_names
 
-@task
-@parallel
 def base_install():
     print 'base_install Host: {0} Env: {1}'.format(env.host_string, env)
     # Update the AMI completely
@@ -82,8 +80,6 @@ def base_install():
 
 
 
-@task
-@parallel
 def common_end_install():
     print 'common_end_install Host: {0} Env: {1}'.format(env.host_string, env)
     # Setup the crontab job to keep things ticking

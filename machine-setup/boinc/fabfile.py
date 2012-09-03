@@ -121,6 +121,10 @@ def sign_files(app_version):
                 local('/home/ec2-user/boinc/tools/sign_executable {0} /home/ec2-user/projects/{1}/keys/code_sign_private | tee {0}.sig'.format(file, env.project_name))
 
 @task
+def edit_files():
+   pass # TODO
+
+@task
 def setup_postfix():
     """Setup the relocated file
 
