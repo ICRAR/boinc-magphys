@@ -201,7 +201,7 @@ for galaxy in galaxies:
         image.save(outname)
         galaxy.image_time = datetime.datetime.now()
         galaxy.pixel_count = pixel_count
-        gaaxy.pixels_processed = pixels_processed
+        galaxy.pixels_processed = pixels_processed
         session.commit()
 
 LOG.info('Built images for %d galaxies\n', len(galaxies))
