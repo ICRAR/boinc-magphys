@@ -17,11 +17,12 @@
           {% if prev_page %}<a href='../GalaxyList/{{ prev_page }}'>Previous Page</a>{% endif %}
           {% if next_page %}<a href='../GalaxyList/{{ next_page }}'>Next Page</a>{% endif %}
         </td>
+      </tr>
       <tr>
         <th>Name</th>
         <th>Image</th>
-        <th>RA</th>
-        <th>Dec</th>
+        <th title='Right Ascension"'>RA</th>
+        <th title='Declination'>Dec</th>
         <th>Redshift</th>
         <th>Type</th>
         <th>More</th>
@@ -38,7 +39,14 @@
         <td>{{ line.galaxy_type }}</td>
         <td><a href="http://ned.ipac.caltech.edu/cgi-bin/objsearch?objname={{ line.name }}&extend=no&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=RA+or+Longitude&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES" target="_blank">Galaxy details</a></td>
       </tr>
-    {% endfor %}
+      {% endfor %}
+      <tr>
+        <td colspan="5"></td>
+        <td colspan="2" align='right'>
+          {% if prev_page %}<a href='../GalaxyList/{{ prev_page }}'>Previous Page</a>{% endif %}
+          {% if next_page %}<a href='../GalaxyList/{{ next_page }}'>Next Page</a>{% endif %}
+        </td>
+      </tr>
     </table>
 {% else %}
     <p>There are currently no galaxies in this survey.</p>
