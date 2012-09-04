@@ -12,6 +12,7 @@ class ImageBuilder:
     """
     debug = False
     imageFileName = ""
+    thumbnailFileName = ""
     image = None
     redFilter = 0
     greenFilter = 0
@@ -30,8 +31,9 @@ class ImageBuilder:
     blueHiCut = math.pi/2
     blueMedian = 0
     
-    def __init__(self, imageFileName, redFilter, greenFilter, blueFilter, width, height, debug):
+    def __init__(self, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug):
         self.imageFileName = imageFileName
+        self.thumbnailFileName = thumbnailFileName
         self.redFilter = redFilter
         self.greenFilter = greenFilter
         self.blueFilter = blueFilter
@@ -82,7 +84,7 @@ class ImageBuilder:
         else:
             return True
             
-    def saveImage(self, imageDirName, imagePrefixName):
+    def saveImage(self):
         centre = 1
         redSigma = centre / self.redMedian
         greenSigma = centre / self.greenMedian
@@ -140,6 +142,11 @@ class ImageBuilder:
                     blueValuerange[blue] = blueValuerange[blue] + 1
                     self.image.putpixel((x,self.width-y-1), (red, green, blue))
         self.image.save(self.imageFileName)
+        
+        if self.thumbnailFileName:
+            self.image = self.image.resize((80,80), Image.ANTIALIAS)
+            self.image.save(self.thumbnailFileName)
+            
         if self.debug:
             for z in range(0, 256):
                 print z, redValuerange[z], greenValuerange[z], blueValuerange[z]
@@ -179,10 +186,10 @@ class FitsImage:
         height = hdu.header['NAXIS2']
 
         # Create Three Colour Images
-        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True), 118, 117, 116, width, height, debug) # i, r, g
-        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), 117, 116, 124, width, height, debug) # r, g, NUV
-        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), 280, 116, 124, width, height, debug) # 3.6, g, NUV
-        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), 283, 117, 124, width, height, debug) # 22, r, NUV
+        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True), self.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True), 118, 117, 116, width, height, debug) # i, r, g
+        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None, 117, 116, 124, width, height, debug) # r, g, NUV
+        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None, 280, 116, 124, width, height, debug) # 3.6, g, NUV
+        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None, 283, 117, 124, width, height, debug) # 22, r, NUV
         images = [image1, image2, image3, image4]
         
         file = 0
@@ -200,7 +207,7 @@ class FitsImage:
         
         for image in images:
             if image.isValid():
-                image.saveImage(imageDirName, imagePrefixName)
+                image.saveImage()
             else:
                 print 'not valid'
 
@@ -538,6 +545,14 @@ class FitsImage:
         many directories to avoid having too many files in a single directory.
         """
         return self.get_file_path(imageDirName, imagePrefixName + "_colour_" + str(colour) + ".png", create)
+    
+    def get_thumbnail_colour_image_path(self, imageDirName, imagePrefixName, colour, create):
+        """
+        Generates the relative path to the file given the directory name, image prefix
+        and colour.  The file name is used to generate a hash to spread the files across
+        many directories to avoid having too many files in a single directory.
+        """
+        return self.get_file_path(imageDirName, imagePrefixName + "_tn_colour_" + str(colour) + ".png", create)
 
     def get_bw_image_path(self, imageDirName, imagePrefixName, file, create):
         """
