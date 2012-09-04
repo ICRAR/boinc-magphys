@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger
+from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger, Boolean
 from sqlalchemy.orm import relationship, backref
 
 # The database is partitioned to improve performance, this means there are no primary
@@ -19,6 +19,10 @@ class Galaxy(Base):
     create_time = Column(TIMESTAMP)
     image_time  = Column(TIMESTAMP)
     version_number = Column(Integer)
+    current = Column(Boolean)
+    galaxy_type = Column(String(10))
+    ra_cent = Column(Float)
+    dec_cent = Column(Float)
 
     def __repr__(self):
         return 'galaxy: {galaxy_id : {0}, name : {1}}'.format(self.galaxy_id, self.name)

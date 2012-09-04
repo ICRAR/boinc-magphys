@@ -11,7 +11,11 @@ CREATE TABLE galaxy (
   redshift       FLOAT NOT NULL,
   create_time    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   image_time     TIMESTAMP,
-  version_number INTEGER UNSIGNED NOT NULL DEFAULT 1
+  version_number INTEGER UNSIGNED NOT NULL DEFAULT 1,
+  current        BOOLEAN NOT NULL DEFAULT TRUE,
+  galaxy_type    VARCHAR(10),
+  ra_cent        FLOAT,
+  dec_cent       FLOAT
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE INDEX galaxy_name_ix ON galaxy(name, version_number);

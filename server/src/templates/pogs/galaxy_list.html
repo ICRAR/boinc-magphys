@@ -12,36 +12,31 @@
 {% if galaxy_list %}
     <table>
       <tr>
-        <td colspan="3">Below is the list of Galaxies used for this survey.  Click on the image to see further images of the galaxy.</td>
+        <td colspan="5">Below is the list of Galaxies used for this survey.  Click on the image to see further images of the galaxy.</td>
         <td colspan="2" align='right'>
           {% if prev_page %}<a href='../GalaxyList/{{ prev_page }}'>Previous Page</a>{% endif %}
           {% if next_page %}<a href='../GalaxyList/{{ next_page }}'>Next Page</a>{% endif %}
         </td>
       <tr>
+        <th>Name</th>
+        <th>Image</th>
+        <th>RA</th>
+        <th>Dec</th>
+        <th>Redshift</th>
+        <th>Type</th>
+        <th>More</th>
+      </tr>
       {% for line in galaxy_list %}
       <tr>
-        <td>{{ line.name1 }}</td>
-        <td>{{ line.name2 }}</td>
-        <td>{{ line.name3 }}</td>
-        <td>{{ line.name4 }}</td>
-        <td>{{ line.name5 }}</td>
-      </tr>
-      <tr>
+        <td>{{ line.name }}</td>
         <td valign='top' style="border-color:white; border-width:1px;">
-          <a href='../Galaxy/{{ line.id1 }}'><img src="../GalaxyImage/{{ line.id1 }}/1" width="{{ line.width1 }}px" height="{{ line.height1 }}px"></a>
+          <a href='../Galaxy/{{ line.galaxy_id }}'><img src="../GalaxyImage/{{ line.galaxy_id }}/1" width="80px" height="80px"></a>
         </td>
-        <td valign='top' {% if line.id2 %}style="border-color:white; border-width:1px;"{% endif %}>
-          {% if line.id2 %}<a href='../Galaxy/{{ line.id2 }}'><img src="../GalaxyImage/{{ line.id2 }}/1" width="{{ line.width2 }}px" height="{{ line.height2 }}px"></a>{% endif %}
-        </td>
-        <td valign='top' {% if line.id3 %}style="border-color:white; border-width:1px;"{% endif %}>
-          {% if line.id3 %}<a href='../Galaxy/{{ line.id3 }}'><img src="../GalaxyImage/{{ line.id3 }}/1" width="{{ line.width3 }}px" height="{{ line.height3 }}px"></a>{% endif %}
-        </td>
-        <td valign='top' {% if line.id4 %}style="border-color:white; border-width:1px;"{% endif %}>
-          {% if line.id4 %}<a href='../Galaxy/{{ line.id4 }}'><img src="../GalaxyImage/{{ line.id4 }}/1" width="{{ line.width4 }}px" height="{{ line.height4 }}px"></a>{% endif %}
-        </td>
-        <td valign='top' {% if line.id5 %}style="border-color:white; border-width:1px;"{% endif %}>
-          {% if line.id5 %}<a href='../Galaxy/{{ line.id5 }}'><img src="../GalaxyImage/{{ line.id5 }}/1" width="{{ line.width5 }}px" height="{{ line.height5 }}px"></a>{% endif %}
-        </td>
+        <td>{{ line.ra_cent }}</td>
+        <td>{{ line.dec_cent }}</td>
+        <td>{{ line.redshift }}</td>
+        <td>{{ line.galaxy_type }}</td>
+        <td><a href="http://ned.ipac.caltech.edu/cgi-bin/objsearch?objname={{ line.name }}&extend=no&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=RA+or+Longitude&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES" target="_blank">Galaxy details</a></td>
       </tr>
     {% endfor %}
     </table>

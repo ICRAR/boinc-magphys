@@ -87,7 +87,7 @@ class Pixel:
         self.pixels = pixels
         self.pixel_id = None
 
-def store_fits_header(hdulist, galaxy_id):
+def store_fits_header(hdulist, galaxy, galaxy_id):
     """
     Store the FITS headers we need to remember
     """
@@ -100,6 +100,11 @@ def store_fits_header(hdulist, galaxy_id):
                 fh.keyword = keyword
                 fh.value = header[keyword]
                 session.add(fh)
+                
+                if keyword == 'RA_CENT':
+                    galaxy.ra_cent = float(fh.value)
+                elif keyword == 'DEC_CENT':
+                    galaxy.dec_cent = float(fh.value)
 
 def sort_layers(hdu_list, layer_count):
     """
@@ -243,6 +248,9 @@ def get_version_number(galaxy_name):
     count = session.query(Galaxy).filter(Galaxy.name == galaxy_name).count()
     return count + 1
 
+def update_current(galaxy_name):
+    session.execute("update galaxy set current = false where name = '"+ galaxy_name + "'")
+
 ## ######################################################################## ##
 ##
 ## Where it all starts
@@ -259,6 +267,8 @@ else:
 LOG.info("Work units for: %(object)s" % { "object":object_name } )
 
 version_number = get_version_number(object_name)
+if version_number > 1:
+    update_current(object_name)
 
 filePrefixName = object_name + "_" + str(version_number)
 fitsFileName = filePrefixName + ".fits"
@@ -274,6 +284,7 @@ datetime_now = datetime.datetime.now()
 galaxy.create_time = datetime_now
 galaxy.image_time = datetime_now
 galaxy.version_number = version_number
+galaxy.current = True
 session.add(galaxy)
 
 # Flush to the DB so we can get the id
@@ -282,7 +293,7 @@ session.flush()
 LOG.info("Wrote %(object)s to database" % { 'object':galaxy.name })
 
 # Store the fits header
-store_fits_header(HDULIST, galaxy.galaxy_id)
+store_fits_header(HDULIST, galaxy, galaxy.galaxy_id)
 LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
 break_up_galaxy(galaxy)
 

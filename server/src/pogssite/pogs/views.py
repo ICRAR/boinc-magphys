@@ -208,8 +208,8 @@ def galaxy(request, galaxy_id):
     return HttpResponse(t.render(c))
 
 def galaxyList(request, page):
-    lines_per_page = 3
-    galaxies_per_line = 5
+    lines_per_page = 50
+    galaxies_per_line = 1
     page = int(page)
     if page < 1:
         page = 1
@@ -220,58 +220,21 @@ def galaxyList(request, page):
     else:
         prev_page = page - 1
     session = PogsSession()
-    galaxies = session.query(database_support.Galaxy).order_by(database_support.Galaxy.name, database_support.Galaxy.version_number).all()
+    galaxies = session.query(database_support.Galaxy).filter("current=true").order_by(database_support.Galaxy.name, database_support.Galaxy.version_number).all()
     galaxy_list = []
-    idx = 0
     count = 0
     galaxy_line = None
     for galaxy in galaxies:
         count = count + 1
-        name = galaxy.name
-        if galaxy.version_number > 1:
-            name = galaxy.name + "[" + str(galaxy.version_number) + "]"
+        #name = galaxy.name
+        #if galaxy.version_number > 1:
+        #    name = galaxy.name + "[" + str(galaxy.version_number) + "]"
         if count < start:
             pass
-        elif idx == 0:
-            if len(galaxy_list) >= lines_per_page:
-                next_page = page + 1
-                break
-            galaxy_line = GalaxyLine()
-            galaxy_line.name1 = name
-            galaxy_line.id1 = galaxy.galaxy_id
-            galaxy_line.redshift1 = str(galaxy.redshift)
-            galaxy_line.height1 = galaxy.dimension_x
-            galaxy_line.width1 = galaxy.dimension_y
-            galaxy_list.append(galaxy_line)
-            idx = 1
-        elif idx == 1:
-            galaxy_line.name2 = name
-            galaxy_line.id2 = galaxy.galaxy_id
-            galaxy_line.redshift2 = str(galaxy.redshift)
-            galaxy_line.height2 = galaxy.dimension_x
-            galaxy_line.width2 = galaxy.dimension_y
-            idx = 2
-        elif idx == 2:
-            galaxy_line.name3 = name
-            galaxy_line.id3 = galaxy.galaxy_id
-            galaxy_line.redshift3 = str(galaxy.redshift)
-            galaxy_line.height3 = galaxy.dimension_x
-            galaxy_line.width3 = galaxy.dimension_y
-            idx = 3
-        elif idx == 3:
-            galaxy_line.name4 = name
-            galaxy_line.id4 = galaxy.galaxy_id
-            galaxy_line.redshift4 = str(galaxy.redshift)
-            galaxy_line.height4 = galaxy.dimension_x
-            galaxy_line.width4 = galaxy.dimension_y
-            idx = 4
-        elif idx == 4:
-            galaxy_line.name5 = name
-            galaxy_line.id5 = galaxy.galaxy_id
-            galaxy_line.redshift5 = str(galaxy.redshift)
-            galaxy_line.height5 = galaxy.dimension_x
-            galaxy_line.width5 = galaxy.dimension_y
-            idx = 0
+        if len(galaxy_list) >= lines_per_page:
+            next_page = page + 1
+            break
+        galaxy_list.append(galaxy)
     session.close()
     referer = getReferer(request)
 
