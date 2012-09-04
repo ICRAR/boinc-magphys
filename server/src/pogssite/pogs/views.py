@@ -225,7 +225,7 @@ def galaxyList(request, page):
     count = 0
     galaxy_line = None
     for galaxy in galaxies:
-        count = count + 1
+        count += 1
         #name = galaxy.name
         #if galaxy.version_number > 1:
         #    name = galaxy.name + "[" + str(galaxy.version_number) + "]"

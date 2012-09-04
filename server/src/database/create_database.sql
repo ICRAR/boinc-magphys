@@ -15,7 +15,9 @@ CREATE TABLE galaxy (
   current        BOOLEAN NOT NULL DEFAULT TRUE,
   galaxy_type    VARCHAR(10),
   ra_cent        FLOAT,
-  dec_cent       FLOAT
+  dec_cent       FLOAT,
+  pixel_count    INTEGER,
+  pixels_processed INTEGER
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE INDEX galaxy_name_ix ON galaxy(name, version_number);

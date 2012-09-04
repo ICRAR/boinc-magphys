@@ -23,6 +23,8 @@ class Galaxy(Base):
     galaxy_type = Column(String(10))
     ra_cent = Column(Float)
     dec_cent = Column(Float)
+    pixel_count = Column(Integer)
+    pixels_processed = Column(Integer)
 
     def __repr__(self):
         return 'galaxy: {galaxy_id : {0}, name : {1}}'.format(self.galaxy_id, self.name)

@@ -120,7 +120,12 @@ for galaxy in galaxies:
     array.fill(numpy.NaN)
 
     # Return the rows
+    pixel_count = 0
+    pixels_processed = 0
     for row in session.query(PixelResult).filter(PixelResult.galaxy_id == galaxy.galaxy_id).all():
+        pixel_count += 1
+        if row.workunit_id != None:
+            pixels_processed += 1
         array[row.y, row.x, 0] = row.fmu_sfh
         array[row.y, row.x, 1] = row.fmu_ir
         array[row.y, row.x, 2] = row.mu
@@ -195,6 +200,8 @@ for galaxy in galaxies:
         outname = fimage.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name), True)
         image.save(outname)
         galaxy.image_time = datetime.datetime.now()
+        galaxy.pixel_count = pixel_count
+        gaaxy.pixels_processed = pixels_processed
         session.commit()
 
 LOG.info('Built images for %d galaxies\n', len(galaxies))

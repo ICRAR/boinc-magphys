@@ -32,6 +32,7 @@ parser.add_argument('image_directory', action=WriteableDir, nargs=1, help='where
 parser.add_argument('galaxy_name', help='the name of the galaxy')
 parser.add_argument('-rh', '--row_height', type=int, default=10, help='the row height')
 parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=15, help='the minimum number of pixels in the file')
+parser.add_argument('type', help='the hubble type')
 args = vars(parser.parse_args())
 
 MIN_LIVE_CHANNELS_PER_PIXEL = 2
@@ -42,7 +43,9 @@ IMAGE_DIR = args['image_directory']
 ROW_HEIGHT = int(args['row_height'])
 MIN_PIXELS_PER_FILE = args['min_pixels_per_file']
 GALAXY_NAME = args['galaxy_name']
+GALAXY_TYPE = args['type']
 SIGMA = 0.1
+pixel_count = 0
 
 HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
                    re.compile('CROTA[0-9]+'),
@@ -231,6 +234,7 @@ def create_areas(galaxy, pix_y):
                 session.flush()
 
                 pixel.pixel_id = pixel_result.pxresult_id
+                pixel_count += 1
 
             # Write the pixels
             create_output_file(galaxy, area, pixels)
@@ -284,7 +288,10 @@ datetime_now = datetime.datetime.now()
 galaxy.create_time = datetime_now
 galaxy.image_time = datetime_now
 galaxy.version_number = version_number
+galaxy.galaxy_type = GALAXY_TYPE
 galaxy.current = True
+galaxy.pixel_count = pixel_count
+galaxy.pixels_processed = 0
 session.add(galaxy)
 
 # Flush to the DB so we can get the id
@@ -300,6 +307,9 @@ break_up_galaxy(galaxy)
 if rollback:
     session.rollback()
 else:
+    galaxy.pixel_count = pixel_count
+    session.flush()
+    
     LOG.info('Building the image')
     image = FitsImage()
     image.buildImage(INPUT_FILE, IMAGE_DIR, filePrefixName, "asinh", False, False, False)
