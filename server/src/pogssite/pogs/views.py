@@ -275,6 +275,34 @@ def galaxyImage(request, galaxy_id, colour):
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
 
+def galaxyThumbnailImage(request, galaxy_id, colour):
+    imageDirName = django_image_dir
+
+    session = PogsSession()
+    galaxy_id = int(galaxy_id)
+    galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
+
+    image = fitsimage.FitsImage()
+    imagePrefixName = '{0}_{1}'.format(galaxy.name, galaxy.version_number);
+    imageFileName = image.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, colour, False)
+    session.close()
+
+    sizeBytes = os.path.getsize(imageFileName)
+    file = open(imageFileName, "rb")
+    myImage = file.read(sizeBytes)
+    file.close()
+
+    DELTA = datetime.timedelta(minutes=100)
+    DELTA_SECONDS = DELTA.days * 86400 + DELTA.seconds
+    EXPIRATION_MASK = "%a, %d %b %Y %H:%M:%S %Z"
+    expires = (datetime.datetime.now()+DELTA).strftime(EXPIRATION_MASK)
+
+    response = HttpResponse(myImage, content_type='image/png')
+    response['Content-Disposition'] = 'filename=\"' + imageFileName + '\"'
+    response['Expires'] = expires
+    response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
+    return response
+
 def galaxyParameterImage(request, galaxy_id, name):
     imageDirName = django_image_dir
 
