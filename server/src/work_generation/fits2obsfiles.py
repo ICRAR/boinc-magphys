@@ -211,6 +211,7 @@ def create_areas(galaxy, pix_y):
     """
     Create a area - we try to make them squares, but they aren't as the images have dead zones
     """
+    global pixel_count
     pix_x = 0
     while pix_x < END_X:
         max_x, pixels = get_pixels(pix_x,pix_y)
@@ -289,6 +290,8 @@ galaxy.create_time = datetime_now
 galaxy.image_time = datetime_now
 galaxy.version_number = version_number
 galaxy.galaxy_type = GALAXY_TYPE
+galaxy.ra_cent = 0
+galaxy.dec_cent = 0
 galaxy.current = True
 galaxy.pixel_count = pixel_count
 galaxy.pixels_processed = 0
