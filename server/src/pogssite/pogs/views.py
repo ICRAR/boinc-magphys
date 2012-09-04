@@ -231,10 +231,11 @@ def galaxyList(request, page):
         #    name = galaxy.name + "[" + str(galaxy.version_number) + "]"
         if count < start:
             pass
-        if len(galaxy_list) >= lines_per_page:
+        elif len(galaxy_list) >= lines_per_page:
             next_page = page + 1
             break
-        galaxy_list.append(galaxy)
+        else:
+            galaxy_list.append(galaxy)
     session.close()
     referer = getReferer(request)
 
