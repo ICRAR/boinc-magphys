@@ -32,7 +32,7 @@ parser.add_argument('image_directory', action=WriteableDir, nargs=1, help='where
 parser.add_argument('galaxy_name', help='the name of the galaxy')
 parser.add_argument('-rh', '--row_height', type=int, default=10, help='the row height')
 parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=15, help='the minimum number of pixels in the file')
-parser.add_argument('type', help='the hubble type')
+parser.add_argument('-type', help='the hubble type')
 args = vars(parser.parse_args())
 
 MIN_LIVE_CHANNELS_PER_PIXEL = 2
