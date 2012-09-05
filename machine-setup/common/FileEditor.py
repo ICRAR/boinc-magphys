@@ -19,7 +19,7 @@ class FileEditor(StreamEditor):
                 shutil.copy(file, file + '.bak')
                 with open(file, 'r') as f:
                     text = f.read()
-                text = StreamEditor.__call__(text)
+                text = StreamEditor.__call__(self, text)
 
                 with open(file, 'w') as f:
                     f.write(text)
