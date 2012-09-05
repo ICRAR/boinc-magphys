@@ -5,7 +5,6 @@ Create Observation files from the fits
 from __future__ import print_function
 import argparse
 import json
-
 import logging
 import math
 import re
@@ -103,7 +102,7 @@ def store_fits_header(hdulist, galaxy, galaxy_id):
                 fh.keyword = keyword
                 fh.value = header[keyword]
                 session.add(fh)
-                
+
                 if keyword == 'RA_CENT':
                     galaxy.ra_cent = float(fh.value)
                 elif keyword == 'DEC_CENT':
@@ -312,7 +311,7 @@ if rollback:
 else:
     galaxy.pixel_count = pixel_count
     session.flush()
-    
+
     LOG.info('Building the image')
     image = FitsImage()
     image.buildImage(INPUT_FILE, IMAGE_DIR, filePrefixName, "asinh", False, False, False)

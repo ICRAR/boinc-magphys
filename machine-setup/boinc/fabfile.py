@@ -1,10 +1,15 @@
 """
 Fabric to be run on the BOINC server to configure things
 """
+
+# Add the parent directory to the path
+import sys
+sys.path.append('..')
+
 from glob import glob
 from os.path import splitext, split
 from fabric.decorators import task
-from fabric.operations import local, prompt, sudo
+from fabric.operations import local, prompt
 from fabric.state import env
 import socket
 from common.FileEditor import FileEditor
