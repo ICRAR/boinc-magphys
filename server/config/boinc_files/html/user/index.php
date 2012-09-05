@@ -150,6 +150,7 @@ include 'schedulers.txt';
 echo "
     </head><body>
     <div class=page_title>".PROJECT."</div>
+    <div><img src=\"logos/POGSbanner.jpg\" alt=\"POGS Banner\"/></div>
 ";
 
 if (!$stopped) {

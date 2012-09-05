@@ -263,262 +263,19 @@ boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
             run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'
                 .format(env.hosts[WEB_HOST], env.db_username, env.db_host_name, env.db_password, env.project_name))
 
-        run('echo databaseUserid = "{0}" > /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.db_username))
-        run('echo databasePassword = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.db_password))
-        run('echo databaseHostname = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.db_host_name))
-        run('echo databaseName = "magphys" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings')
-        run('echo boincDatabaseName = "{0}" >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'.format(env.project_name))
+        run('''echo 'databaseUserid = "{0}"
+databasePassword = "{1}"
+databaseHostname = "{2}"
+databaseName = "magphys"
+boincDatabaseName = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'''.format(env.db_username, env.db_password, env.db_host_name, env.project_name))
 
     # Setup Django files
-    run('echo template_dir = "/home/ec2-user/boinc-magphys/server/src/templates" > /home/ec2-user/boinc-magphys/server/src/config/django.settings')
-    run('echo image_dir = "/home/ec2-user/galaxyImages" >> /home/ec2-user/boinc-magphys/server/src/config/django.settings')
+    run('''echo 'template_dir = "/home/ec2-user/boinc-magphys/server/src/templates"
+image_dir = "/home/ec2-user/galaxyImages"' >> /home/ec2-user/boinc-magphys/server/src/config/django.settings''')
 
     # Setup Apache for Django.
     sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/wsgi.conf /etc/httpd/conf.d/')
     sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/pogs.django.conf /etc/httpd/conf.d/')
-
-    # Edit the files
-    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH PROJECT NAME', 'theSkyNet {0} - the PS1 Optical Galaxy Survey'.format(env.project_name.upper()))
-    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'REPLACE WITH COPYRIGHT HOLDER', 'The International Centre for Radio Astronomy Research')
-    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), '"white.css"', '"black.css"')
-    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'define\("FORUM_QA_MERGED_MODE", false\);', 'define("FORUM_QA_MERGED_MODE", true);')
-    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'admin\@\$master_url', 'theskynet.boinc@gmail.com')
-    sed('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name), 'moderator1\@\$master_url\|moderator2\@\$master_url', 'theskynet.boinc@gmail.com')
-
-    # As this goes through AWK we need to be a bit careful
-    run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
-    run('''awk '/<tasks>/,/<\/daemons>/ {if ( $0 ~ /<\/daemons>/ ) print "'''
-        '  <tasks>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        antique_file_deleter -d 2\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        24 hours\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        antique_file_deleter.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        db_dump -d 2 --dump_spec ../db_dump_spec.xml\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        12 hours\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        db_dump.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        run_in_ops ./update_uotd.php\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        1 days\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        update_uotd.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        run_in_ops ./update_forum_activities.php\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        1 hour\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        update_forum_activities.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        update_stats\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        12 hours\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        update_stats.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        run_in_ops ./update_profile_pages.php\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        48 hours\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        update_profile_pages.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        run_in_ops ./team_import.php\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        24 hours\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        1\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        team_import.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        run_in_ops ./notify.php\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        24 hours\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        1\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        notify.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        /home/ec2-user/boinc-magphys/server/src/credit/assign_credit.py -app magphys_wrapper\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        24 hours\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        assign_credit.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        /home/ec2-user/boinc-magphys/server/src/credit/update_credit.py -app magphys_wrapper\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        24 hours\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        update_credit.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        /home/ec2-user/boinc-magphys/post-processing/src/build_png_image.py\\n'
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        3 hour\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        build_png_image.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>\\n'
-        '        /home/ec2-user/boinc-magphys/server/src/work_generation/obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/{0} -t 10000\\n'.format(env.project_name) +
-        '      </cmd>\\n'
-        '      <period>\\n'
-        '        3 hour\\n'
-        '      </period>\\n'
-        '      <disabled>\\n'
-        '        0\\n'
-        '      </disabled>\\n'
-        '      <output>\\n'
-        '        obsfiles2wu.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '    <task>\\n'
-        '      <cmd>census</cmd>\\n'
-        '      <period>1 day</period>\\n'
-        '      <output>\\n'
-        '        census.out\\n'
-        '      </output>\\n'
-        '    </task>\\n'
-        '  </tasks>\\n'
-        '  <daemons>\\n'
-        '    <daemon>\\n'
-        '      <cmd>\\n'
-        '        feeder -d 2 --priority_order_create_time\\n'
-        '      </cmd>\\n'
-        '    </daemon>\\n'
-        '    <daemon>\\n'
-        '      <cmd>\\n'
-        '        transitioner -d 2\\n'
-        '      </cmd>\\n'
-        '    </daemon>\\n'
-        '    <daemon>\\n'
-        '      <cmd>\\n'
-        '        file_deleter -d 2\\n'
-        '      </cmd>\\n'
-        '    </daemon>\\n'
-        '    <daemon>\\n'
-        '      <cmd>\\n'
-        '        /home/ec2-user/boinc-magphys/server/src/magphys_validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job\\n'
-        '      </cmd>\\n'
-        '    </daemon>\\n'
-        '    <daemon>\\n'
-        '      <cmd>\\n'
-        '        /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 2 0\\n'
-        '      </cmd>\\n'
-        '      <output>\\n'
-        '         assimilator.0.log\\n'
-        '      </output>\\n'
-        '      <pid>\\n'
-        '         assimilator.0.pid\\n'
-        '      </pid>\\n'
-        '    </daemon>\\n'
-        '    <daemon>\\n'
-        '      <cmd>\\n'
-        '        /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 2 1\\n'
-        '      </cmd>\\n'
-        '      <output>\\n'
-        '         assimilator.1.log\\n'
-        '      </output>\\n'
-        '      <pid>\\n'
-        '         assimilator.1.pid\\n'
-        '      </pid>\\n'
-        '    </daemon>\\n'
-        '''  </daemons>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml'''% { 'name' : env.project_name})
-    run('cp /home/ec2-user/projects/{0}/config.xml /home/ec2-user/projects/{0}/config.xml.bak'.format(env.project_name))
-    run('''awk '/<one_result_per_user_per_wu>/,/<\/one_result_per_user_per_wu>/ {if ( $0 ~ /<\/one_result_per_user_per_wu>/ ) print "'''
-        '      <delete_delay_hours>48</delete_delay_hours>\\n'
-        '      <prefer_primary_platform>1</prefer_primary_platform>\\n'
-        '      <homogeneous_redundancy>2</homogeneous_redundancy>\\n'
-        '      <one_result_per_user_per_wu/>\\n'
-        '      <max_wus_in_progress>10</max_wus_in_progress>\\n'
-        '      <matchmaker>1</matchmaker>\\n'
-        '      <job_size_matching>1</job_size_matching>\\n'
-        '''      <one_result_per_host_per_wu/>"; next } 1' /home/ec2-user/projects/%(name)s/config.xml.bak > /home/ec2-user/projects/%(name)s/config.xml''' % { 'name' : env.project_name})
 
     # Copy the config files
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
@@ -529,21 +286,6 @@ boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
 
     comment('/home/ec2-user/projects/{0}/html/ops/create_forums.php'.format(env.project_name), '^die', char='// ')
 
-    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), 'XXX is a research project that uses volunteers', 'theSkyNet {0} is a research project that uses volunteers'.format(env.project_name.upper))
-    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name),
-        'to do research in XXX.',
-        'to do research in astronomy.\\n'
-        'We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe.\\n'
-        'We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
-    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), 'XXX is a research project that uses Internet-connected', 'theSkyNet {0} is a research project that uses Internet-connected'.format(env.project_name.upper()))
-    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name),
-        'computers to do research in XXX.',
-        'computers to do research in astronomy.\\n'
-        'We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe.\\n'
-        'We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.')
-    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), 'XXX is based at', 'theSkyNet {0} is based at'.format(env.project_name.upper()))
-    sed('/home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name), '\[describe your institution, with link to web page\]', 'The International Centre for Radio Astronomy Research.')
-
     run('mkdir -p /home/ec2-user/projects/{0}/html/user/logos'.format(env.project_name))
     run('cp /home/ec2-user/boinc-magphys/server/logos/* /home/ec2-user/projects/{0}/html/user/logos/'.format(env.project_name))
 
@@ -553,7 +295,7 @@ boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
 
     # setup_website
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        sudo('fab --set project_name={0} setup_website'.format(env.project_name))
+        sudo('fab --set project_name={0} setup_website edit_files'.format(env.project_name))
 
     # This is needed because the files that Apache serve are inside the user's home directory.
     run('chmod 711 /home/ec2-user')
@@ -590,16 +332,16 @@ boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
     # Setup the logrotation
-    sudo('echo "/home/ec2-user/projects/{0}/log_*/*.log" > /etc/logrotate.d/boinc'.format(env.project_name))
-    sudo('echo "/home/ec2-user/projects/{0}/log_*/*.out" >> /etc/logrotate.d/boinc'.format(env.project_name))
-    sudo('echo "{" >> /etc/logrotate.d/boinc')
-    sudo('echo "  notifempty" >> /etc/logrotate.d/boinc')
-    sudo('echo "  daily" >> /etc/logrotate.d/boinc')
-    sudo('echo "  compress" >> /etc/logrotate.d/boinc')
-    sudo('echo "  rotate 10" >> /etc/logrotate.d/boinc')
-    sudo('echo "  dateext" >> /etc/logrotate.d/boinc')
-    sudo('echo "  copytruncate" >> /etc/logrotate.d/boinc')
-    sudo('echo "}" >> /etc/logrotate.d/boinc')
+    sudo('''echo "/home/ec2-user/projects/{0}/log_*/*.log
+/home/ec2-user/projects/{0}/log_*/*.out
+{{
+  notifempty
+  daily
+  compress
+  rotate 10
+  dateext
+  copytruncate
+}}" > /etc/logrotate.d/boinc'''.format(env.project_name))
 
 def build_mod_wsgi():
     run('mkdir -p /home/ec2-user/build')

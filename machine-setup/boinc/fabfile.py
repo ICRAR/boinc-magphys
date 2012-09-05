@@ -7,6 +7,7 @@ from fabric.decorators import task
 from fabric.operations import local, prompt, sudo
 from fabric.state import env
 import socket
+from common.FileEditor import FileEditor
 
 APP_NAME="magphys_wrapper"
 PLATFORMS=["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu"]
@@ -122,7 +123,133 @@ def sign_files(app_version):
 
 @task
 def edit_files():
-   pass # TODO
+    # Edit project.inc
+    file_editor = FileEditor()
+    file_editor.substitute('REPLACE WITH PROJECT NAME', to='theSkyNet {0} - the PS1 Optical Galaxy Survey'.format(env.project_name.upper()))
+    file_editor.substitute('REPLACE WITH COPYRIGHT HOLDER', to='The International Centre for Radio Astronomy Research')
+    file_editor.substitute('"white.css"', to='"black.css"')
+    file_editor.substitute('define("FORUM_QA_MERGED_MODE", false);', to='define("FORUM_QA_MERGED_MODE", true);')
+    file_editor.substitute('admin@$master_url', to='theskynet.boinc@gmail.com')
+    file_editor.substitute('moderator1@$master_url|moderator2@$master_url', to='theskynet.boinc@gmail.com')
+    file_editor('/home/ec2-user/projects/{0}/html/project/project.inc'.format(env.project_name))
+
+    # Edit config.xml
+    file_editor = FileEditor()
+    file_editor.substitute('  <task>', end='</daemons>', to='''
+  <tasks>
+    <task>
+      <cmd> antique_file_deleter -d 2 </cmd>
+      <period> 24 hours </period>
+      <disabled> 0 </disabled>
+      <output> antique_file_deleter.out </output>
+    </task>
+    <task>
+      <cmd>db_dump -d 2 --dump_spec ../db_dump_spec.xml</cmd>
+      <period> 12 hours </period>
+      <disabled> 0 </disabled>
+      <output> db_dump.out </output>
+    </task>
+    <task>
+      <cmd> run_in_ops ./update_uotd.php </cmd>
+      <period> 1 days </period>
+      <disabled> 0 </disabled>
+      <output> update_uotd.out </output>
+    </task>
+    <task>
+      <cmd> run_in_ops ./update_forum_activities.php </cmd>
+      <period> 1 hour </period>
+      <disabled> 0 </disabled>
+      <output> update_forum_activities.out </output>
+    </task>
+    <task>
+      <cmd> update_stats </cmd>
+      <period> 12 hours </period>
+      <disabled> 0 </disabled>
+      <output> update_stats.out </output>
+    </task>
+    <task>
+      <cmd> run_in_ops ./update_profile_pages.php </cmd>
+      <period> 48 hours </period>
+      <disabled> 0 </disabled>
+      <output> update_profile_pages.out </output>
+    </task>
+    <task>
+      <cmd> run_in_ops ./team_import.php </cmd>
+      <period> 24 hours </period>
+      <disabled> 1 </disabled>
+      <output> team_import.out </output>
+    </task>
+    <task>
+      <cmd> run_in_ops ./notify.php </cmd>
+      <period> 24 hours </period>
+      <disabled> 1 </disabled>
+      <output> notify.out </output>
+    </task>
+    <task>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/credit/assign_credit.py -app magphys_wrapper </cmd>
+      <period> 24 hours </period>
+      <disabled> 0 </disabled>
+      <output> assign_credit.out </output>
+    </task>
+    <task>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/credit/update_credit.py -app magphys_wrapper </cmd>
+      <period> 24 hours </period>
+      <disabled> 0 </disabled>
+      <output> update_credit.out </output>
+    </task>
+    <task>
+      <cmd> /home/ec2-user/boinc-magphys/post-processing/src/build_png_image.py </cmd>
+      <period> 3 hour </period>
+      <disabled> 0 </disabled>
+      <output> build_png_image.out </output>
+    </task>
+    <task>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/{0} -t 10000.format(env.project_name) + </cmd>
+      <period> 3 hour </period>
+      <disabled> 0 </disabled>
+      <output> obsfiles2wu.out </output>
+    </task>
+    <task>
+      <cmd>census</cmd>
+      <period>1 day</period>
+      <output> census.out </output>
+    </task>
+  </tasks>
+  <daemons>
+    <daemon>
+      <cmd> feeder -d 2 --priority_order </cmd>
+    </daemon>
+    <daemon>
+      <cmd> transitioner -d 2 </cmd>
+    </daemon>
+    <daemon>
+      <cmd> file_deleter -d 2 </cmd>
+    </daemon>
+    <daemon>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/magphys_validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job </cmd>
+    </daemon>
+    <daemon>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 2 0 </cmd>
+      <output> assimilator.0.log </output>
+      <pid> assimilator.0.pid </pid>
+    </daemon>
+    <daemon>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 2 1 </cmd>
+      <output> assimilator.1.log </output>
+      <pid> assimilator.1.pid </pid>
+    </daemon>
+  </daemons>''')
+    file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>',to='''
+      <delete_delay_hours>48</delete_delay_hours>
+      <prefer_primary_platform>1</prefer_primary_platform>
+      <homogeneous_redundancy>2</homogeneous_redundancy>
+      <hr_allocate_slots/>
+      <one_result_per_user_per_wu/>
+      <max_wus_in_progress>10</max_wus_in_progress>
+      <shmem_work_items>200</shmem_work_items>
+      <feeder_query_size>300</feeder_query_size>
+      <one_result_per_host_per_wu/>''')
+    file_editor('/home/ec2-user/projects/{0}/config.xml'.format(env.project_name))
 
 @task
 def setup_postfix():
@@ -131,9 +258,9 @@ def setup_postfix():
     The relocated file needs the hostname
     """
     host_name = socket.gethostname()
-    local('''sudo su -l root -c 'echo "ec2-user@{0}.ec2.internal  theskynet.boinc@gmail.com" >> /etc/postfix/generic' '''.format(host_name))
-    local('''sudo su -l root -c 'echo "root@{0}.ec2.internal      theskynet.boinc@gmail.com" >> /etc/postfix/generic' '''.format(host_name))
-    local('''sudo su -l root -c 'echo "apache@{0}.ec2.internal    theskynet.boinc@gmail.com" >> /etc/postfix/generic' '''.format(host_name))
+    local('''sudo su -l root -c 'echo "ec2-user@{0}.ec2.internal  theskynet.boinc@gmail.com
+root@{0}.ec2.internal      theskynet.boinc@gmail.com
+apache@{0}.ec2.internal    theskynet.boinc@gmail.com" >> /etc/postfix/generic' '''.format(host_name))
     local('sudo postmap /etc/postfix/generic')
 
 @task

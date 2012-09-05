@@ -108,6 +108,11 @@ def test01():
 b = "456"
 789' > test2.echo''')
 
+def test02():
+    run('mkdir test02')
+    run('cp /home/ec2-user/boinc/html/project.sample/project.inc /home/ec2-user/test02')
+
+
 @task
 def environment():
     """
@@ -124,3 +129,4 @@ def step01():
 
     base_install()
     test01()
+    test02()
