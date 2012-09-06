@@ -295,7 +295,8 @@ image_dir = "/home/ec2-user/galaxyImages"' >> /home/ec2-user/boinc-magphys/serve
 
     # setup_website
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        sudo('fab --set project_name={0} setup_website edit_files'.format(env.project_name))
+        run('fab --set project_name={0} edit_files'.format(env.project_name))
+        sudo('fab --set project_name={0} setup_website'.format(env.project_name))
 
     # This is needed because the files that Apache serve are inside the user's home directory.
     run('chmod 711 /home/ec2-user')

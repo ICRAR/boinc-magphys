@@ -140,7 +140,7 @@ def edit_files():
 
     # Edit config.xml
     file_editor = FileEditor()
-    file_editor.substitute('  <task>', end='</daemons>', to='''
+    file_editor.substitute('  <tasks>', end='</daemons>', to='''
   <tasks>
     <task>
       <cmd> antique_file_deleter -d 2 </cmd>
@@ -245,15 +245,16 @@ def edit_files():
     </daemon>
   </daemons>''')
     file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>',to='''
-      <delete_delay_hours>48</delete_delay_hours>
-      <prefer_primary_platform>1</prefer_primary_platform>
-      <homogeneous_redundancy>2</homogeneous_redundancy>
-      <hr_allocate_slots/>
-      <one_result_per_user_per_wu/>
-      <max_wus_in_progress>10</max_wus_in_progress>
-      <shmem_work_items>200</shmem_work_items>
-      <feeder_query_size>300</feeder_query_size>
-      <one_result_per_host_per_wu/>''')
+    <delete_delay_hours>48</delete_delay_hours>
+    <prefer_primary_platform>1</prefer_primary_platform>
+    <homogeneous_redundancy>2</homogeneous_redundancy>
+    <hr_allocate_slots/>
+    <one_result_per_user_per_wu/>
+    <max_wus_in_progress>10</max_wus_in_progress>
+    <shmem_work_items>200</shmem_work_items>
+    <feeder_query_size>300</feeder_query_size>
+    <reliable_priority_on_over>5</reliable_priority_on_over>
+    <one_result_per_host_per_wu/>''')
     file_editor('/home/ec2-user/projects/{0}/config.xml'.format(env.project_name))
 
 @task
