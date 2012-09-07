@@ -123,7 +123,7 @@ def userGalaxies(request, userid):
             galaxy_line.redshift6 = str(galaxy.redshift)
             idx = 0
     session.close()
-    referer = getReferer(request, response)
+    referer = getReferer(request)
 
     t = loader.get_template('pogs/index.html')
     c = Context({
