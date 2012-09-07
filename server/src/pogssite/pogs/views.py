@@ -228,9 +228,9 @@ def galaxyList(request):
     except KeyError as e:
         ra_from= ""
     try:
-        ra_from = request.GET["ra_from"]
+        ra_to = request.GET["ra_to"]
     except KeyError as e:
-        ra_from = ""
+        ra_to = ""
     try:
         dec_from = request.GET["dec_from"]
     except KeyError as e:
