@@ -207,8 +207,48 @@ def galaxy(request, galaxy_id):
     })
     return HttpResponse(t.render(c))
 
-def galaxyList(request, page):
-    lines_per_page = 50
+def galaxyListOld(request, page):
+    return HttpResponseRedirect("GalaxyList?page=" + page)
+
+def galaxyList(request):
+    try:
+        page = request.GET["page"]
+    except KeyError as e:
+        page = 1
+    try:
+        type = request.GET["type"]
+    except KeyError as e:
+        type = ""
+    try:
+        name = request.GET["name"].upper()
+    except KeyError as e:
+        name = ""
+    try:
+        ra_from = request.GET["ra_from"]
+    except KeyError as e:
+        ra_from= ""
+    try:
+        ra_from = request.GET["ra_from"]
+    except KeyError as e:
+        ra_from = ""
+    try:
+        dec_from = request.GET["dec_from"]
+    except KeyError as e:
+        dec_from = ""
+    try:
+        dec_to = request.GET["dec_to"]
+    except KeyError as e:
+        dec_to = ""
+    try:
+        sort = request.GET["sort"]
+    except KeyError as e:
+        sort = "NAME"
+    try:
+        per_page = request.GET["per_page"]
+    except KeyError as e:
+        per_page = "50"
+    
+    lines_per_page = int(per_page)
     galaxies_per_line = 1
     page = int(page)
     if page < 1:
@@ -220,7 +260,46 @@ def galaxyList(request, page):
     else:
         prev_page = page - 1
     session = PogsSession()
-    galaxies = session.query(database_support.Galaxy).filter("current=true").order_by(database_support.Galaxy.name, database_support.Galaxy.version_number).all()
+    query = session.query(database_support.Galaxy).filter("current=true");
+    if type == "S":
+        query = query.filter("galaxy_type like'S%' and galaxy_type not like'SB%' and galaxy_type not like'S0%'")
+    elif type == "SB":
+        query = query.filter("galaxy_type like'SB%'")
+    elif type == "L":
+        query = query.filter("galaxy_type like'S0%'")
+    elif type == "E":
+        query = query.filter("galaxy_type like'E%'")
+    elif type == "I":
+        query = query.filter("galaxy_type like'I%'")
+        
+    if name != "":
+        query = query.filter("name like'" + name + "%'")
+        
+    if ra_from != "" and ra_to != "":
+        query = query.filter("ra_cent between " + str(float(ra_from)) + " and " + str(float(ra_to)));
+    elif ra_from != "":
+        query = query.filter("ra_cent >= " + str(float(ra_from)));
+    elif ra_to != "":
+        query = query.filter("ra_cent <= " + str(float(ra_to)));
+    
+    if dec_from != "" and dec_to != "":
+        query = query.filter("dec_cent between " + str(float(dec_from)) + " and " + str(float(dec_to)));
+    elif dec_from != "":
+        query = query.filter("dec_cent >= " + str(float(dec_from)));
+    elif dec_to != "":
+        query = query.filter("dec_cent <= " + str(float(dec_to)));
+        
+    if sort == "NAME":
+        query = query.order_by(database_support.Galaxy.name, database_support.Galaxy.version_number)
+    elif sort == "RADEC":
+        query = query.order_by(database_support.Galaxy.ra_cent, database_support.Galaxy.dec_cent)
+    elif sort == "TYPE":
+        query = query.order_by(database_support.Galaxy.galaxy_type)
+    elif sort == "USED":
+        query = query.order_by(database_support.Galaxy.name, database_support.Galaxy.version_number)
+    else:
+        query = query.order_by(database_support.Galaxy.name, database_support.Galaxy.version_number)
+    galaxies = query.all()
     galaxy_list = []
     count = 0
     galaxy_line = None
@@ -245,6 +324,14 @@ def galaxyList(request, page):
         'prev_page':        prev_page,
         'next_page':        next_page,
         'referer':          referer,
+        'type':             type,
+        'name':             name,
+        'ra_from':          ra_from,
+        'ra_to':            ra_to,
+        'dec_from':         dec_from,
+        'dec_to':           dec_to,
+        'sort':             sort,
+        'per_page':         per_page,
     })
     return HttpResponse(t.render(c))
 
