@@ -161,6 +161,7 @@
         <th title="Declination">Dec</th>
         <th>Redshift</th>
         <th title="Hubble Type">Type</th>
+        <th>Percent<br>Complete</th>
         <th>More</th>
       </tr>
       {% for line in galaxy_list %}
@@ -173,6 +174,7 @@
         <td>{{ line.dec_cent }}</td>
         <td>{{ line.redshift }}</td>
         <td>{{ line.galaxy_type }}</td>
+        <td>{{ line.pct_complete }}</td>
         <td><a href="http://ned.ipac.caltech.edu/cgi-bin/objsearch?objname={{ line.name }}&extend=no&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=RA+or+Longitude&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES" target="_blank">Galaxy details</a></td>
       </tr>
       {% endfor %}

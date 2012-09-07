@@ -43,6 +43,15 @@ class GalaxyLine:
     height5 = 100
     height6 = 100
     
+class GalaxyInfo:
+    galaxy_id = 0
+    name = ""
+    ra_cent = 0.0
+    dec_cent = 0.0
+    galaxy_type = ""
+    redshift = 0
+    pct_complete = "0.00%"
+    
 def getReferer(request):
     try:
         referer = request.META['HTTP_REFERER']
@@ -319,7 +328,18 @@ def galaxyList(request):
             next_page = page + 1
             break
         else:
-            galaxy_list.append(galaxy)
+            line = GalaxyInfo();
+            line.name = galaxy.name
+            line.galaxy_id = galaxy.galaxy_id
+            line.ra_cent = galaxy.ra_cent
+            line.dec_cent = galaxy.dec_cent
+            line.redshift = galaxy.redshift
+            line.galaxy_type = galaxy.galaxy_type
+            if galaxy.pixel_count == None or galaxy.pixels_processed == None or galaxy.pixel_count == 0:
+                line.pct_complete = "0.00%"
+            else:
+                line.pct_complete = "{:.2%}".format(galaxy.pixels_processed/galaxy.pixel_count)
+            galaxy_list.append(line)
     session.close()
     referer = getReferer(request)
 
