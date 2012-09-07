@@ -338,7 +338,7 @@ def galaxyList(request):
             if galaxy.pixel_count == None or galaxy.pixels_processed == None or galaxy.pixel_count == 0:
                 line.pct_complete = "0.00%"
             else:
-                line.pct_complete = "{:.2%}".format(galaxy.pixels_processed/galaxy.pixel_count)
+                line.pct_complete = "{:.2%}".format(galaxy.pixels_processed*1.0/galaxy.pixel_count)
             galaxy_list.append(line)
     session.close()
     referer = getReferer(request)
