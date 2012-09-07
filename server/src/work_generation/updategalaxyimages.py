@@ -25,20 +25,24 @@ for galaxy in session.query(Galaxy).order_by(Galaxy.name).all():
 
     INPUT_FILE = FITS_DIR + "/POGS_" + galaxy.name + ".fits"
     print galaxy.name, galaxy.version_number
-    if os.path.isfile(INPUT_FILE):
-        pass
-        #print INPUT_FILE, 'found'
-    else:
-        #print INPUT_FILE, 'not found'
-        INPUT_FILE = FITS_DIR + "/POGS_" + galaxy.name[0:(len(galaxy.name)-1)] + ".fits"
-        #print INPUT_FILE
-        if os.path.isfile(INPUT_FILE):
-            pass
-            #print INPUT_FILE, 'found'
-        else:
-            print INPUT_FILE, 'not found'
+    #if os.path.isfile(INPUT_FILE):
+    #    pass
+    #    #print INPUT_FILE, 'found'
+    #else:
+    #    #print INPUT_FILE, 'not found'
+    #    temp_name = galaxy.name[0:(len(galaxy.name)-1)]
+    #    INPUT_FILE = FITS_DIR + "/POGS_" + temp_name + ".fits"
+    #    #print INPUT_FILE
+    #    if os.path.isfile(INPUT_FILE):
+    #        INPUT_FILE = temp_name
+    #        pass
+    #        #print INPUT_FILE, 'found'
+    #    else:
+    #        print INPUT_FILE, 'not found'
 
     #print INPUT_FILE, image.get_file_path(IMAGE_DIR, fitsFileName, True)
 
     #shutil.copyfile(INPUT_FILE, image.get_file_path(IMAGE_DIR, fitsFileName, True))
-    image.buildImage(INPUT_FILE, IMAGE_DIR, filePrefixName, 'asinh', False, False, False)
+    INPUT_FILE = image.get_file_path(IMAGE_DIR, fitsFileName, False)
+    if os.path.isfile(INPUT_FILE):
+        image.buildImage(INPUT_FILE, IMAGE_DIR, filePrefixName, 'asinh', False, False, False)
