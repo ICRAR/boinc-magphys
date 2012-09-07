@@ -212,7 +212,7 @@ def galaxy(request, galaxy_id):
     return HttpResponse(t.render(c))
 
 def galaxyListOld(request, page):
-    return HttpResponseRedirect("GalaxyList?page=" + page)
+    return HttpResponseRedirect("../GalaxyList?page=" + page)
 
 def galaxyList(request):
     try:
