@@ -56,7 +56,6 @@ def getReferer(request):
         referer = parts[3]
     if referer == 'pogssite':
         referer = getRefererFromCookie(request)
-    request.COOKIES['pogs_referer'] = referer
     return referer
 
 def getRefererFromCookie(request):
@@ -67,6 +66,9 @@ def getRefererFromCookie(request):
     if referer == '' or referer == None:
         referer = 'pogs'
     return referer;
+
+def setReferrer(response, referer):
+    response.set_cookie('pogs_referer', referer)
 
 def userGalaxies(request, userid):
     session = PogsSession()
@@ -112,7 +114,7 @@ def userGalaxies(request, userid):
             galaxy_line.redshift6 = str(galaxy.redshift)
             idx = 0
     session.close()
-    referer = getReferer(request)
+    referer = getReferer(request, response)
 
     t = loader.get_template('pogs/index.html')
     c = Context({
@@ -120,7 +122,9 @@ def userGalaxies(request, userid):
         'userid':           userid,
         'referer':          referer,
     })
-    return HttpResponse(t.render(c))
+    response = HttpResponse(t.render(c))
+    setReferrer(response, referer)
+    return response
 
 def userGalaxy(request, userid, galaxy_id):
     session = PogsSession()
@@ -333,7 +337,9 @@ def galaxyList(request):
         'sort':             sort,
         'per_page':         per_page,
     })
-    return HttpResponse(t.render(c))
+    response = HttpResponse(t.render(c))
+    setReferrer(response, referer)
+    return response
 
 def galaxyImage(request, galaxy_id, colour):
     imageDirName = django_image_dir
