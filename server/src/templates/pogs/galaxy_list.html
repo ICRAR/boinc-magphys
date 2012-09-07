@@ -178,10 +178,10 @@
       </tr>
       {% endfor %}
       <tr>
-        <td colspan="5"></td>
+        <td colspan="6"></td>
         <td colspan="2" align='right'>
-          {% if prev_page %}<a href='../GalaxyList/{{ prev_page }}, false'>Previous Page</a>{% endif %}
-          {% if next_page %}<a href='../GalaxyList/{{ next_page }}, false'>Next Page</a>{% endif %}
+          {% if prev_page %}<a href='javascript:galaxySearch({{ prev_page }}, false)'>Previous Page</a>{% endif %}
+          {% if next_page %}<a href='javascript:galaxySearch({{ next_page }}), false'>Next Page</a>{% endif %}
         </td>
       </tr>
     </table>
