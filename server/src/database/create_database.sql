@@ -13,7 +13,7 @@ CREATE TABLE galaxy (
   image_time     TIMESTAMP,
   version_number INTEGER UNSIGNED NOT NULL DEFAULT 1,
   current        BOOLEAN NOT NULL DEFAULT TRUE,
-  galaxy_type    VARCHAR(10),
+  galaxy_type    VARCHAR(10) character set utf8 collate utf8_bin,
   ra_cent        FLOAT,
   dec_cent       FLOAT,
   pixel_count    INTEGER,
