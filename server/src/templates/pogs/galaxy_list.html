@@ -122,7 +122,7 @@
         <td><input type="text" id="input_dec_from" size="5" maxlength="10" value="{{ dec_from }}"/></td>
         <td>Sort By</td>
         <td>
-          <select name="input_sort">
+          <select id="input_sort">
             <option value="NAME"{% if sort == "NAME"%} selected{% endif %}>Name</option>
             <option value="RADEC"{% if sort == "RADEC"%} selected{% endif %}>RA/DEC</option>
             <option value="TYPE"{% if sort == "TYPE"%} selected{% endif %}>Type</option>
