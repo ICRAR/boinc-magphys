@@ -299,6 +299,7 @@ def galaxyList(request):
         query = query.order_by(database_support.Galaxy.ra_cent, database_support.Galaxy.dec_cent)
     elif sort == "TYPE":
         query = query.order_by(database_support.Galaxy.galaxy_type)
+        query = query.order_by(database_support.Galaxy.name, database_support.Galaxy.version_number)
     elif sort == "USED":
         query = query.order_by(database_support.Galaxy.name, database_support.Galaxy.version_number)
     else:
