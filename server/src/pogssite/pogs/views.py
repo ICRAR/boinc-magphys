@@ -73,7 +73,7 @@ def userGalaxies(request, userid):
         galaxy_line.redshifts[idx] = str(galaxy.redshift)
         
         idx += 1
-        if idx == 6:
+        if idx > 5:
             idx = 0
     session.close()
     referer = getReferer(request)
