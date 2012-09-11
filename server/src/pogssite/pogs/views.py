@@ -67,18 +67,14 @@ def userGalaxies(request, userid):
             name = galaxy.name + "[" + str(galaxy.version_number) + "]"
         if idx == 0:    
             galaxy_line = GalaxyLine()
-            galaxy_line.names[idx] = name
-            galaxy_line.ids[idx] = galaxy.galaxy_id
-            galaxy_line.redshifts[idx] = str(galaxy.redshift)
             user_galaxy_list.append(galaxy_line)
-            idx = 1
-        else:
-            galaxy_line.names[idx] = name
-            galaxy_line.ids[idx] = galaxy.galaxy_id
-            galaxy_line.redshifts[idx] = str(galaxy.redshift)
-            idx += 1
-            if idx == 6:
-                idx = 0
+        galaxy_line.names[idx] = name
+        galaxy_line.ids[idx] = galaxy.galaxy_id
+        galaxy_line.redshifts[idx] = str(galaxy.redshift)
+        
+        idx += 1
+        if idx == 6:
+            idx = 0
     session.close()
     referer = getReferer(request)
 
