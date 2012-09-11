@@ -12,11 +12,11 @@ from database import database_support
 import os, io, datetime, tempfile
 
 class GalaxyLine:
-    names = ["", "", "", "", "", "", ""]
-    ids = ["", "", "", "", "", "", ""]
-    redshifts = ["", "", "", "", "", "", ""]
-    widths = [100, 100, 100, 100, 100, 100]
-    heights = [100, 100, 100, 100, 100, 100]
+    names = []
+    ids = []
+    redshifts = []
+    widths = []
+    heights = []
     
 class GalaxyInfo:
     galaxy_id = 0
@@ -68,9 +68,9 @@ def userGalaxies(request, userid):
         if idx == 0:    
             galaxy_line = GalaxyLine()
             user_galaxy_list.append(galaxy_line)
-        galaxy_line.names[idx] = name
-        galaxy_line.ids[idx] = galaxy.galaxy_id
-        galaxy_line.redshifts[idx] = str(galaxy.redshift)
+        galaxy_line.names.append(name)
+        galaxy_line.ids.append(galaxy.galaxy_id)
+        galaxy_line.redshifts.append(str(galaxy.redshift))
         
         idx += 1
         if idx > 5:
