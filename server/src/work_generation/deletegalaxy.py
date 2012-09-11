@@ -27,6 +27,8 @@ galaxy = session.query(Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=G
 if galaxy == None:
     print 'Error: Galaxy with galaxy_id of', GALAXY_ID, 'was not found'
 else:
+    print 'Deleting Galaxy with galaxy_id of', GALAXY_ID
+    
     for area in galaxy.areas:
         for pxresult in area.pixelResults:
             for filter in pxresult.filters:
@@ -39,6 +41,8 @@ else:
         for user in area.users:
             session.delete(user)
         session.delete(area)
+    for hdr in galaxy.fits_headers:
+        session.delete(hdr)
     session.delete(galaxy)
     print 'Galaxy with galaxy_id of', GALAXY_ID, 'was deleted'
         
