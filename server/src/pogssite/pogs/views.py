@@ -216,7 +216,7 @@ def galaxyList(request):
     try:
         per_page = request.GET["per_page"]
     except KeyError as e:
-        per_page = "50"
+        per_page = "20"
     
     lines_per_page = int(per_page)
     galaxies_per_line = 1
