@@ -21,13 +21,13 @@ class GalaxyLine:
     
 class GalaxyInfo:
     def __init__(self):
-        galaxy_id = 0
-        name = ""
-        ra_cent = 0.0
-        dec_cent = 0.0
-        galaxy_type = ""
-        redshift = 0
-        pct_complete = "0.00%"
+        self.galaxy_id = 0
+        self.name = ""
+        self.ra_cent = 0.0
+        self.dec_cent = 0.0
+        self.galaxy_type = ""
+        self.redshift = 0
+        self.pct_complete = "0.00%"
     
 def getReferer(request):
     try:
