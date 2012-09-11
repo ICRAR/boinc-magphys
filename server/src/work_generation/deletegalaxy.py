@@ -1,3 +1,7 @@
+#! /usr/bin/env python2.7
+"""
+Delete a galaxy and all it's related data.
+"""
 import argparse
 import logging
 from config import db_login
