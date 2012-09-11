@@ -20,13 +20,14 @@ class GalaxyLine:
         self.heights = []
     
 class GalaxyInfo:
-    galaxy_id = 0
-    name = ""
-    ra_cent = 0.0
-    dec_cent = 0.0
-    galaxy_type = ""
-    redshift = 0
-    pct_complete = "0.00%"
+    def __init__(self):
+        galaxy_id = 0
+        name = ""
+        ra_cent = 0.0
+        dec_cent = 0.0
+        galaxy_type = ""
+        redshift = 0
+        pct_complete = "0.00%"
     
 def getReferer(request):
     try:
