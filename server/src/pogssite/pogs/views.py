@@ -12,11 +12,12 @@ from database import database_support
 import os, io, datetime, tempfile
 
 class GalaxyLine:
-    names = []
-    ids = []
-    redshifts = []
-    widths = []
-    heights = []
+    def __init__(self):
+        self.names = []
+        self.ids = []
+        self.redshifts = []
+        self.widths = []
+        self.heights = []
     
 class GalaxyInfo:
     galaxy_id = 0
