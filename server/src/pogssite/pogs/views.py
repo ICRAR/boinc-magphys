@@ -12,36 +12,11 @@ from database import database_support
 import os, io, datetime, tempfile
 
 class GalaxyLine:
-    name1 = ""
-    name2 = ""
-    name3 = ""
-    name4 = ""
-    name5 = ""
-    name6 = ""
-    id1 = ""
-    id2 = ""
-    id3 = ""
-    id4 = ""
-    id5 = ""
-    id6 = ""
-    redshift1 = ""
-    redshift2 = ""
-    redshift3 = ""
-    redshift4 = ""
-    redshift5 = ""
-    redshift6 = ""
-    width1 = 100
-    width2 = 100
-    width3 = 100
-    width4 = 100
-    width5 = 100
-    width6 = 100
-    height1 = 100
-    height2 = 100
-    height3 = 100
-    height4 = 100
-    height5 = 100
-    height6 = 100
+    names = ["", "", "", "", "", "", ""]
+    ids = ["", "", "", "", "", "", ""]
+    redshifts = ["", "", "", "", "", "", ""]
+    widths = [100, 100, 100, 100, 100]
+    heights = [100, 100, 100, 100, 100]
     
 class GalaxyInfo:
     galaxy_id = 0
@@ -90,38 +65,20 @@ def userGalaxies(request, userid):
         name = galaxy.name
         if galaxy.version_number > 1:
             name = galaxy.name + "[" + str(galaxy.version_number) + "]"
-        if idx == 0:
+        if idx == 0:    
             galaxy_line = GalaxyLine()
-            galaxy_line.name1 = name
-            galaxy_line.id1 = galaxy.galaxy_id
-            galaxy_line.redshift1 = str(galaxy.redshift)
+            galaxy_line.names[idx] = name
+            galaxy_line.ids[idx] = galaxy.galaxy_id
+            galaxy_line.redshifts[idx] = str(galaxy.redshift)
             user_galaxy_list.append(galaxy_line)
             idx = 1
-        elif idx == 1:
-            galaxy_line.name2 = name
-            galaxy_line.id2 = galaxy.galaxy_id
-            galaxy_line.redshift2 = str(galaxy.redshift)
-            idx = 2
-        elif idx == 2:
-            galaxy_line.name3 = name
-            galaxy_line.id3 = galaxy.galaxy_id
-            galaxy_line.redshift3 = str(galaxy.redshift)
-            idx = 3
-        elif idx == 3:
-            galaxy_line.name4 = name
-            galaxy_line.id4 = galaxy.galaxy_id
-            galaxy_line.redshift4 = str(galaxy.redshift)
-            idx = 4
-        elif idx == 4:
-            galaxy_line.name5 = name
-            galaxy_line.id5 = galaxy.galaxy_id
-            galaxy_line.redshift5 = str(galaxy.redshift)
-            idx = 5
-        elif idx == 5:
-            galaxy_line.name6 = name
-            galaxy_line.id6 = galaxy.galaxy_id
-            galaxy_line.redshift6 = str(galaxy.redshift)
-            idx = 0
+        else:
+            galaxy_line.names[idx] = name
+            galaxy_line.ids[idx] = galaxy.galaxy_id
+            galaxy_line.redshifts[idx] = str(galaxy.redshift)
+            idx += 1
+            if idx == 5:
+                idx = 0
     session.close()
     referer = getReferer(request)
 
