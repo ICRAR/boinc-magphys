@@ -67,6 +67,9 @@ def userGalaxies(request, userid):
             name = galaxy.name + "[" + str(galaxy.version_number) + "]"
         if idx == 0:    
             galaxy_line = GalaxyLine()
+            galaxy_line.names = []
+            galaxy_line.ids = []
+            galaxy_line.redshifts = []
             user_galaxy_list.append(galaxy_line)
         galaxy_line.names.append(name)
         galaxy_line.ids.append(galaxy.galaxy_id)
