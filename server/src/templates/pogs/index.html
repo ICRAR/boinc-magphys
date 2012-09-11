@@ -28,17 +28,17 @@
       </tr>
     {% for line in user_galaxy_list %}
       <tr>
-        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids[0] }}">{{ line.names[0] }}</a></td>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids.0 }}">{{ line.names.0 }}</a></td>
         <td>{{ line.redshift1 }}</td>
-        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids[1] }}">{{ line.names[1] }}</a></td>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids.1 }}">{{ line.names.1 }}</a></td>
         <td>{{ line.redshift2 }}</td>
-        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids[2] }}">{{ line.names[2] }}</a></td>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids.2 }}">{{ line.names.2 }}</a></td>
         <td>{{ line.redshift3 }}</td>
-        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids[3] }}">{{ line.names[3] }}</a></td>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids.3 }}">{{ line.names.3 }}</a></td>
         <td>{{ line.redshift4 }}</td>
-        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids[4] }}">{{ line.name[4] }}</a></td>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids.4 }}">{{ line.names.4] }}</a></td>
         <td>{{ line.redshift5 }}</td>
-        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids[5] }}">{{ line.names[5] }}</a></td>
+        <td><a href="UserGalaxy/{{ userid }}/{{ line.ids.5 }}">{{ line.names.5 }}</a></td>
         <td>{{ line.redshift6 }}</td>
       </tr>
     {% endfor %}
