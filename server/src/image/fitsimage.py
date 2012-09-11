@@ -31,7 +31,9 @@ class ImageBuilder:
     blueHiCut = math.pi/2
     blueMedian = 0
     
-    def __init__(self, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug):
+    centre = 0.6
+    
+    def __init__(self, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre):
         self.imageFileName = imageFileName
         self.thumbnailFileName = thumbnailFileName
         self.redFilter = redFilter
@@ -40,6 +42,7 @@ class ImageBuilder:
         self.width = width
         self.height = height
         self.debug = debug
+        self.centre = centre
         self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
         
     def setData(self, filter, data):
@@ -85,10 +88,9 @@ class ImageBuilder:
             return True
             
     def saveImage(self):
-        centre = 1
-        redSigma = centre / self.redMedian
-        greenSigma = centre / self.greenMedian
-        blueSigma = centre / self.blueMedian
+        redSigma = self.centre / self.redMedian
+        greenSigma = self.centre / self.greenMedian
+        blueSigma = self.centre / self.blueMedian
         if self.debug:
             print 'Red', self.redMedian, self.redHiCut, self.redScale, redSigma
             print 'Green', self.greenMedian, self.greenHiCut, self.greenScale, greenSigma
@@ -154,12 +156,24 @@ class ImageBuilder:
 class FitsImage:
     useHighCut = False
     includeHash = True
-    sigma = 0.000001
+    centre = 0.5
     
     def __init__(self):
         pass
     
-    def buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug):
+    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug):
+        """
+        Build Three Colour Images, and optionally black and white and white and black images for each image.
+        """
+        
+        if method == "asinh":
+            # Use the new asinh algorithm.
+            self.buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre)
+        else:
+            # Use the old algorithm.
+            self.buildImageOld(fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug)
+    
+    def buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre):
         """
         Build Three Colour Images using the asinh() function.
         """
@@ -186,10 +200,10 @@ class FitsImage:
         height = hdu.header['NAXIS2']
 
         # Create Three Colour Images
-        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True), self.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True), 118, 117, 116, width, height, debug) # i, r, g
-        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None, 117, 116, 124, width, height, debug) # r, g, NUV
-        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None, 280, 116, 124, width, height, debug) # 3.6, g, NUV
-        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None, 283, 117, 124, width, height, debug) # 22, r, NUV
+        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True), self.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True), 118, 117, 116, width, height, debug, centre) # i, r, g
+        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None, 117, 116, 124, width, height, debug, centre) # r, g, NUV
+        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None, 280, 116, 124, width, height, debug, centre) # 3.6, g, NUV
+        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None, 283, 117, 124, width, height, debug, centre) # 22, r, NUV
         images = [image1, image2, image3, image4]
         
         file = 0
@@ -213,15 +227,10 @@ class FitsImage:
 
         hdulist.close()
 
-    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug):
+    def buildImageOld(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
-        
-        if method == "asinh":
-            # Use the new asinh algorithm.
-            self.buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug)
-            return;
         
         if imageDirName[-1] != "/":
             imageDirName = imageDirName + "/"

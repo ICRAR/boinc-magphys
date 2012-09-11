@@ -7,7 +7,7 @@ import sys
 image = fitsimage.FitsImage()
 image.includeHash = False
 
-fitsName = "POGS_NGC2500"
+fitsName = "POGS_IC0278"
 method = "asinh"
 
 if len(sys.argv) > 1:
