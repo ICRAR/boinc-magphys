@@ -5,7 +5,7 @@ Delete a galaxy and all it's related data.
 import argparse
 import logging
 from config import db_login
-from database.database_support import Galaxy, Area, AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram
+from database.database_support import Galaxy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -24,11 +24,11 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 galaxy = session.query(Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=GALAXY_ID).first()
-if galaxy == None:
+if galaxy is None:
     print 'Error: Galaxy with galaxy_id of', GALAXY_ID, 'was not found'
 else:
     print 'Deleting Galaxy with galaxy_id of', GALAXY_ID
-    
+
     for area in galaxy.areas:
         for pxresult in area.pixelResults:
             for filter in pxresult.filters:
@@ -45,7 +45,6 @@ else:
         session.delete(hdr)
     session.delete(galaxy)
     print 'Galaxy with galaxy_id of', GALAXY_ID, 'was deleted'
-        
-        
+
 session.commit()
 session.close()
