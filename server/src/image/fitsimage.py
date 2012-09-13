@@ -66,7 +66,7 @@ class ImageBuilder:
         elif len(values) > 0:
             medianvalue = values[0]
         else:
-            medianvalue = 0
+            medianvalue = 1
                 
         if self.redFilter == filter:
             self.redData = numpy.copy(data)
