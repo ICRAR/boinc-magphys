@@ -1,9 +1,5 @@
-import pyfits
-from PIL import Image
-import math
-import os, hashlib
-import shutil
-from database.database_support import Galaxy, Area, AreaUser
+import os
+from database.database_support import Galaxy
 from image.fitsimage import FitsImage
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine

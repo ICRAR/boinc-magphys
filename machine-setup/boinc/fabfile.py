@@ -245,7 +245,6 @@ def edit_files():
     </daemon>
   </daemons>''')
     file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>',to='''
-    <delete_delay_hours>48</delete_delay_hours>
     <prefer_primary_platform>1</prefer_primary_platform>
     <homogeneous_redundancy>2</homogeneous_redundancy>
     <hr_allocate_slots/>
