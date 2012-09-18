@@ -64,7 +64,7 @@ DELAY_BOUND = 86400 * 7 						# Clients must report results within a week
 FPOPS_EST_PER_PIXEL = 3.312						# Estimated number of gigaflops per pixel
 FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	# Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
-COBBLESTONE_SCALING_FACTOR = 8.2
+COBBLESTONE_SCALING_FACTOR = 8.6
 
 # The BOINC scripts/apps do not feel at home outside their directory
 os.chdir(BOINC_PROJECT_ROOT)
@@ -113,6 +113,7 @@ for file_name in sorted(os.listdir(FILE_DIR)):
     args_params = [
         "--appname",         APP_NAME,
         "--min_quorum",      "%(min_quorum)s" % {'min_quorum':MIN_QUORUM},
+        "--max_success_results", "4",
         "--delay_bound",     "%(delay_bound)s" % {'delay_bound':DELAY_BOUND},
         "--target_nresults", "%(target_nresults)s" % {'target_nresults':TARGET_NRESULTS},
         "--wu_name",         file_name,
@@ -120,7 +121,7 @@ for file_name in sorted(os.listdir(FILE_DIR)):
         "--result_template", TEMPLATES_PATH + "/fitsed_result.xml",
         "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
         "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
-        "--additional_xml", "<credit>%(credit)d</credit>" % {'credit':pixels_in_file*COBBLESTONE_SCALING_FACTOR},
+        "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_file*COBBLESTONE_SCALING_FACTOR},
         "--opaque",   str(area_id)
     ]
     args_files = [file_name, file_name_job]

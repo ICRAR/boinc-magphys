@@ -24,13 +24,14 @@ int main(int argc, char *argv[]) {
         fp2 = fopen(buffer1, "r");
         if (fp2 == NULL) {
             fprintf(stderr, "Unable to open the file %s\n", buffer1);
-            exit(1);
         }
-        char *string;
-        while ((string = fgets(buffer2, 10240, fp2)) != NULL) {
-            fputs(string, fp1);
+        else {
+            char *string;
+            while ((string = fgets(buffer2, 10240, fp2)) != NULL) {
+                fputs(string, fp1);
+            }
+            fclose(fp2);
         }
-        fclose(fp2);
     }
     fclose(fp1);
     exit(0);

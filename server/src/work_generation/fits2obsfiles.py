@@ -34,7 +34,7 @@ parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=15, help='
 parser.add_argument('-type', help='the hubble type')
 args = vars(parser.parse_args())
 
-MIN_LIVE_CHANNELS_PER_PIXEL = 5
+MIN_LIVE_CHANNELS_PER_PIXEL = 6
 REDSHIFT = args['redshift'][0]
 INPUT_FILE = args['FITS_file'][0]
 OUTPUT_DIR = args['output_directory']

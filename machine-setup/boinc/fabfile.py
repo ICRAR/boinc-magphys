@@ -222,7 +222,7 @@ def edit_files():
   </tasks>
   <daemons>
     <daemon>
-      <cmd> feeder -d 2 --priority_order </cmd>
+      <cmd> feeder -d 2 --priority_order_create_time </cmd>
     </daemon>
     <daemon>
       <cmd> transitioner -d 2 </cmd>
@@ -246,8 +246,6 @@ def edit_files():
   </daemons>''')
     file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>',to='''
     <prefer_primary_platform>1</prefer_primary_platform>
-    <homogeneous_redundancy>2</homogeneous_redundancy>
-    <hr_allocate_slots/>
     <one_result_per_user_per_wu/>
     <max_wus_in_progress>10</max_wus_in_progress>
     <shmem_work_items>200</shmem_work_items>
