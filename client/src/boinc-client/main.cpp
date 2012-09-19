@@ -24,14 +24,16 @@
 int do_checkpoint(int pixel, long loopPosition) {
     fprintf(stderr, "APP: checkpointing\n");
     FILE* f = fopen("temp", "w");
-    if (!f) return 1;
+    if (!f)
+        return 1;
     fprintf(f, "%d %ld", pixel, loopPosition);
     fclose(f);
 
     string resolved_name;
     boinc_resolve_filename_s(CHECKPOINT_FILE, resolved_name);
     int retval = boinc_rename("temp", resolved_name.c_str());
-    if (retval) return retval;
+    if (retval)
+        return retval;
 
     return 0;
 }

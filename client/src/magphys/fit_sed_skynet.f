@@ -46,7 +46,7 @@ c     ==========================================================================
 
       implicit none
       integer isave,i,j,k,i_gal,io,largo
-      integer nmax,galmax,nmod,channel_count
+      integer nmax,galmax,nmod
       parameter(nmax=50,galmax=5000) !nmax: maxium number of photometric points/filters
       integer n_obs,n_models,ibin  !galmax: maximum number of galaxies in one input file
       integer kfilt_sfh(nmax),kfilt_ir(nmax),nfilt_sfh,nfilt_ir,nfilt_mix
@@ -265,23 +265,12 @@ c     Do we have the observation
 c     WHAT OBSERVATIONS DO YOU WANT TO FIT?
 c     fit(ifilt)=1: fit flux from filter ifilt
 c     fit(ifilt)=0: do not fit flux from filter ifilt (set flux=-99)
-      channel_count = 0
       do ifilt=1,nfilt
          if (fit(ifilt).eq.0) then
             flux_obs(i_gal,ifilt)=-99.
             sigma(i_gal,ifilt)=-99.
-c theSkyNet
-         else
-            channel_count = channel_count + 1
-c theSkyNet
          endif
       enddo
-
-c theSkyNet
-      if (channel_count < 4) then
-         call EXIT(0)
-      endif
-c theSkyNet
 
 c     Count number of non-zero fluxes (i.e. detections) to fit
       n_flux=0
@@ -290,6 +279,13 @@ c     Count number of non-zero fluxes (i.e. detections) to fit
             n_flux=n_flux+1
          endif
       enddo
+
+c theSkyNet
+         write(*,*) 'n_flux =',n_flux
+      if (n_flux < 4) then
+         call EXIT(0)
+      endif
+c theSkyNet
 
 c     COMPUTE LUMINOSITY DISTANCE from z given cosmology
 c     Obtain cosmological constant and q
