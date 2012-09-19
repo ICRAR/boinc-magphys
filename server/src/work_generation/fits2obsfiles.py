@@ -166,17 +166,17 @@ def enough_layers(pixels):
         Are there enough layers with data in them to warrant counting this pixel?
     """
     uv_layers = 0
-    for layer_id in ULTRAVIOLET_BANDS.iteritems():
+    for layer_id in ULTRAVIOLET_BANDS.values():
         if pixels[layer_id] > 0:
             uv_layers += 1
 
     optical_layers = 0
-    for layer_id in OPTICAL_BANDS.iteritems():
+    for layer_id in OPTICAL_BANDS.values():
         if pixels[layer_id] > 0:
             optical_layers += 1
 
     ir_layers = 0
-    for layer_id in INFRARED_BANDS.iteritems():
+    for layer_id in INFRARED_BANDS.values():
         if pixels[layer_id] > 0:
             ir_layers += 1
 
