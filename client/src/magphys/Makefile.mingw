@@ -1,6 +1,6 @@
 RM = /bin/rm -f
 UTILIB = ./public_utilities.a
-FC =  gfortran -ggdb -O0 -ffixed-line-length-none
+FC =  gfortran -ggdb -O3 -ffixed-line-length-none
 
 .f.o:
 	$(FC) -c $<

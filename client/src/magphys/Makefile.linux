@@ -2,7 +2,7 @@ RM = /bin/rm -f
 UTILIB = ./public_utilities.a
 
 # Linux
-FC = gfortran -std=legacy -ffixed-line-length-none -static-libgfortran
+FC = gfortran -O3 -std=legacy -ffixed-line-length-none -static-libgfortran
 
 
 .f.o:

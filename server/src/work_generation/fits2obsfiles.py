@@ -17,7 +17,7 @@ from database.database_support import Galaxy, Area, PixelResult, FitsHeader
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from utils.writeable_dir import WriteableDir
-from work_generation import FILTER_BANDS
+from work_generation import FILTER_BANDS, ULTRAVIOLET_BANDS, OPTICAL_BANDS, INFRARED_BANDS
 from image.fitsimage import FitsImage
 
 LOG = logging.getLogger(__name__)
@@ -34,7 +34,6 @@ parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=15, help='
 parser.add_argument('-type', help='the hubble type')
 args = vars(parser.parse_args())
 
-MIN_LIVE_CHANNELS_PER_PIXEL = 6
 REDSHIFT = args['redshift'][0]
 INPUT_FILE = args['FITS_file'][0]
 OUTPUT_DIR = args['output_directory']
@@ -162,6 +161,35 @@ def create_output_file(galaxy, area, pixels):
         row_num += 1
     outfile.close()
 
+def enough_layers(pixels):
+    """
+        Are there enough layers with data in them to warrant counting this pixel?
+    """
+    uv_layers = 0
+    for layer_id in ULTRAVIOLET_BANDS.iteritems():
+        if pixels[layer_id] > 0:
+            uv_layers += 1
+
+    optical_layers = 0
+    for layer_id in OPTICAL_BANDS.iteritems():
+        if pixels[layer_id] > 0:
+            optical_layers += 1
+
+    ir_layers = 0
+    for layer_id in INFRARED_BANDS.iteritems():
+        if pixels[layer_id] > 0:
+            ir_layers += 1
+
+    if optical_layers >= 4:
+        return True
+
+    if optical_layers == 3 and (uv_layers >= 1 or ir_layers >= 1):
+        return True
+
+    # Not enough
+    return False
+
+
 def get_pixels(pix_x, pix_y):
     """
         Retrieves pixels from each pair of (x, y) coordinates specified in pix_x and pix_y.
@@ -178,7 +206,6 @@ def get_pixels(pix_x, pix_y):
             if y >= END_Y:
                 continue
 
-            live_pixels = 0
             pixels = []
             for layer in LAYER_ORDER:
                 if layer == -1:
@@ -192,10 +219,9 @@ def get_pixels(pix_x, pix_y):
                         # A zero tells MAGPHYS - we have no value here
                         pixels.append(0)
                     else:
-                        live_pixels += 1
                         pixels.append(pixel)
 
-            if live_pixels >= MIN_LIVE_CHANNELS_PER_PIXEL:
+            if enough_layers(pixels):
                 result.append(Pixel(x, y, pixels))
 
         max_x = x
