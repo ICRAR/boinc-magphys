@@ -161,7 +161,7 @@ def create_output_file(galaxy, area, pixels):
         row_num += 1
     outfile.close()
 
-def enough_layers(pixels):
+def enough_layers(pixels, x, y):
     """
         Are there enough layers with data in them to warrant counting this pixel?
     """
@@ -186,7 +186,8 @@ def enough_layers(pixels):
     if optical_layers == 3 and (uv_layers >= 1 or ir_layers >= 1):
         return True
 
-    # Not enough
+    # Not enough layers
+    LOG.info('Not enough pixels {0}x{1} - {2}, {3}, {4}'.format(x, y, uv_layers, optical_layers, ir_layers))
     return False
 
 
@@ -221,7 +222,7 @@ def get_pixels(pix_x, pix_y):
                     else:
                         pixels.append(pixel)
 
-            if enough_layers(pixels):
+            if enough_layers(pixels, x, y):
                 result.append(Pixel(x, y, pixels))
 
         max_x = x
