@@ -24,18 +24,24 @@ class MagphysAssimilator(assimilator.Assimilator):
         self.Session = sessionmaker(bind=engine)
 
     def get_output_file_infos(self, result, list):
+        """
+
+        """
         dom = parseString(result.xml_doc_in)
         for node in dom.getElementsByTagName('file_name'):
             list.append(node.firstChild.nodeValue)
 
     def getResult(self, session, pxresultId):
+        """
+
+        """
         if self.noinsert:
             pxresult = None
         else:
             pxresult = session.query(PixelResult).filter("pxresult_id=:pxresultId").params(pxresultId=pxresultId).first()
         #doAdd = False
         if pxresult is None:
-            print "Pixel Result row not found for pxresultId of", pxresultId
+            self.logCritical("Pixel Result row not found for pxresultId of %d\n", pxresultId)
             return None
             #pxresult = PixelResult()
         else:
@@ -51,13 +57,16 @@ class MagphysAssimilator(assimilator.Assimilator):
         return pxresult
 
     def saveResult(self, session, pxresult):
+        """
+
+        """
         if pxresult.pxresult_id is None and not self.noinsert:
             session.add(pxresult)
 
     def processResult(self, session, outFile, wu):
         """
-        Read the output file, add the values to the PixelResult row, and insert the filter,
-        parameter and histogram rows.
+            Read the output file, add the values to the PixelResult row, and insert the filter,
+            parameter and histogram rows.
         """
         if is_gzip(outFile):
             self.logDebug('Is GZIP\n')
@@ -200,7 +209,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
     def assimilate_handler(self, wu, results, canonical_result):
         """
-        Process the Results.
+            Process the Results.
         """
         self.logDebug("Start of assimilate_handler for %d\n", wu.id)
         try:

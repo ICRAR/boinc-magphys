@@ -41,8 +41,7 @@ elif args['all']:
     query = session.query(Galaxy).order_by(Galaxy.name)
 else:
     LOG.info('Building PNG files for updated galaxies\n')
-    query = session.query(Galaxy).filter(Area.galaxy_id == Galaxy.galaxy_id)\
-        .filter(Area.update_time >= Galaxy.image_time)
+    query = session.query(Galaxy).filter(Area.galaxy_id == Galaxy.galaxy_id).filter(Area.update_time >= Galaxy.image_time)
 
 galaxies = query.all()
 

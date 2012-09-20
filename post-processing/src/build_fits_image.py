@@ -4,6 +4,7 @@ Build a fits image from the data in the database
 """
 from __future__ import print_function
 import argparse
+import glob
 import logging
 from datetime import datetime
 import os
@@ -12,8 +13,9 @@ import pyfits
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import sys
+from sqlalchemy.sql.expression import func
 from config import db_login
-from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter
+from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area
 from utils.writeable_dir import WriteableDir
 
 LOG = logging.getLogger(__name__)
@@ -87,8 +89,43 @@ def get_index(parameter_name):
 
     raise AttributeError('Invalid parameter {0}'.format(pixel_parameter.parameter_name))
 
+def check_need_to_run(directory, galaxy):
+    """
+    Find out if any pixels have arrived since we processed the images in the directory
+    """
+    min_mtime = None
+    for filename in glob.glob(directory + "/*"):
+        mtime = os.path.getmtime(filename)
+        if min_mtime is None:
+            min_mtime = mtime
+        else:
+            min_mtime = min(min_mtime, mtime)
+
+    query = session.query(func.max(Area.update_time)).filter('Area.galaxy_id == :galaxy_id').params(galaxy_id=galaxy.galaxy_id)
+    update_time = query.first()
+    LOG.info('min_mtime = {0} - update_time = {1}'.format(min_mtime, update_time))
+    return update_time > min_mtime
+
 for galaxy in galaxies:
     LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
+
+    # Do we have an old version
+    need_to_run = True
+
+    # Create the directory to hold the fits files
+    if galaxy.version_number == 1:
+        directory = '{0}/{1}'.format(output_directory, galaxy.name)
+    else:
+        directory = '{0}/{1}_V{2}'.format(output_directory, galaxy.name, galaxy.version_number)
+
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    else:
+        need_to_run = check_need_to_run(directory, galaxy)
+
+    # If we don't need to run - don't
+    if not need_to_run:
+        continue
 
     # A vagary of PyFits/NumPy is the order of the x & y indexes is reversed
     # See page 13 of the PyFITS User Guide
@@ -133,15 +170,6 @@ for galaxy in galaxies:
             for pixel_parameter in session.query(PixelParameter).filter(PixelParameter.pxresult_id == row.pxresult_id).all():
                 index = get_index(pixel_parameter.parameter_name)
                 array_median[row.y, row.x, index] = pixel_parameter.percentile50
-
-    # Create the directory to hold the fits files
-    if galaxy.version_number == 1:
-        directory = '{0}/{1}'.format(output_directory, galaxy.name)
-    else:
-        directory = '{0}/{1}_V{2}'.format(output_directory, galaxy.name, galaxy.version_number)
-
-    if not os.path.exists(directory):
-        os.makedirs(directory)
 
     name_count = 0
     for name in IMAGE_NAMES:

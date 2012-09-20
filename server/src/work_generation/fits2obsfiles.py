@@ -189,7 +189,6 @@ def enough_layers(pixels):
     # Not enough layers
     return False
 
-
 def get_pixels(pix_x, pix_y):
     """
         Retrieves pixels from each pair of (x, y) coordinates specified in pix_x and pix_y.
