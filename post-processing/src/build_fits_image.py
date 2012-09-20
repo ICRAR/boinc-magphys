@@ -101,6 +101,9 @@ def check_need_to_run(directory, galaxy):
         else:
             min_mtime = min(min_mtime, mtime)
 
+    # Convert to a datetime
+    min_mtime = datetime.fromtimestamp(min_mtime)
+
     update_time = session.query(func.max(Area.update_time)).filter('galaxy_id = :galaxy_id').params(galaxy_id=galaxy.galaxy_id).first()
     LOG.info('{0}-{1} min_mtime = {2} - update_time = {3}'.format(galaxy.name, galaxy.version_number, min_mtime, update_time[0]))
     if update_time[0] is None:
