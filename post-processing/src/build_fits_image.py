@@ -103,8 +103,10 @@ def check_need_to_run(directory, galaxy):
 
     query = session.query(func.max(Area.update_time)).filter('galaxy_id = :galaxy_id').params(galaxy_id=galaxy.galaxy_id)
     update_time = query.all()
-    LOG.info('{0}-{1} min_mtime = {2} - update_time = {3}'.format(galaxy.name, galaxy.version_number, min_mtime, update_time))
-    return update_time > min_mtime
+    LOG.info('{0}-{1} min_mtime = {2} - update_time = {3}'.format(galaxy.name, galaxy.version_number, min_mtime, update_time[0]))
+    if update_time[0] is None:
+        return False
+    return update_time[0] > min_mtime
 
 for galaxy in galaxies:
     LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
