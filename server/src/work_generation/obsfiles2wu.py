@@ -152,5 +152,6 @@ for file_name in sorted(os.listdir(FILE_DIR)):
 
     files_processed += 1
 
+    LOG.debug('%d -> %d', files_processed, FILES_TO_PROCESS)
     if files_processed >= FILES_TO_PROCESS:
         break
