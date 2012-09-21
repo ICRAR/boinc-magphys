@@ -26,6 +26,8 @@ parser.add_argument('-p', '--priority', type=int, help='the priority of the WUs'
 parser.add_argument('-t', '--threshold', type=int, help='if the number is less than this threshold add records')
 args = vars(parser.parse_args())
 
+HIGH_WATER_MARK = 2000
+
 # Do we need to run this
 if args['threshold'] is not None:
     # select count(*) from result where server_state = 2
@@ -45,7 +47,7 @@ if args['threshold'] is not None:
         exit(0)
 
     if args['files_to_process'] is None:
-        args['files_to_process'] = args['threshold'] - count
+        args['files_to_process'] = args['threshold'] - count + HIGH_WATER_MARK
 
 APP_NAME = "magphys_wrapper"
 FILE_DIR = args['observations_directory']
