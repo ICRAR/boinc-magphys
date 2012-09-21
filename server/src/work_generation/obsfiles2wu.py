@@ -5,6 +5,7 @@ Convert observations into WU
 import argparse
 import json
 import logging
+import shutil
 import sys
 import os
 import subprocess
@@ -139,7 +140,7 @@ for file_name in sorted(os.listdir(FILE_DIR)):
 
     # Copy file into BOINC's download hierarchy
     new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()
-    os.rename(FILE_DIR + "/" + file_name, new_full_path)
+    shutil.move(FILE_DIR + "/" + file_name, new_full_path)
 
     create_job_xml(file_name_job, pixels_in_file)
 

@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 
     // Get the number of pixels
     int num_pixels = get_number_pixels(infile);
-    fclose(infile);     // The Fortran does the reading
+    fclose(infile);     // The Fortran does the reading so make sure the file is closed
 
     // See if there's a valid checkpoint file.
     // If so seek input file and truncate output file
