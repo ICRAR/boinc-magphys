@@ -36,18 +36,18 @@ else:
             print("Deleting area {0} pixel {1}".format(area.area_id, pxresult.pxresult_id), end="\r")
             sys.stdout.flush()
 
-            session.query(PixelFilter).filter_by('pxresult_id=:pxresult_id').params(pxresult_id=pxresult.pxresult_id).delete()
-            session.query(PixelParameter).filter_by('pxresult_id=:pxresult_id').params(pxresult_id=pxresult.pxresult_id).delete()
-            session.query(PixelHistogram).filter_by('pxresult_id=:pxresult_id').params(pxresult_id=pxresult.pxresult_id).delete()
+            session.query(PixelFilter).filter_by(pxresult_id=pxresult.pxresult_id).delete()
+            session.query(PixelParameter).filter_by(pxresult_id=pxresult.pxresult_id).delete()
+            session.query(PixelHistogram).filter_by(pxresult_id=pxresult.pxresult_id).delete()
 
             session.delete(pxresult)
 
-        session.query(AreaUser).filter_by('area_id=:area_id').params(area_id=area.area_id).delete()
+        session.query(AreaUser).filter_by(area_id=area.area_id).delete()
         session.delete(area)
 
         session.commit()
 
-    session.query(FitsHeader).filter_by('galaxy_id=:galaxy_id').params(galaxy_id=galaxy.galaxy_id).delete()
+    session.query(FitsHeader).filter_by(galaxy_id=galaxy.galaxy_id).delete()
     session.delete(galaxy)
     LOG.info('Galaxy with galaxy_id of %d was deleted', GALAXY_ID)
 
