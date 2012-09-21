@@ -6,8 +6,9 @@ from __future__ import print_function
 import argparse
 import logging
 import sys
+from sqlalchemy.sql.expression import func
 from config import db_login
-from database.database_support import Galaxy, PixelFilter, PixelParameter, PixelHistogram, AreaUser, FitsHeader
+from database.database_support import Galaxy, PixelFilter, PixelParameter, PixelHistogram, AreaUser, FitsHeader, Area
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -30,6 +31,9 @@ if galaxy is None:
     LOG.info('Error: Galaxy with galaxy_id of %d was not found', GALAXY_ID)
 else:
     LOG.info('Deleting Galaxy with galaxy_id of %d', GALAXY_ID)
+
+    values = session.query(func.max(Area.area_id),func.min(Area.area_id)).filter(galaxy_id=galaxy.galaxy_id).first()
+    LOG.info('Areas range {0}'.format(values))
 
     for area in galaxy.areas:
         for pxresult in area.pixelResults:
