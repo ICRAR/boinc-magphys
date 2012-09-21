@@ -49,7 +49,7 @@ class Area(Base):
     workunit_id  = Column(BigInteger)
     update_time  = Column(TIMESTAMP)
 
-    galaxy = relationship("Galaxy", backref=backref('areas', order_by=galaxy_id))
+    galaxy = relationship("Galaxy", backref=backref('areas', order_by=area_id))
 
 class AreaUser(Base):
     __tablename__ = 'area_user'
@@ -96,7 +96,7 @@ class PixelResult(Base):
     dz = Column(Float)
 
     galaxy = relationship("Galaxy", backref=backref('pixelResults', order_by=galaxy_id))
-    area = relationship("Area", backref=backref('pixelResults', order_by=area_id))
+    area = relationship("Area", backref=backref('pixelResults', order_by=pxresult_id))
 
 class PixelFilter(Base):
     __tablename__ = 'pixel_filter'
