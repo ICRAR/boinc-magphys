@@ -2,8 +2,10 @@
 """
 Delete a galaxy and all it's related data.
 """
+from __future__ import print_function
 import argparse
 import logging
+import sys
 from config import db_login
 from database.database_support import Galaxy
 from sqlalchemy import create_engine
@@ -25,11 +27,13 @@ session = Session()
 
 galaxy = session.query(Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=GALAXY_ID).first()
 if galaxy is None:
-    print 'Error: Galaxy with galaxy_id of', GALAXY_ID, 'was not found'
+    LOG.info('Error: Galaxy with galaxy_id of %d was not found', GALAXY_ID)
 else:
-    print 'Deleting Galaxy with galaxy_id of', GALAXY_ID
+    LOG.info('Deleting Galaxy with galaxy_id of %d', GALAXY_ID)
 
     for area in galaxy.areas:
+        print("Deleting area {0}".format(area.area_id), end="\r")
+        sys.stdout.flush()
         for pxresult in area.pixelResults:
             for filter in pxresult.filters:
                 session.delete(filter)
@@ -44,7 +48,7 @@ else:
     for hdr in galaxy.fits_headers:
         session.delete(hdr)
     session.delete(galaxy)
-    print 'Galaxy with galaxy_id of', GALAXY_ID, 'was deleted'
+    LOG.info('Galaxy with galaxy_id of %d was deleted', GALAXY_ID)
 
 session.commit()
 session.close()
