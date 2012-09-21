@@ -32,7 +32,7 @@ if galaxy is None:
 else:
     LOG.info('Deleting Galaxy with galaxy_id of %d', GALAXY_ID)
 
-    values = session.query(func.max(Area.area_id),func.min(Area.area_id)).filter(galaxy_id=galaxy.galaxy_id).first()
+    values = session.query(func.max(Area.area_id),func.min(Area.area_id)).filter_by(galaxy_id=galaxy.galaxy_id).first()
     LOG.info('Areas range {0}'.format(values))
 
     for area in galaxy.areas:
