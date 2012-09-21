@@ -37,7 +37,7 @@ else:
 
     for area_id1 in session.query(Area.area_id).filter_by(galaxy_id=galaxy.galaxy_id).all():
         for pxresult_id1 in session.query(PixelResult.pxresult_id).filter_by(area_id=area_id1[0]).all():
-            print("Deleting area {0} pixel {1}".format(area_id1, pxresult_id1), end="\r")
+            print("Deleting area {0} pixel {1}".format(area_id1[0], pxresult_id1[0]), end="\r")
             sys.stdout.flush()
 
             session.query(PixelFilter).filter_by(pxresult_id=pxresult_id1[0]).delete()
