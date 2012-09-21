@@ -251,6 +251,7 @@ def edit_files():
     <shmem_work_items>200</shmem_work_items>
     <feeder_query_size>300</feeder_query_size>
     <reliable_priority_on_over>5</reliable_priority_on_over>
+    <delete_delay_hours>24</delete_delay_hours>
     <one_result_per_host_per_wu/>''')
     file_editor('/home/ec2-user/projects/{0}/config.xml'.format(env.project_name))
 

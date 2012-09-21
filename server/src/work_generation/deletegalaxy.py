@@ -53,6 +53,7 @@ for galaxy_id_str in args['galaxy_id']:
         session.query(FitsHeader).filter_by(galaxy_id=galaxy.galaxy_id).delete()
         session.delete(galaxy)
         LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id1)
+    session.commit()
 
 session.commit()
 session.close()
