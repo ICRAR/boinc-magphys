@@ -36,7 +36,7 @@ else:
     LOG.info('Areas range {0}'.format(values))
 
     for area_id1 in session.query(Area.area_id).filter_by(galaxy_id=galaxy.galaxy_id).all():
-        for pxresult_id1 in session.query(PixelResult.pxresult_id).filer_by(area_id=area_id1).all():
+        for pxresult_id1 in session.query(PixelResult.pxresult_id).filter_by(area_id=area_id1).all():
             print("Deleting area {0} pixel {1}".format(area_id1, pxresult_id1), end="\r")
             sys.stdout.flush()
 
