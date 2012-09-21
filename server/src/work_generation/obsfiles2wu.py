@@ -27,7 +27,7 @@ parser.add_argument('-p', '--priority', type=int, help='the priority of the WUs'
 parser.add_argument('-t', '--threshold', type=int, help='if the number is less than this threshold add records')
 args = vars(parser.parse_args())
 
-HIGH_WATER_MARK = 2000
+HIGH_WATER_MARK = 10
 
 # Do we need to run this
 if args['threshold'] is not None:
@@ -152,6 +152,8 @@ for file_name in sorted(os.listdir(FILE_DIR)):
 
     files_processed += 1
 
-    LOG.debug('%d -> %d', files_processed, FILES_TO_PROCESS)
+    LOG.info('%d -> %d', files_processed, FILES_TO_PROCESS)
     if files_processed >= FILES_TO_PROCESS:
         break
+
+LOG.info('Added %d files', files_processed)
