@@ -58,6 +58,8 @@ if args['files_to_process'] is not None:
 else:
     FILES_TO_PROCESS = sys.maxint
 
+LOG.info('Files to process %d', FILES_TO_PROCESS)
+
 BIN_PATH = BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates"                    # In true BOINC style, this is magically relative to the project root
 
