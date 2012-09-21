@@ -8,7 +8,7 @@ import logging
 import sys
 from sqlalchemy.sql.expression import func
 from config import db_login
-from database.database_support import Galaxy, PixelFilter, PixelParameter, PixelHistogram, AreaUser, FitsHeader, Area
+from database.database_support import Galaxy, PixelFilter, PixelParameter, PixelHistogram, AreaUser, FitsHeader, Area, PixelResult
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -32,25 +32,24 @@ if galaxy is None:
 else:
     LOG.info('Deleting Galaxy with galaxy_id of %d', GALAXY_ID)
 
-    values = session.query(func.max(Area.area_id),func.min(Area.area_id)).filter_by(galaxy_id=galaxy.galaxy_id).first()
+    values = session.query(func.min(Area.area_id),func.max(Area.area_id)).filter_by(galaxy_id=galaxy.galaxy_id).first()
     LOG.info('Areas range {0}'.format(values))
 
-    for area in galaxy.areas:
-        for pxresult in area.pixelResults:
-            print("Deleting area {0} pixel {1}".format(area.area_id, pxresult.pxresult_id), end="\r")
+    for area_id1 in session.query(Area.area_id).filter_by(galaxy_id=galaxy.galaxy_id).all():
+        for pxresult_id1 in session.query(PixelResult.pxresult_id).filer_by(area_id=area_id1).all():
+            print("Deleting area {0} pixel {1}".format(area_id1, pxresult_id1), end="\r")
             sys.stdout.flush()
 
-            session.query(PixelFilter).filter_by(pxresult_id=pxresult.pxresult_id).delete()
-            session.query(PixelParameter).filter_by(pxresult_id=pxresult.pxresult_id).delete()
-            session.query(PixelHistogram).filter_by(pxresult_id=pxresult.pxresult_id).delete()
+            session.query(PixelFilter).filter_by(pxresult_id=pxresult_id1).delete()
+            session.query(PixelParameter).filter_by(pxresult_id=pxresult_id1).delete()
+            session.query(PixelHistogram).filter_by(pxresult_id=pxresult_id1).delete()
 
-            session.delete(pxresult)
-
-        session.query(AreaUser).filter_by(area_id=area.area_id).delete()
-        session.delete(area)
+        session.query(PixelResult).filter_by(area_id=area_id1).delete()
+        session.query(AreaUser).filter_by(area_id=area_id1).delete()
 
         session.commit()
 
+    session.query(Area).filter_by(galaxy_id=galaxy.galaxy_id).delete()
     session.query(FitsHeader).filter_by(galaxy_id=galaxy.galaxy_id).delete()
     session.delete(galaxy)
     LOG.info('Galaxy with galaxy_id of %d was deleted', GALAXY_ID)
