@@ -32,9 +32,9 @@ else:
     LOG.info('Deleting Galaxy with galaxy_id of %d', GALAXY_ID)
 
     for area in galaxy.areas:
-        print("Deleting area {0}".format(area.area_id), end="\r")
-        sys.stdout.flush()
         for pxresult in area.pixelResults:
+            print("Deleting area {0} pixel {1}".format(area.area_id, pxresult.pxresult_id), end="\r")
+            sys.stdout.flush()
             for filter in pxresult.filters:
                 session.delete(filter)
             for parameter in pxresult.parameters:
