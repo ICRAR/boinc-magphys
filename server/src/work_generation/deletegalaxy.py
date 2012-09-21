@@ -26,7 +26,7 @@ engine = create_engine(db_login)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-galaxy = session.query(Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=GALAXY_ID).first()
+galaxy = session.query(Galaxy).filter_by(galaxy_id=GALAXY_ID).first()
 if galaxy is None:
     LOG.info('Error: Galaxy with galaxy_id of %d was not found', GALAXY_ID)
 else:
@@ -36,16 +36,16 @@ else:
     LOG.info('Areas range {0}'.format(values))
 
     for area_id1 in session.query(Area.area_id).filter_by(galaxy_id=galaxy.galaxy_id).all():
-        for pxresult_id1 in session.query(PixelResult.pxresult_id).filter_by(area_id=area_id1).all():
+        for pxresult_id1 in session.query(PixelResult.pxresult_id).filter_by(area_id=area_id1[0]).all():
             print("Deleting area {0} pixel {1}".format(area_id1, pxresult_id1), end="\r")
             sys.stdout.flush()
 
-            session.query(PixelFilter).filter_by(pxresult_id=pxresult_id1).delete()
-            session.query(PixelParameter).filter_by(pxresult_id=pxresult_id1).delete()
-            session.query(PixelHistogram).filter_by(pxresult_id=pxresult_id1).delete()
+            session.query(PixelFilter).filter_by(pxresult_id=pxresult_id1[0]).delete()
+            session.query(PixelParameter).filter_by(pxresult_id=pxresult_id1[0]).delete()
+            session.query(PixelHistogram).filter_by(pxresult_id=pxresult_id1[0]).delete()
 
-        session.query(PixelResult).filter_by(area_id=area_id1).delete()
-        session.query(AreaUser).filter_by(area_id=area_id1).delete()
+        session.query(PixelResult).filter_by(area_id=area_id1[0]).delete()
+        session.query(AreaUser).filter_by(area_id=area_id1[0]).delete()
 
         session.commit()
 
