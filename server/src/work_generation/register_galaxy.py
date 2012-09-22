@@ -36,18 +36,10 @@ engine = create_engine(db_login)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def get_version_number(galaxy_name):
-    count = session.query(Galaxy).filter(Galaxy.name == galaxy_name).count()
-    return count + 1
-
-def update_current(galaxy_name):
-    session.execute("update galaxy set current = false where name = '"+ galaxy_name + "'")
-
 LOG.info("Registering %s", GALAXY_NAME)
 
-version_number = get_version_number(GALAXY_NAME)
-if version_number > 1:
-    update_current(GALAXY_NAME)
+version_number = session.query(Galaxy).filter(Galaxy.name == GALAXY_NAME).count()
+version_number += 1
 
 filePrefixName = "%s_%s" % (GALAXY_NAME, str(version_number))
 fitsFileName = filePrefixName + ".fits"
@@ -72,7 +64,7 @@ galaxy.version_number = version_number
 galaxy.galaxy_type = GALAXY_TYPE
 galaxy.ra_cent = 0
 galaxy.dec_cent = 0
-galaxy.current = True
+galaxy.current = False
 galaxy.pixel_count = 0
 galaxy.pixels_processed = 0
 session.add(galaxy)
