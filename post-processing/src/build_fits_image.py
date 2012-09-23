@@ -101,6 +101,10 @@ def check_need_to_run(directory, galaxy):
         else:
             min_mtime = min(min_mtime, mtime)
 
+    # No files exist
+    if min_mtime is None:
+        return True
+
     # Convert to a datetime
     min_mtime = datetime.fromtimestamp(min_mtime)
 

@@ -1,15 +1,11 @@
-from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
-from django.core.urlresolvers import reverse
-from django.template import RequestContext, Context, loader
+from django.http import HttpResponse, HttpResponseRedirect
+from django.template import Context, loader
 from config import django_image_dir
 from image import fitsimage
-from sqlalchemy.orm import sessionmaker
-from django.db import connection
 from pogs.models import Galaxy
 from pogs import PogsSession
 from database import database_support
-import os, io, datetime, tempfile
+import os, datetime, tempfile
 
 class GalaxyLine:
     def __init__(self):
@@ -18,7 +14,7 @@ class GalaxyLine:
         self.redshifts = []
         self.widths = []
         self.heights = []
-    
+
 class GalaxyInfo:
     def __init__(self):
         self.galaxy_id = 0
@@ -28,13 +24,13 @@ class GalaxyInfo:
         self.galaxy_type = ""
         self.redshift = 0
         self.pct_complete = "0.00%"
-    
+
 def getReferer(request):
     try:
         referer = request.META['HTTP_REFERER']
     except KeyError as e:
         referer = None
-        
+
     if referer == '' or referer == None:
         referer = 'pogs'
     else:
@@ -51,7 +47,7 @@ def getRefererFromCookie(request):
         referer = None
     if referer == '' or referer == None:
         referer = 'pogs'
-    return referer;
+    return referer
 
 def setReferrer(response, referer):
     response.set_cookie('pogs_referer', referer)
@@ -67,7 +63,7 @@ def userGalaxies(request, userid):
         name = galaxy.name
         if galaxy.version_number > 1:
             name = galaxy.name + "[" + str(galaxy.version_number) + "]"
-        if idx == 0:    
+        if idx == 0:
             galaxy_line = GalaxyLine()
             galaxy_line.names = []
             galaxy_line.ids = []
@@ -76,7 +72,7 @@ def userGalaxies(request, userid):
         galaxy_line.names.append(name)
         galaxy_line.ids.append(galaxy.galaxy_id)
         galaxy_line.redshifts.append(str(galaxy.redshift))
-        
+
         idx += 1
         if idx > 5:
             idx = 0
@@ -101,12 +97,12 @@ def userGalaxy(request, userid, galaxy_id):
     galaxy_name = galaxy.name
     if galaxy.version_number > 1:
         galaxy_name = galaxy.name + "[" + str(galaxy.version_number) + "]"
-    galaxy_height = galaxy.dimension_x;
-    galaxy_width = galaxy.dimension_y;
+    galaxy_height = galaxy.dimension_x
+    galaxy_width = galaxy.dimension_y
     session.close()
-    
+
     referer = getRefererFromCookie(request)
-    
+
     t = loader.get_template('pogs/user_images.html')
     c = Context({
         'userid': userid,
@@ -162,12 +158,12 @@ def galaxy(request, galaxy_id):
     galaxy_name = galaxy.name
     if galaxy.version_number > 1:
         galaxy_name = galaxy.name + "[" + str(galaxy.version_number) + "]"
-    galaxy_height = galaxy.dimension_x;
-    galaxy_width = galaxy.dimension_y;
+    galaxy_height = galaxy.dimension_x
+    galaxy_width = galaxy.dimension_y
     session.close()
-    
+
     referer = getRefererFromCookie(request)
-    
+
     t = loader.get_template('pogs/galaxy_images.html')
     c = Context({
         'galaxy_id': galaxy_id,
@@ -218,7 +214,7 @@ def galaxyList(request):
         per_page = request.GET["per_page"]
     except KeyError as e:
         per_page = "20"
-    
+
     lines_per_page = int(per_page)
     galaxies_per_line = 1
     page = int(page)
@@ -231,7 +227,7 @@ def galaxyList(request):
     else:
         prev_page = page - 1
     session = PogsSession()
-    query = session.query(database_support.Galaxy).filter("current=true");
+    query = session.query(database_support.Galaxy).filter("current=true")
     if type == "S":
         query = query.filter("galaxy_type like'S%' and galaxy_type not like'SB%' and galaxy_type not like'S0%'")
     elif type == "SB":
@@ -242,24 +238,24 @@ def galaxyList(request):
         query = query.filter("galaxy_type like'E%'")
     elif type == "I":
         query = query.filter("galaxy_type like'I%'")
-        
+
     if name != "":
         query = query.filter("name like'" + name + "%'")
-        
+
     if ra_from != "" and ra_to != "":
-        query = query.filter("ra_cent between " + str(float(ra_from)) + " and " + str(float(ra_to)));
+        query = query.filter("ra_cent between " + str(float(ra_from)) + " and " + str(float(ra_to)))
     elif ra_from != "":
-        query = query.filter("ra_cent >= " + str(float(ra_from)));
+        query = query.filter("ra_cent >= " + str(float(ra_from)))
     elif ra_to != "":
-        query = query.filter("ra_cent <= " + str(float(ra_to)));
-    
+        query = query.filter("ra_cent <= " + str(float(ra_to)))
+
     if dec_from != "" and dec_to != "":
-        query = query.filter("dec_cent between " + str(float(dec_from)) + " and " + str(float(dec_to)));
+        query = query.filter("dec_cent between " + str(float(dec_from)) + " and " + str(float(dec_to)))
     elif dec_from != "":
-        query = query.filter("dec_cent >= " + str(float(dec_from)));
+        query = query.filter("dec_cent >= " + str(float(dec_from)))
     elif dec_to != "":
-        query = query.filter("dec_cent <= " + str(float(dec_to)));
-        
+        query = query.filter("dec_cent <= " + str(float(dec_to)))
+
     if sort == "NAME":
         query = query.order_by(database_support.Galaxy.name, database_support.Galaxy.version_number)
     elif sort == "RADEC":
@@ -286,7 +282,7 @@ def galaxyList(request):
             next_page = page + 1
             break
         else:
-            line = GalaxyInfo();
+            line = GalaxyInfo()
             line.name = galaxy.name
             line.galaxy_id = galaxy.galaxy_id
             line.ra_cent = galaxy.ra_cent
@@ -328,7 +324,7 @@ def galaxyImage(request, galaxy_id, colour):
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
 
     image = fitsimage.FitsImage()
-    imagePrefixName = '{0}_{1}'.format(galaxy.name, galaxy.version_number);
+    imagePrefixName = '{0}_{1}'.format(galaxy.name, galaxy.version_number)
     imageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
     session.close()
 
@@ -356,7 +352,7 @@ def galaxyThumbnailImage(request, galaxy_id, colour):
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
 
     image = fitsimage.FitsImage()
-    imagePrefixName = '{0}_{1}'.format(galaxy.name, galaxy.version_number);
+    imagePrefixName = '{0}_{1}'.format(galaxy.name, galaxy.version_number)
     imageFileName = image.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, colour, False)
     session.close()
 
@@ -384,7 +380,7 @@ def galaxyParameterImage(request, galaxy_id, name):
     galaxy = session.query(database_support.Galaxy).filter("galaxy_id=:galaxy_id").params(galaxy_id=galaxy_id).first()
 
     image = fitsimage.FitsImage()
-    imageFileName = '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name);
+    imageFileName = '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name)
     filename = image.get_file_path(imageDirName, imageFileName, False)
     session.close()
 
