@@ -234,14 +234,22 @@ def edit_files():
       <cmd> /home/ec2-user/boinc-magphys/server/src/magphys_validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job </cmd>
     </daemon>
     <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 2 0 </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 3 0 </cmd>
       <output> assimilator.0.log </output>
       <pid> assimilator.0.pid </pid>
+      <disabled>0</disabled>
     </daemon>
     <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 2 1 </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 3 1 </cmd>
+      <output> assimilator.2.log </output>
+      <pid> assimilator.2.pid </pid>
+      <disabled>0</disabled>
+    </daemon>
+    <daemon>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 3 2 </cmd>
       <output> assimilator.1.log </output>
       <pid> assimilator.1.pid </pid>
+      <disabled>0</disabled>
     </daemon>
   </daemons>''')
     file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>',to='''

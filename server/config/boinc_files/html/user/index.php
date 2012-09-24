@@ -149,8 +149,23 @@ echo "<html>
 include 'schedulers.txt';
 echo "
     </head><body>
+<div id=\"fb-root\"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = \"//connect.facebook.net/en_US/all.js#xfbml=1\";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
     <div class=page_title>".PROJECT."</div>
-    <div><img src=\"logos/POGSbanner.jpg\" alt=\"POGS Banner\"/></div>
+    <div><img src=\"logos/POGSbanner_label.jpg\" alt=\"POGS Banner\" width=\"808\" height=\"202\" border=\"0\" usemap=\"#map\" />
+        <map name=\"map\">
+            <area shape=\"rect\" coords=\"0,0,200,200\" alt=\"GALEX (Galaxy Evolution Explorer)\" href=\"http://www.galex.caltech.edu\" />
+            <area shape=\"rect\" coords=\"203,0,403,200\" alt=\"Pan-STARRS1\" href=\"http://www.ps1sc.org\" />
+            <area shape=\"rect\" coords=\"406,0,606,200\" alt=\"WISE (Wide-field Infrared Survey Explorer)\" href=\"http://wise.ssl.berkeley.edu/index.html\" />
+            <area shape=\"rect\" coords=\"608,0,808,200\" alt=\"MAGPHYS\" href=\"http://www.iap.fr/magphys/magphys/MAGPHYS.html\" />
+        </map>
+   </div>
 ";
 
 if (!$stopped) {
@@ -177,6 +192,7 @@ echo "
     <p>
     <a href=\"http://boinc.berkeley.edu/\"><img align=\"middle\" border=\"0\" src=\"img/pb_boinc.gif\" alt=\"Powered by BOINC\"></a>
     </p>
+    <div class=\"fb-like\" data-href=\"http://ec2-23-23-126-96.compute-1.amazonaws.com/pogs\" data-send=\"false\" data-width=\"450\" data-show-faces=\"false\"></div>
     </td>
 ";
 

@@ -23,7 +23,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the images will be written')
-parser.add_argument('-m', '--median', action='store_true', help='also generate the images using the median value')
+parser.add_argument('-me', '--median', action='store_true', help='also generate the images using the median value')
+parser.add_argument('-mo', '--mode', action='store_true', help='also generate the images using the mode value')
 parser.add_argument('names', nargs='*', help='optional the name of tha galaxies to produce')
 args = vars(parser.parse_args())
 
