@@ -37,7 +37,7 @@ for galaxy in galaxies:
         LOG.info('Area %d', area.area_id)
 
         wu_name = '{0}_area{1}'.format(galaxy.name, area.area_id)
-        workunits = engine_pogs.query(Workunit).filter_by(name=wu_name).all()
+        workunits = session_pogs.query(Workunit).filter_by(name=wu_name).all()
 
         for workunit in workunits:
             if workunit.assimilate_state == 2:
