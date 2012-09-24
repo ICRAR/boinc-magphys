@@ -34,17 +34,17 @@ for galaxy in galaxies:
     areas = session_magphys.query(Area).filter_by(galaxy_id=galaxy.galaxy_id).filter_by(workunit_id = None).all()
 
     for area in areas:
-        LOG.info('Area %d', area.area_id)
-
         wu_name = '{0}_area{1}'.format(galaxy.name, area.area_id)
         workunits = session_pogs.query(Workunit).filter_by(name=wu_name).all()
 
         for workunit in workunits:
             if workunit.assimilate_state == 2:
-                LOG.info('Found area %d - WU_id %d', area.area_id, workunit.id)
+                LOG.info('%d Found area %d - WU_id %d', galaxy.name, area.area_id, workunit.id)
                 area.workunit_id = workunit.id
 
                 for pixel in area.pixelResults:
                     pixel.workunit_id = workunit.id
+
+    session_magphys.commit()
 
 LOG.info('Done.')
