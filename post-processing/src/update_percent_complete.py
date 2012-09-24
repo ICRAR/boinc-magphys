@@ -39,7 +39,7 @@ for galaxy in galaxies:
 
         for workunit in workunits:
             if workunit.assimilate_state == 2:
-                LOG.info('%d Found area %d - WU_id %d', galaxy.name, area.area_id, workunit.id)
+                LOG.info('%s Found area %d - WU_id %d', galaxy.name, area.area_id, workunit.id)
                 area.workunit_id = workunit.id
 
                 for pixel in area.pixelResults:
