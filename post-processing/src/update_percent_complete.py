@@ -29,10 +29,9 @@ session_pogs = Session()
 galaxies = session_magphys.query(Galaxy).all()
 
 for galaxy in galaxies:
-    LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
-
     # Have we got work units out there for this galaxy?
     count = session_pogs.query(Workunit).filter(Workunit.name.like('{0}_area%'.format(galaxy.name))).count()
+    LOG.info('Working on galaxy %s (%d) - %d work units deployed', galaxy.name, galaxy.version_number, count)
     if not count:
         LOG.info('No work units for %s deployed', galaxy.name)
         continue
