@@ -12,6 +12,7 @@ import logging
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from config import db_login, boinc_db_login
+from database.boinc_database_support import Workunit
 from database.database_support import Galaxy, Area
 
 LOG = logging.getLogger(__name__)
@@ -34,5 +35,12 @@ for galaxy in galaxies:
 
     for area in areas:
         LOG.info('Area %d', area.area_id)
+
+        wu_name = '{0}_area{1}'.format(galaxy.name, area.area_id)
+        workunits = engine_pogs.query(Workunit).filter_by(name=wu_name).all()
+
+        for workunit in workunits:
+            if workunit.assimilate_state == 2:
+                LOG.info('Found area %d - WU_id %d', area.area_id, workunit.id)
 
 LOG.info('Done.')
