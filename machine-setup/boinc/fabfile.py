@@ -209,8 +209,8 @@ def edit_files():
       <output> build_png_image.out </output>
     </task>
     <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/{0} -t 10000.format(env.project_name) + </cmd>
-      <period> 3 hour </period>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/{0} -t 1500.format(env.project_name) + </cmd>
+      <period> 1 hour </period>
       <disabled> 0 </disabled>
       <output> obsfiles2wu.out </output>
     </task>

@@ -23,8 +23,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the images will be written')
-parser.add_argument('-me', '--median', action='store_true', help='also generate the images using the median value')
-parser.add_argument('-mo', '--mode', action='store_true', help='also generate the images using the mode value')
+parser.add_argument('-m', '--median', action='store_true', help='also generate the images using the median value')
+parser.add_argument('-p', '--highest_prob_bin_v', action='store_true', help='also generate the images using the highest probability bin value')
 parser.add_argument('names', nargs='*', help='optional the name of tha galaxies to produce')
 args = vars(parser.parse_args())
 
@@ -115,6 +115,9 @@ def check_need_to_run(directory, galaxy):
         return False
     return update_time[0] > min_mtime
 
+median = args['median']
+highest_prob_bin_v_ = args['highest_prob_bin_v']
+
 for galaxy in galaxies:
     LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
 
@@ -142,9 +145,14 @@ for galaxy in galaxies:
     array_best_fit.fill(numpy.NaN)
 
     array_median = None
-    if args['median']:
+    if median:
         array_median = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(PARAMETER_NAMES)), dtype=numpy.float)
         array_median.fill(numpy.NaN)
+
+    array_highest_prob_bin_v = None
+    if highest_prob_bin_v_:
+        array_highest_prob_bin_v = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(PARAMETER_NAMES)), dtype=numpy.float)
+        array_highest_prob_bin_v.fill(numpy.NaN)
 
     # Get the header values
     header = {}
@@ -175,10 +183,21 @@ for galaxy in galaxies:
         array_best_fit[row.y, row.x, 14] = row.mdust
         array_best_fit[row.y, row.x, 15] = row.sfr
 
-        if args['median'] and array_median is not None:
+        if median or highest_prob_bin_v_:
             for pixel_parameter in session.query(PixelParameter).filter(PixelParameter.pxresult_id == row.pxresult_id).all():
                 index = get_index(pixel_parameter.parameter_name)
-                array_median[row.y, row.x, index] = pixel_parameter.percentile50
+                if median:
+                    array_median[row.y, row.x, index] = pixel_parameter.percentile50
+
+                if highest_prob_bin_v_:
+                    max = None
+                    for pixel_histogram in pixel_parameter.histograms:
+                        if max is None:
+                            max = (pixel_histogram.x_axis, pixel_histogram.hist_value)
+                        elif pixel_histogram.hist_value > max[1]:
+                            max = (pixel_histogram.x_axis, pixel_histogram.hist_value)
+                    if max is not None:
+                        array_highest_prob_bin_v[row.y, row.x, index] = max[0]
 
     name_count = 0
     for name in IMAGE_NAMES:
@@ -201,7 +220,7 @@ for galaxy in galaxies:
         name_count += 1
 
     # If the medians are required produce them
-    if args['median'] and array_median is not None:
+    if median and array_median is not None:
         for k, tuple in PARAMETER_NAMES.iteritems():
             hdu = pyfits.PrimaryHDU(array_median[:,:,tuple[1]])
             hdu_list = pyfits.HDUList([hdu])
@@ -219,3 +238,24 @@ for galaxy in galaxies:
                 hdu_list.writeto('{0}/{1}_{2}_median.fits'.format(directory, galaxy.name, tuple[0]), clobber=True)
             else:
                 hdu_list.writeto('{0}/{1}_V{3}_{2}_median.fits'.format(directory, galaxy.name, tuple[0], galaxy.version_number), clobber=True)
+
+    if highest_prob_bin_v_ and array_highest_prob_bin_v is not None:
+        for k, tuple in PARAMETER_NAMES.iteritems():
+            hdu = pyfits.PrimaryHDU(array_highest_prob_bin_v[:,:,tuple[1]])
+            hdu_list = pyfits.HDUList([hdu])
+            # Write the header
+            hdu_list[0].header.update('MAGPHYST', k, 'MAGPHYS Parameter Highest Probability Bin Value')
+            hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
+            hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
+            hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
+            hdu_list[0].header.update('REDSHIFT', galaxy.redshift, 'The POGS Galaxy redshift')
+
+            for key, value in header.items():
+                hdu_list[0].header.update(key, value)
+
+            if galaxy.version_number == 1:
+                hdu_list.writeto('{0}/{1}_{2}_high_prob_bin_value.fits'.format(directory, galaxy.name, tuple[0]), clobber=True)
+            else:
+                hdu_list.writeto('{0}/{1}_V{3}_{2}_high_prob_bin_value.fits'.format(directory, galaxy.name, tuple[0], galaxy.version_number), clobber=True)
+
+LOG.info('Done')

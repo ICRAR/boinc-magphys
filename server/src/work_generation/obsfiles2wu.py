@@ -126,6 +126,8 @@ for file_name in sorted(os.listdir(FILE_DIR)):
         "--result_template", TEMPLATES_PATH + "/fitsed_result.xml",
         "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
         "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_file, 'exp':FPOPS_EXP},
+        "--rsc_memory_bound", "1e8",
+        "--rsc_disk_bound", "5e8",
         "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_file*COBBLESTONE_SCALING_FACTOR},
         "--opaque",   str(area_id)
     ]
