@@ -34,13 +34,13 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 if len(args['names']) > 0:
-    LOG.info('Building PNG files for the galaxies {0}\n'.format(args['names']))
+    LOG.info('Building PNG files for the galaxies {0}'.format(args['names']))
     query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
 elif args['all']:
-    LOG.info('Building PNG files for all the galaxies\n')
+    LOG.info('Building PNG files for all the galaxies')
     query = session.query(Galaxy).order_by(Galaxy.name)
 else:
-    LOG.info('Building PNG files for updated galaxies\n')
+    LOG.info('Building PNG files for updated galaxies')
     query = session.query(Galaxy).filter(Area.galaxy_id == Galaxy.galaxy_id).filter(Area.update_time >= Galaxy.image_time)
 
 galaxies = query.all()
@@ -114,7 +114,7 @@ FIRE_B = [0,7,15,22,30,38,45,53,61,65,69,74,78,
 fimage = fitsimage.FitsImage()
 
 for galaxy in galaxies:
-    LOG.info('Working on galaxy %s\n', galaxy.name)
+    LOG.info('Working on galaxy %s', galaxy.name)
     array = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
     array.fill(numpy.NaN)
 
@@ -203,5 +203,5 @@ for galaxy in galaxies:
         galaxy.pixels_processed = pixels_processed
         session.commit()
 
-LOG.info('Built images for %d galaxies\n', len(galaxies))
+LOG.info('Built images for %d galaxies', len(galaxies))
 

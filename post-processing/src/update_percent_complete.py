@@ -31,6 +31,12 @@ galaxies = session_magphys.query(Galaxy).all()
 for galaxy in galaxies:
     LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
 
+    # Have we got work units out there for this galaxy?
+    count = session_pogs.query(Workunit).filter(Workunit.name.like('{0}_area%'.format(galaxy.name))).count()
+    if not count:
+        LOG.info('No work units for %s deployed', galaxy.name)
+        continue
+
     # Look for whole areas first
     areas = session_magphys.query(Area).filter_by(galaxy_id=galaxy.galaxy_id).filter_by(workunit_id = None).all()
     for area in areas:
