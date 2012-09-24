@@ -55,7 +55,7 @@ for galaxy in galaxies:
 
         for workunit in workunits:
             if workunit.assimilate_state == 2:
-                LOG.info('%s Found pixel % in area %d - WU_id %d - fixing', galaxy.name, pixel.pxresult_id, pixel.area_id, workunit.id)
+                LOG.info('%s Found pixel %d in area %d - WU_id %d - fixing', galaxy.name, pixel.pxresult_id, pixel.area_id, workunit.id)
                 pixel.workunit_id = workunit.id
 
 
