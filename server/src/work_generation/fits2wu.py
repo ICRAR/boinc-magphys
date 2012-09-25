@@ -418,8 +418,7 @@ FILES_TO_PROCESS = wg_threshold - count + wg_high_water_mark
 
 # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
 while files_processed < FILES_TO_PROCESS:
-    rollback = False
-    register = session.query(Register).filter(Register.create_time is None).order_by(desc(Register.priority), Register.register_time).first()
+    register = session.query(Register).filter(Register.create_time == None).order_by(desc(Register.priority), Register.register_time).first()
     if os.path.exists(register.filename):
         LOG.info('Processing %s %d', register.galaxy_name, register.priority)
         status = process_file(register)
