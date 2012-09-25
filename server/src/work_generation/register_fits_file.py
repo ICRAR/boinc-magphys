@@ -41,7 +41,7 @@ register.galaxy_type = GALAXY_TYPE
 register.filename = INPUT_FILE
 register.priority = PRIORITY
 register.register_time = datetime.now()
-
+session.add(register)
 session.commit()
 
 LOG.info('Registered %s %s %f %s %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY)
