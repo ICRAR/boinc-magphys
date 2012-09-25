@@ -46,3 +46,30 @@ if exists(django_file_name):
 else:
     django_template_dir = '/Users/rob/development/boinc-magphys/server/src/templates'
     django_image_dir = '/Users/rob/magphys/POGS_NGC1209'
+
+############### Work Generation Settings ###############
+
+work_generation_file_name = dirname(__file__) + '/work_generation.settings'
+wg_image_directory = None
+wg_row_height = None
+wg_min_pixels_per_file = None
+wg_sigma = None
+wg_threshold = None
+wg_high_water_mark = None
+wg_boinc_project_root = None
+if exists(work_generation_file_name):
+    config = ConfigObj(work_generation_file_name)
+    wg_image_directory = config['image_directory']
+    wg_min_pixels_per_file = int(config['min_pixels_per_file'])
+    wg_row_height = int(config['row_height'])
+    wg_sigma = float(config['sigma'])
+    wg_threshold = int(config['threshold'])
+    wg_high_water_mark = int(config['high_water_mark'])
+    wg_boinc_project_root = config['boinc_project_root']
+else:
+    wg_image_directory = '/home/ec2-user/galaxyImages'
+    wg_min_pixels_per_file = 15
+    wg_row_height = 10
+    wg_sigma = 0.1
+    wg_threshold = 1500
+    wg_high_water_mark = 3000

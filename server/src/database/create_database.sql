@@ -139,7 +139,21 @@ PARTITIONS 16;
 CREATE INDEX pxhistogram_pxresult_ix ON pixel_histogram(pxresult_id);
 CREATE INDEX pxhistogram_pxparameter_ix ON pixel_histogram(pxparameter_id);
 
-CREATE TABLE user_pixel (userid BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    pixel_count INTEGER
+CREATE TABLE user_pixel (
+  userid BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+  pixel_count INTEGER
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+CREATE TABLE register (
+  register_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  galaxy_name   VARCHAR(128) NOT NULL,
+  redshift      FLOAT NOT NULL,
+  galaxy_type   VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
+  filename      VARCHAR(1000) NOT NULL,
+  priority      INTEGER NOT NULL,
+  register_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  create_time   TIMESTAMP
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE INDEX register_galaxy_name_ix ON register(name);
+CREATE INDEX register_time_ix ON register(create_time, register_time);

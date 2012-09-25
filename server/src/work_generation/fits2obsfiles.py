@@ -337,7 +337,7 @@ else:
     galaxy.pixel_count = pixel_count
     session.flush()
 
-    LOG.info('Building the image')
+    LOG.info('Building the images')
     image = FitsImage()
     image.buildImage(INPUT_FILE, IMAGE_DIR, filePrefixName, "asinh", False, False, False)
 

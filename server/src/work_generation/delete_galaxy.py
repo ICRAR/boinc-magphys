@@ -38,7 +38,7 @@ for galaxy_id_str in galaxy_ids:
     if galaxy is None:
         LOG.info('Error: Galaxy with galaxy_id of %d was not found', galaxy_id1)
     else:
-        LOG.info('Deleting Galaxy with galaxy_id of %d', galaxy_id1)
+        LOG.info('Deleting Galaxy with galaxy_id of %d - %s', galaxy_id1, galaxy.name)
 
         values = session.query(func.min(Area.area_id),func.max(Area.area_id)).filter_by(galaxy_id=galaxy.galaxy_id).first()
         LOG.info('Areas range {0}'.format(values))

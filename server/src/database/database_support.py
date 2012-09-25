@@ -135,4 +135,15 @@ class PixelHistogram(Base):
 
     parameter = relationship("PixelParameter", backref=backref('histograms', order_by=pxhistogram_id))
 
+class Register(Base):
+    __tablename__ = 'register'
+
+    register_id   = Column(BigInteger, primary_key=True)
+    galaxy_name   = Column(String(128))
+    redshift      = Column(Float)
+    galaxy_type   = Column(String(10))
+    filename      = Column(String(1000))
+    priority      = Column(Integer)
+    register_time = Column(TIMESTAMP)
+    create_time   = Column(TIMESTAMP)
 

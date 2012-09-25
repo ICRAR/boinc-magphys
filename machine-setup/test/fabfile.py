@@ -273,6 +273,15 @@ boincDatabaseName = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
     run('''echo 'template_dir = "/home/ec2-user/boinc-magphys/server/src/templates"
 image_dir = "/home/ec2-user/galaxyImages"' >> /home/ec2-user/boinc-magphys/server/src/config/django.settings''')
 
+    # Setup Work Generation files
+    run('''echo 'image_directory = "/home/ec2-user/galaxyImages"
+min_pixels_per_file = "15"
+row_height = "10"
+sigma = "0.1"
+threshold = "1500"
+high_water_mark = "3000"
+wg_boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
+
     # Setup Apache for Django.
     sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/wsgi.conf /etc/httpd/conf.d/')
     sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/pogs.django.conf /etc/httpd/conf.d/')
