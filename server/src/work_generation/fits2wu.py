@@ -332,8 +332,9 @@ def create_areas(status, galaxy, hdu_list, pix_y, end_x, end_y, layer_order, pri
 
         pix_x = max_x + 1
 
-def break_up_galaxy(galaxy, hdu_list, start_x, start_y, end_x, end_y, layer_order, priority):
-    status = Status
+def break_up_galaxy(galaxy, hdu_list, end_x, end_y, layer_order, priority):
+    status = Status()
+    start_y = 0
     for pix_y in range(start_y, end_y, wg_row_height):
         str = "Scanned %(pct_done)3d%% of image" % { 'pct_done':100*(pix_y-start_y)/(end_y-start_y) }
         print(str, end="\r")
@@ -353,8 +354,6 @@ def process_file(register):
     hdu_list = pyfits.open(register.filename, memmap=True)
     layer_count = len(hdu_list)
 
-    start_x = 0
-    start_y = 0
     end_y = hdu_list[0].data.shape[0]
     end_x = hdu_list[0].data.shape[1]
 
@@ -395,7 +394,7 @@ def process_file(register):
     # Store the fits header
     store_fits_header(hdu_list, galaxy, galaxy.galaxy_id)
     layer_order = sort_layers(hdu_list, layer_count)
-    status = break_up_galaxy(galaxy, hdu_list, start_x, start_y, end_x, end_y, layer_order, register.priority)
+    status = break_up_galaxy(galaxy, hdu_list, end_x, end_y, layer_order, register.priority)
     galaxy.pixel_count = status.pixel_count
     session.flush()
 
