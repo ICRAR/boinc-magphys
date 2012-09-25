@@ -16,7 +16,7 @@ LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 parser = argparse.ArgumentParser('Delete Galaxy by galaxy_id')
-parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id')
+parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id or 4-30 if you need a range')
 args = vars(parser.parse_args())
 
 # First check the galaxy exists in the database
