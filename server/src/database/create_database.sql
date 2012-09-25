@@ -155,5 +155,5 @@ CREATE TABLE register (
   create_time   TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE INDEX register_galaxy_name_ix ON register(name);
+CREATE INDEX register_galaxy_name_ix ON register(galaxy_name);
 CREATE INDEX register_time_ix ON register(create_time, register_time);

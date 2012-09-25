@@ -193,11 +193,8 @@ def create_output_file(galaxy, area, pixels, priority):
     pixels_in_area = len(pixels)
     data = [{'galaxy':galaxy.name, 'area_id':area.area_id, 'pixels':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,}]
     filename = '%(galaxy)s_area%(area)s' % { 'galaxy':galaxy.name, 'area':area.area_id}
-
-    # Create the job file
     file_name_job = filename + '.job.xml'
-
-    LOG.info("Creating work unit from observations file %(file)s: %(pixels)d pixels " % {'file':filename, 'pixels':pixels_in_area})
+    LOG.info("Creating work unit %s : %d pixels ", filename, pixels_in_area)
 
     args_params = [
         "--appname",         APP_NAME,
