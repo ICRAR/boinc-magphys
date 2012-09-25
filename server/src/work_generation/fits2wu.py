@@ -336,9 +336,6 @@ def break_up_galaxy(galaxy, hdu_list, end_x, end_y, layer_order, priority):
     status = Status()
     start_y = 0
     for pix_y in range(start_y, end_y, wg_row_height):
-        str = "Scanned %(pct_done)3d%% of image" % { 'pct_done':100*(pix_y-start_y)/(end_y-start_y) }
-        print(str, end="\r")
-        sys.stdout.flush()
         create_areas(status, galaxy, hdu_list, pix_y, end_x, end_y, layer_order, priority)
 
     return status
@@ -429,7 +426,7 @@ while files_processed < FILES_TO_PROCESS:
             os.remove(register.filename)
             register.create_time = datetime.now()
         else:
-            LOG.error('The file %s does not exits', register.filename)
+            LOG.error('The file %s does not exist', register.filename)
             register.create_time = datetime.now()
 
         session.commit()
