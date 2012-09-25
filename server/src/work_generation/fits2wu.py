@@ -420,16 +420,18 @@ while files_processed < FILES_TO_PROCESS:
     register = session.query(Register).filter(Register.create_time == None).order_by(desc(Register.priority), Register.register_time).first()
     if register is None:
         LOG.info('No registrations waiting')
-    elif os.path.exists(register.filename):
-        LOG.info('Processing %s %d', register.galaxy_name, register.priority)
-        status = process_file(register)
-        files_processed += status.work_units_added
-        os.remove(register.filename)
-        register.create_time = datetime.now()
-    else:
-        LOG.error('The file %s does not exits', register.filename)
-        register.create_time = datetime.now()
+        break
+    else :
+        if os.path.exists(register.filename):
+            LOG.info('Processing %s %d', register.galaxy_name, register.priority)
+            status = process_file(register)
+            files_processed += status.work_units_added
+            os.remove(register.filename)
+            register.create_time = datetime.now()
+        else:
+            LOG.error('The file %s does not exits', register.filename)
+            register.create_time = datetime.now()
 
-    session.commit()
+        session.commit()
 
 LOG.info('Done - added %d WUs', files_processed)
