@@ -33,7 +33,6 @@ for galaxy in galaxies:
     count = session_pogs.query(Workunit).filter(Workunit.name.like('{0}_area%'.format(galaxy.name))).count()
     LOG.info('Working on galaxy %s (%d) - %d work units deployed', galaxy.name, galaxy.version_number, count)
     if not count:
-        LOG.info('No work units for %s deployed', galaxy.name)
         continue
 
     # Look for whole areas first

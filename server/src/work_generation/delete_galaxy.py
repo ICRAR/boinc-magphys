@@ -24,7 +24,15 @@ engine = create_engine(db_login)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-for galaxy_id_str in args['galaxy_id']:
+galaxy_ids = None
+if len(args['galaxy_id']) == 1 and args['galaxy_id'][0].find('-') > 1:
+    list = args['galaxy_id'][0].split('-')
+    LOG.info('Range from %s to %s', list[0], list[1])
+    galaxy_ids = range(int(list[0]), int(list[1]) + 1)
+else:
+    galaxy_ids = args['galaxy_id']
+
+for galaxy_id_str in galaxy_ids:
     galaxy_id1 = int(galaxy_id_str)
     galaxy = session.query(Galaxy).filter_by(galaxy_id=galaxy_id1).first()
     if galaxy is None:
