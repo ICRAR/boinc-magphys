@@ -424,6 +424,7 @@ while files_processed < FILES_TO_PROCESS:
         LOG.info('Processing %s %d', register.galaxy_name, register.priority)
         status = process_file(register)
         files_processed += status.work_units_added
+        os.remove(register.filename)
     else:
         LOG.error('The file %s does not exits', register.filename)
 

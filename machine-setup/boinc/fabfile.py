@@ -209,7 +209,7 @@ def edit_files():
       <output> build_png_image.out </output>
     </task>
     <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/{0} -t 1500.format(env.project_name) + </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/{0} -t 1500 </cmd>
       <period> 1 hour </period>
       <disabled> 0 </disabled>
       <output> obsfiles2wu.out </output>
@@ -251,7 +251,7 @@ def edit_files():
       <pid> assimilator.1.pid </pid>
       <disabled>0</disabled>
     </daemon>
-  </daemons>''')
+  </daemons>'''.format(env.project_name))
     file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>',to='''
     <prefer_primary_platform>1</prefer_primary_platform>
     <one_result_per_user_per_wu/>
