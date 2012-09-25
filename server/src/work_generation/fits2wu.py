@@ -375,7 +375,7 @@ def process_file(register):
     galaxy.dimension_y = end_y
     galaxy.dimension_z = layer_count
     galaxy.redshift = register.redshift
-    datetime_now = datetime.datetime.now()
+    datetime_now = datetime.now()
     galaxy.create_time = datetime_now
     galaxy.image_time = datetime_now
     galaxy.version_number = version_number
