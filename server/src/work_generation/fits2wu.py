@@ -227,7 +227,7 @@ def create_output_file(galaxy, area, pixels, priority):
     # And "create work" = create the work unit
     subprocess.call(cmd_create_work)
 
-def enough_layers(pixels, x, y):
+def enough_layers(pixels):
     """
         Are there enough layers with data in them to warrant counting this pixel?
     """
@@ -245,8 +245,6 @@ def enough_layers(pixels, x, y):
     for layer_id in INFRARED_BANDS.values():
         if pixels[layer_id] > 0:
             ir_layers += 1
-
-    LOG.info('%d:%d uv=%d opt=%d ir=%d', x, y, uv_layers, optical_layers, ir_layers)
 
     if optical_layers >= 4:
         return True
@@ -288,7 +286,7 @@ def get_pixels(hdu_list, pix_x, pix_y, end_x, end_y, layer_order):
                     else:
                         pixels.append(pixel)
 
-            if enough_layers(pixels, x, y):
+            if enough_layers(pixels):
                 result.append(Pixel(x, y, pixels))
 
         max_x = x
