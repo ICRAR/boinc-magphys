@@ -5,28 +5,28 @@
     <link rel="stylesheet" type="text/css" href="/{{ referer }}/main.css" media="all" />
     <link rel="stylesheet" type="text/css" href="/{{ referer }}/black.css">
   </head>
-  
+
   <body>
     <div class=page_title>theSkyNet POGS - the PS1 Optical Galaxy Survey</div>
-    
+
 <script>
   function isInteger(num) {
-	  return parseInt(num,10).toString() == num;  
+	  return parseInt(num,10).toString() == num;
   }
-  
+
   function isFloat(num) {
-	  return parseFloat(num).toString() == num;  
+	  return parseFloat(num).toString() == num;
 	}
-  
+
   function isNumber(num) {
 	  return !isNaN(parseFloat(num)) && isFinite(num);
   }
-  
+
   function galaxySearch(nextPage, apply) {
 	  var form = document.getElementById('searchForm');
     var form_page = form.elements["page"]
 	  form_page.value = nextPage;
-	  
+
     if (apply) {
     	// Apply changes to the Filter values.
       var input_type = document.getElementById('input_type');
@@ -37,7 +37,7 @@
       var input_dec_to = document.getElementById('input_dec_to');
       var input_sort = document.getElementById('input_sort');
       var input_per_page = document.getElementById('input_per_page');
-    
+
       var valid = true;
       if (input_ra_from.value != "" && !isNumber(input_ra_from.value)) {
         window.alert("The RA From is not a valid number");
@@ -62,7 +62,7 @@
       if (parseInt(input_per_page.value,10) > 100) {
       	input_per_page.value = "100";
       }
-  	  
+
       if (valid) {
         var form_type = form.elements["type"]
         var form_name = form.elements["name"]
@@ -72,7 +72,7 @@
         var form_dec_to = form.elements["dec_to"]
         var form_per_page = form.elements["per_page"]
         var form_sort = form.elements["sort"]
-  		  
+
         form_type.value = input_type.options[input_type.selectedIndex].value;
         form_name.value = input_name.value;
         form_ra_from.value = input_ra_from.value;
@@ -89,7 +89,7 @@
     }
   }
 </script>
-    
+
 <form id="searchForm" method="get" action="GalaxyList">
   <input type="hidden" value="" name="page"/>
   <input type="hidden" value="{{ type }}" name="type"/>
@@ -100,7 +100,7 @@
   <input type="hidden" value="{{ dec_to }}" name="dec_to"/>
   <input type="hidden" value="{{ sort }}" name="sort"/>
   <input type="hidden" value="{{ per_page }}" name="per_page"/>
-  
+
     <table>
       <tr>
         <td>Type</td>
@@ -143,7 +143,7 @@
       </tr>
     </table>
 </form>
-    
+
 {% if galaxy_list %}
     <table>
       <tr>
@@ -160,6 +160,7 @@
         <th title="Declination">Dec</th>
         <th>Redshift</th>
         <th title="Hubble Type">Type</th>
+        <th title="Dimensions">Dim</th>
         <th>Percent<br>Complete</th>
         <th>More</th>
       </tr>
@@ -173,6 +174,7 @@
         <td>{{ line.dec_cent }}</td>
         <td>{{ line.redshift }}</td>
         <td>{{ line.galaxy_type }}</td>
+        <td>{{ line.dimensions }}</td>
         <td>{{ line.pct_complete }}</td>
         <td><a href="http://ned.ipac.caltech.edu/cgi-bin/objsearch?objname={{ line.name }}&extend=no&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=RA+or+Longitude&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES" target="_blank">Galaxy details</a></td>
       </tr>
@@ -188,7 +190,7 @@
 {% else %}
     <p>There are currently no galaxies in this survey with the specified criteria.</p>
 {% endif %}
-    
+
 {% include "pogs/footer.html" %}
   </body>
 </html>

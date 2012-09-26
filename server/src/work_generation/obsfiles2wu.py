@@ -27,7 +27,8 @@ parser.add_argument('-p', '--priority', type=int, help='the priority of the WUs'
 parser.add_argument('-t', '--threshold', type=int, help='if the number is less than this threshold add records')
 args = vars(parser.parse_args())
 
-HIGH_WATER_MARK = 3000
+# A single WU will generate 2 results so 1500 WU adds 3000 pending results
+HIGH_WATER_MARK = 1500
 
 # Do we need to run this
 if args['threshold'] is not None:

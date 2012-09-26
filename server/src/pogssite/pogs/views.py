@@ -23,15 +23,19 @@ class GalaxyInfo:
         self.dec_cent = 0.0
         self.galaxy_type = ""
         self.redshift = 0
+        self.dimensions = ""
         self.pct_complete = "0.00%"
 
 def getReferer(request):
+    """
+    Get the referrer
+    """
     try:
         referer = request.META['HTTP_REFERER']
-    except KeyError as e:
+    except KeyError:
         referer = None
 
-    if referer == '' or referer == None:
+    if referer == '' or referer is None:
         referer = 'pogs'
     else:
         parts = referer.split('/')
@@ -43,9 +47,9 @@ def getReferer(request):
 def getRefererFromCookie(request):
     try:
         referer = request.COOKIES['pogs_referer']
-    except KeyError as e:
+    except KeyError:
         referer = None
-    if referer == '' or referer == None:
+    if referer == '' or referer is None:
         referer = 'pogs'
     return referer
 
@@ -180,39 +184,39 @@ def galaxyListOld(request, page):
 def galaxyList(request):
     try:
         page = request.GET["page"]
-    except KeyError as e:
+    except KeyError:
         page = 1
     try:
         type = request.GET["type"]
-    except KeyError as e:
+    except KeyError:
         type = ""
     try:
         name = request.GET["name"].upper()
-    except KeyError as e:
+    except KeyError:
         name = ""
     try:
         ra_from = request.GET["ra_from"]
-    except KeyError as e:
+    except KeyError:
         ra_from= ""
     try:
         ra_to = request.GET["ra_to"]
-    except KeyError as e:
+    except KeyError:
         ra_to = ""
     try:
         dec_from = request.GET["dec_from"]
-    except KeyError as e:
+    except KeyError:
         dec_from = ""
     try:
         dec_to = request.GET["dec_to"]
-    except KeyError as e:
+    except KeyError:
         dec_to = ""
     try:
         sort = request.GET["sort"]
-    except KeyError as e:
+    except KeyError:
         sort = "NAME"
     try:
         per_page = request.GET["per_page"]
-    except KeyError as e:
+    except KeyError:
         per_page = "20"
 
     lines_per_page = int(per_page)
@@ -270,7 +274,7 @@ def galaxyList(request):
     galaxies = query.all()
     galaxy_list = []
     count = 0
-    galaxy_line = None
+
     for galaxy in galaxies:
         count += 1
         #name = galaxy.name
@@ -289,7 +293,8 @@ def galaxyList(request):
             line.dec_cent = galaxy.dec_cent
             line.redshift = galaxy.redshift
             line.galaxy_type = galaxy.galaxy_type
-            if galaxy.pixel_count == None or galaxy.pixels_processed == None or galaxy.pixel_count == 0:
+            line.dimensions = '{0} x {1}'.format(galaxy.dimension_x, galaxy.dimension_y)
+            if galaxy.pixel_count is None or galaxy.pixels_processed is None or galaxy.pixel_count == 0:
                 line.pct_complete = "0.00%"
             else:
                 line.pct_complete = "{:.2%}".format(galaxy.pixels_processed*1.0/galaxy.pixel_count)
