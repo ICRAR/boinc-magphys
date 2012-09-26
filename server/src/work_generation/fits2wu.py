@@ -386,7 +386,7 @@ def process_file(register):
     # Flush to the DB so we can get the id
     session.flush()
 
-    LOG.info("Wrote %(object)s to database" % { 'object':galaxy.name })
+    LOG.info("Wrote %s to database", galaxy.name)
 
     # Store the fits header
     store_fits_header(hdu_list, galaxy, galaxy.galaxy_id)
@@ -418,7 +418,7 @@ while files_processed < FILES_TO_PROCESS:
     if register is None:
         LOG.info('No registrations waiting')
         break
-    else :
+    else:
         if os.path.exists(register.filename):
             LOG.info('Processing %s %d', register.galaxy_name, register.priority)
             status = process_file(register)
