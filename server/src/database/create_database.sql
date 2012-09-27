@@ -9,15 +9,16 @@ CREATE TABLE galaxy (
   dimension_y    INTEGER UNSIGNED NOT NULL,
   dimension_z    INTEGER UNSIGNED NOT NULL,
   redshift       FLOAT NOT NULL,
+  sigma          FLOAT NOT NULL,
   create_time    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   image_time     TIMESTAMP,
   version_number INTEGER UNSIGNED NOT NULL DEFAULT 1,
   current        BOOLEAN NOT NULL DEFAULT TRUE,
-  galaxy_type    VARCHAR(10) character set utf8 collate utf8_bin,
-  ra_cent        FLOAT,
-  dec_cent       FLOAT,
-  pixel_count    INTEGER,
-  pixels_processed INTEGER
+  galaxy_type    VARCHAR(10) NOT NULL character set utf8 collate utf8_bin,
+  ra_cent        FLOAT NULL,
+  dec_cent       FLOAT NULL,
+  pixel_count    INTEGER NULL,
+  pixels_processed INTEGER NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE INDEX galaxy_name_ix ON galaxy(name, version_number);
@@ -149,6 +150,7 @@ CREATE TABLE register (
   galaxy_name   VARCHAR(128) NOT NULL,
   redshift      FLOAT NOT NULL,
   galaxy_type   VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
+  sigma         FLOAT NOT NULL,
   filename      VARCHAR(1000) NOT NULL,
   priority      INTEGER NOT NULL,
   register_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

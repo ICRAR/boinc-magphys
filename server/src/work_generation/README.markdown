@@ -1,19 +1,29 @@
 # Generation of work units: overview
 
-*fits2obs.py* takes a FITS file as input and cuts it up into squares which are inserted into a database.
-This database is then queried to create a specified number of observations files (one file per square).
-The second script, which will move observations files into the BOINC project's download hierarchy and call **create_work**, is not yet written.
-
 # Prerequisites
 
 * AWS running at least a small model - this uses more memory than a micro model provides
 * MySQL locally installed
 * Python >=2.7.1 (tested on Python 2.7.1 (r271:86832, Jun 16 2011, 16:59:05))
 
+# New Method
+
+The new method doesn't load lots of W
+
+## Register Galaxy
+
+## Autoload
+
+
+# Old method
+
+*fits2obs.py* takes a FITS file as input and cuts it up into squares which are inserted into a database.
+This database is then queried to create a specified number of observations files (one file per square).
+The second script, which will move observations files into the BOINC project's download hierarchy and call **create_work**.
+
 ## Python scripts
 
-MySQL Connector/Python can be installed with either **sudo easy_install-2.7 mysql-connector** or **sudo pip-2.7 install mysql-connector**.
-Note that the scripts assume that they can use the MySQL "root" user without password.
+MySQL Connector/Python can be installed with either **sudo pip-2.7 install mysql-connector**.
 
 * **fits2obsfiles.py** works with a single FITS file as the smallest unit of work.
 A FITS file can be processed only once, unless effort is made to make sure that the object name in it is changed.

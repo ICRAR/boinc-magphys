@@ -30,11 +30,13 @@ parser.add_argument('output_directory', action=WriteableDir, nargs=1, help='wher
 parser.add_argument('image_directory', action=WriteableDir, nargs=1, help='where the images will be written too')
 parser.add_argument('galaxy_name', nargs=1, help='the name of the galaxy')
 parser.add_argument('type', nargs=1, help='the hubble type')
+parser.add_argument('sigma', type=float, nargs=1, help='the error in the observations')
 parser.add_argument('-rh', '--row_height', type=int, default=10, help='the row height')
 parser.add_argument('-mp', '--min_pixels_per_file', type=int, default=15, help='the minimum number of pixels in the file')
 args = vars(parser.parse_args())
 
 REDSHIFT = args['redshift'][0]
+SIGMA = args['sigma'][0]
 INPUT_FILE = args['FITS_file'][0]
 OUTPUT_DIR = args['output_directory']
 IMAGE_DIR = args['image_directory']
@@ -42,7 +44,6 @@ ROW_HEIGHT = int(args['row_height'])
 MIN_PIXELS_PER_FILE = args['min_pixels_per_file']
 GALAXY_NAME = args['galaxy_name'][0]
 GALAXY_TYPE = args['type'][0]
-SIGMA = 0.1
 pixel_count = 0
 
 HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
@@ -309,6 +310,7 @@ galaxy.dimension_x = END_X
 galaxy.dimension_y = END_Y
 galaxy.dimension_z = LAYER_COUNT
 galaxy.redshift = REDSHIFT
+galaxy.sigma = SIGMA
 datetime_now = datetime.datetime.now()
 galaxy.create_time = datetime_now
 galaxy.image_time = datetime_now

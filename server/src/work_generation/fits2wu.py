@@ -16,9 +16,8 @@ import pyfits
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.expression import desc
-import sys
 import subprocess
-from config import boinc_db_login, wg_threshold, wg_high_water_mark, db_login, wg_sigma, wg_min_pixels_per_file, wg_row_height, wg_image_directory, wg_boinc_project_root
+from config import boinc_db_login, wg_threshold, wg_high_water_mark, db_login, wg_min_pixels_per_file, wg_row_height, wg_image_directory, wg_boinc_project_root
 from database.boinc_database_support import Result
 from database.database_support import Register, FitsHeader, Galaxy, Area, PixelResult
 from image.fitsimage import FitsImage
@@ -180,7 +179,7 @@ def create_observation_file(filename, data, galaxy, pixels):
     for pixel in pixels:
         outfile.write('pix%(id)s %(pixel_redshift)s ' % {'id':pixel.pixel_id, 'pixel_redshift':galaxy.redshift})
         for value in pixel.pixels:
-            outfile.write("{0}  {1}  ".format(value, value * wg_sigma))
+            outfile.write("{0}  {1}  ".format(value, value * galaxy.sigma))
 
         outfile.write('\n')
         row_num += 1
@@ -371,6 +370,7 @@ def process_file(register):
     galaxy.dimension_y = end_y
     galaxy.dimension_z = layer_count
     galaxy.redshift = register.redshift
+    galaxy.sigma = register.sigma
     datetime_now = datetime.now()
     galaxy.create_time = datetime_now
     galaxy.image_time = datetime_now

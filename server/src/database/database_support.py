@@ -23,6 +23,7 @@ class Galaxy(Base):
     galaxy_type = Column(String(10))
     ra_cent = Column(Float)
     dec_cent = Column(Float)
+    sigma = Column(Float)
     pixel_count = Column(Integer)
     pixels_processed = Column(Integer)
 
@@ -141,6 +142,7 @@ class Register(Base):
     register_id   = Column(BigInteger, primary_key=True)
     galaxy_name   = Column(String(128))
     redshift      = Column(Float)
+    sigma         = Column(Float)
     galaxy_type   = Column(String(10))
     filename      = Column(String(1000))
     priority      = Column(Integer)

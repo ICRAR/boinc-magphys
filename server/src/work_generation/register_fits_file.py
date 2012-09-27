@@ -18,6 +18,7 @@ parser.add_argument('FITS_file', nargs=1, help='the input FITS file containing t
 parser.add_argument('redshift', type=float, nargs=1, help='the redshift of the galaxy')
 parser.add_argument('galaxy_name', nargs=1, help='the name of the galaxy')
 parser.add_argument('type', nargs=1, help='the hubble type')
+parser.add_argument('sigma', type=float, nargs=1, help='the error in the observations')
 parser.add_argument('priority', type=int, nargs=1, help='the higher the number the higher the priority')
 
 args = vars(parser.parse_args())
@@ -27,6 +28,7 @@ INPUT_FILE = args['FITS_file'][0]
 GALAXY_NAME = args['galaxy_name'][0]
 GALAXY_TYPE = args['type'][0]
 PRIORITY = args['priority'][0]
+SIGMA = args['sigma'][0]
 
 # Connect to the database - the login string is set in the database package
 engine = create_engine(db_login)
@@ -37,6 +39,7 @@ session = Session()
 register = Register()
 register.galaxy_name = GALAXY_NAME
 register.redshift = REDSHIFT
+register.sigma = SIGMA
 register.galaxy_type = GALAXY_TYPE
 register.filename = INPUT_FILE
 register.priority = PRIORITY
