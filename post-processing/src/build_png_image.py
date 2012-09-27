@@ -14,18 +14,15 @@ from config import django_image_dir
 from image import fitsimage
 from database.database_support import Galaxy, Area, PixelResult
 from PIL import Image
-from utils.writeable_dir import WriteableDir
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
-parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the images will be written')
 parser.add_argument('names', nargs='*', help='optional the name of the galaxies to produce')
 parser.add_argument('-all', action='store_true', help='build images for all the galaxies')
 args = vars(parser.parse_args())
 
-#output_directory = args['output_dir']
 output_directory = django_image_dir
 
 # First check the galaxy exists in the database
