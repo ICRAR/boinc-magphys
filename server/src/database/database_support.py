@@ -124,6 +124,7 @@ class PixelParameter(Base):
     percentile97_5 = Column(Float)
 
     result = relationship("PixelResult", backref=backref('parameters', order_by=pxparameter_id))
+    aggregate = relationship("aggregate", uselist=False, backref="parameter")
 
 class PixelHistogram(Base):
     __tablename__ = 'pixel_histogram'
@@ -153,7 +154,6 @@ class Register(Base):
 # But I can't really take down the running system
 class ParameterAggregate(Base):
     __tablename__ = 'parameter_aggregate'
-    pxparameter_id = Column(BigInteger, primary_key=True)
-    high_prob_bin_value = Column(Float)
 
-    result = relationship("PixelParameter", uselist=False, backref=backref('aggregate', order_by=pxparameter_id))
+    pxparameter_id      = Column(BigInteger, primary_key=True, ForeignKey('pixel_parameter.pxparameter_id'))
+    high_prob_bin_value = Column(Float)
