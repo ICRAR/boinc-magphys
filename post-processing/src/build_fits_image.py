@@ -119,7 +119,7 @@ median = args['median']
 highest_prob_bin_v_ = args['highest_prob_bin_v']
 
 for galaxy in galaxies:
-    LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
+    LOG.info('Working on galaxy %s (%d) %d x %d', galaxy.name, galaxy.version_number, galaxy.dimension_x, galaxy.dimension_y)
 
     # Do we have an old version
     need_to_run = True
