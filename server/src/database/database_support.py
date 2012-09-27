@@ -124,7 +124,7 @@ class PixelParameter(Base):
     percentile97_5 = Column(Float)
 
     result = relationship("PixelResult", backref=backref('parameters', order_by=pxparameter_id))
-    aggregate = relationship("aggregate", uselist=False, backref="parameter")
+    aggregate = relationship("ParameterAggregate", uselist=False, backref="parameter")
 
 class PixelHistogram(Base):
     __tablename__ = 'pixel_histogram'
