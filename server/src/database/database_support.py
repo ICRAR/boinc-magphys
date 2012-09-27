@@ -155,5 +155,5 @@ class Register(Base):
 class ParameterAggregate(Base):
     __tablename__ = 'parameter_aggregate'
 
-    pxparameter_id      = Column(BigInteger, primary_key=True, ForeignKey('pixel_parameter.pxparameter_id'))
+    pxparameter_id      = Column(BigInteger, ForeignKey('pixel_parameter.pxparameter_id'), primary_key=True)
     high_prob_bin_value = Column(Float)
