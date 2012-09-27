@@ -13,9 +13,9 @@ import pyfits
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import sys
-from sqlalchemy.sql.expression import func
+from sqlalchemy.sql.expression import func, and_
 from config import db_login
-from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area
+from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area, PixelHistogram
 from utils.writeable_dir import WriteableDir
 
 LOG = logging.getLogger(__name__)
@@ -190,14 +190,21 @@ for galaxy in galaxies:
                     array_median[row.y, row.x, index] = pixel_parameter.percentile50
 
                 if highest_prob_bin_v_:
-                    max = None
-                    for pixel_histogram in pixel_parameter.histograms:
-                        if max is None:
-                            max = (pixel_histogram.x_axis, pixel_histogram.hist_value)
-                        elif pixel_histogram.hist_value > max[1]:
-                            max = (pixel_histogram.x_axis, pixel_histogram.hist_value)
-                    if max is not None:
-                        array_highest_prob_bin_v[row.y, row.x, index] = max[0]
+                    mhv = session.query(func.max(PixelHistogram.hist_value).label('max_hist_value'))\
+                        .filter(PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id).subquery('mhv')
+                    pixel_histogram = session.query(PixelHistogram).filter(
+                        and_(PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id,
+                            PixelHistogram.hist_value == mhv.c.max_hist_value)).first()
+                    array_highest_prob_bin_v[row.y, row.x, index] = pixel_histogram.x_axis
+
+                    #max = None
+                    #for pixel_histogram in pixel_parameter.histograms:
+                    #    if max is None:
+                    #        max = (pixel_histogram.x_axis, pixel_histogram.hist_value)
+                    #    elif pixel_histogram.hist_value > max[1]:
+                    #        max = (pixel_histogram.x_axis, pixel_histogram.hist_value)
+                    #if max is not None:
+                    #    array_highest_prob_bin_v[row.y, row.x, index] = max[0]
 
     name_count = 0
     for name in IMAGE_NAMES:
@@ -209,6 +216,7 @@ for galaxy in galaxies:
         hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
         hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
         hdu_list[0].header.update('REDSHIFT', galaxy.redshift, 'The POGS Galaxy redshift')
+        hdu_list[0].header.update('SIGMA', galaxy.sigma, 'The POGS Galaxy sigma')
 
         for key, value in header.items():
             hdu_list[0].header.update(key, value)
@@ -230,6 +238,7 @@ for galaxy in galaxies:
             hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
             hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
             hdu_list[0].header.update('REDSHIFT', galaxy.redshift, 'The POGS Galaxy redshift')
+            hdu_list[0].header.update('SIGMA', galaxy.sigma, 'The POGS Galaxy sigma')
 
             for key, value in header.items():
                 hdu_list[0].header.update(key, value)
@@ -249,6 +258,7 @@ for galaxy in galaxies:
             hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
             hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
             hdu_list[0].header.update('REDSHIFT', galaxy.redshift, 'The POGS Galaxy redshift')
+            hdu_list[0].header.update('SIGMA', galaxy.sigma, 'The POGS Galaxy sigma')
 
             for key, value in header.items():
                 hdu_list[0].header.update(key, value)

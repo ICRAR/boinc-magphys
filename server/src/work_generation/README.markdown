@@ -8,7 +8,8 @@
 
 # New Method
 
-The new method doesn't load lots of W
+A galaxy is registered ready for processing.
+The registration says where the files are, names and red-shift
 
 ## Register Galaxy
 
