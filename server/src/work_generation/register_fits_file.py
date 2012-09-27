@@ -5,6 +5,7 @@ Register a FITS file ready to be converted into Work Units
 import argparse
 from datetime import datetime
 import logging
+import os
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from config import db_login
@@ -29,6 +30,11 @@ GALAXY_NAME = args['galaxy_name'][0]
 GALAXY_TYPE = args['type'][0]
 PRIORITY = args['priority'][0]
 SIGMA = args['sigma'][0]
+
+# Make sure the file exists
+if not os.path.isfile(INPUT_FILE):
+    LOG.error('The file %s does not exist', INPUT_FILE)
+    exit(1)
 
 # Connect to the database - the login string is set in the database package
 engine = create_engine(db_login)

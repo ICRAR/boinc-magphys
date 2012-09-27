@@ -419,7 +419,7 @@ while files_processed < FILES_TO_PROCESS:
         LOG.info('No registrations waiting')
         break
     else:
-        if os.path.exists(register.filename):
+        if os.path.isfile(register.filename):
             LOG.info('Processing %s %d', register.galaxy_name, register.priority)
             status = process_file(register)
             files_processed += status.work_units_added
