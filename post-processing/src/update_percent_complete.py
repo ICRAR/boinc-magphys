@@ -9,6 +9,7 @@ BOINC to see if has been assimilated
 
 # First check the galaxy exists in the database
 import logging
+import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from config import db_login, boinc_db_login
@@ -49,6 +50,8 @@ for galaxy in galaxies:
                 for pixel in area.pixelResults:
                     pixel.workunit_id = workunit.id
 
+                area.update_time = datetime.datetime.now()
+
     session_magphys.commit()
 
     # Look for stray pixels
@@ -61,7 +64,7 @@ for galaxy in galaxies:
             if workunit.assimilate_state == 2:
                 LOG.info('%s Found pixel %d in area %d - WU_id %d - fixing', galaxy.name, pixel.pxresult_id, pixel.area_id, workunit.id)
                 pixel.workunit_id = workunit.id
-
+                pixel.area.update_time = datetime.datetime.now()
 
     session_magphys.commit()
 
