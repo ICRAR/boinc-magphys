@@ -13,7 +13,7 @@ import pyfits
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import sys
-from sqlalchemy.sql.expression import func, and_
+from sqlalchemy.sql.expression import func, and_, desc
 from config import db_login
 from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area, PixelHistogram
 from utils.writeable_dir import WriteableDir
@@ -190,12 +190,18 @@ for galaxy in galaxies:
                     array_median[row.y, row.x, index] = pixel_parameter.percentile50
 
                 if highest_prob_bin_v_:
-                    mhv = session.query(func.max(PixelHistogram.hist_value).label('max_hist_value'))\
-                        .filter(PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id).subquery('mhv')
-                    pixel_histogram = session.query(PixelHistogram).filter(
-                        and_(PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id,
-                            PixelHistogram.hist_value == mhv.c.max_hist_value)).first()
-                    array_highest_prob_bin_v[row.y, row.x, index] = pixel_histogram.x_axis
+                    pixel_histogram = session.query(PixelHistogram) \
+                        .filter(PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id) \
+                        .order_by(desc(PixelHistogram.hist_value), PixelHistogram.x_axis).first()
+                    if pixel_histogram is not None:
+                        array_highest_prob_bin_v[row.y, row.x, index] = pixel_histogram.x_axis
+
+                    #mhv = session.query(func.max(PixelHistogram.hist_value).label('max_hist_value')).filter(PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id).subquery('mhv')
+                    #pixel_histogram = session.query(PixelHistogram).filter(
+                    #    and_(PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id,
+                    #        PixelHistogram.hist_value == mhv.c.max_hist_value)).first()
+                    #if pixel_histogram is not None:
+                    #    array_highest_prob_bin_v[row.y, row.x, index] = pixel_histogram.x_axis
 
                     #max = None
                     #for pixel_histogram in pixel_parameter.histograms:
