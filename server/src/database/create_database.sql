@@ -159,3 +159,9 @@ CREATE TABLE register (
 
 CREATE INDEX register_galaxy_name_ix ON register(galaxy_name);
 CREATE INDEX register_time_ix ON register(create_time, register_time);
+
+CREATE TABLE parameter_aggregate (
+  pxparameter_id      BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+  high_prob_bin_value DOUBLE NULL
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
