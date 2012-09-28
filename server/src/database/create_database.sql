@@ -15,10 +15,10 @@ CREATE TABLE galaxy (
   version_number INTEGER UNSIGNED NOT NULL DEFAULT 1,
   current        BOOLEAN NOT NULL DEFAULT TRUE,
   galaxy_type    VARCHAR(10) NOT NULL character set utf8 collate utf8_bin,
-  ra_cent        FLOAT NULL,
-  dec_cent       FLOAT NULL,
-  pixel_count    INTEGER NULL,
-  pixels_processed INTEGER NULL
+  ra_cent        FLOAT,
+  dec_cent       FLOAT,
+  pixel_count    INTEGER,
+  pixels_processed INTEGER
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE INDEX galaxy_name_ix ON galaxy(name, version_number);
@@ -154,7 +154,7 @@ CREATE TABLE register (
   filename      VARCHAR(1000) NOT NULL,
   priority      INTEGER NOT NULL,
   register_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  create_time   TIMESTAMP NULL
+  create_time   TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE INDEX register_galaxy_name_ix ON register(galaxy_name);
@@ -162,6 +162,6 @@ CREATE INDEX register_time_ix ON register(create_time, register_time);
 
 CREATE TABLE parameter_aggregate (
   pxparameter_id      BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-  high_prob_bin_value DOUBLE NULL
+  high_prob_bin_value DOUBLE
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
