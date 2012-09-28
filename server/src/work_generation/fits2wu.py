@@ -432,7 +432,8 @@ if args['register'] is None:
             if os.path.isfile(register.filename):
                 LOG.info('Processing %s %d', register.galaxy_name, register.priority)
                 status = process_file(register)
-                files_processed += status.work_units_added
+                # One WU = MIN_QUORUM Results
+                files_processed += (status.work_units_added * MIN_QUORUM)
                 os.remove(register.filename)
                 register.create_time = datetime.now()
             else:
@@ -450,7 +451,7 @@ else:
         if os.path.isfile(register.filename):
             LOG.info('Processing %s %d', register.galaxy_name, register.priority)
             status = process_file(register)
-            files_processed = status.work_units_added
+            files_processed = status.work_units_added * MIN_QUORUM
             os.remove(register.filename)
             register.create_time = datetime.now()
         else:
@@ -459,4 +460,4 @@ else:
 
         session.commit()
 
-LOG.info('Done - added %d WUs', files_processed)
+LOG.info('Done - added %d Results', files_processed)
