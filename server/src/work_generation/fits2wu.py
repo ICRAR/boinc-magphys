@@ -423,6 +423,7 @@ if args['register'] is None:
 
     # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
     while files_processed < FILES_TO_PROCESS:
+        LOG.info("Added %d of %d", files_processed, FILES_TO_PROCESS)
         register = session.query(Register).filter(Register.create_time == None).order_by(desc(Register.priority), Register.register_time).first()
         if register is None:
             LOG.info('No registrations waiting')

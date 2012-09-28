@@ -154,7 +154,7 @@ CREATE TABLE register (
   filename      VARCHAR(1000) NOT NULL,
   priority      INTEGER NOT NULL,
   register_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  create_time   TIMESTAMP
+  create_time   TIMESTAMP NULL DEFAULT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE INDEX register_galaxy_name_ix ON register(galaxy_name);
