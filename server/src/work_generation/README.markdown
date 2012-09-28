@@ -9,11 +9,25 @@
 # New Method
 
 A galaxy is registered ready for processing.
-The registration says where the files are, names and red-shift
+The registration says where the files are, names, red-shift, etc.
+The WU generator takes a image and breaks in into WU and loads them into the BOINC server.
 
 ## Register Galaxy
 
+$ ./register_fits_file.py Filename Redshift Galaxy Type Sigma Priority
+$ ./register_fits_file.py /home/ec2-user/galaxies/POGS_IC0089.fits    0.0181  IC0089   S0     0.05    0
+
+* **Filename** is the absolute path to the FITS file contain the image of the galaxy
+* **Redshift** is the redshift of the Galaxy
+* **Galaxy** is the name to be used for this galaxy
+* **Type** the hubble type of the galaxy
+* **Sigma** the sigma to be used on the flux values extracted from the FITS file
+* **Priority** the priority of the galaxy - the higher the number the quicker it will be queued and processed
+
 ## Autoload
+
+**./fits2wu.py** - when run with no arguments the file looks in work_generation.settings to get thresholds and values. It then converts galaxies in order of priority and registration time into work units
+If the could is called with -r or --register flag it will find that registration and convert it into work units
 
 
 # Old method

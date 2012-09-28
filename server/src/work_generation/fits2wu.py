@@ -3,6 +3,7 @@
 Convert a FITS file ready to be converted into Work Units
 """
 from __future__ import print_function
+import argparse
 from datetime import datetime
 
 import logging
@@ -26,18 +27,24 @@ from work_generation import FILTER_BANDS, ULTRAVIOLET_BANDS, OPTICAL_BANDS, INFR
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-# select count(*) from result where server_state = 2
-engine = create_engine(boinc_db_login)
-Session = sessionmaker(bind=engine)
-session = Session()
-count = session.query(Result).filter(Result.server_state == 2).count()
-session.close()
+parser = argparse.ArgumentParser()
+parser.add_argument('-r', '--register', type=int, help='the registration id of a galaxy')
+args = vars(parser.parse_args())
 
-LOG.info('Checking pending = %d : threshold = %d', count, wg_threshold)
+count = None
+if args['register'] is None:
+    # select count(*) from result where server_state = 2
+    engine = create_engine(boinc_db_login)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    count = session.query(Result).filter(Result.server_state == 2).count()
+    session.close()
 
-if count >= wg_threshold:
-    LOG.info('Nothing to do')
-    exit(0)
+    LOG.info('Checking pending = %d : threshold = %d', count, wg_threshold)
+
+    if count >= wg_threshold:
+        LOG.info('Nothing to do')
+        exit(0)
 
 # Constants need
 HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
@@ -409,20 +416,40 @@ def process_file(register):
 ##
 ## ######################################################################## ##
 
+# Normal operation
 files_processed = 0
-FILES_TO_PROCESS = wg_threshold - count + wg_high_water_mark
+if args['register'] is None:
+    FILES_TO_PROCESS = wg_threshold - count + wg_high_water_mark
 
-# Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
-while files_processed < FILES_TO_PROCESS:
-    register = session.query(Register).filter(Register.create_time == None).order_by(desc(Register.priority), Register.register_time).first()
+    # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
+    while files_processed < FILES_TO_PROCESS:
+        register = session.query(Register).filter(Register.create_time == None).order_by(desc(Register.priority), Register.register_time).first()
+        if register is None:
+            LOG.info('No registrations waiting')
+            break
+        else:
+            if os.path.isfile(register.filename):
+                LOG.info('Processing %s %d', register.galaxy_name, register.priority)
+                status = process_file(register)
+                files_processed += status.work_units_added
+                os.remove(register.filename)
+                register.create_time = datetime.now()
+            else:
+                LOG.error('The file %s does not exist', register.filename)
+                register.create_time = datetime.now()
+
+            session.commit()
+
+# We want an explict galaxy to load
+else:
+    register = session.query(Register).filter(Register.register_id == args['register']).first()
     if register is None:
-        LOG.info('No registrations waiting')
-        break
+        LOG.info('No registration waiting with the id %d', args['register'])
     else:
         if os.path.isfile(register.filename):
             LOG.info('Processing %s %d', register.galaxy_name, register.priority)
             status = process_file(register)
-            files_processed += status.work_units_added
+            files_processed = status.work_units_added
             os.remove(register.filename)
             register.create_time = datetime.now()
         else:
