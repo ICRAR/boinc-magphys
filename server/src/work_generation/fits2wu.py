@@ -16,7 +16,7 @@ import pyfits
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
-from sqlalchemy.sql.expression import desc
+from sqlalchemy.sql.expression import desc, and_
 import subprocess
 from config import boinc_db_login, wg_threshold, wg_high_water_mark, db_login, wg_min_pixels_per_file, wg_row_height, wg_image_directory, wg_boinc_project_root
 from database.boinc_database_support import Result
@@ -442,7 +442,7 @@ if args['register'] is None:
 
 # We want an explict galaxy to load
 else:
-    register = session.query(Register).filter(Register.register_id == args['register']).first()
+    register = session.query(Register).filter(and_(Register.register_id == args['register'], Register.create_time == None)).first()
     if register is None:
         LOG.info('No registration waiting with the id %d', args['register'])
     else:
