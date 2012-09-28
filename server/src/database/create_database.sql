@@ -3,21 +3,21 @@ CREATE SCHEMA magphys;
 USE magphys;
 
 CREATE TABLE galaxy (
-  galaxy_id      BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  name           VARCHAR(128) NOT NULL,
-  dimension_x    INTEGER UNSIGNED NOT NULL,
-  dimension_y    INTEGER UNSIGNED NOT NULL,
-  dimension_z    INTEGER UNSIGNED NOT NULL,
-  redshift       FLOAT NOT NULL,
-  sigma          FLOAT NOT NULL,
-  create_time    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  image_time     TIMESTAMP,
-  version_number INTEGER UNSIGNED NOT NULL DEFAULT 1,
-  current        BOOLEAN NOT NULL DEFAULT TRUE,
-  galaxy_type    VARCHAR(10) NOT NULL character set utf8 collate utf8_bin,
-  ra_cent        FLOAT,
-  dec_cent       FLOAT,
-  pixel_count    INTEGER,
+  galaxy_id        BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  name             VARCHAR(128) NOT NULL,
+  dimension_x      INTEGER UNSIGNED NOT NULL,
+  dimension_y      INTEGER UNSIGNED NOT NULL,
+  dimension_z      INTEGER UNSIGNED NOT NULL,
+  redshift         FLOAT NOT NULL,
+  sigma            FLOAT NOT NULL,
+  create_time      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  image_time       TIMESTAMP,
+  version_number   INTEGER UNSIGNED NOT NULL DEFAULT 1,
+  current          BOOLEAN NOT NULL DEFAULT TRUE,
+  galaxy_type      VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
+  ra_cent          FLOAT,
+  dec_cent         FLOAT,
+  pixel_count      INTEGER,
   pixels_processed INTEGER
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
