@@ -2,6 +2,7 @@
 
 import assimilator
 import boinc_path_config
+import math
 import gzip, os, sys, traceback, datetime
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
@@ -187,7 +188,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             hist.pxresult_id = pxresult.pxresult_id
                             values = line.split()
                             hist_value = float(values[1])
-                            if hist_value != 0:
+                            if hist_value != 0 and not math.isnan(hist_value):
                                 hist.x_axis = float(values[0])
                                 hist.hist_value = hist_value
                                 parameter.histograms.append(hist)
