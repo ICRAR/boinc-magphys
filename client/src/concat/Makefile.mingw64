@@ -1,0 +1,6 @@
+
+.c.o:
+	x86_64-w64-mingw32-gcc -std=c99 -c -o $@ $<
+
+concat_windows_x86_64: concat.o
+	x86_64-w64-mingw32-gcc -m64 -g -O2 -o $@ $^
