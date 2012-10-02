@@ -1,6 +1,6 @@
 RM = /bin/rm -f
 UTILIB = ./public_utilities.a
-FC =  gfortran -ggdb -O3 -ffixed-line-length-none
+FC =  gfortran -ggdb -O3 -ffixed-line-length-none -mieee-fp
 
 .f.o:
 	$(FC) -c $<
@@ -18,10 +18,10 @@ fit_sed: fit_sed.f $(UTILIB)
 	$(FC) -o fit_sed -static $(UTILIB) fit_sed.f
 
 fit_sed_windows_x86_64: fit_sed_skynet.f
-	$(FC) -o fit_sed_windows_x86_64 -static fit_sed_skynet.f
+	$(FC) -m64 -o fit_sed_windows_x86_64 -static fit_sed_skynet.f
 
 fit_sed_windows_intelx86: fit_sed_skynet.f
-	$(FC) -o fit_sed_windows_intelx86 -static fit_sed_skynet.f
+	$(FC) -m32 -o fit_sed_windows_intelx86 -static fit_sed_skynet.f
 
 read_optilib_bin: read_optilib_bin.f $(UTILIB)
 	$(FC) read_optilib_bin.f $(UTILIB) -o read_optilib_bin

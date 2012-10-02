@@ -8,21 +8,20 @@ from datetime import datetime
 
 import logging
 import os
-import re
 import json
 import shutil
 import math
 import pyfits
+import subprocess
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.expression import desc, and_
-import subprocess
 from config import boinc_db_login, wg_threshold, wg_high_water_mark, db_login, wg_min_pixels_per_file, wg_row_height, wg_image_directory, wg_boinc_project_root
 from database.boinc_database_support import Result
 from database.database_support import Register, FitsHeader, Galaxy, Area, PixelResult
 from image.fitsimage import FitsImage
-from work_generation import FILTER_BANDS, ULTRAVIOLET_BANDS, OPTICAL_BANDS, INFRARED_BANDS
+from work_generation import FILTER_BANDS, ULTRAVIOLET_BANDS, OPTICAL_BANDS, INFRARED_BANDS, HEADER_PATTERNS
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -46,17 +45,6 @@ if args['register'] is None:
         LOG.info('Nothing to do')
         exit(0)
 
-# Constants need
-HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
-                   re.compile('CROTA[0-9]+'),
-                   re.compile('CRPIX[0-9]+'),
-                   re.compile('CRVAL[0-9]+'),
-                   re.compile('CTYPE[0-9]+'),
-                   re.compile('EQUINOX'),
-                   re.compile('EPOCH'),
-                   re.compile('RA_CENT'),
-                   re.compile('DEC_CENT'),
-                   ]
 APP_NAME = "magphys_wrapper"
 BIN_PATH = wg_boinc_project_root + "/bin"
 TEMPLATES_PATH = "templates"                    # In true BOINC style, this is magically relative to the project root
@@ -154,6 +142,9 @@ def sort_layers(hdu_list, layer_count):
     return layers
 
 def create_job_xml(file_name, pixels_in_file):
+    """
+    Create the job.xml file
+    """
     new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name]).rstrip()
     file = open(new_full_path, 'wb')
     file.write('<job_desc>\n')
@@ -178,6 +169,11 @@ def create_job_xml(file_name, pixels_in_file):
     file.close()
 
 def create_observation_file(filename, data, galaxy, pixels):
+    """
+    Create an observation file
+
+    Create an observation file for the list of pixels
+    """
     new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", filename]).rstrip()
     outfile = open(new_full_path, 'w')
     outfile.write('#  %(data)s\n' % { 'data': json.dumps(data) })
@@ -194,7 +190,7 @@ def create_observation_file(filename, data, galaxy, pixels):
 
 def create_output_file(galaxy, area, pixels, priority):
     """
-        Write an output file for this area
+    Write an output file for this area
     """
     pixels_in_area = len(pixels)
     data = [{'galaxy':galaxy.name, 'area_id':area.area_id, 'pixels':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,}]
@@ -235,7 +231,7 @@ def create_output_file(galaxy, area, pixels, priority):
 
 def enough_layers(pixels):
     """
-        Are there enough layers with data in them to warrant counting this pixel?
+    Are there enough layers with data in them to warrant counting this pixel?
     """
     uv_layers = 0
     for layer_id in ULTRAVIOLET_BANDS.values():
@@ -263,10 +259,10 @@ def enough_layers(pixels):
 
 def get_pixels(hdu_list, pix_x, pix_y, end_x, end_y, layer_order):
     """
-        Retrieves pixels from each pair of (x, y) coordinates specified in pix_x and pix_y.
-        Returns pixels only from those coordinates where there is data in more than
-        MIN_LIVE_CHANNELS_PER_PIXEL channels. Pixels are retrieved in the order specified in
-        the global LAYER_ORDER list.
+    Retrieves pixels from each pair of (x, y) coordinates specified in pix_x and pix_y.
+    Returns pixels only from those coordinates where there is data in more than
+    given by the enough_layers function. Pixels are retrieved in the order specified in
+    the global LAYER_ORDER list.
     """
     result = []
     max_x = pix_x
@@ -339,6 +335,9 @@ def create_areas(status, galaxy, hdu_list, pix_y, end_x, end_y, layer_order, pri
         pix_x = max_x + 1
 
 def break_up_galaxy(galaxy, hdu_list, end_x, end_y, layer_order, priority):
+    """
+    Break up the galaxy into small pieces
+    """
     status = Status()
     start_y = 0
     for pix_y in range(start_y, end_y, wg_row_height):
@@ -347,13 +346,22 @@ def break_up_galaxy(galaxy, hdu_list, end_x, end_y, layer_order, priority):
     return status
 
 def get_version_number(galaxy_name):
+    """
+    Get the version number of the galaxy
+    """
     count = session.query(Galaxy).filter(Galaxy.name == galaxy_name).count()
     return count + 1
 
 def update_current(galaxy_name):
+    """
+    The current galaxy is current - mark all the others as npot
+    """
     session.execute("update galaxy set current = false where name = '"+ galaxy_name + "'")
 
 def process_file(register):
+    """
+    Process a registration.
+    """
     hdu_list = pyfits.open(register.filename, memmap=True)
     layer_count = len(hdu_list)
 

@@ -1,5 +1,7 @@
 #! /usr/bin/env python2.7
-
+"""
+The Assimilator for the MagPhys code
+"""
 import assimilator
 import boinc_path_config
 import math
@@ -8,7 +10,7 @@ from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messa
 from xml.dom.minidom import parseString
 from assimilator_utils import is_gzip
 from config import db_login
-from database.database_support import AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram
+from database.database_support import AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram, ParameterAggregate
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -26,7 +28,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
     def get_output_file_infos(self, result, list):
         """
-
+        Get the file names
         """
         dom = parseString(result.xml_doc_in)
         for node in dom.getElementsByTagName('file_name'):
@@ -34,17 +36,16 @@ class MagphysAssimilator(assimilator.Assimilator):
 
     def getResult(self, session, pxresultId):
         """
-
+        Get the pixel result row from the database
         """
         if self.noinsert:
             pxresult = None
         else:
             pxresult = session.query(PixelResult).filter("pxresult_id=:pxresultId").params(pxresultId=pxresultId).first()
-        #doAdd = False
+
         if pxresult is None:
             self.logCritical("Pixel Result row not found for pxresultId of %d\n", pxresultId)
             return None
-            #pxresult = PixelResult()
         else:
             for filter in pxresult.filters:
                 session.delete(filter)
@@ -52,6 +53,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 for histogram in parameter.histograms:
                     session.delete(histogram)
                 session.delete(parameter)
+
         self.area = pxresult.area
         pxresult.filters = []
         pxresult.parameters = []
@@ -59,15 +61,15 @@ class MagphysAssimilator(assimilator.Assimilator):
 
     def saveResult(self, session, pxresult):
         """
-
+        Add the pixel to the database
         """
         if pxresult.pxresult_id is None and not self.noinsert:
             session.add(pxresult)
 
     def processResult(self, session, outFile, wu):
         """
-            Read the output file, add the values to the PixelResult row, and insert the filter,
-            parameter and histogram rows.
+        Read the output file, add the values to the PixelResult row, and insert the filter,
+        parameter and histogram rows.
         """
         if is_gzip(outFile):
             self.logDebug('Is GZIP\n')
@@ -78,10 +80,11 @@ class MagphysAssimilator(assimilator.Assimilator):
         lineNo = 0
         pxresult = None
         parameter = None
-        percentilesNext = False
-        histogramNext = False
-        skynetNext = False
-        resultCount = 0
+        percentiles_next = False
+        histogram_next = False
+        skynet_next1 = False
+        skynet_next2 = False
+        result_count = 0
         try:
             for line in f:
                 lineNo += 1
@@ -91,17 +94,16 @@ class MagphysAssimilator(assimilator.Assimilator):
                         self.saveResult(session, pxresult)
                     values = line.split()
                     pointName = values[1]
-                    #print "pointName", pointName
                     pxresultId = pointName[3:].rstrip()
-                    #print "pxresultId", pxresultId
                     pxresult = self.getResult(session, pxresultId)
                     if pxresult:
                       pxresult.workunit_id = wu.id
                     lineNo = 0
-                    percentilesNext = False
-                    histogramNext = False
-                    skynetNext = False
-                    resultCount += 1
+                    percentiles_next = False
+                    histogram_next = False
+                    skynet_next1 = False
+                    skynet_next2 = False
+                    result_count += 1
                 elif pxresult:
                     if lineNo == 2:
                         filterNames = line.split()
@@ -130,8 +132,6 @@ class MagphysAssimilator(assimilator.Assimilator):
                         pxresult.i_ir = float(values[1])
                         pxresult.chi2 = float(values[2])
                         pxresult.redshift = float(values[3])
-                        #for value in values:
-                        #    print value
                     elif lineNo == 11:
                         values = line.split()
                         pxresult.fmu_sfh = float(values[0])
@@ -164,26 +164,34 @@ class MagphysAssimilator(assimilator.Assimilator):
                             parameter = PixelParameter()
                             parameter.parameter_name = parameterName
                             pxresult.parameters.append(parameter)
-                            percentilesNext = False
-                            histogramNext = True
-                            skynetNext = False
+                            percentiles_next = False
+                            histogram_next = True
+                            skynet_next1 = False
+                            skynet_next2 = False
                         elif line.startswith("#....percentiles of the PDF......") and parameter is not None:
-                            percentilesNext = True
-                            histogramNext = False
-                            skynetNext = False
+                            percentiles_next = True
+                            histogram_next = False
+                            skynet_next1 = False
+                            skynet_next2 = False
                         elif line.startswith(" #...theSkyNet"):
-                            percentilesNext = False
-                            histogramNext = False
-                            skynetNext = True
-                        elif percentilesNext:
+                            percentiles_next = False
+                            histogram_next = False
+                            skynet_next1 = True
+                            skynet_next2 = False
+                        elif line.startswith("#.theSkyNet2 "):
+                            percentiles_next = False
+                            histogram_next = False
+                            skynet_next1 = False
+                            skynet_next2 = True
+                        elif percentiles_next:
                             values = line.split()
                             parameter.percentile2_5 = float(values[0])
                             parameter.percentile16 = float(values[1])
                             parameter.percentile50 = float(values[2])
                             parameter.percentile84 = float(values[3])
                             parameter.percentile97_5 = float(values[4])
-                            percentilesNext = False
-                        elif histogramNext:
+                            percentiles_next = False
+                        elif histogram_next:
                             hist = PixelHistogram()
                             hist.pxresult_id = pxresult.pxresult_id
                             values = line.split()
@@ -192,34 +200,45 @@ class MagphysAssimilator(assimilator.Assimilator):
                                 hist.x_axis = float(values[0])
                                 hist.hist_value = hist_value
                                 parameter.histograms.append(hist)
-                        elif skynetNext:
+                        elif skynet_next1:
                             values = line.split()
                             pxresult.i_opt = float(values[0])
                             pxresult.i_ir = float(values[1])
                             pxresult.dmstar = float(values[2])
                             pxresult.dfmu_aux = float(values[3])
                             pxresult.dz = float(values[4])
-                            skynetNext = False
+                            skynet_next1 = False
+                        elif skynet_next2:
+                            # We have the highest bin probability values which require the parameter_id
+                            session.flush()
+                            values = line.split()
+                            index = 0
+                            for parameter1 in pxresult.parameters:
+                                if index < len(values):
+                                    parameter_aggregate = ParameterAggregate()
+                                    parameter_aggregate.pxparameter_id = parameter1.pxparameter_id
+                                    parameter_aggregate.high_prob_bin_value = values[index]
+                                    session.add(parameter_aggregate)
+                                index += 1
+                            skynet_next2 = False
+
         except IOError:
             self.logCritical('IOError after %d lines\n', lineNo)
         finally:
             f.close()
         if pxresult:
             self.saveResult(session, pxresult)
-        return resultCount
+        return result_count
 
     def assimilate_handler(self, wu, results, canonical_result):
         """
-            Process the Results.
+        Process the Results.
         """
         self.logDebug("Start of assimilate_handler for %d\n", wu.id)
         try:
-            #self.logDebug("url: [%s]\n", login)
             if wu.canonical_result:
-                #file_list = []
                 outFile = self.get_file_path(canonical_result)
                 self.area = None
-                #self.get_output_file_infos(canonical_result, file_list)
                 if outFile:
                      if os.path.isfile(outFile):
                           pass
@@ -236,6 +255,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                     else:
                         if resultCount == 0:
                             self.logCritical("No results were found in the output file\n")
+
                         if self.area is None:
                             self.logDebug("The Area was not found\n")
                         else:
@@ -243,21 +263,17 @@ class MagphysAssimilator(assimilator.Assimilator):
                             self.area.update_time = datetime.datetime.now()
                             useridSet = set()
                             for result in results:
-                                #if result.user:
-                                #    self.logDebug("Result: %d Userid: %d State: %d\n", result.id, result.user.id, result.validate_state)
                                 if result.user and result.validate_state == boinc_db.VALIDATE_STATE_VALID:
                                     userid = result.user.id
-                                    #self.logDebug("Userid %d\n", userid)
                                     if userid not in useridSet:
-                                        #self.logDebug("Added Userid %d\n", userid)
                                         useridSet.add(userid)
-                            #print 'Adding users'
+
                             for user in self.area.users:
                                 session.delete(user)
                             for userid in useridSet:
                                 usr = AreaUser()
                                 usr.userid = userid
-                                #usr.create_time =
+
                                 self.area.users.append(usr)
                         self.logDebug("Saving %d results for workunit %d\n", resultCount, wu.id)
                         session.commit()

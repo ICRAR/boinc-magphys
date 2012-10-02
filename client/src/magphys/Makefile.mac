@@ -1,6 +1,6 @@
 RM = /bin/rm -f
 UTILIB = ./public_utilities.a
-FC = /usr/local/bin/gfortran -O3 -std=legacy -ffixed-line-length-none -static-libgfortran
+FC = /usr/local/bin/gfortran -O3 -std=legacy -ffixed-line-length-none -static-libgfortran -mieee-fp
 
 .f.o:
 	$(FC) -c $<

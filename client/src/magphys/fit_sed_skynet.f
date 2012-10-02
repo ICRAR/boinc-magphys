@@ -115,6 +115,11 @@ c theSkyNet parameter (nbinmax1=1500,nbinmax2=150)
       real*8 sfr2_hist(nbinmax2),a2_hist(nbinmax2),ld2_hist(nbinmax2)
       real*8 tbg1_2_hist(nbinmax2),tbg2_2_hist(nbinmax2),xi2_hist(nbinmax2)
       real*8 tvism2_hist(nbinmax2)
+c theSkyNet
+c     The highest probability bin values
+       integer icount
+       real*8 max_pr, hpbv(16)
+c theSkyNet
       integer nbin_fmu,nbin_mu,nbin_tv,nbin_a,nbin2_tvism
       integer nbin_tbg1,nbin_tbg2,nbin_xi,nbin_sfr,nbin_ld
       integer nbin2_fmu,nbin2_mu,nbin2_tv,nbin2_a,nbin_fmu_ism
@@ -1125,6 +1130,208 @@ c     --------------------------------------------------------------------------
          if (skynet .eqv. .TRUE.) then
             write(31,*) '#...theSkyNet parameters of this model'
             write(31,'(2I15,E20.6,E20.4,E10.2)') indx(sfh_sav),ir_sav,a_sav,fmu_sfh(sfh_sav),redshift(i_gal)
+
+            icount = 1
+c f_mu (SFH)
+            do ibin=1,nbin2_fmu
+               if (ibin .eq. 1) then
+                  max_pr = psfh2(ibin)
+                  hpbv(icount) = fmu2_hist(ibin)
+               else if (psfh2(ibin) .gt. max_pr) then
+                  max_pr = psfh2(ibin)
+                  hpbv(icount) = fmu2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c f_mu (IR)
+            do ibin=1,nbin2_fmu
+               if (ibin .eq. 1) then
+                  max_pr = pir2(ibin)
+                  hpbv(icount) = fmu2_hist(ibin)
+               else if (pir2(ibin) .gt. max_pr) then
+                  max_pr = pir2(ibin)
+                  hpbv(icount) = fmu2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c mu parameter
+            do ibin=1,nbin2_mu
+               if (ibin .eq. 1) then
+                  max_pr = pmu2(ibin)
+                  hpbv(icount) = mu2_hist(ibin)
+               else if (pmu2(ibin) .gt. max_pr) then
+                  max_pr = pmu2(ibin)
+                  hpbv(icount) = mu2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c tau_V
+            do ibin=1,nbin2_tv
+               if (ibin .eq. 1) then
+                  max_pr = ptv2(ibin)
+                  hpbv(icount) = tv2_hist(ibin)
+               else if (ptv2(ibin) .gt. max_pr) then
+                  max_pr = ptv2(ibin)
+                  hpbv(icount) = tv2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c sSFR_0.1Gyr
+            do ibin=1,nbin2_ssfr
+               if (ibin .eq. 1) then
+                  max_pr = pssfr2(ibin)
+                  hpbv(icount) = ssfr2_hist(ibin)
+               else if (pssfr2(ibin) .gt. max_pr) then
+                  max_pr = pssfr2(ibin)
+                  hpbv(icount) = ssfr2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c M(stars)
+            do ibin=1,nbin2_a
+               if (ibin .eq. 1) then
+                  max_pr = pa2(ibin)
+                  hpbv(icount) = a2_hist(ibin)
+               else if (pa2(ibin) .gt. max_pr) then
+                  max_pr = pa2(ibin)
+                  hpbv(icount) = a2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c Ldust
+            do ibin=1,nbin2_ld
+               if (ibin .eq. 1) then
+                  max_pr = pldust2(ibin)
+                  hpbv(icount) = ld2_hist(ibin)
+               else if (pldust2(ibin) .gt. max_pr) then
+                  max_pr = pldust2(ibin)
+                  hpbv(icount) = ld2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c T_C^ISM
+            do ibin=1,nbin2_tbg2
+               if (ibin .eq. 1) then
+                  max_pr = ptbg2_2(ibin)
+                  hpbv(icount) = tbg2_2_hist(ibin)
+               else if (ptbg2_2(ibin) .gt. max_pr) then
+                  max_pr = ptbg2_2(ibin)
+                  hpbv(icount) = tbg2_2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c T_W^BC
+            do ibin=1,nbin2_tbg1
+               if (ibin .eq. 1) then
+                  max_pr = ptbg1_2(ibin)
+                  hpbv(icount) = tbg1_2_hist(ibin)
+               else if (ptbg1_2(ibin) .gt. max_pr) then
+                  max_pr = ptbg1_2(ibin)
+                  hpbv(icount) = tbg1_2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c xi_C^tot
+            do ibin=1,nbin2_fmu_ism
+               if (ibin .eq. 1) then
+                  max_pr = pism2(ibin)
+                  hpbv(icount) = fmuism2_hist(ibin)
+               else if (pism2(ibin) .gt. max_pr) then
+                  max_pr = pism2(ibin)
+                  hpbv(icount) = fmuism2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c xi_PAH^tot
+            do ibin=1,nbin2_xi
+               if (ibin .eq. 1) then
+                  max_pr = pxi1_2(ibin)
+                  hpbv(icount) = xi2_hist(ibin)
+               else if (pxi1_2(ibin) .gt. max_pr) then
+                  max_pr = pxi1_2(ibin)
+                  hpbv(icount) = xi2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c xi_MIR^tot
+            do ibin=1,nbin2_xi
+               if (ibin .eq. 1) then
+                  max_pr = pxi2_2(ibin)
+                  hpbv(icount) = xi2_hist(ibin)
+               else if (pxi2_2(ibin) .gt. max_pr) then
+                  max_pr = pxi2_2(ibin)
+                  hpbv(icount) = xi2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c xi_W^tot
+            do ibin=1,nbin2_xi
+               if (ibin .eq. 1) then
+                  max_pr = pxi3_2(ibin)
+                  hpbv(icount) = xi2_hist(ibin)
+               else if (pxi3_2(ibin) .gt. max_pr) then
+                  max_pr = pxi3_2(ibin)
+                  hpbv(icount) = xi2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c tau_V^ISM
+            do ibin=1,nbin2_tvism
+               if (ibin .eq. 1) then
+                  max_pr = ptvism2(ibin)
+                  hpbv(icount) = tvism2_hist(ibin)
+               else if (ptvism2(ibin) .gt. max_pr) then
+                  max_pr = ptvism2(ibin)
+                  hpbv(icount) = tvism2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c M(dust)
+            do ibin=1,nbin2_md
+               if (ibin .eq. 1) then
+                  max_pr = pmd_2(ibin)
+                  hpbv(icount) = md2_hist(ibin)
+               else if (pmd_2(ibin) .gt. max_pr) then
+                  max_pr = pmd_2(ibin)
+                  hpbv(icount) = md2_hist(ibin)
+               endif
+            enddo
+            icount = icount + 1
+
+c SFR_0.1Gyr
+            do ibin=1,nbin2_sfr
+               if (ibin .eq. 1) then
+                  max_pr = psfr2(ibin)
+                  hpbv(icount) = sfr2_hist(ibin)
+               else if (psfr2(ibin) .gt. max_pr) then
+                  max_pr = psfr2(ibin)
+                  hpbv(icount) = sfr2_hist(ibin)
+               endif
+            enddo
+
+            write(31, 900)
+900         format('#.theSkyNet2 fmu(SFH) fmu(IR) mu tauv',
+      +        ' sSFR M* Ldust',
+      +        ' T_W^BC T_C^ISM xi_C^tot',
+      +        ' xi_PAH^tot xi_MIR^tot xi_W^tot tvism',
+      +        ' Mdust SFR')
+901         format(16(0pf10.4))
+            write(31, 901) (hpbv(k), k=1,16)
+
             close (31)
          else
 c     ---------------------------------------------------------------------------
