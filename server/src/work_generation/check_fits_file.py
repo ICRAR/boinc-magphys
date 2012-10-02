@@ -31,15 +31,22 @@ for file_name in args['file_names']:
         for layer in range(layer_count):
             header = hdu_list[layer].header
             for keyword in header:
-                found_pattern = False
-                for pattern in HEADER_PATTERNS:
-                    if pattern.search(keyword):
-                        LOG.info('** Layer %d - %s: %s', layer, keyword, header[keyword])
-                        found_pattern = True
-                        break
+                if keyword.startswith('MAGPHYS'):
+                    LOG.info('** Layer %d - %s: %s', layer, keyword, header[keyword])
 
-                if not found_pattern:
-                    LOG.info('Layer %d - %s: %s', layer, keyword, header[keyword])
+                elif keyword.startswith('NAXIS'):
+                    LOG.info('** Layer %d - %s: %s', layer, keyword, header[keyword])
+
+                else:
+                    found_pattern = False
+                    for pattern in HEADER_PATTERNS:
+                        if pattern.search(keyword):
+                            LOG.info('** Layer %d - %s: %s', layer, keyword, header[keyword])
+                            found_pattern = True
+                            break
+
+                    if not found_pattern:
+                        LOG.info('Layer %d - %s: %s', layer, keyword, header[keyword])
 
     else:
         LOG.info('The file %s does not exist', file_name)
