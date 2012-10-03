@@ -1,6 +1,6 @@
 
 .c.o:
-	gcc -std=c99 -c -o $@ $<
+	i686-pc-mingw32-gcc -std=c99 -c -o $@ $<
 
-concat_windows_intelx86: concat.c
-	gcc -g -O2 -o $@ $^
+concat_windows_intelx86: concat.o
+	i686-pc-mingw32-gcc -g -O2 -o $@ $^
