@@ -1,4 +1,4 @@
-
+# File for 32bit MINGW under cygwin
 .c.o:
 	i686-pc-mingw32-gcc -std=c99 -c -o $@ $<
 
