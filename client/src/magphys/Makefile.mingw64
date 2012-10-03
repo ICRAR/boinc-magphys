@@ -1,6 +1,6 @@
 RM = /bin/rm -f
 UTILIB = ./public_utilities.a
-FC =  gfortran -ggdb -O3 -ffixed-line-length-none -mieee-fp
+FC =   x86_64-w64-mingw32-gfortran -ggdb -O3 -ffixed-line-length-none -mieee-fp
 
 .f.o:
 	$(FC) -c $<
