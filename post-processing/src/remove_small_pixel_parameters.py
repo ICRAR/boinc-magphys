@@ -19,13 +19,17 @@ session = Session()
 
 galaxies = session.query(Galaxy).all()
 
+deleted_total = 0
 for galaxy in galaxies:
     # Have we got work units out there for this galaxy?
     LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
 
+    deleted_galaxy = 0
     for pxresult_id in session.query(PixelResult.pxresult_id).filter_by(galaxy_id=galaxy.galaxy_id).order_by(PixelResult.pxresult_id).all():
-        print("Deleting low pixel_histogram values from galaxy {0} pixel {1}".format(galaxy.galaxy_id, pxresult_id[0]), end="\r")
-        session.query(PixelHistogram).filter(and_(PixelHistogram.pxresult_id == pxresult_id[0], PixelHistogram.hist_value < MIN_HIST_VALUE)).delete()
+        print("Deleting low pixel_histogram values from galaxy {0} pixel {1} : Deleted total {2} galaxy {3}".format(galaxy.galaxy_id, pxresult_id[0], deleted_total, deleted_galaxy), end="\r")
+        deleted = session.query(PixelHistogram).filter(and_(PixelHistogram.pxresult_id == pxresult_id[0], PixelHistogram.hist_value < MIN_HIST_VALUE)).delete()
+        deleted_total += deleted
+        deleted_galaxy += deleted
         session.commit()
 
 session.close()
