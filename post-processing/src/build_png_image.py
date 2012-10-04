@@ -9,8 +9,8 @@ import numpy
 import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
-from config import db_login
-from config import django_image_dir
+from config import DB_LOGIN
+from config import DJANGO_IMAGE_DIR
 from image import fitsimage
 from database.database_support import Galaxy, Area, PixelResult
 from PIL import Image
@@ -23,10 +23,10 @@ parser.add_argument('names', nargs='*', help='optional the name of the galaxies 
 parser.add_argument('-all', action='store_true', help='build images for all the galaxies')
 args = vars(parser.parse_args())
 
-output_directory = django_image_dir
+output_directory = DJANGO_IMAGE_DIR
 
 # First check the galaxy exists in the database
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 

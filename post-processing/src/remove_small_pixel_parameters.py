@@ -7,13 +7,13 @@ import logging
 from operator import and_
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
-from config import db_login, MIN_HIST_VALUE
+from config import DB_LOGIN, MIN_HIST_VALUE
 from database.database_support import Galaxy, PixelResult, PixelParameter, PixelHistogram
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 

@@ -8,7 +8,7 @@ import logging
 import os
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
-from config import db_login
+from config import DB_LOGIN
 from database.database_support import Register
 
 LOG = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ if not os.path.isfile(INPUT_FILE):
     exit(1)
 
 # Connect to the database - the login string is set in the database package
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 

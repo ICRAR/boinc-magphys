@@ -14,7 +14,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import sys
 from sqlalchemy.sql.expression import func, and_
-from config import db_login
+from config import DB_LOGIN
 from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area, PixelHistogram
 from utils.writeable_dir import WriteableDir
 
@@ -31,7 +31,7 @@ args = vars(parser.parse_args())
 output_directory = args['output_dir']
 
 # First check the galaxy exists in the database
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 

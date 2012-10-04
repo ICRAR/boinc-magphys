@@ -7,19 +7,15 @@ import argparse
 import json
 import logging
 import math
-import re
-import datetime
 import pyfits
-import sys
-import shutil
-from config import db_login
-from database.database_support import Galaxy, Area, PixelResult, FitsHeader
+from config import DB_LOGIN
+from database.database_support import Area
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from utils.writeable_dir import WriteableDir
 from work_generation import FILTER_BANDS
 from image.fitsimage import FitsImage
-from config import django_image_dir
+from config import DJANGO_IMAGE_DIR
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -34,7 +30,7 @@ AREA_ID = int(args['area_id'][0])
 SIGMA = 0.1
 
 # Connect to the database - the login string is set in the database package
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 rollback = False
@@ -152,20 +148,20 @@ if area == None:
     LOG.info(str(AREA_ID) + ' Area was not found')
 else:
     galaxy = area.galaxy;
-    
+
     filePrefixName = galaxy.name + "_" + str(galaxy.version_number)
     fitsFileName = filePrefixName + ".fits"
-    
+
     image = FitsImage()
-    fitsFile = image.get_file_path(django_image_dir, fitsFileName, False)
-    
+    fitsFile = image.get_file_path(DJANGO_IMAGE_DIR, fitsFileName, False)
+
     HDULIST = pyfits.open(fitsFile, memmap=True)
     LAYER_COUNT = len(HDULIST)
     LAYER_ORDER = sort_layers(HDULIST, LAYER_COUNT)
-    
+
     pixels = get_pixels(area)
     create_output_file(galaxy, area, pixels)
-    
+
     HDULIST.close()
     LOG.info('Area ' + str(AREA_ID) + ' has been rebuilt')
 

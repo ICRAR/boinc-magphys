@@ -1,16 +1,16 @@
-from PIL import Image, ImageDraw
+from PIL import Image
 import sys
 import os
-from database.database_support import Galaxy, AreaUser, Area, PixelResult, login
-from config import db_login
+from database.database_support import Galaxy, AreaUser, Area
+from config import DB_LOGIN
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, aliased
+from sqlalchemy.orm import sessionmaker
 
 if len(sys.argv) < 2:
    print "build-image.py fileName [method]"
    sys.exit(1)
-   
-   
+
+
 fileName = sys.argv[1]
 
 parts = os.path.splitext(fileName)
@@ -21,12 +21,12 @@ magphysDir = "/Users/rob/magphys/"
 outputDir = magphysDir + dirName + "/"
 fileName = magphysDir + fileName
 
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 
 image = Image.open(outputDir + "image_log_colour_1.jpg", "r").convert("RGBA")
-galaxy_id = 1;
+galaxy_id = 1
 userid = 2
 
 stmt = session.query(Galaxy.galaxy_id).join(Area).join(AreaUser).filter(AreaUser.userid == userid).subquery()

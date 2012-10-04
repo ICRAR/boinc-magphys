@@ -12,7 +12,7 @@ import datetime
 import pyfits
 import sys
 import shutil
-from config import db_login
+from config import DB_LOGIN
 from database.database_support import Galaxy, Area, PixelResult, FitsHeader
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -68,7 +68,7 @@ END_X = HDULIST[0].data.shape[1]
 LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':END_X,'y':END_Y,'z':LAYER_COUNT,'pix':END_X*END_Y/1000000.0})
 
 # Connect to the database - the login string is set in the database package
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 rollback = False

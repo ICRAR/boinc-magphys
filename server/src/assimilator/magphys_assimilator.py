@@ -9,7 +9,7 @@ import gzip, os, sys, traceback, datetime
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
 from assimilator_utils import is_gzip
-from config import db_login, MIN_HIST_VALUE
+from config import DB_LOGIN, MIN_HIST_VALUE
 from database.database_support import AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram, ParameterName
 
 from sqlalchemy import create_engine
@@ -23,7 +23,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         assimilator.Assimilator.__init__(self)
 
         # Login is set in the database package
-        engine = create_engine(db_login)
+        engine = create_engine(DB_LOGIN)
         self.Session = sessionmaker(bind=engine)
         self.map_parameter_name = {}
 

@@ -3,12 +3,12 @@ from database.database_support import Galaxy
 from image.fitsimage import FitsImage
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from config import db_login
+from config import DB_LOGIN
 
 FITS_DIR = "/home/ec2-user/galaxies"
 IMAGE_DIR = "/home/ec2-user/galaxyImages"
 
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 
 session = Session()

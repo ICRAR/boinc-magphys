@@ -9,7 +9,7 @@ import boinc_path_config
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages, db_base
 import logging
 
-from config import db_login
+from config import DB_LOGIN
 from database.database_support import Area, AreaUser
 from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import sessionmaker
@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 class AssignCredit:
     def __init__(self):
         # Login is set in the database package
-        engine = create_engine(db_login)
+        engine = create_engine(DB_LOGIN)
         self.Session = sessionmaker(bind=engine)
 
     def parse_args(self, args):

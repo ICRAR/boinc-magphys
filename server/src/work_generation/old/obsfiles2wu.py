@@ -11,7 +11,7 @@ import os
 import subprocess
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
-from config import boinc_db_login
+from config import BOINC_DB_LOGIN
 from database.boinc_database_support import Result
 from utils.readable_dir import ReadableDir
 from utils.writeable_dir import WriteableDir
@@ -33,7 +33,7 @@ HIGH_WATER_MARK = 1500
 # Do we need to run this
 if args['threshold'] is not None:
     # select count(*) from result where server_state = 2
-    engine = create_engine(boinc_db_login)
+    engine = create_engine(BOINC_DB_LOGIN)
     Session = sessionmaker(bind=engine)
     session = Session()
     count = session.query(Result).filter(Result.server_state == 2).count()

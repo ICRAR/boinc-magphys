@@ -3,10 +3,10 @@
 Job to recalculate the number of pixels processed by each user.
 """
 
-from config import db_login
+from config import DB_LOGIN
 from sqlalchemy import create_engine
 
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 trans = connection.begin()
 try:

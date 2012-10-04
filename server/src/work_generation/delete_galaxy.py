@@ -7,7 +7,7 @@ import argparse
 import logging
 import sys
 from sqlalchemy.sql.expression import func
-from config import db_login
+from config import DB_LOGIN
 from database.database_support import Galaxy, PixelFilter, PixelParameter, PixelHistogram, AreaUser, FitsHeader, Area, PixelResult
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -20,7 +20,7 @@ parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id or 4-30 if you n
 args = vars(parser.parse_args())
 
 # First check the galaxy exists in the database
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 

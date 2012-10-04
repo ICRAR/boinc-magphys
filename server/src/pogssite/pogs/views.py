@@ -1,6 +1,6 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import Context, loader
-from config import django_image_dir
+from config import DJANGO_IMAGE_DIR
 from image import fitsimage
 from pogs.models import Galaxy
 from pogs import PogsSession
@@ -123,7 +123,7 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     file = tmp[0]
     os.close(file)
 
-    imageDirName = django_image_dir
+    imageDirName = DJANGO_IMAGE_DIR
 
     outImageFileName = tmp[1]
 
@@ -322,7 +322,7 @@ def galaxyList(request):
     return response
 
 def galaxyImage(request, galaxy_id, colour):
-    imageDirName = django_image_dir
+    imageDirName = DJANGO_IMAGE_DIR
 
     session = PogsSession()
     galaxy_id = int(galaxy_id)
@@ -350,7 +350,7 @@ def galaxyImage(request, galaxy_id, colour):
     return response
 
 def galaxyThumbnailImage(request, galaxy_id, colour):
-    imageDirName = django_image_dir
+    imageDirName = DJANGO_IMAGE_DIR
 
     session = PogsSession()
     galaxy_id = int(galaxy_id)
@@ -378,7 +378,7 @@ def galaxyThumbnailImage(request, galaxy_id, colour):
     return response
 
 def galaxyParameterImage(request, galaxy_id, name):
-    imageDirName = django_image_dir
+    imageDirName = DJANGO_IMAGE_DIR
 
     session = PogsSession()
     galaxy_id = int(galaxy_id)

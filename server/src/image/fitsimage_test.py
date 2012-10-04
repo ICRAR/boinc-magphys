@@ -1,7 +1,4 @@
 import fitsimage
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from config import db_login
 import sys
 
 image = fitsimage.FitsImage()
@@ -27,7 +24,7 @@ outImageFileName = imageDirName + "/" + imagePrefixName + "_colour_1_mark.png"
 galaxy_id = 1;
 userid = 2
 
-#engine = create_engine(db_login)
+#engine = create_engine(DB_LOGIN)
 #Session = sessionmaker(bind=engine)
 #session = Session()
 

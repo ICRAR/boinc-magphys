@@ -1,5 +1,5 @@
 # Django settings for pogssite project.
-from config import db_name, db_hostname, db_password, db_userid, django_template_dir
+from config import DB_NAME, DB_HOSTNAME, DB_PASSWORD, DB_USER_ID, DJANGO_TEMPLATE_DIR
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -13,10 +13,10 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': db_name,                      # Or path to database file if using sqlite3.
-        'USER': db_userid,                    # Not used with sqlite3.
-        'PASSWORD': db_password,              # Not used with sqlite3.
-        'HOST': db_hostname,                  # Set to empty string for localhost. Not used with sqlite3.
+        'NAME': DB_NAME,                      # Or path to database file if using sqlite3.
+        'USER': DB_USER_ID,                   # Not used with sqlite3.
+        'PASSWORD': DB_PASSWORD,              # Not used with sqlite3.
+        'HOST': DB_HOSTNAME,                  # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '3306',                       # Set to empty string for default. Not used with sqlite3.
     }
 }
@@ -110,7 +110,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    django_template_dir,
+    DJANGO_TEMPLATE_DIR,
 )
 
 INSTALLED_APPS = (

@@ -17,7 +17,7 @@ import subprocess
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.expression import desc, and_
-from config import boinc_db_login, wg_threshold, wg_high_water_mark, db_login, wg_min_pixels_per_file, wg_row_height, wg_image_directory, wg_boinc_project_root
+from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT
 from database.boinc_database_support import Result
 from database.database_support import Register, FitsHeader, Galaxy, Area, PixelResult
 from image.fitsimage import FitsImage
@@ -33,20 +33,20 @@ args = vars(parser.parse_args())
 count = None
 if args['register'] is None:
     # select count(*) from result where server_state = 2
-    engine = create_engine(boinc_db_login)
+    engine = create_engine(BOINC_DB_LOGIN)
     Session = sessionmaker(bind=engine)
     session = Session()
     count = session.query(Result).filter(Result.server_state == 2).count()
     session.close()
 
-    LOG.info('Checking pending = %d : threshold = %d', count, wg_threshold)
+    LOG.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
 
-    if count >= wg_threshold:
+    if count >= WG_THRESHOLD:
         LOG.info('Nothing to do')
         exit(0)
 
 APP_NAME = "magphys_wrapper"
-BIN_PATH = wg_boinc_project_root + "/bin"
+BIN_PATH = WG_BOINC_PROJECT_ROOT + "/bin"
 TEMPLATES_PATH = "templates"                    # In true BOINC style, this is magically relative to the project root
 MIN_QUORUM = 2									# Validator run when there are at least this many results for a work unit
 TARGET_NRESULTS = MIN_QUORUM 					# Initially create this many instances of a work unit
@@ -57,10 +57,10 @@ FPOPS_EXP = "e12"
 COBBLESTONE_SCALING_FACTOR = 8.6
 
 # The BOINC scripts/apps do not feel at home outside their directory
-os.chdir(wg_boinc_project_root)
+os.chdir(WG_BOINC_PROJECT_ROOT)
 
 # Connect to the database - the login string is set in the database package
-engine = create_engine(db_login)
+engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -268,7 +268,7 @@ def get_pixels(hdu_list, pix_x, pix_y, end_x, end_y, layer_order):
     max_x = pix_x
     x = pix_x
     while x < end_x:
-        for y in range(pix_y, pix_y + wg_row_height):
+        for y in range(pix_y, pix_y + WG_ROW_HEIGHT):
             # Have we moved off the edge
             if y >= end_y:
                 continue
@@ -292,7 +292,7 @@ def get_pixels(hdu_list, pix_x, pix_y, end_x, end_y, layer_order):
                 result.append(Pixel(x, y, pixels))
 
         max_x = x
-        if len(result) > wg_min_pixels_per_file:
+        if len(result) > WG_MIN_PIXELS_PER_FILE:
             break
 
         x += 1
@@ -312,7 +312,7 @@ def create_areas(status, galaxy, hdu_list, pix_y, end_x, end_y, layer_order, pri
             area.top_x = pix_x
             area.top_y = pix_y
             area.bottom_x = max_x
-            area.bottom_y = min(pix_y + wg_row_height, end_y)
+            area.bottom_y = min(pix_y + WG_ROW_HEIGHT, end_y)
             session.add(area)
             session.flush()
 
@@ -340,7 +340,7 @@ def break_up_galaxy(galaxy, hdu_list, end_x, end_y, layer_order, priority):
     """
     status = Status()
     start_y = 0
-    for pix_y in range(start_y, end_y, wg_row_height):
+    for pix_y in range(start_y, end_y, WG_ROW_HEIGHT):
         create_areas(status, galaxy, hdu_list, pix_y, end_x, end_y, layer_order, priority)
 
     return status
@@ -412,9 +412,9 @@ def process_file(register):
 
     LOG.info('Building the images')
     image = FitsImage()
-    image.buildImage(register.filename, wg_image_directory, filePrefixName, "asinh", False, False, False)
+    image.buildImage(register.filename, WG_IMAGE_DIRECTORY, filePrefixName, "asinh", False, False, False)
 
-    shutil.copyfile(register.filename, image.get_file_path(wg_image_directory, fitsFileName, True))
+    shutil.copyfile(register.filename, image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
 
     return status
 
@@ -427,7 +427,7 @@ def process_file(register):
 # Normal operation
 files_processed = 0
 if args['register'] is None:
-    FILES_TO_PROCESS = wg_threshold - count + wg_high_water_mark
+    FILES_TO_PROCESS = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
 
     # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
     while files_processed < FILES_TO_PROCESS:

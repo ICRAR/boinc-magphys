@@ -12,18 +12,18 @@ import logging
 import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
-from config import db_login, boinc_db_login
+from config import DB_LOGIN, BOINC_DB_LOGIN
 from database.boinc_database_support import Workunit
 from database.database_support import Galaxy, Area, PixelResult
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-engine_magphys = create_engine(db_login)
+engine_magphys = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine_magphys)
 session_magphys = Session()
 
-engine_pogs = create_engine(boinc_db_login)
+engine_pogs = create_engine(BOINC_DB_LOGIN)
 Session = sessionmaker(bind=engine_pogs)
 session_pogs = Session()
 
