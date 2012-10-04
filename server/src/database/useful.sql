@@ -7,4 +7,4 @@ idx,concat(round(sum(data_length+index_length)/(1024*1024*1024),2),'G')
 total_size,round(sum(index_length)/sum(data_length),2) idxfrac
 FROM information_schema.TABLES group by table_schema;
 
-select table_name, round(((data_length + index_length) / (1024*1024)),2) as 'size in megs' from information_schema.tables where table_schema = 'magphys';
+select table_name, round(((data_length + index_length) / (1024*1024*1024)),2) as 'size in gigs' from information_schema.tables where table_schema = 'magphys';

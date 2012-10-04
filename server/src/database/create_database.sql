@@ -111,15 +111,18 @@ PARTITIONS 16;
 CREATE INDEX pxfilter_pxresult_ix ON pixel_filter(pxresult_id);
 
 CREATE TABLE pixel_parameter (
-  pxparameter_id      BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  pxresult_id         BIGINT UNSIGNED NOT NULL,
-  parameter_name_id   TINYINT NOT NULL,
-  percentile2_5       DOUBLE NOT NULL,
-  percentile16        DOUBLE NOT NULL,
-  percentile50        DOUBLE NOT NULL,
-  percentile84        DOUBLE NOT NULL,
-  percentile97_5      DOUBLE NOT NULL,
-  high_prob_bin_value DOUBLE NOT NULL,
+  pxparameter_id    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  pxresult_id       BIGINT UNSIGNED NOT NULL,
+  parameter_name_id TINYINT NOT NULL,
+  percentile2_5     DOUBLE NOT NULL,
+  percentile16      DOUBLE NOT NULL,
+  percentile50      DOUBLE NOT NULL,
+  percentile84      DOUBLE NOT NULL,
+  percentile97_5    DOUBLE NOT NULL,
+  high_prob_bin     DOUBLE NOT NULL,
+  first_prob_bin    DOUBLE NOT NULL,
+  last_prob_bin     DOUBLE NOT NULL,
+  bin_step          DOUBLE NOT NULL,
   KEY (pxparameter_id)
 ) CHARACTER SET utf8 ENGINE=InnoDB
 PARTITION BY KEY (pxresult_id)
@@ -182,3 +185,44 @@ INSERT INTO parameter_name VALUES (13, 'xi_W^tot');
 INSERT INTO parameter_name VALUES (14, 'tau_V^ISM');
 INSERT INTO parameter_name VALUES (15, 'M(dust)');
 INSERT INTO parameter_name VALUES (16, 'SFR_0.1Gyr');
+
+CREATE TABLE filter (
+  filter_id     TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+  name          VARCHAR(30) NOT NULL,
+  eff_lambda    DECIMAL(10, 4) NOT NULL,
+  filter_number SMALLINT NOT NULL,
+  sort_order    SMALLINT NOT NULL,
+  ultraviolet   TINYINT(1) NOT NULL,
+  optical       TINYINT(1) NOT NULL,
+  infrared      TINYINT(1) NOT NULL
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+INSERT INTO filter VALUES (0,  'GALEXFUV', 0.152,  123, 0,  1, 0, 0);
+INSERT INTO filter VALUES (1,  'GALEXNUV', 0.231,  124, 1,  1, 0, 0);
+INSERT INTO filter VALUES (2,  'SDSSu',    0.3534, 229, 2,  0, 1, 0);
+INSERT INTO filter VALUES (3,  'SDSSg',    0.4742, 230, 3,  0, 1, 0);
+INSERT INTO filter VALUES (4,  'PS1g',     0.481,  323, 4,  0, 1, 0);
+INSERT INTO filter VALUES (5,  'PS1r',     0.617,  324, 5,  0, 1, 0);
+INSERT INTO filter VALUES (6,  'SDSSr',    0.6189, 231, 6,  0, 1, 0);
+INSERT INTO filter VALUES (7,  'PS1i',     0.752,  325, 7,  0, 1, 0);
+INSERT INTO filter VALUES (8,  'SDSSi',    0.7595, 232, 8,  0, 1, 0);
+INSERT INTO filter VALUES (9,  'PS1z',     0.866,  326, 9,  0, 1, 0);
+INSERT INTO filter VALUES (10, 'SDSSz',    0.9032, 233, 10, 0, 1, 0);
+INSERT INTO filter VALUES (11, 'PS1y',     0.962,  327, 11, 0, 1, 0);
+INSERT INTO filter VALUES (12, 'WISEW1',   3.4,    280, 12, 0, 0, 1);
+INSERT INTO filter VALUES (13, 'IRAC3.6',  3.550,  153, 13, 0, 0, 1);
+INSERT INTO filter VALUES (14, 'IRAC4.5',  4.493,  154, 14, 0, 0, 1);
+INSERT INTO filter VALUES (15, 'WISEW2',   4.6,    281, 15, 0, 0, 1);
+INSERT INTO filter VALUES (16, 'IRAC5.8',  5.731,  155, 16, 0, 0, 1);
+INSERT INTO filter VALUES (17, 'IRAC8.0',  7.872,  156, 17, 0, 0, 1);
+INSERT INTO filter VALUES (18, 'WISEW3',   12.0,   282, 18, 0, 0, 1);
+INSERT INTO filter VALUES (19, 'WISEW4',   22.0,   283, 19, 0, 0, 1);
+INSERT INTO filter VALUES (20, 'MIPS24',   23.68,  157, 20, 0, 0, 1);
+INSERT INTO filter VALUES (21, 'MIPS70',   71.42,  158, 21, 0, 0, 1);
+INSERT INTO filter VALUES (22, 'PACS75',   75.0,   169, 22, 0, 0, 1);
+INSERT INTO filter VALUES (23, 'PACS110',  110.0,  170, 23, 0, 0, 1);
+INSERT INTO filter VALUES (24, 'MIPS160',  155.9,  159, 24, 0, 0, 1);
+INSERT INTO filter VALUES (25, 'PACS170',  170.0,  171, 25, 0, 0, 1);
+INSERT INTO filter VALUES (26, 'SPIRE250', 250.0,  172, 26, 0, 0, 1);
+INSERT INTO filter VALUES (27, 'SPIRE350', 350.0,  173, 27, 0, 0, 1);
+INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 28, 0, 0, 1);

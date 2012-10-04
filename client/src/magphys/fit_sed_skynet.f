@@ -998,7 +998,7 @@ c     --------------------------------------------------------------------------
 
 c theSkyNet
  900     format('# theSkyNet2')
- 901     format(16(0pf10.4))
+ 901     format(4(0pf10.4))
 c theSkyNet
 
          write(31,806)
@@ -1011,7 +1011,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(psfh2, fmu2_hist, nbin2_fmu)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, fmu2_hist(1), fmu2_hist(nbin2_fmu), fmu2_hist(2) - fmu2_hist(1)
 c theSkyNet
 
          write(31,808)
@@ -1024,7 +1024,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pir2, fmu2_hist, nbin2_fmu)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, fmu2_hist(1), fmu2_hist(nbin2_fmu), fmu2_hist(2) - fmu2_hist(1)
 c theSkyNet
 
          write(31,809)
@@ -1037,7 +1037,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pmu2, mu2_hist, nbin2_mu)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, mu2_hist(1), mu2_hist(nbin2_mu), mu2_hist(2) - mu2_hist(1)
 c theSkyNet
 
          write(31,810)
@@ -1050,7 +1050,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(ptv2, tv2_hist, nbin2_tv)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, tv2_hist(1), tv2_hist(nbin2_tv), tv2_hist(2) - tv2_hist(1)
 c theSkyNet
 
          write(31,811)
@@ -1064,7 +1064,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pssfr2, ssfr2_hist, nbin2_ssfr)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, ssfr2_hist(1), ssfr2_hist(nbin2_ssfr), ssfr2_hist(2) - ssfr2_hist(1)
 c theSkyNet
 
          write(31,813)
@@ -1077,7 +1077,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pa2, a2_hist, nbin2_a)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, a2_hist(1), a2_hist(nbin2_a), a2_hist(2) - a2_hist(1)
 c theSkyNet
 
          write(31,814)
@@ -1090,7 +1090,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pldust2, ld2_hist, nbin2_ld)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, ld2_hist(1), ld2_hist(nbin2_ld), ld2_hist(2) - ld2_hist(1)
 c theSkyNet
 
          write(31,815)
@@ -1103,7 +1103,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(ptbg2_2, tbg2_2_hist, nbin2_tbg2)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, tbg2_2_hist(1), tbg2_2_hist(nbin2_tbg2), tbg2_2_hist(2) - tbg2_2_hist(1)
 c theSkyNet
 
          write(31,820)
@@ -1116,7 +1116,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(ptbg1_2, tbg1_2_hist, nbin2_tbg1)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, tbg1_2_hist(1), tbg1_2_hist(nbin2_tbg1), tbg1_2_hist(2) - tbg1_2_hist(1)
 c theSkyNet
 
          write(31,821)
@@ -1129,7 +1129,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pism2, fmuism2_hist, nbin2_fmu_ism)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, fmuism2_hist(1), fmuism2_hist(nbin2_fmu_ism), fmuism2_hist(2) - fmuism2_hist(1)
 c theSkyNet
 
          write(31,816)
@@ -1142,7 +1142,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pxi1_2, xi2_hist, nbin2_xi)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, xi2_hist(1), xi2_hist(nbin2_xi), xi2_hist(2) - xi2_hist(1)
 c theSkyNet
 
          write(31,817)
@@ -1155,7 +1155,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pxi2_2, xi2_hist, nbin2_xi)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, xi2_hist(1), xi2_hist(nbin2_xi), xi2_hist(2) - xi2_hist(1)
 c theSkyNet
 
          write(31,818)
@@ -1168,7 +1168,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pxi3_2, xi2_hist, nbin2_xi)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, xi2_hist(1), xi2_hist(nbin2_xi), xi2_hist(2) - xi2_hist(1)
 c theSkyNet
 
          write(31,81)
@@ -1181,7 +1181,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(ptvism2, tvism2_hist, nbin2_tvism)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, tvism2_hist(1), tvism2_hist(nbin2_tvism), tvism2_hist(2) - tvism2_hist(1)
 c theSkyNet
 
          write(31,888)
@@ -1194,7 +1194,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(pmd_2, md2_hist, nbin2_md)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, md2_hist(1), md2_hist(nbin2_md), md2_hist(2) - md2_hist(1)
 c theSkyNet
 
          write(31,889)
@@ -1207,7 +1207,7 @@ c theSkyNet
 c theSkyNet
          hpbv = get_hpbv(psfr2, sfr2_hist, nbin2_sfr)
          write(31, 900)
-         write(31, 901) hpbv
+         write(31, 901) hpbv, sfr2_hist(1), sfr2_hist(nbin2_sfr), sfr2_hist(2) - sfr2_hist(1)
 c theSkyNet
 
 c     ---------------------------------------------------------------------------

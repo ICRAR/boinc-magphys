@@ -114,15 +114,18 @@ class PixelFilter(Base):
 class PixelParameter(Base):
     __tablename__ = 'pixel_parameter'
 
-    pxparameter_id = Column(BigInteger, primary_key=True)
-    pxresult_id    = Column(BigInteger, ForeignKey('pixel_result.pxresult_id'))
-    parameter_id   = Column(Integer)
-    percentile2_5  = Column(Float)
-    percentile16   = Column(Float)
-    percentile50   = Column(Float)
-    percentile84   = Column(Float)
-    percentile97_5 = Column(Float)
-    high_prob_bin_value = Column(Float)
+    pxparameter_id    = Column(BigInteger, primary_key=True)
+    pxresult_id       = Column(BigInteger, ForeignKey('pixel_result.pxresult_id'))
+    parameter_name_id = Column(Integer)
+    percentile2_5     = Column(Float)
+    percentile16      = Column(Float)
+    percentile50      = Column(Float)
+    percentile84      = Column(Float)
+    percentile97_5    = Column(Float)
+    high_prob_bin     = Column(Float)
+    first_prob_bin    = Column(Float)
+    last_prob_bin     = Column(Float)
+    bin_step          = Column(Float)
 
     result = relationship("PixelResult", backref=backref('parameters', order_by=pxparameter_id))
 
@@ -155,3 +158,14 @@ class ParameterName(Base):
 
     parameter_name_id = Column(Integer, primary_key=True)
     name              = Column(String(100))
+
+class Filter(Base):
+    __tablename__ = 'filter'
+    filter_id     = Column(Integer, primary_key=True)
+    name          = Column(String(30))
+    eff_lambda    = Column(Float)
+    filter_number = Column(Integer)
+    sort_order    = Column(Integer)
+    ultraviolet   = Column(Integer)
+    optical       = Column(Integer)
+    infrared      = Column(Integer)

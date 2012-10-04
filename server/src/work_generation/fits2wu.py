@@ -19,9 +19,9 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.expression import desc, and_
 from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT
 from database.boinc_database_support import Result
-from database.database_support import Register, FitsHeader, Galaxy, Area, PixelResult
+from database.database_support import Register, FitsHeader, Galaxy, Area, PixelResult, Filter
 from image.fitsimage import FitsImage
-from work_generation import FILTER_BANDS, ULTRAVIOLET_BANDS, OPTICAL_BANDS, INFRARED_BANDS, HEADER_PATTERNS
+from work_generation import HEADER_PATTERNS
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -63,6 +63,23 @@ os.chdir(WG_BOINC_PROJECT_ROOT)
 engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
+
+# Build the filter tables I need
+FILTER_BANDS = []
+ULTRAVIOLET_BANDS = {}
+OPTICAL_BANDS = {}
+INFRARED_BANDS = {}
+for filter in session.query(Filter).order_by(Filter.sort_order).all():
+    FILTER_BANDS.append(filter.name)
+
+    if filter.infrared == 1:
+        INFRARED_BANDS[filter.name] = filter.sort_order
+
+    if filter.optical == 1:
+        OPTICAL_BANDS[filter.name] = filter.sort_order
+
+    if filter.ultraviolet == 1:
+        ULTRAVIOLET_BANDS[filter.name] = filter.sort_order
 
 ## ######################################################################## ##
 ##

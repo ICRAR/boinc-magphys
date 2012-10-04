@@ -62,27 +62,51 @@ def create_version_xml(platform, app_version, directory, exe):
         <gzip/>
     </file>
     <file>
-        <physical_name>infrared_dce08_z0.0100.lbr_{1}</physical_name>
+        <physical_name>infrared_dce08_z0.0250.lbr_{1}</physical_name>
         <copy_file/>
-        <logical_name>infrared_dce08_z0.0100.lbr</logical_name>
+        <logical_name>infrared_dce08_z0.0250.lbr</logical_name>
         <gzip/>
     </file>
     <file>
-        <physical_name>starformhist_cb07_z0.0100.lbr_{1}</physical_name>
+        <physical_name>starformhist_cb07_z0.0250.lbr_{1}</physical_name>
         <copy_file/>
-        <logical_name>starformhist_cb07_z0.0100.lbr</logical_name>
+        <logical_name>starformhist_cb07_z0.0250.lbr</logical_name>
         <gzip/>
     </file>
     <file>
-        <physical_name>infrared_dce08_z0.0200.lbr_{1}</physical_name>
+        <physical_name>infrared_dce08_z0.0500.lbr_{1}</physical_name>
         <copy_file/>
-        <logical_name>infrared_dce08_z0.0200.lbr</logical_name>
+        <logical_name>infrared_dce08_z0.0500.lbr</logical_name>
         <gzip/>
     </file>
     <file>
-        <physical_name>starformhist_cb07_z0.0200.lbr_{1}</physical_name>
+        <physical_name>starformhist_cb07_z0.0500.lbr_{1}</physical_name>
         <copy_file/>
-        <logical_name>starformhist_cb07_z0.0200.lbr</logical_name>
+        <logical_name>starformhist_cb07_z0.0500.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>infrared_dce08_z0.0750.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>infrared_dce08_z0.0750.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>starformhist_cb07_z0.0750.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>starformhist_cb07_z0.0750.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>infrared_dce08_z0.1000.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>infrared_dce08_z0.1000.lbr</logical_name>
+        <gzip/>
+    </file>
+    <file>
+        <physical_name>starformhist_cb07_z0.1000.lbr_{1}</physical_name>
+        <copy_file/>
+        <logical_name>starformhist_cb07_z0.1000.lbr</logical_name>
         <gzip/>
     </file>
     <file>
@@ -209,10 +233,10 @@ def edit_files():
       <output> build_png_image.out </output>
     </task>
     <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/obsfiles2wu.py /home/ec2-user/f2wu /home/ec2-user/projects/{0} -t 1500 </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/fits2wu.py </cmd>
       <period> 1 hour </period>
       <disabled> 0 </disabled>
-      <output> obsfiles2wu.out </output>
+      <output> fits2wu.out </output>
     </task>
     <task>
       <cmd>census</cmd>
@@ -241,14 +265,14 @@ def edit_files():
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 3 1 </cmd>
-      <output> assimilator.2.log </output>
-      <pid> assimilator.2.pid </pid>
+      <output> assimilator.1.log </output>
+      <pid> assimilator.1.pid </pid>
       <disabled>0</disabled>
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 3 2 </cmd>
-      <output> assimilator.1.log </output>
-      <pid> assimilator.1.pid </pid>
+      <output> assimilator.2.log </output>
+      <pid> assimilator.2.pid </pid>
       <disabled>0</disabled>
     </daemon>
   </daemons>'''.format(env.project_name))

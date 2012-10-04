@@ -191,7 +191,7 @@ for galaxy in galaxies:
 
                 if highest_prob_bin_v_:
                     # Have we worked this value out before
-                    if pixel_parameter.high_prob_bin_value is None:
+                    if pixel_parameter.high_prob_bin is None:
                         mhv = session.query(func.max(PixelHistogram.hist_value).label('max_hist_value')).filter(
                             and_(PixelHistogram.pxresult_id == row.pxresult_id,
                                 PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id)).subquery('mhv')
@@ -202,10 +202,10 @@ for galaxy in galaxies:
 
                         if pixel_histogram is not None:
                             array_highest_prob_bin_v[row.y, row.x, index] = pixel_histogram.x_axis
-                            pixel_parameter.high_prob_bin_value = pixel_histogram.x_axis
+                            pixel_parameter.high_prob_bin = pixel_histogram.x_axis
 
                     else:
-                        array_highest_prob_bin_v[row.y, row.x, index] = pixel_parameter.high_prob_bin_value
+                        array_highest_prob_bin_v[row.y, row.x, index] = pixel_parameter.high_prob_bin
 
     # Commit any changes
     session.commit()
@@ -268,8 +268,8 @@ for galaxy in galaxies:
                 hdu_list[0].header.update(key, value)
 
             if galaxy.version_number == 1:
-                hdu_list.writeto('{0}/{1}_{2}_high_prob_bin_value.fits'.format(directory, galaxy.name, tuple[0]), clobber=True)
+                hdu_list.writeto('{0}/{1}_{2}_high_prob_bin.fits'.format(directory, galaxy.name, tuple[0]), clobber=True)
             else:
-                hdu_list.writeto('{0}/{1}_V{3}_{2}_high_prob_bin_value.fits'.format(directory, galaxy.name, tuple[0], galaxy.version_number), clobber=True)
+                hdu_list.writeto('{0}/{1}_V{3}_{2}_high_prob_bin.fits'.format(directory, galaxy.name, tuple[0], galaxy.version_number), clobber=True)
 
 LOG.info('Done')

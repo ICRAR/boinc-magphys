@@ -217,7 +217,10 @@ class MagphysAssimilator(assimilator.Assimilator):
                         elif skynet_next2:
                             # We have the highest bin probability values which require the parameter_id
                             values = line.split()
-                            parameter.high_prob_bin_value = float(values[0])
+                            parameter.high_prob_bin = float(values[0])
+                            parameter.first_prob_bin = float(values[1])
+                            parameter.last_prob_bin = float(values[2])
+                            parameter.bin_step = float(values[3])
                             skynet_next2 = False
 
         except IOError:
