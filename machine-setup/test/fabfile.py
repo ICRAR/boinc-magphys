@@ -330,8 +330,7 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
 
     # Mark the python scripts as executable
     run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py')
-    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/work_generation/fits2obsfiles.py')
-    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/work_generation/obsfiles2wu.py')
+    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/work_generation/fits2wu.py')
     run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/credit/assign_credit.py')
     run('chmod oug+x /home/ec2-user/boinc-magphys/post-processing/src/build_fits_image.py')
     run('chmod oug+x /home/ec2-user/boinc-magphys/post-processing/src/build_png_image.py')
