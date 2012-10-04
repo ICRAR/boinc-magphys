@@ -15,7 +15,7 @@ from sqlalchemy.orm.session import sessionmaker
 import sys
 from sqlalchemy.sql.expression import func, and_
 from config import db_login
-from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area, PixelHistogram, ParameterAggregate
+from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area, PixelHistogram
 from utils.writeable_dir import WriteableDir
 
 LOG = logging.getLogger(__name__)
@@ -191,7 +191,7 @@ for galaxy in galaxies:
 
                 if highest_prob_bin_v_:
                     # Have we worked this value out before
-                    if pixel_parameter.aggregate is None:
+                    if pixel_parameter.high_prob_bin_value is None:
                         mhv = session.query(func.max(PixelHistogram.hist_value).label('max_hist_value')).filter(
                             and_(PixelHistogram.pxresult_id == row.pxresult_id,
                                 PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id)).subquery('mhv')
@@ -200,15 +200,12 @@ for galaxy in galaxies:
                                 PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id,
                                 PixelHistogram.hist_value == mhv.c.max_hist_value)).first()
 
-                        parameter_aggregate = ParameterAggregate()
-                        parameter_aggregate.pxparameter_id = pixel_parameter.pxparameter_id
                         if pixel_histogram is not None:
                             array_highest_prob_bin_v[row.y, row.x, index] = pixel_histogram.x_axis
-                            parameter_aggregate.high_prob_bin_value = pixel_histogram.x_axis
-                        session.add(parameter_aggregate)
+                            pixel_parameter.high_prob_bin_value = pixel_histogram.x_axis
 
-                    elif pixel_parameter.aggregate.high_prob_bin_value is not None:
-                        array_highest_prob_bin_v[row.y, row.x, index] = pixel_parameter.aggregate.high_prob_bin_value
+                    else:
+                        array_highest_prob_bin_v[row.y, row.x, index] = pixel_parameter.high_prob_bin_value
 
     # Commit any changes
     session.commit()

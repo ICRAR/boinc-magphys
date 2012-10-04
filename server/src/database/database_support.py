@@ -116,15 +116,15 @@ class PixelParameter(Base):
 
     pxparameter_id = Column(BigInteger, primary_key=True)
     pxresult_id    = Column(BigInteger, ForeignKey('pixel_result.pxresult_id'))
-    parameter_name = Column(String(100))
+    parameter_id   = Column(Integer)
     percentile2_5  = Column(Float)
     percentile16   = Column(Float)
     percentile50   = Column(Float)
     percentile84   = Column(Float)
     percentile97_5 = Column(Float)
+    high_prob_bin_value = Column(Float)
 
     result = relationship("PixelResult", backref=backref('parameters', order_by=pxparameter_id))
-    aggregate = relationship("ParameterAggregate", uselist=False, backref="parameter")
 
 class PixelHistogram(Base):
     __tablename__ = 'pixel_histogram'
@@ -150,10 +150,8 @@ class Register(Base):
     register_time = Column(TIMESTAMP)
     create_time   = Column(TIMESTAMP)
 
-# If the DB is offline at sometime this should be moved into PixelParameter.
-# But I can't really take down the running system
-class ParameterAggregate(Base):
-    __tablename__ = 'parameter_aggregate'
+class ParameterName(Base):
+    __tablename__ = 'parameter_name'
 
-    pxparameter_id      = Column(BigInteger, ForeignKey('pixel_parameter.pxparameter_id'), primary_key=True)
-    high_prob_bin_value = Column(Float)
+    parameter_name_id = Column(Integer, primary_key=True)
+    name              = Column(String(100))

@@ -8,7 +8,7 @@ import logging
 import sys
 from sqlalchemy.sql.expression import func
 from config import db_login
-from database.database_support import Galaxy, PixelFilter, PixelParameter, PixelHistogram, AreaUser, FitsHeader, Area, PixelResult, ParameterAggregate
+from database.database_support import Galaxy, PixelFilter, PixelParameter, PixelHistogram, AreaUser, FitsHeader, Area, PixelResult
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -47,9 +47,6 @@ for galaxy_id_str in galaxy_ids:
             for pxresult_id1 in session.query(PixelResult.pxresult_id).filter_by(area_id=area_id1[0]).order_by(PixelResult.pxresult_id).all():
                 print("Deleting galaxy {0} area {1} pixel {2}".format(galaxy_id_str, area_id1[0], pxresult_id1[0]), end="\r")
                 sys.stdout.flush()
-
-                for pxparameter_id1 in session(PixelParameter.pxparameter_id).filter_by(pxresult_id=pxresult_id1[0]).all():
-                    session.query(ParameterAggregate).filter_by(pxparameter_id=pxparameter_id1[0]).delete()
 
                 session.query(PixelFilter).filter_by(pxresult_id=pxresult_id1[0]).delete()
                 session.query(PixelParameter).filter_by(pxresult_id=pxresult_id1[0]).delete()

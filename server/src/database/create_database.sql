@@ -111,14 +111,15 @@ PARTITIONS 16;
 CREATE INDEX pxfilter_pxresult_ix ON pixel_filter(pxresult_id);
 
 CREATE TABLE pixel_parameter (
-  pxparameter_id     BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  pxresult_id        BIGINT UNSIGNED NOT NULL,
-  parameter_name     VARCHAR(100) NOT NULL,
-  percentile2_5      DOUBLE NOT NULL,
-  percentile16       DOUBLE NOT NULL,
-  percentile50       DOUBLE NOT NULL,
-  percentile84       DOUBLE NOT NULL,
-  percentile97_5     DOUBLE NOT NULL,
+  pxparameter_id      BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  pxresult_id         BIGINT UNSIGNED NOT NULL,
+  parameter_name_id   TINYINT NOT NULL,
+  percentile2_5       DOUBLE NOT NULL,
+  percentile16        DOUBLE NOT NULL,
+  percentile50        DOUBLE NOT NULL,
+  percentile84        DOUBLE NOT NULL,
+  percentile97_5      DOUBLE NOT NULL,
+  high_prob_bin_value DOUBLE NOT NULL,
   KEY (pxparameter_id)
 ) CHARACTER SET utf8 ENGINE=InnoDB
 PARTITION BY KEY (pxresult_id)
@@ -160,8 +161,24 @@ CREATE TABLE register (
 CREATE INDEX register_galaxy_name_ix ON register(galaxy_name);
 CREATE INDEX register_time_ix ON register(create_time, register_time);
 
-CREATE TABLE parameter_aggregate (
-  pxparameter_id      BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-  high_prob_bin_value DOUBLE
+CREATE TABLE parameter_name (
+  parameter_name_id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+  name              VARCHAR(100) NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+INSERT INTO parameter_name VALUES (1, 'f_mu (SFH)');
+INSERT INTO parameter_name VALUES (2, 'f_mu (IR)');
+INSERT INTO parameter_name VALUES (3, 'mu parameter');
+INSERT INTO parameter_name VALUES (4, 'tau_V');
+INSERT INTO parameter_name VALUES (5, 'sSFR_0.1Gyr');
+INSERT INTO parameter_name VALUES (6, 'M(stars)');
+INSERT INTO parameter_name VALUES (7, 'Ldust');
+INSERT INTO parameter_name VALUES (8, 'T_C^ISM');
+INSERT INTO parameter_name VALUES (9, 'T_W^BC');
+INSERT INTO parameter_name VALUES (10, 'xi_C^tot');
+INSERT INTO parameter_name VALUES (11, 'xi_PAH^tot');
+INSERT INTO parameter_name VALUES (12, 'xi_MIR^tot');
+INSERT INTO parameter_name VALUES (13, 'xi_W^tot');
+INSERT INTO parameter_name VALUES (14, 'tau_V^ISM');
+INSERT INTO parameter_name VALUES (15, 'M(dust)');
+INSERT INTO parameter_name VALUES (16, 'SFR_0.1Gyr');

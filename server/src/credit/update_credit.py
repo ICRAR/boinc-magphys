@@ -3,11 +3,8 @@
 Job to recalculate the number of pixels processed by each user.
 """
 
-import os, re, sys
-
 from config import db_login
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 engine = create_engine(db_login)
 connection = engine.connect()

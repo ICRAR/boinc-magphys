@@ -19,12 +19,10 @@ FILTER_BANDS = [
     'WISEW4',    # 10
     ]
 
-INFRARED_BANDS = {
-    'WISEW1': 7,
-    'WISEW2': 8,
-    'WISEW3': 9,
-    'WISEW4': 10,
-}
+ULTRAVIOLET_BANDS = {
+    'GALEXFUV': 0,
+    'GALEXNUV': 1,
+    }
 
 OPTICAL_BANDS = {
     'SDSSu': 2,
@@ -34,10 +32,12 @@ OPTICAL_BANDS = {
     'SDSSz': 6,
 }
 
-ULTRAVIOLET_BANDS = {
-    'GALEXFUV': 0,
-    'GALEXNUV': 1,
-}
+INFRARED_BANDS = {
+    'WISEW1': 7,
+    'WISEW2': 8,
+    'WISEW3': 9,
+    'WISEW4': 10,
+    }
 
 HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
                    re.compile('CROTA[0-9]+'),

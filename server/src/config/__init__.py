@@ -70,3 +70,8 @@ else:
     wg_row_height = 10
     wg_threshold = 1500
     wg_high_water_mark = 3000
+
+############### Work Generation Settings ###############
+
+# Any probability in the pixel histogram less than this is considered to be 0 and ignored
+MIN_HIST_VALUE = 0.000001

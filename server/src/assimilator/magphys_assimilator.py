@@ -9,8 +9,8 @@ import gzip, os, sys, traceback, datetime
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
 from assimilator_utils import is_gzip
-from config import db_login
-from database.database_support import AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram, ParameterAggregate
+from config import db_login, MIN_HIST_VALUE
+from database.database_support import AreaUser, PixelResult, PixelFilter, PixelParameter, PixelHistogram, ParameterName
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -25,6 +25,12 @@ class MagphysAssimilator(assimilator.Assimilator):
         # Login is set in the database package
         engine = create_engine(db_login)
         self.Session = sessionmaker(bind=engine)
+        self.map_parameter_name = {}
+
+        session = self.Session()
+        for parameter_name in session.query(ParameterName).all():
+            self.map_parameter_name[parameter_name.name] = parameter_name.parameter_name_id
+        session.close()
 
     def get_output_file_infos(self, result, list):
         """
@@ -162,7 +168,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             parts = line.split('...')
                             parameterName = parts[1].strip()
                             parameter = PixelParameter()
-                            parameter.parameter_name = parameterName
+                            parameter.parameter_id = self.map_parameter_name[parameterName]
                             pxresult.parameters.append(parameter)
                             percentiles_next = False
                             histogram_next = True
@@ -178,7 +184,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             histogram_next = False
                             skynet_next1 = True
                             skynet_next2 = False
-                        elif line.startswith("#.theSkyNet2 "):
+                        elif line.startswith("# theSkyNet2 "):
                             percentiles_next = False
                             histogram_next = False
                             skynet_next1 = False
@@ -192,11 +198,11 @@ class MagphysAssimilator(assimilator.Assimilator):
                             parameter.percentile97_5 = float(values[4])
                             percentiles_next = False
                         elif histogram_next:
-                            hist = PixelHistogram()
-                            hist.pxresult_id = pxresult.pxresult_id
                             values = line.split()
                             hist_value = float(values[1])
-                            if hist_value != 0 and not math.isnan(hist_value):
+                            if hist_value > MIN_HIST_VALUE and not math.isnan(hist_value):
+                                hist = PixelHistogram()
+                                hist.pxresult_id = pxresult.pxresult_id
                                 hist.x_axis = float(values[0])
                                 hist.hist_value = hist_value
                                 parameter.histograms.append(hist)
@@ -210,16 +216,8 @@ class MagphysAssimilator(assimilator.Assimilator):
                             skynet_next1 = False
                         elif skynet_next2:
                             # We have the highest bin probability values which require the parameter_id
-                            session.flush()
                             values = line.split()
-                            index = 0
-                            for parameter1 in pxresult.parameters:
-                                if index < len(values):
-                                    parameter_aggregate = ParameterAggregate()
-                                    parameter_aggregate.pxparameter_id = parameter1.pxparameter_id
-                                    parameter_aggregate.high_prob_bin_value = values[index]
-                                    session.add(parameter_aggregate)
-                                index += 1
+                            parameter.high_prob_bin_value = float(values[0])
                             skynet_next2 = False
 
         except IOError:

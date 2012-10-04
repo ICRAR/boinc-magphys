@@ -4,14 +4,18 @@ Job to assign any credits in the "credited_job" table to the "area_user" table i
 and to remove the rows from "credited_job" table once they have been assigned to the area.
 """
 
-import os, re, sys
+import sys
 import boinc_path_config
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages, db_base
+import logging
 
 from config import db_login
 from database.database_support import Area, AreaUser
 from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import sessionmaker
+
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 class AssignCredit:
     def __init__(self):
@@ -34,7 +38,7 @@ class AssignCredit:
                 arg = args.pop()
                 self.appname = arg
             else:
-                self.logCritical("Unrecognized arg: %s\n", arg)
+                LOG.critical("Unrecognized arg: %s\n", arg)
 
     def run(self):
         self.parse_args(sys.argv[1:])
