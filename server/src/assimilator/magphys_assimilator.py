@@ -173,6 +173,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             parameter.parameter_id = self.map_parameter_name[parameterName]
                             # TODO
                             if parameter.parameter_id is None:
+                                self.logCritical('Fatal error\n')
                                 for key, value in self.map_parameter_name.iteritems() :
                                     self.logNormal('Key %s Vale %d\n', key, value)
                                 sys.exit(1)
