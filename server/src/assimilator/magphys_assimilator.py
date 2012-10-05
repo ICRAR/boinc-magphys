@@ -32,6 +32,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         for parameter_name in session.query(ParameterName).all():
             self.map_parameter_name[parameter_name.name] = parameter_name.parameter_name_id
         session.close()
+        self.logNormal('')
 
     def get_output_file_infos(self, result, list):
         """
@@ -170,6 +171,11 @@ class MagphysAssimilator(assimilator.Assimilator):
                             parameterName = parts[1].strip()
                             parameter = PixelParameter()
                             parameter.parameter_id = self.map_parameter_name[parameterName]
+                            # TODO
+                            if parameter.parameter_id is None:
+                                for key, value in self.map_parameter_name.iteritems() :
+                                    self.logNormal('Key %s Vale %d\n', key, value)
+                                sys.exit(1)
                             pxresult.parameters.append(parameter)
                             percentiles_next = False
                             histogram_next = True
@@ -236,7 +242,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         """
         Process the Results.
         """
-        self.logDebug("Start of assimilate_handler for %d\n", wu.id)
+        self.logDebug("Start of assimilate_handler for wu %d\n", wu.id)
         try:
             if wu.canonical_result:
                 outFile = self.get_file_path(canonical_result)
