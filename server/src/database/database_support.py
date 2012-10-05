@@ -169,3 +169,12 @@ class Filter(Base):
     ultraviolet   = Column(Integer)
     optical       = Column(Integer)
     infrared      = Column(Integer)
+
+class ImageFiltersUsed(Base):
+    __tablename__ = 'image_filters_used'
+
+    image_filters_used_id = Column(BigInteger, primary_key=True)
+    name                  = Column(String(1000))
+    filter_number_red     = Column(Integer)
+    filter_number_green   = Column(Integer)
+    filter_number_blue    = Column(Integer)

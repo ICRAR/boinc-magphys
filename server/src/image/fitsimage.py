@@ -1,12 +1,16 @@
 """
 Image generation
 """
+import logging
 import pyfits
-from PIL import Image
 import math
 import os, hashlib
-from database.database_support import Galaxy, Area, AreaUser
 import numpy
+from database.database_support import Galaxy, Area, AreaUser, ImageFiltersUsed
+from PIL import Image
+
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 class ImageBuilder:
     """
@@ -36,7 +40,7 @@ class ImageBuilder:
 
     centre = 0.6
 
-    def __init__(self, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre):
+    def __init__(self, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre, session):
         self.imageFileName = imageFileName
         self.thumbnailFileName = thumbnailFileName
         self.redFilter = redFilter
@@ -47,6 +51,13 @@ class ImageBuilder:
         self.debug = debug
         self.centre = centre
         self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
+
+        image_filters_used = ImageFiltersUsed()
+        image_filters_used.name = imageFileName
+        image_filters_used.filter_number_red = redFilter
+        image_filters_used.filter_number_blue = blueFilter
+        image_filters_used.filter_number_green = greenFilter
+        session.add(image_filters_used)
 
     def setData(self, filter, data):
         values = []
@@ -94,15 +105,11 @@ class ImageBuilder:
         redSigma = self.centre / self.redMedian
         greenSigma = self.centre / self.greenMedian
         blueSigma = self.centre / self.blueMedian
-        if self.debug:
-            print 'Red', self.redMedian, self.redHiCut, self.redScale, redSigma
-            print 'Green', self.greenMedian, self.greenHiCut, self.greenScale, greenSigma
-            print 'Blue', self.blueMedian, self.blueHiCut, self.blueScale, blueSigma
 
         redMult = 255.0 / math.asinh(self.redHiCut * redSigma)
         greenMult = 255.0 / math.asinh(self.greenHiCut * greenSigma)
         blueMult = 255.0 / math.asinh(self.blueHiCut * blueSigma)
-        #print 'HiCut', self.hiCut, 'Multiplier', mult, self.redScale, self.greenScale, self.blueScale, self.redMedian/self.sigma, self.greenMedian/self.sigma, self.blueMedian/self.sigma
+
         redValuerange = []
         greenValuerange = []
         blueValuerange = []
@@ -142,9 +149,9 @@ class ImageBuilder:
                     green = int(green)
                     blue = int(blue)
 
-                    redValuerange[red] = redValuerange[red] + 1
-                    greenValuerange[green] = greenValuerange[green] + 1
-                    blueValuerange[blue] = blueValuerange[blue] + 1
+                    redValuerange[red] += 1
+                    greenValuerange[green] += 1
+                    blueValuerange[blue] += 1
                     self.image.putpixel((x,self.width-y-1), (red, green, blue))
         self.image.save(self.imageFileName)
 
@@ -162,28 +169,65 @@ class FitsImage:
     centre = 0.5
 
     def __init__(self):
-        pass
+        self.sigma = None
 
-    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug):
+    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug, session):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
 
         if method == "asinh":
             # Use the new asinh algorithm.
-            self.buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre)
+            self.buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre, session)
         else:
             # Use the old algorithm.
             self.buildImageOld(fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug)
 
-    def buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre):
+    def get_image_filters(self, hdulist):
+        """
+        Get the combinations to use
+        """
+        image1_filters = [0,0,0]
+        image2_filters = [0,0,0]
+        image3_filters = [0,0,0]
+        image4_filters = [0,0,0]
+
+        filters_used = []
+
+        for hdu in hdulist:
+            filter_number = hdu.header['MAGPHYSI']
+            filters_used.append(filter_number)
+
+        if 323 in filters_used \
+            and 324 in filters_used \
+            and 325 in filters_used \
+            and 326 in filters_used \
+            and 327 in filters_used:
+            image1_filters = [326, 325, 324]
+            image2_filters = [325, 324, 323]
+            image3_filters = [326, 324, 323]
+            image4_filters = [327, 325, 323]
+        elif 116 in filters_used \
+            and 117 in filters_used \
+            and 118 in filters_used \
+            and 124 in filters_used \
+            and 280 in filters_used \
+            and 283 in filters_used:
+            image1_filters = [118, 117, 116]
+            image2_filters = [117, 116, 124]
+            image3_filters = [280, 116, 124]
+            image4_filters = [283, 117, 124]
+
+        return image1_filters, image2_filters, image3_filters, image4_filters
+
+    def buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre, session):
         """
         Build Three Colour Images using the asinh() function.
         """
         if imageDirName[-1] != "/":
             imageDirName += "/"
         if os.path.isfile(imageDirName):
-            print 'Directory ', imageDirName , 'exists'
+            LOG.info('Directory %s exists', imageDirName)
             return 1
         elif os.path.isdir(imageDirName):
             pass
@@ -194,19 +238,22 @@ class FitsImage:
         if debug:
             hdulist.info()
 
-        blackRGB = (0, 0, 0)
-        black = (0)
-        white = (255)
-
         hdu = hdulist[0]
         width = hdu.header['NAXIS1']
         height = hdu.header['NAXIS2']
 
+        (image1_filters, image2_filters, image3_filters, image4_filters) = self.get_image_filters(hdulist)
+
         # Create Three Colour Images
-        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True), self.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True), 118, 117, 116, width, height, debug, centre) # i, r, g
-        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None, 117, 116, 124, width, height, debug, centre) # r, g, NUV
-        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None, 280, 116, 124, width, height, debug, centre) # 3.6, g, NUV
-        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None, 283, 117, 124, width, height, debug, centre) # 22, r, NUV
+        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
+            self.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True),
+            image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, session) # i, r, g
+        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None,
+            image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, session) # r, g, NUV
+        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None,
+            image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, session) # 3.6, g, NUV
+        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None,
+            image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, session) # 22, r, NUV
         images = [image1, image2, image3, image4]
 
         file = 0
@@ -234,9 +281,9 @@ class FitsImage:
         """
 
         if imageDirName[-1] != "/":
-            imageDirName = imageDirName + "/"
+            imageDirName += "/"
         if os.path.isfile(imageDirName):
-            print 'Directory ', imageDirName , 'exists'
+            LOG.info('Directory %s exists', imageDirName)
             return 1
         elif os.path.isdir(imageDirName):
             pass
@@ -272,8 +319,6 @@ class FitsImage:
         imageFilters = [image1Filters, image2Filters, image3Filters, image4Filters]
 
         file = 0
-        loCut = 0
-        hiCut = 999999
         for hdu in hdulist:
             file += 1
             if debug:
@@ -299,11 +344,8 @@ class FitsImage:
                     bImages.append(img)
 
             xoffset = 0
-            yoffset = 0
             minorigvalue = 99999999.0
             maxorigvalue = -99999999.0
-            minvalue = 9999999.0
-            maxvalue = -99999999.0
             zerocount = 0
             sumsq = 0
             sum = 0
@@ -358,13 +400,13 @@ class FitsImage:
                             if value > maxorigvalue:
                                 maxorigvalue = value
                             if value == 0:
-                                zerocount = zerocount + 1
+                                zerocount += 1
                                 continue
                             value = self.applyFunc(value, method)
                             if not math.isnan(value) and value > 0:
-                                sum = sum + value
-                                sumsq = sumsq + (value*value)
-                                count = count + 1
+                                sum += value
+                                sumsq += value * value
+                                count += 1
                 avg = 0
                 if count > 0:
                     avg = sum / count
@@ -442,24 +484,23 @@ class FitsImage:
                         value = self.applyFunc(value, method)
                         adjvalue = value - minvalue
                         value = int(adjvalue*mult)
-                        #value = int(value*256)
+
                         if value < 0:
                             value = 0
                         if value > 255:
                             value = 255
-                        #if value > 0:
-                        #    value += 50
+
                         if value < sminvalue:
                             sminvalue = value
                         if value > smaxvalue:
                             smaxvalue = value
-                        valuerange[value] = valuerange[value] + 1
+                        valuerange[value] += 1
                         #print 'x', x, 'y', width-y-1, 'Value', value, 'Width', width, 'Height', height
                         if createBWImages:
                             imagebw.putpixel((x,width-y-1), (value))
                             imagewb.putpixel((x,width-y-1), (255-value))
                         if value > 0:
-                            pixelcount = pixelcount + 1
+                            pixelcount += 1
                         for img in rImages:
                             px = img.getpixel((x,width-y-1))
                             img.putpixel((x,width-y-1), (value, px[1], px[2]))
@@ -589,26 +630,17 @@ class FitsImage:
         image = Image.open(inImageFileName, "r").convert("RGBA")
         width, height = image.size
 
-        #pixels = session.query(PixelResult).filter("galaxy_id=:galaxyId", "user_id=:userId").params(galaxyId=galaxyId).all()
         areas = session.query(Area, AreaUser).filter(AreaUser.userid == userid)\
           .filter(Area.area_id == AreaUser.area_id)\
           .filter(Area.galaxy_id == galaxy_id)\
           .order_by(Area.top_x, Area.top_y).all()
-        #print 'Areas', len(areas)
+
         for areax in areas:
-            area = areax.Area;
+            area = areax.Area
             for x in range(area.top_x, area.bottom_x):
                 for y in range(area.top_y, area.bottom_y):
                     if x < height and y < width:
                         self.markPixel(image, x, width-y-1)
-
-        #for x in range(140, 145):
-        #    for y in range(80, 93):
-        #        self.markPixel(image, x, y)
-
-        #for x in range(100, 113):
-        #    for y in range(80, 122):
-        #        self.markPixel(image, x, y)
 
         image.save(outImageFileName)
 
@@ -618,14 +650,9 @@ class FitsImage:
         generated results.
         """
         px = image.getpixel((x,y))
-        #image.putpixel((x,y), (255,255,255))
-        #image.putpixel((x,y), (px[0], px[1], px[2], 50))
         r = int(px[0] + ((255 - px[0]) * 0.5))
         g = int(px[1] + ((255 - px[1]) * 0.5))
         b = int(px[2] + ((255 - px[2]) * 0.5))
-        #r = px[0] * 2
-        #g = px[1] * 2
-        #b = px[2] * 2
         if r > 255:
             r = 255
         if g > 255:
@@ -646,10 +673,7 @@ class FitsImage:
         galaxy_ids.
         """
         stmt = session.query(Galaxy.galaxy_id).join(Area).join(AreaUser).filter(AreaUser.userid == userid).subquery()
-        #print stmt
-        #print session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt))
-        #adalias = aliased(PixelResult, stmt);
-        return session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)).order_by(Galaxy.name, Galaxy.version_number);
+        return session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)).order_by(Galaxy.name, Galaxy.version_number)
 
     def userGalaxyIds(self, session, userid):
         """
@@ -657,20 +681,18 @@ class FitsImage:
         galaxy_ids.
         """
         stmt = session.query(Galaxy.galaxy_id).join(Area).join(AreaUser).filter(AreaUser.userid == userid).subquery()
-        #print stmt
-        #print session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt))
-        #adalias = aliased(PixelResult, stmt);
+
         galaxyIds = []
         for galaxy in session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)):
-           #print 'Galaxy', galaxy.name
            galaxyIds.append(galaxy.galaxy_id)
-        return galaxyIds;
+
+        return galaxyIds
 
     def printCardsToFile(self, outFile, header, keys):
         for key in keys:
             try:
                 outFile.write('{0:8} {1}\n'.format(key, header[key]))
-            except KeyError as e:
+            except KeyError:
                 pass
 
 

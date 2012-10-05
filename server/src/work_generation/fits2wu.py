@@ -47,12 +47,12 @@ if args['register'] is None:
 
 APP_NAME = "magphys_wrapper"
 BIN_PATH = WG_BOINC_PROJECT_ROOT + "/bin"
-TEMPLATES_PATH = "templates"                    # In true BOINC style, this is magically relative to the project root
-MIN_QUORUM = 2									# Validator run when there are at least this many results for a work unit
-TARGET_NRESULTS = MIN_QUORUM 					# Initially create this many instances of a work unit
-DELAY_BOUND = 86400 * 7 						# Clients must report results within a week
-FPOPS_EST_PER_PIXEL = 3.312						# Estimated number of gigaflops per pixel
-FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	# Maximum number of gigaflops per pixel client will allow before terminating job
+TEMPLATES_PATH = "templates"                                           # In true BOINC style, this is magically relative to the project root
+MIN_QUORUM = 2                                                         # Validator run when there are at least this many results for a work unit
+TARGET_NRESULTS = MIN_QUORUM                                           # Initially create this many instances of a work unit
+DELAY_BOUND = 86400 * 7                                                # Clients must report results within a week
+FPOPS_EST_PER_PIXEL_PER_LAYER = 0.3                                    # Estimated number of gigaflops per pixel per layer
+FPOPS_BOUND_PER_PIXEL_PER_LAYER = FPOPS_EST_PER_PIXEL_PER_LAYER*30     # Maximum number of gigaflops per pixel per layer the client will allow before terminating job
 FPOPS_EXP = "e12"
 COBBLESTONE_LAYER_SCALING_FACTOR = 0.8
 
@@ -243,10 +243,10 @@ def create_output_file(galaxy, area, pixels, priority):
         "--wu_name",         filename,
         "--wu_template",     TEMPLATES_PATH + "/fitsed_wu.xml",
         "--result_template", TEMPLATES_PATH + "/fitsed_result.xml",
-        "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_area, 'exp':FPOPS_EXP},
-        "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_area, 'exp':FPOPS_EXP},
+        "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL_PER_LAYER*pixels_in_area*active_layers, 'exp':FPOPS_EXP},
+        "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL_PER_LAYER*pixels_in_area*active_layers, 'exp':FPOPS_EXP},
         "--rsc_memory_bound", "1e8",
-        "--rsc_disk_bound", "5e8",
+        "--rsc_disk_bound", "1e8",
         "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_area*COBBLESTONE_LAYER_SCALING_FACTOR*active_layers},
         "--opaque",   str(area.area_id),
         "--priority", '{0}'.format(priority)
@@ -448,7 +448,7 @@ def process_file(register):
 
     LOG.info('Building the images')
     image = FitsImage()
-    image.buildImage(register.filename, WG_IMAGE_DIRECTORY, filePrefixName, "asinh", False, False, False)
+    image.buildImage(register.filename, WG_IMAGE_DIRECTORY, filePrefixName, "asinh", False, False, False, session)
 
     shutil.copyfile(register.filename, image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
 
