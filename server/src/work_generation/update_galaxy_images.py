@@ -28,9 +28,9 @@ for galaxy in session.query(Galaxy).order_by(Galaxy.name).all():
     fitsFileName = filePrefixName + ".fits"
 
     LOG.info('Processing %s (%d)', galaxy.name, galaxy.version_number)
-    INPUT_FILE = image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, False)
-    if os.path.isfile(INPUT_FILE):
-        image.buildImage(INPUT_FILE, WG_IMAGE_DIRECTORY, filePrefixName, 'asinh', False, False, False, session, galaxy.galaxy_id)
+    input_file = image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, False)
+    if os.path.isfile(input_file):
+        image.buildImage(input_file, WG_IMAGE_DIRECTORY, filePrefixName, 'asinh', False, False, False, session, galaxy.galaxy_id)
 
     end = time.time()
     LOG.info("Images generated in %.2f seconds", end - start)
