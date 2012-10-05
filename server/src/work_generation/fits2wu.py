@@ -448,7 +448,7 @@ def process_file(register):
 
     LOG.info('Building the images')
     image = FitsImage()
-    image.buildImage(register.filename, WG_IMAGE_DIRECTORY, filePrefixName, "asinh", False, False, False, session)
+    image.buildImage(register.filename, WG_IMAGE_DIRECTORY, filePrefixName, "asinh", False, False, False, session, galaxy.galaxy_id)
 
     shutil.copyfile(register.filename, image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
 

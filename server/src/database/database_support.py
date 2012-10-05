@@ -175,6 +175,7 @@ class ImageFiltersUsed(Base):
 
     image_filters_used_id = Column(BigInteger, primary_key=True)
     name                  = Column(String(1000))
+    galaxy_id             = Column(BigInteger)
     filter_number_red     = Column(Integer)
     filter_number_green   = Column(Integer)
     filter_number_blue    = Column(Integer)

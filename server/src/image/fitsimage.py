@@ -40,7 +40,7 @@ class ImageBuilder:
 
     centre = 0.6
 
-    def __init__(self, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre, session):
+    def __init__(self, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre, session, galaxy_id):
         self.imageFileName = imageFileName
         self.thumbnailFileName = thumbnailFileName
         self.redFilter = redFilter
@@ -54,6 +54,7 @@ class ImageBuilder:
 
         image_filters_used = ImageFiltersUsed()
         image_filters_used.name = imageFileName
+        image_filters_used.galaxy_id = galaxy_id
         image_filters_used.filter_number_red = redFilter
         image_filters_used.filter_number_blue = blueFilter
         image_filters_used.filter_number_green = greenFilter
@@ -171,14 +172,14 @@ class FitsImage:
     def __init__(self):
         self.sigma = None
 
-    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug, session):
+    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug, session, galaxy_id):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
 
         if method == "asinh":
             # Use the new asinh algorithm.
-            self.buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre, session)
+            self.buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre, session, galaxy_id)
         else:
             # Use the old algorithm.
             self.buildImageOld(fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug)
@@ -222,7 +223,7 @@ class FitsImage:
 
         return image1_filters, image2_filters, image3_filters, image4_filters
 
-    def buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre, session):
+    def buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre, session, galaxy_id):
         """
         Build Three Colour Images using the asinh() function.
         """
@@ -249,13 +250,13 @@ class FitsImage:
         # Create Three Colour Images
         image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
             self.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True),
-            image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, session) # i, r, g
+            image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, session, galaxy_id) # i, r, g
         image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None,
-            image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, session) # r, g, NUV
+            image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, session, galaxy_id) # r, g, NUV
         image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None,
-            image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, session) # 3.6, g, NUV
+            image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, session, galaxy_id) # 3.6, g, NUV
         image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None,
-            image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, session) # 22, r, NUV
+            image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, session, galaxy_id) # 22, r, NUV
         images = [image1, image2, image3, image4]
 
         file = 0
