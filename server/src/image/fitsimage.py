@@ -1,3 +1,6 @@
+"""
+Image generation
+"""
 import pyfits
 from PIL import Image
 import math
@@ -23,16 +26,16 @@ class ImageBuilder:
     width = 0
     height = 0
     blackRGB = (0, 0, 0)
-    
+
     redHiCut = math.pi/2
     redMedian = 0
     greenHiCut = math.pi/2
     greenMedian = 0
     blueHiCut = math.pi/2
     blueMedian = 0
-    
+
     centre = 0.6
-    
+
     def __init__(self, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre):
         self.imageFileName = imageFileName
         self.thumbnailFileName = thumbnailFileName
@@ -44,7 +47,7 @@ class ImageBuilder:
         self.debug = debug
         self.centre = centre
         self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
-        
+
     def setData(self, filter, data):
         values = []
         for x in range(0, self.width-1):
@@ -52,7 +55,7 @@ class ImageBuilder:
                 value = data[y, x]
                 if not math.isnan(value) and value > 0:
                     values.append(value)
-        
+
         values.sort()
         if len(values) > 1000:
             topCount = int(len(values)*0.005)
@@ -67,7 +70,7 @@ class ImageBuilder:
             medianvalue = values[0]
         else:
             medianvalue = 1
-                
+
         if self.redFilter == filter:
             self.redData = numpy.copy(data)
             self.redHiCut = topValue
@@ -80,13 +83,13 @@ class ImageBuilder:
             self.blueData = numpy.copy(data)
             self.blueHiCut = topValue
             self.blueMedian = medianvalue
-            
+
     def isValid(self):
-        if self.redData == None or self.greenData == None or self.blueData == None:
+        if self.redData is None or self.greenData is None or self.blueData is None:
             return False
         else:
             return True
-            
+
     def saveImage(self):
         redSigma = self.centre / self.redMedian
         greenSigma = self.centre / self.greenMedian
@@ -95,7 +98,7 @@ class ImageBuilder:
             print 'Red', self.redMedian, self.redHiCut, self.redScale, redSigma
             print 'Green', self.greenMedian, self.greenHiCut, self.greenScale, greenSigma
             print 'Blue', self.blueMedian, self.blueHiCut, self.blueScale, blueSigma
-        
+
         redMult = 255.0 / math.asinh(self.redHiCut * redSigma)
         greenMult = 255.0 / math.asinh(self.greenHiCut * greenSigma)
         blueMult = 255.0 / math.asinh(self.blueHiCut * blueSigma)
@@ -107,7 +110,7 @@ class ImageBuilder:
             redValuerange.append(0)
             greenValuerange.append(0)
             blueValuerange.append(0)
-                
+
         for x in range(0, self.width-1):
             for y in range(0, self.height-1):
                 red = self.redData[y,x]
@@ -138,47 +141,47 @@ class ImageBuilder:
                     red = int(red)
                     green = int(green)
                     blue = int(blue)
-                    
+
                     redValuerange[red] = redValuerange[red] + 1
                     greenValuerange[green] = greenValuerange[green] + 1
                     blueValuerange[blue] = blueValuerange[blue] + 1
                     self.image.putpixel((x,self.width-y-1), (red, green, blue))
         self.image.save(self.imageFileName)
-        
+
         if self.thumbnailFileName:
             self.image = self.image.resize((80,80), Image.ANTIALIAS)
             self.image.save(self.thumbnailFileName)
-            
+
         if self.debug:
             for z in range(0, 256):
                 print z, redValuerange[z], greenValuerange[z], blueValuerange[z]
-        
+
 class FitsImage:
     useHighCut = False
     includeHash = True
     centre = 0.5
-    
+
     def __init__(self):
         pass
-    
+
     def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
-        
+
         if method == "asinh":
             # Use the new asinh algorithm.
             self.buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre)
         else:
             # Use the old algorithm.
             self.buildImageOld(fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug)
-    
+
     def buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre):
         """
         Build Three Colour Images using the asinh() function.
         """
         if imageDirName[-1] != "/":
-            imageDirName = imageDirName + "/"
+            imageDirName += "/"
         if os.path.isfile(imageDirName):
             print 'Directory ', imageDirName , 'exists'
             return 1
@@ -205,20 +208,18 @@ class FitsImage:
         image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None, 280, 116, 124, width, height, debug, centre) # 3.6, g, NUV
         image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None, 283, 117, 124, width, height, debug, centre) # 22, r, NUV
         images = [image1, image2, image3, image4]
-        
+
         file = 0
         for hdu in hdulist:
-            file = file + 1
+            file += 1
             if debug:
                 print hdu,
                 print file
 
-            width = hdu.header['NAXIS1']
-            height = hdu.header['NAXIS2']
             filter = hdu.header['MAGPHYSI']
             for image in images:
                 image.setData(filter, hdu.data)
-        
+
         for image in images:
             if image.isValid():
                 image.saveImage()
@@ -231,7 +232,7 @@ class FitsImage:
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
-        
+
         if imageDirName[-1] != "/":
             imageDirName = imageDirName + "/"
         if os.path.isfile(imageDirName):
@@ -254,7 +255,6 @@ class FitsImage:
         width = hdu.header['NAXIS1']
         height = hdu.header['NAXIS2']
 
-        #cards = ['MAGPHYSL', 'MAGPHYSN', 'MAGPHYSI', 'MAGPHYSF']
         cards = ['MAGPHYSL', 'MAGPHYSN', 'MAGPHYSI', 'MAGPHYSF', 'BITPIX', 'NAXIS', 'NAXIS2', 'CRPIX1', 'CRPIX2', 'CRVAL1', 'CRVAL2', 'BZERO', 'BSCALE', 'OBJECT']
 
         # Create Three Colour Images
@@ -275,7 +275,7 @@ class FitsImage:
         loCut = 0
         hiCut = 999999
         for hdu in hdulist:
-            file = file + 1
+            file += 1
             if debug:
                 print hdu,
                 print file
@@ -297,7 +297,7 @@ class FitsImage:
                     gImages.append(img)
                 if filters[2] == filter:
                     bImages.append(img)
-            
+
             xoffset = 0
             yoffset = 0
             minorigvalue = 99999999.0
@@ -340,9 +340,9 @@ class FitsImage:
                 if filter == 282:
                     hiCut = 0.0781642428067
                 if filter == 283:
-                    hiCut = 0.444458113518    
+                    hiCut = 0.444458113518
                 maxorigvalue = hiCut
-            
+
                 maxvalue = self.applyFunc(maxorigvalue, method)
                 mult = 255.0 / (maxvalue - minvalue)
             else:
@@ -373,9 +373,9 @@ class FitsImage:
                 stddev=0.0
                 #if count > 0:
                 #    stddev = math.sqrt((sumsq/count) - (avg*avg))
-                   
+
                 bottomIdx = 0
-                bottomValue = 0; 
+                bottomValue = 0
                 values.sort()
                 for val in values:
                     bottomValue = val
@@ -383,16 +383,16 @@ class FitsImage:
                         break
                     bottomIdx += 1
                 loCut = bottomValue
-                    
+
                 topIdx = 0
-                topValue = 0;
+                topValue = 0
                 values.reverse()
                 for val in values:
                     topValue = val
                     if topIdx > 200:
                         break
                     topIdx += 1
-                    
+
                 hiCut = topValue
                 minvalue = self.applyFunc(bottomValue, method)
                 maxvalue = self.applyFunc(topValue, method)
@@ -404,9 +404,9 @@ class FitsImage:
                 #    #    maxvalue = hiCut
                 #if method == 'log':
                 #    minvalue = 0.0
-                #    
+                #
                 #minvalue = 0.0
-                    
+
                 #if method == 'asinh':
                 #    minvalue = 0.0
 
@@ -414,16 +414,16 @@ class FitsImage:
                     mult = 255.0
                 else:
                     mult = 255.0 / (maxvalue - minvalue)
-                
+
             sminvalue = 99999999
             smaxvalue = 0
             pixelcount = 0
-            
+
             #if method == 'asinh':
             #    slope = 255.0 / ((10000)/sigma)
-            #     
-            #    scaledMean = slope * math.asinh((avg) /sigma); 
-            #    # now we can get the scale for each colour as 
+            #
+            #    scaledMean = slope * math.asinh((avg) /sigma);
+            #    # now we can get the scale for each colour as
             #    mult = scaledMean/avg;
             #    minvalue = 0.0
             #    #mult = 255.0 / ((maxvalue - minvalue)/sigma)
@@ -498,7 +498,7 @@ class FitsImage:
         image4.save(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True))
 
         hdulist.close()
-        
+
     def applyFunc(self, value, method):
         if method == 'atan':
             return math.atan(value / self.sigma)
@@ -542,7 +542,7 @@ class FitsImage:
             elif os.path.isdir(hashDirName):
                 pass
             elif create:
-                os.mkdir(hashDirName) 
+                os.mkdir(hashDirName)
             return os.path.join(dirName,hashed,fileName)
         else:
             return os.path.join(dirName,fileName)
@@ -554,7 +554,7 @@ class FitsImage:
         many directories to avoid having too many files in a single directory.
         """
         return self.get_file_path(imageDirName, imagePrefixName + "_colour_" + str(colour) + ".png", create)
-    
+
     def get_thumbnail_colour_image_path(self, imageDirName, imagePrefixName, colour, create):
         """
         Generates the relative path to the file given the directory name, image prefix

@@ -27,6 +27,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         self.Session = sessionmaker(bind=engine)
         self.map_parameter_name = {}
 
+        # Load the parameter name map
         session = self.Session()
         for parameter_name in session.query(ParameterName).all():
             self.map_parameter_name[parameter_name.name] = parameter_name.parameter_name_id
