@@ -9,7 +9,7 @@ class Galaxy(models.Model):
     redshift = models.FloatField()
     class Meta:
         db_table = u'galaxy'
-        
+
 class Area(models.Model):
     area_id = models.BigIntegerField(primary_key=True)
     galaxy = models.ForeignKey(Galaxy, related_name='areas', on_delete=models.PROTECT)
@@ -28,7 +28,7 @@ class AreaUser(models.Model):
     create_time = models.DateTimeField()
     class Meta:
         db_table = u'area_user'
-        
+
 
 class PixelResult(models.Model):
     pxresult_id = models.BigIntegerField()
@@ -77,15 +77,20 @@ class PixelFilter(models.Model):
 class PixelParameter(models.Model):
     pxparameter_id = models.BigIntegerField()
     pixelResult = models.ForeignKey(PixelResult, db_column='pxresult_id', related_name='parameters', on_delete=models.PROTECT)
-    parameter_name = models.CharField(max_length=300)
+    parameter_name_id = models.IntegerField()
     percentile2_5 = models.FloatField()
     percentile16 = models.FloatField()
     percentile50 = models.FloatField()
     percentile84 = models.FloatField()
     percentile97_5 = models.FloatField()
+    high_prob_bin = models.FloatField(null=True, blank=True)
+    first_prob_bin = models.FloatField(null=True, blank=True)
+    last_prob_bin = models.FloatField(null=True, blank=True)
+    bin_step = models.FloatField(null=True, blank=True)
+
     class Meta:
         db_table = u'pixel_parameter'
-        
+
 class PixelHistogram(models.Model):
     pxhistogram_id = models.BigIntegerField()
     parameter = models.ForeignKey(PixelParameter, db_column='pxparameter_id', related_name='histograms', on_delete=models.PROTECT)

@@ -44,22 +44,22 @@ else:
 
 galaxies = query.all()
 
-PARAMETER_NAMES = { 'f_mu (IR)'    : ['f_mu_ir',      0],
-                    'f_mu (SFH)'   : ['f_mu_sfh',     1],
-                    'Ldust'        : ['ldust',        2],
-                    'M(dust)'      : ['m_dust',       3],
-                    'M(stars)'     : ['m_stars',      4],
-                    'mu parameter' : ['mu_paramater', 5],
-                    'SFR_0.1Gyr'   : ['sfr',          6],
-                    'sSFR_0.1Gyr'  : ['s_sfr',        7],
-                    'tau_V'        : ['tau_v',        8],
-                    'tau_V^ISM'    : ['tau_v_ism',    9],
-                    'T_C^ISM'      : ['t_c_ism',      10],
-                    'T_W^BC'       : ['t_w_bc',       11],
-                    'xi_C^tot'     : ['xi_c_tot',     12],
-                    'xi_MIR^tot'   : ['xi_mir_tot',   13],
-                    'xi_PAH^tot'   : ['xi_pah_tot',   14],
-                    'xi_W^tot'     : ['xi_w_tot',     15],
+PARAMETER_NAMES = { 1 : ['f_mu_ir',      0],
+                    2 : ['f_mu_sfh',     1],
+                    3 : ['ldust',        2],
+                    4 : ['m_dust',       3],
+                    5 : ['m_stars',      4],
+                    6 : ['mu_paramater', 5],
+                    7 : ['sfr',          6],
+                    8 : ['s_sfr',        7],
+                    9 : ['tau_v',        8],
+                    10 : ['tau_v_ism',    9],
+                    11 : ['t_c_ism',      10],
+                    12 : ['t_w_bc',       11],
+                    13 : ['xi_c_tot',     12],
+                    14 : ['xi_mir_tot',   13],
+                    15 : ['xi_pah_tot',   14],
+                    16 : ['xi_w_tot',     15],
                   }
 
 IMAGE_NAMES = [ 'fmu_sfh',
@@ -80,15 +80,15 @@ IMAGE_NAMES = [ 'fmu_sfh',
                 'sfr',
               ]
 
-def get_index(parameter_name):
+def get_index(parameter_name_id):
     """
     Find the plane we should be using
     """
-    tuple = PARAMETER_NAMES[parameter_name]
+    tuple = PARAMETER_NAMES[parameter_name_id]
     if tuple is not None:
         return tuple[1]
 
-    raise AttributeError('Invalid parameter {0}'.format(pixel_parameter.parameter_name))
+    raise AttributeError('Invalid parameter {0}'.format(pixel_parameter.parameter_name_id))
 
 def check_need_to_run(directory, galaxy):
     """
@@ -185,7 +185,7 @@ for galaxy in galaxies:
 
         if median or highest_prob_bin_v_:
             for pixel_parameter in session.query(PixelParameter).filter(PixelParameter.pxresult_id == row.pxresult_id).all():
-                index = get_index(pixel_parameter.parameter_name)
+                index = get_index(pixel_parameter.parameter_name_id)
                 if median:
                     array_median[row.y, row.x, index] = pixel_parameter.percentile50
 
