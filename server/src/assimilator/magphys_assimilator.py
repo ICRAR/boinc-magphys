@@ -171,12 +171,6 @@ class MagphysAssimilator(assimilator.Assimilator):
                             parameterName = parts[1].strip()
                             parameter = PixelParameter()
                             parameter.parameter_name_id = self.map_parameter_name[parameterName]
-                            # TODO
-                            if parameter.parameter_name_id is None:
-                                self.logCritical('Fatal error\n')
-                                for key, value in self.map_parameter_name.iteritems() :
-                                    self.logNormal('Key %s Vale %d\n', key, value)
-                                sys.exit(1)
                             pxresult.parameters.append(parameter)
                             percentiles_next = False
                             histogram_next = True
