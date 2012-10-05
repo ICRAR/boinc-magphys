@@ -54,7 +54,7 @@ DELAY_BOUND = 86400 * 7 						# Clients must report results within a week
 FPOPS_EST_PER_PIXEL = 3.312						# Estimated number of gigaflops per pixel
 FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*15	# Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
-COBBLESTONE_SCALING_FACTOR = 8.6
+COBBLESTONE_LAYER_SCALING_FACTOR = 0.8
 
 # The BOINC scripts/apps do not feel at home outside their directory
 os.chdir(WG_BOINC_PROJECT_ROOT)
@@ -205,6 +205,23 @@ def create_observation_file(filename, data, galaxy, pixels):
         row_num += 1
     outfile.close()
 
+def get_active_layers(pixels):
+    """
+    Get the number of active layers
+
+    Get the number of active layers by looking at all the pixels
+    """
+    max_layers = 0
+    for pixel in pixels:
+        layers = 0
+        for value in pixel.pixels:
+            if value > 0:
+                layers += 1
+
+        max_layers = max(max_layers, layers)
+
+    return max_layers
+
 def create_output_file(galaxy, area, pixels, priority):
     """
     Write an output file for this area
@@ -213,7 +230,9 @@ def create_output_file(galaxy, area, pixels, priority):
     data = [{'galaxy':galaxy.name, 'area_id':area.area_id, 'pixels':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,}]
     filename = '%(galaxy)s_area%(area)s' % { 'galaxy':galaxy.name, 'area':area.area_id}
     file_name_job = filename + '.job.xml'
-    LOG.info("Creating work unit %s : %d pixels ", filename, pixels_in_area)
+
+    active_layers = get_active_layers(pixels)
+    LOG.info("Creating work unit %s : %d pixels : %d layers", filename, pixels_in_area, active_layers)
 
     args_params = [
         "--appname",         APP_NAME,
@@ -228,7 +247,7 @@ def create_output_file(galaxy, area, pixels, priority):
         "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_area, 'exp':FPOPS_EXP},
         "--rsc_memory_bound", "1e8",
         "--rsc_disk_bound", "5e8",
-        "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_area*COBBLESTONE_SCALING_FACTOR},
+        "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_area*COBBLESTONE_LAYER_SCALING_FACTOR*active_layers},
         "--opaque",   str(area.area_id),
         "--priority", '{0}'.format(priority)
     ]
