@@ -5,6 +5,7 @@ Update all the images from the fits image
 
 import os
 import logging
+import time
 from database.database_support import Galaxy
 from image.fitsimage import FitsImage
 from sqlalchemy.orm import sessionmaker
@@ -22,6 +23,7 @@ session = Session()
 image = FitsImage()
 
 for galaxy in session.query(Galaxy).order_by(Galaxy.name).all():
+    start = time.time()
     filePrefixName = galaxy.name + "_" + str(galaxy.version_number)
     fitsFileName = filePrefixName + ".fits"
 
@@ -30,4 +32,7 @@ for galaxy in session.query(Galaxy).order_by(Galaxy.name).all():
     if os.path.isfile(INPUT_FILE):
         image.buildImage(INPUT_FILE, WG_IMAGE_DIRECTORY, filePrefixName, 'asinh', False, False, False, session, galaxy.galaxy_id)
 
-session.commit()
+    end = time.time()
+    LOG.info("Images generated in %.2f seconds", end - start)
+
+    session.commit()
