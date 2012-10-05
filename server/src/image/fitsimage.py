@@ -57,7 +57,7 @@ class ImageBuilder:
             image_filters_used = ImageFiltersUsed()
             session.add(image_filters_used)
 
-        image_filters_used.name = imageFileName
+        image_filters_used.file_name = imageFileName
         image_filters_used.galaxy_id = galaxy_id
         image_filters_used.filter_number_red = redFilter
         image_filters_used.filter_number_blue = blueFilter

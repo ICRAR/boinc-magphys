@@ -231,13 +231,13 @@ INSERT INTO filter VALUES (27, 'SPIRE350', 350.0,  173, 27, 0, 0, 1, '350');
 INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 28, 0, 0, 1, '500');
 
 CREATE TABLE image_filters_used (
-  image_filters_used_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR (1000)   NOT NULL,
-  galaxy_id             BIGINT UNSIGNED NOT NULL,
-  filter_number_red     SMALLINT NOT NULL,
-  filter_number_green   SMALLINT NOT NULL,
-  filter_number_blue    SMALLINT NOT NULL
+  image_filters_used_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  file_name VARCHAR (250) NOT NULL,
+  galaxy_id               BIGINT UNSIGNED NOT NULL,
+  filter_number_red       SMALLINT NOT NULL,
+  filter_number_green     SMALLINT NOT NULL,
+  filter_number_blue      SMALLINT NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE INDEX image_filters_used_name_ix ON image_filters_used(name);
+CREATE INDEX image_filters_used_file_name_ix ON image_filters_used(file_name);
 CREATE INDEX image_filters_used_galaxy_id_ix ON image_filters_used(galaxy_id);

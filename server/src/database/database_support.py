@@ -174,7 +174,7 @@ class ImageFiltersUsed(Base):
     __tablename__ = 'image_filters_used'
 
     image_filters_used_id = Column(BigInteger, primary_key=True)
-    name                  = Column(String(1000))
+    file_name             = Column(String(250))
     galaxy_id             = Column(BigInteger)
     filter_number_red     = Column(Integer)
     filter_number_green   = Column(Integer)
