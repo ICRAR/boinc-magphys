@@ -52,13 +52,16 @@ class ImageBuilder:
         self.centre = centre
         self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
 
-        image_filters_used = ImageFiltersUsed()
+        image_filters_used = session.query(ImageFiltersUsed).filter(ImageFiltersUsed.galaxy_id == galaxy_id).first
+        if image_filters_used is None:
+            image_filters_used = ImageFiltersUsed()
+            session.add(image_filters_used)
+
         image_filters_used.name = imageFileName
         image_filters_used.galaxy_id = galaxy_id
         image_filters_used.filter_number_red = redFilter
         image_filters_used.filter_number_blue = blueFilter
         image_filters_used.filter_number_green = greenFilter
-        session.add(image_filters_used)
 
     def setData(self, filter, data):
         values = []
