@@ -2,7 +2,6 @@ import pyfits
 from PIL import Image, ImageDraw
 import math
 import sys
-import os
 
 def printCard(header, key):
   print key,
@@ -16,15 +15,14 @@ def printCardsToFile(outFile, header, keys):
     for key in keys:
         outFile.write('{0:8} {1}\n'.format(key, header[key]))
 
+hdulist = pyfits.open('POGS_NGC628_v3.fits', memmap=True)
+hdulist.info()
+
 method = 'log'
+outputDir = "/Users/rob/Magphys/"
 
-if len(sys.argv) < 2:
-   print "build-image.py fileName [method]"
-   sys.exit(1)
-
-fileName = sys.argv[1]
-if len(sys.argv) > 2:
-    method = sys.argv[2]
+if len(sys.argv) > 1:
+    method = sys.argv[1]
     
 if method == 'log':
     pass
@@ -35,25 +33,6 @@ elif method == 'atan':
 else:
     method = 'linear'
 
-parts = os.path.splitext(fileName)
-dirName = parts[0]
-print "filename", fileName, dirName
-
-magphysDir = "/Users/rob/magphys/"
-outputDir = magphysDir + dirName + "/"
-fileName = magphysDir + fileName
-
-if os.path.isfile(outputDir):
-   print 'Directory ', outputDir , 'exists'
-   sys.exit(1)
-elif os.path.isdir(outputDir):
-   pass
-else:
-   os.mkdir(outputDir)
-
-hdulist = pyfits.open(fileName, memmap=True)
-hdulist.info()
-
 blackRGB = (0, 0, 0)
 black = (0)
 white = (255)
@@ -63,13 +42,13 @@ width = hdu.header['NAXIS1']
 height = hdu.header['NAXIS2']
 
 cards = ['MAGPHYSL', 'MAGPHYSN', 'MAGPHYSI', 'MAGPHYSF']
-cards2 = ['MAGPHYSL', 'MAGPHYSN', 'MAGPHYSI', 'MAGPHYSF', 'BITPIX', 'NAXIS', 'NAXIS2', 'CRPIX1', 'CRPIX2', 'CRVAL1', 'CRVAL2', 'OBJECT']
+cards2 = ['MAGPHYSL', 'MAGPHYSN', 'MAGPHYSI', 'MAGPHYSF', 'BITPIX', 'NAXIS', 'NAXIS2', 'CRPIX1', 'CRPIX2', 'CRVAL1', 'CRVAL2', 'OBJECT', 'BSCALE', 'BZERO']
 
 # Create Three Colour Images
 image1Filters = [118, 117, 116] # i, r, g
 image2Filters = [117, 116, 124] # r, g, NUV
-image3Filters = [280, 116, 124] # 3.6, g, NUV
-image4Filters = [283, 117, 124] # 22, r, NUV
+image3Filters = [153, 116, 124] # 3.6, g, NUV
+image4Filters = [157, 117, 124] # 22, r, NUV
 
 image1 = Image.new("RGB", (width, height), blackRGB)
 image2 = Image.new("RGB", (width, height), blackRGB)
@@ -123,10 +102,10 @@ for hdu in hdulist:
     
     xoffset = 0
     yoffset = 0        
-    minorigvalue = 99999999.0
-    maxorigvalue = -99999999.0
-    minvalue = 9999999.0
-    maxvalue = -99999999.0
+    minorigvalue = 99999999
+    maxorigvalue = 0
+    minvalue = 99999999
+    maxvalue = 0
     zerocount = 0
     sumsq = 0
     sum = 0
@@ -141,18 +120,17 @@ for hdu in hdulist:
                     maxorigvalue = value
                 #if value < 0:
                 #    value = 0
-                if value == 0:
+                if value== 0:
                     zerocount = zerocount + 1
-                    continue
                 if method == 'atan':
                     value = math.atan(value)
                 elif method == 'log':
-                    #if value < 0.001:
-                    #    value = 0.001;
+                    if value < 0.001:
+                        value = 0.001;
                     value = math.log(value)
                 elif method == 'log10':
-                    #if value < 0.001:
-                    #    value = 0.001;
+                    if value < 0.001:
+                        value = 0.001;
                     value = math.log(value, 10)
                 elif method == 'linear':
                     if value < 0.0:
@@ -168,12 +146,7 @@ for hdu in hdulist:
                 if value > maxvalue:
                     maxvalue = value
     avg = sum / count
-    print sumsq, count, avg
-    stddev=0.0
-    try:
-        stddev = math.sqrt((sumsq/count) - (avg*avg))
-    except ValueError:
-        stddev=0.0
+    stddev = math.sqrt((sumsq/count) - (avg*avg))
     
     valuerange = []
     for z in range(0, 256):
@@ -203,16 +176,12 @@ for hdu in hdulist:
                 if method == 'atan':
                     value = math.atan(value)
                 elif method == 'log':
-                    if value == 0:
-                        continue
-                    #if value < 0.001:
-                    #    value = 0.001;
+                    if value < 0.001:
+                        value = 0.001;
                     value = math.log(value)
                 elif method == 'log10':
-                    if value == 0:
-                        continue
-                    #if value < 0.001:
-                    #    value = 0.001;
+                    if value < 0.001:
+                        value = 0.001;
                     value = math.log(value, 10)
                 elif method == 'linear':
                     if value < 0.0:
@@ -230,20 +199,19 @@ for hdu in hdulist:
                 if value > smaxvalue:
                     smaxvalue = value
                 valuerange[value] = valuerange[value] + 1
-                #print 'x', x, 'y', width-y-1, 'Value', value, 'Width', width, 'Height', height
-                imagebw.putpixel((x,width-y-1), (value))
-                imagewb.putpixel((x,width-y-1), (255-value))
+                imagebw.putpixel((x,width-y), (value))
+                imagewb.putpixel((x,width-y), (255-value))
                 if value > 0:
                     pixelcount = pixelcount + 1
                 for img in rImages:
-                    px = img.getpixel((x,width-y-1))
-                    img.putpixel((x,width-y-1), (value, px[1], px[2]))
+                    px = img.getpixel((x,width-y))
+                    img.putpixel((x,width-y), (value, px[1], px[2]))
                 for img in gImages:
-                    px = img.getpixel((x,width-y-1))
-                    img.putpixel((x,width-y-1), (px[0], value, px[2]))
+                    px = img.getpixel((x,width-y))
+                    img.putpixel((x,width-y), (px[0], value, px[2]))
                 for img in bImages:
-                    px = img.getpixel((x,width-y-1))
-                    img.putpixel((x,width-y-1), (px[0], px[1], value))
+                    px = img.getpixel((x,width-y))
+                    img.putpixel((x,width-y), (px[0], px[1], value))
     
     print 'Scaled: Min', sminvalue, 'Max', smaxvalue
     print 'Pixel Count', pixelcount
@@ -253,7 +221,7 @@ for hdu in hdulist:
     logFile = open(outputDir +  'image_' + method + '_' + str(file) + '.txt', 'w')
     printCardsToFile(logFile, hdu.header, cards2)
     logFile.write('\n')
-    logFile.write('Count {} Avg {} StdDev {} Pixels {} PercentWithValue {}\n'.format(count, avg, stddev, width*height, ((count-zerocount)*100.0)/(width*height)))
+    logFile.write('Count {} Avg {} StdDev {}\n'.format(count, avg, stddev))
     logFile.write('Possible LoCut {} HiCut {}\n'.format(avg - (10*stddev), avg + (15*stddev)))
     logFile.write('Min-Orig {} Max-Orig {} Min-Adj {} Max-Adj {} Multiplier {} Zeroes {}\n'.format(minorigvalue, maxorigvalue, minvalue, maxvalue, mult, zerocount))
     logFile.write('\n')
@@ -264,10 +232,10 @@ for hdu in hdulist:
     imagebw.save(outputDir +  'image_' + method + '_' + str(file) + '_bw.jpg')
     imagewb.save(outputDir +  'image_' + method + '_' + str(file) + '_wb.jpg')
 
-image1.save(outputDir + dirName + "_" + method + "_colour_1.jpg")
-image2.save(outputDir + dirName + "_" + method + "_colour_2.jpg")
-image3.save(outputDir + dirName + "_" + method + "_colour_3.jpg")
-image4.save(outputDir + dirName + "_" + method + "_colour_4.jpg")
+image1.save(outputDir + "image_" + method + "_colour_1.jpg")
+image2.save(outputDir + "image_" + method + "_colour_2.jpg")
+image3.save(outputDir + "image_" + method + "_colour_3.jpg")
+image4.save(outputDir + "image_" + method + "_colour_4.jpg")
 
 
   

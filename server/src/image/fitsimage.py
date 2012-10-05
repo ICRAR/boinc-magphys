@@ -217,6 +217,8 @@ class FitsImage:
             image2_filters = [117, 116, 124]
             image3_filters = [280, 116, 124]
             image4_filters = [283, 117, 124]
+        else:
+            LOG.critical('No filters defined that we recognise')
 
         return image1_filters, image2_filters, image3_filters, image4_filters
 

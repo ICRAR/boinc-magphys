@@ -2,6 +2,7 @@
 """
 The Assimilator for the MagPhys code
 """
+import time
 import assimilator
 import boinc_path_config
 import math
@@ -251,6 +252,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
                 if outFile:
                     self.logDebug("Reading File [%s]\n", outFile)
+                    start = time.time()
                     session = self.Session()
                     resultCount = self.processResult(session, outFile, wu)
                     if self.noinsert:
@@ -278,7 +280,9 @@ class MagphysAssimilator(assimilator.Assimilator):
                                 usr.userid = userid
 
                                 self.area.users.append(usr)
-                        self.logDebug("Saving %d results for workunit %d\n", resultCount, wu.id)
+                        end = time.time()
+                        time_taken = '{0:.2f}'.format(end - start)
+                        self.logDebug("Saving %d results for workunit %d in %s seconds\n", resultCount, wu.id, time_taken)
                         session.commit()
                     session.close()
                 else:
