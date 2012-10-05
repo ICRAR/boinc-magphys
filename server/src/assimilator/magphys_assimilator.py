@@ -186,7 +186,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             histogram_next = False
                             skynet_next1 = True
                             skynet_next2 = False
-                        elif line.startswith("# theSkyNet2 "):
+                        elif line.startswith("# theSkyNet2"):
                             percentiles_next = False
                             histogram_next = False
                             skynet_next1 = False
