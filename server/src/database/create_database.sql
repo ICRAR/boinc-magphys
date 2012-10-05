@@ -232,7 +232,7 @@ INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 28, 0, 0, 1, '500');
 
 CREATE TABLE image_filters_used (
   image_filters_used_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  file_name VARCHAR (250) NOT NULL,
+  file_name               VARCHAR(250) NOT NULL,
   galaxy_id               BIGINT UNSIGNED NOT NULL,
   filter_number_red       SMALLINT NOT NULL,
   filter_number_green     SMALLINT NOT NULL,

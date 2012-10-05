@@ -52,7 +52,7 @@ class ImageBuilder:
         self.centre = centre
         self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
 
-        image_filters_used = session.query(ImageFiltersUsed).filter(ImageFiltersUsed.galaxy_id == galaxy_id).first
+        image_filters_used = session.query(ImageFiltersUsed).filter(ImageFiltersUsed.galaxy_id == galaxy_id).first()
         if image_filters_used is None:
             image_filters_used = ImageFiltersUsed()
             session.add(image_filters_used)
