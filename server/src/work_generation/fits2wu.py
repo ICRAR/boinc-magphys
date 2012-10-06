@@ -52,7 +52,7 @@ MIN_QUORUM = 2                                                         # Validat
 TARGET_NRESULTS = MIN_QUORUM                                           # Initially create this many instances of a work unit
 DELAY_BOUND = 86400 * 7                                                # Clients must report results within a week
 FPOPS_EST_PER_PIXEL = 2.312	                                           # Estimated number of gigaflops per pixel
-FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*30                         # Maximum number of gigaflops per pixel client will allow before terminating job
+FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*50                         # Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
 COBBLESTONE_SCALING_FACTOR = 8.85
 
