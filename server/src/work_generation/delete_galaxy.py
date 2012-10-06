@@ -7,6 +7,7 @@ import argparse
 import logging
 import sys
 from sqlalchemy.sql.expression import func
+import time
 from config import DB_LOGIN
 from database.database_support import Galaxy, PixelFilter, PixelParameter, PixelHistogram, AreaUser, FitsHeader, Area, PixelResult
 from sqlalchemy import create_engine
@@ -56,6 +57,9 @@ for galaxy_id_str in galaxy_ids:
             session.query(AreaUser).filter_by(area_id=area_id1[0]).delete()
 
             session.commit()
+
+            # Give the rest of the world a chance to access the database
+            time.sleep(10)
 
         session.query(Area).filter_by(galaxy_id=galaxy.galaxy_id).delete()
         session.query(FitsHeader).filter_by(galaxy_id=galaxy.galaxy_id).delete()

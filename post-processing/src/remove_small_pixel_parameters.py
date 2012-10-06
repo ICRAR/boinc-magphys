@@ -8,8 +8,9 @@ import logging
 from operator import and_
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
+import time
 from config import DB_LOGIN, MIN_HIST_VALUE
-from database.database_support import Galaxy, PixelResult, PixelParameter, PixelHistogram
+from database.database_support import Galaxy, PixelResult, PixelHistogram
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -47,6 +48,10 @@ for galaxy_id_str in galaxy_ids:
             deleted_total += deleted
             deleted_galaxy += deleted
             session.commit()
+
+            # Give the rest of the world a chance to access the database
+            time.sleep(1)
+
         print('')
         LOG.info('Removed %d really small histogram values from %s (%d)', deleted_galaxy, galaxy.name, galaxy.version_number)
 
