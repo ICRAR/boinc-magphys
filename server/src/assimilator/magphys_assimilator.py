@@ -53,7 +53,7 @@ class MagphysAssimilator(assimilator.Assimilator):
             pxresult = session.query(PixelResult).filter("pxresult_id=:pxresultId").params(pxresultId=pxresultId).first()
 
         if pxresult is None:
-            self.logCritical("Pixel Result row not found for pxresultId of %d\n", pxresultId)
+            self.logCritical("Pixel Result row not found for pxresultId of %s\n", pxresultId)
             return None
         else:
             for filter in pxresult.filters:

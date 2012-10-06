@@ -3,6 +3,7 @@
 During the Beta testing we stored all the Pixel Parameter values - this script removes the really small values
 """
 from __future__ import print_function
+import argparse
 import logging
 from operator import and_
 from sqlalchemy.engine import create_engine
@@ -13,25 +14,40 @@ from database.database_support import Galaxy, PixelResult, PixelParameter, Pixel
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
+parser = argparse.ArgumentParser('Delete Galaxy by galaxy_id')
+parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id or 4-30 if you need a range')
+args = vars(parser.parse_args())
+
 engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-galaxies = session.query(Galaxy).all()
-
+galaxy_ids = None
 deleted_total = 0
-for galaxy in galaxies:
-    # Have we got work units out there for this galaxy?
-    LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
+if len(args['galaxy_id']) == 1 and args['galaxy_id'][0].find('-') > 1:
+    list = args['galaxy_id'][0].split('-')
+    LOG.info('Range from %s to %s', list[0], list[1])
+    galaxy_ids = range(int(list[0]), int(list[1]) + 1)
+else:
+    galaxy_ids = args['galaxy_id']
 
-    deleted_galaxy = 0
-    for pxresult_id in session.query(PixelResult.pxresult_id).filter_by(galaxy_id=galaxy.galaxy_id).order_by(PixelResult.pxresult_id).all():
-        print('Deleting low pixel_histogram values from galaxy {0} pixel {1} : Deleted total {2} galaxy {3}'.format(galaxy.galaxy_id, pxresult_id[0], deleted_total, deleted_galaxy), end='\r')
-        deleted = session.query(PixelHistogram).filter(and_(PixelHistogram.pxresult_id == pxresult_id[0], PixelHistogram.hist_value < MIN_HIST_VALUE)).delete()
-        deleted_total += deleted
-        deleted_galaxy += deleted
-        session.commit()
-    print('')
-    LOG.info('Removed %d really small histogram values from %s (%d)', deleted_galaxy, galaxy.name, galaxy.version_number)
-session.close()
+for galaxy_id_str in galaxy_ids:
+    galaxy_id1 = int(galaxy_id_str)
+    galaxy = session.query(Galaxy).filter_by(galaxy_id=galaxy_id1).first()
+    if galaxy is None:
+        LOG.info('Error: Galaxy with galaxy_id of %d was not found', galaxy_id1)
+    else:
+        # Have we got work units out there for this galaxy?
+        LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
+
+        deleted_galaxy = 0
+        for pxresult_id in session.query(PixelResult.pxresult_id).filter_by(galaxy_id=galaxy.galaxy_id).order_by(PixelResult.pxresult_id).all():
+            print('Deleting low pixel_histogram values from galaxy {0} pixel {1} : Deleted total {2} galaxy {3}'.format(galaxy.galaxy_id, pxresult_id[0], deleted_total, deleted_galaxy), end='\r')
+            deleted = session.query(PixelHistogram).filter(and_(PixelHistogram.pxresult_id == pxresult_id[0], PixelHistogram.hist_value < MIN_HIST_VALUE)).delete()
+            deleted_total += deleted
+            deleted_galaxy += deleted
+            session.commit()
+        print('')
+        LOG.info('Removed %d really small histogram values from %s (%d)', deleted_galaxy, galaxy.name, galaxy.version_number)
+
 LOG.info('Done - removed %d really small histogram values.', deleted_total)
