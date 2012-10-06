@@ -54,7 +54,7 @@ DELAY_BOUND = 86400 * 7                                                # Clients
 FPOPS_EST_PER_PIXEL_PER_LAYER = 0.3                                    # Estimated number of gigaflops per pixel per layer
 FPOPS_BOUND_PER_PIXEL_PER_LAYER = FPOPS_EST_PER_PIXEL_PER_LAYER*30     # Maximum number of gigaflops per pixel per layer the client will allow before terminating job
 FPOPS_EXP = "e12"
-COBBLESTONE_LAYER_SCALING_FACTOR = 0.8
+COBBLESTONE_LAYER_SCALING_FACTOR = 1.1
 
 # The BOINC scripts/apps do not feel at home outside their directory
 os.chdir(WG_BOINC_PROJECT_ROOT)

@@ -199,6 +199,7 @@ CREATE TABLE filter (
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE INDEX filter_filter_number_ix ON filter(filter_number);
+CREATE INDEX filter_name_ix ON filter(name);
 
 INSERT INTO filter VALUES (0,  'GALEXFUV', 0.152,  123, 0,  1, 0, 0, 'FUV');
 INSERT INTO filter VALUES (1,  'GALEXNUV', 0.231,  124, 1,  1, 0, 0, 'NUV');
@@ -212,23 +213,23 @@ INSERT INTO filter VALUES (8,  'SDSSi',    0.7595, 232, 8,  0, 1, 0, 'i');
 INSERT INTO filter VALUES (9,  'PS1z',     0.866,  326, 9,  0, 1, 0, 'z');
 INSERT INTO filter VALUES (10, 'SDSSz',    0.9032, 233, 10, 0, 1, 0, 'z');
 INSERT INTO filter VALUES (11, 'PS1y',     0.962,  327, 11, 0, 1, 0, 'y');
-INSERT INTO filter VALUES (12, 'WISEW1',   3.4,    280, 12, 0, 0, 1, '3.4');
-INSERT INTO filter VALUES (13, 'IRAC3.6',  3.550,  153, 13, 0, 0, 1, '3.6');
-INSERT INTO filter VALUES (14, 'IRAC4.5',  4.493,  154, 14, 0, 0, 1, '4.5');
-INSERT INTO filter VALUES (15, 'WISEW2',   4.6,    281, 15, 0, 0, 1, '4.6');
-INSERT INTO filter VALUES (16, 'IRAC5.8',  5.731,  155, 16, 0, 0, 1, '5.8');
-INSERT INTO filter VALUES (17, 'IRAC8.0',  7.872,  156, 17, 0, 0, 1, '8.0');
-INSERT INTO filter VALUES (18, 'WISEW3',   12.0,   282, 18, 0, 0, 1, '12');
-INSERT INTO filter VALUES (19, 'WISEW4',   22.0,   283, 19, 0, 0, 1, '22');
-INSERT INTO filter VALUES (20, 'MIPS24',   23.68,  157, 20, 0, 0, 1, '24');
-INSERT INTO filter VALUES (21, 'MIPS70',   71.42,  158, 21, 0, 0, 1, '70');
-INSERT INTO filter VALUES (22, 'PACS75',   75.0,   169, 22, 0, 0, 1, '75');
-INSERT INTO filter VALUES (23, 'PACS110',  110.0,  170, 23, 0, 0, 1, '110');
-INSERT INTO filter VALUES (24, 'MIPS160',  155.9,  159, 24, 0, 0, 1, '160');
-INSERT INTO filter VALUES (25, 'PACS170',  170.0,  171, 25, 0, 0, 1, '170');
-INSERT INTO filter VALUES (26, 'SPIRE250', 250.0,  172, 26, 0, 0, 1, '250');
-INSERT INTO filter VALUES (27, 'SPIRE350', 350.0,  173, 27, 0, 0, 1, '350');
-INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 28, 0, 0, 1, '500');
+INSERT INTO filter VALUES (12, 'WISEW1',   3.4,    280, 12, 0, 0, 1, '3.4μm');
+INSERT INTO filter VALUES (13, 'IRAC3.6',  3.550,  153, 13, 0, 0, 1, '3.6μm');
+INSERT INTO filter VALUES (14, 'IRAC4.5',  4.493,  154, 14, 0, 0, 1, '4.5μm');
+INSERT INTO filter VALUES (15, 'WISEW2',   4.6,    281, 15, 0, 0, 1, '4.6μm');
+INSERT INTO filter VALUES (16, 'IRAC5.8',  5.731,  155, 16, 0, 0, 1, '5.8μm');
+INSERT INTO filter VALUES (17, 'IRAC8.0',  7.872,  156, 17, 0, 0, 1, '8.0μm');
+INSERT INTO filter VALUES (18, 'WISEW3',   12.0,   282, 18, 0, 0, 1, '12μm');
+INSERT INTO filter VALUES (19, 'WISEW4',   22.0,   283, 19, 0, 0, 1, '22μm');
+INSERT INTO filter VALUES (20, 'MIPS24',   23.68,  157, 20, 0, 0, 1, '24μm');
+INSERT INTO filter VALUES (21, 'MIPS70',   71.42,  158, 21, 0, 0, 1, '70μm');
+INSERT INTO filter VALUES (22, 'PACS75',   75.0,   169, 22, 0, 0, 1, '75μm');
+INSERT INTO filter VALUES (23, 'PACS110',  110.0,  170, 23, 0, 0, 1, '110μm');
+INSERT INTO filter VALUES (24, 'MIPS160',  155.9,  159, 24, 0, 0, 1, '160μm');
+INSERT INTO filter VALUES (25, 'PACS170',  170.0,  171, 25, 0, 0, 1, '170μm');
+INSERT INTO filter VALUES (26, 'SPIRE250', 250.0,  172, 26, 0, 0, 1, '250μm');
+INSERT INTO filter VALUES (27, 'SPIRE350', 350.0,  173, 27, 0, 0, 1, '350μm');
+INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 28, 0, 0, 1, '500μm');
 
 CREATE TABLE image_filters_used (
   image_filters_used_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
