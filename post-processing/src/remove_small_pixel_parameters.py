@@ -45,8 +45,8 @@ for galaxy_id_str in galaxy_ids:
             # Sqlalchemy doesn't support joins when deleting
             deleted = engine.execute('''select count(*) from pixel_histogram a, pixel_result b
 where a.pxresult_id == b.pxresult_id
-and a.hist_value < ?
-and b.area_id = ?''', MIN_HIST_VALUE, area_id[0])
+and a.hist_value < {0}
+and b.area_id = {1}'''.format(MIN_HIST_VALUE, area_id[0]))
             deleted_total += deleted
             deleted_galaxy += deleted
             session.commit()
