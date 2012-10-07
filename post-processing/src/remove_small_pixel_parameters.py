@@ -45,7 +45,7 @@ for galaxy_id_str in galaxy_ids:
         deleted_galaxy = 0
         for area_id in session.query(Area.area_id).filter_by(galaxy_id=galaxy.galaxy_id).order_by(Area.area_id).all():
             print('Deleting low pixel_histogram values from galaxy {0} area {1} : Deleted total {2} galaxy {3}'.format(galaxy.galaxy_id, area_id[0], deleted_total, deleted_galaxy), end='\r')
-            deleted = session.query(PixelHistogram).select_from(join(PixelResult, PixelHistogram)) \
+            deleted = session.query(PixelHistogram).select_from(join(PixelHistogram, PixelResult)) \
                 .filter(PixelResult.area_id == area_id[0]).filter(PixelHistogram.hist_value < MIN_HIST_VALUE).delete()
             deleted_total += deleted
             deleted_galaxy += deleted
