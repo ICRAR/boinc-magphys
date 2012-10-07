@@ -9,8 +9,9 @@ from operator import and_
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import time
+from sqlalchemy.sql.expression import join
 from config import DB_LOGIN, MIN_HIST_VALUE
-from database.database_support import Galaxy, PixelResult, PixelHistogram
+from database.database_support import Galaxy, PixelResult, PixelHistogram, Area
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -42,15 +43,16 @@ for galaxy_id_str in galaxy_ids:
         LOG.info('Working on galaxy %s (%d)', galaxy.name, galaxy.version_number)
 
         deleted_galaxy = 0
-        for pxresult_id in session.query(PixelResult.pxresult_id).filter_by(galaxy_id=galaxy.galaxy_id).order_by(PixelResult.pxresult_id).all():
-            print('Deleting low pixel_histogram values from galaxy {0} pixel {1} : Deleted total {2} galaxy {3}'.format(galaxy.galaxy_id, pxresult_id[0], deleted_total, deleted_galaxy), end='\r')
-            deleted = session.query(PixelHistogram).filter(and_(PixelHistogram.pxresult_id == pxresult_id[0], PixelHistogram.hist_value < MIN_HIST_VALUE)).delete()
+        for area_id in session.query(Area.area_id).filter_by(galaxy_id=galaxy.galaxy_id).order_by(Area.area_id).all():
+            print('Deleting low pixel_histogram values from galaxy {0} area {1} : Deleted total {2} galaxy {3}'.format(galaxy.galaxy_id, area_id[0], deleted_total, deleted_galaxy), end='\r')
+            deleted = session.query(PixelHistogram).select_from(join(PixelResult, PixelHistogram)) \
+                .filter(PixelResult.area_id == area_id[0]).filter(PixelHistogram.hist_value < MIN_HIST_VALUE).delete()
             deleted_total += deleted
             deleted_galaxy += deleted
             session.commit()
 
             # Give the rest of the world a chance to access the database
-            time.sleep(1)
+            time.sleep(2)
 
         print('')
         LOG.info('Removed %d really small histogram values from %s (%d)', deleted_galaxy, galaxy.name, galaxy.version_number)
