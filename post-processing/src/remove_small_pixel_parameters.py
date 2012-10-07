@@ -43,7 +43,7 @@ for galaxy_id_str in galaxy_ids:
         for area_id in session.query(Area.area_id).filter_by(galaxy_id=galaxy.galaxy_id).order_by(Area.area_id).all():
             LOG.info('Deleting low pixel_histogram values from galaxy {0} area {1} : Deleted total {2} galaxy {3}'.format(galaxy.galaxy_id, area_id[0], deleted_total, deleted_galaxy))
             # Sqlalchemy doesn't support joins when deleting so use the raw SQL as it is MUCH faster
-            result_proxy = engine.execute('''delete from pixel_histogram a, pixel_result b
+            result_proxy = engine.execute('''delete a from pixel_histogram a, pixel_result b
 where a.pxresult_id = b.pxresult_id
 and a.hist_value < {0}
 and b.area_id = {1}'''.format(MIN_HIST_VALUE, area_id[0]))
