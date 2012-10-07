@@ -8,7 +8,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import time
 from config import DB_LOGIN, MIN_HIST_VALUE
-from database.database_support import Galaxy, PixelResult, PixelHistogram, Area
+from database.database_support import Galaxy, Area
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -42,9 +42,11 @@ for galaxy_id_str in galaxy_ids:
         deleted_galaxy = 0
         for area_id in session.query(Area.area_id).filter_by(galaxy_id=galaxy.galaxy_id).order_by(Area.area_id).all():
             LOG.info('Deleting low pixel_histogram values from galaxy {0} area {1} : Deleted total {2} galaxy {3}'.format(galaxy.galaxy_id, area_id[0], deleted_total, deleted_galaxy))
-            # I have to use a sub query as Sqlalchemy doesn't support joins when deleting
-            sub_query = session.query(PixelResult.pxresult_id).filter(PixelResult.area_id == area_id[0]).subquery('sub_query')
-            deleted = session.query(PixelHistogram).filter(PixelHistogram.pxresult_id == sub_query.c.pxresult_id).filter(PixelHistogram.hist_value < MIN_HIST_VALUE).delete()
+            # Sqlalchemy doesn't support joins when deleting
+            deleted = engine.execute('''select count(*) from pixel_histogram a, pixel_result b
+where a.pxresult_id == b.pxresult_id
+and a.hist_value < ?
+and b.area_id = ?''', MIN_HIST_VALUE, area_id[0])
             deleted_total += deleted
             deleted_galaxy += deleted
             session.commit()
