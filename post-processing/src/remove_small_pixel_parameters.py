@@ -47,9 +47,8 @@ for galaxy_id_str in galaxy_ids:
 where a.pxresult_id = b.pxresult_id
 and a.hist_value < {0}
 and b.area_id = {1}'''.format(MIN_HIST_VALUE, area_id[0]))
-            deleted = result_proxy.first()
-            deleted_total += deleted[0]
-            deleted_galaxy += deleted[0]
+            deleted_total += result_proxy.rowcount()
+            deleted_galaxy += result_proxy.rowcount()
             session.commit()
 
             # Give the rest of the world a chance to access the database
