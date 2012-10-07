@@ -139,6 +139,7 @@ class PixelHistogram(Base):
     hist_value     = Column(Float)
 
     parameter = relationship("PixelParameter", backref=backref('histograms', order_by=pxhistogram_id))
+    pxresult = relationship("PixelResult", backref=backref('histograms', order_by=pxhistogram_id))
 
 class Register(Base):
     __tablename__ = 'register'
