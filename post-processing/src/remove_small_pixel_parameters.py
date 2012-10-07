@@ -44,13 +44,13 @@ for galaxy_id_str in galaxy_ids:
             LOG.info('Deleting low pixel_histogram values from galaxy {0} area {1} : Deleted total {2} galaxy {3}'.format(galaxy.galaxy_id, area_id[0], deleted_total, deleted_galaxy))
             # I have to use a sub query as Sqlalchemy doesn't support joins when deleting
             sub_query = session.query(PixelResult.pxresult_id).filter(PixelResult.area_id == area_id[0]).subquery('sub_query')
-            deleted = session.query(PixelHistogram).filter(PixelHistogram.pxresult_id == sub_query.c.pxresult_id).filter(PixelHistogram.hist_value < MIN_HIST_VALUE).count()
+            deleted = session.query(PixelHistogram).filter(PixelHistogram.pxresult_id == sub_query.c.pxresult_id).filter(PixelHistogram.hist_value < MIN_HIST_VALUE).delete()
             deleted_total += deleted
             deleted_galaxy += deleted
             session.commit()
 
             # Give the rest of the world a chance to access the database
-            time.sleep(2)
+            time.sleep(1)
 
         print('')
         LOG.info('Removed %d really small histogram values from %s (%d)', deleted_galaxy, galaxy.name, galaxy.version_number)
