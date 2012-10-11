@@ -56,10 +56,10 @@ CREATE TABLE run (
   INDEX (short_description)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE TABLE filter_id (
+CREATE TABLE run_filter (
   run_filter_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   run_id        BIGINT UNSIGNED NOT NULL,
-  filter_id     BIGINT UNSIGNED NOT NULL,
+  filter_id     SMALLINT UNSIGNED NOT NULL,
 
   FOREIGN KEY (run_id) REFERENCES run(run_id),
   FOREIGN KEY (filter_id) REFERENCES filter(filter_id),
