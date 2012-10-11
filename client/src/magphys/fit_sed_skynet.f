@@ -118,6 +118,8 @@ c theSkyNet parameter (nbinmax1=1500,nbinmax2=150)
 c theSkyNet
 c     The highest probability bin values
        real*8 hpbv, get_hpbv
+       real*8 min_hpbv
+       parameter(min_hpbv = 0.00001)
 c theSkyNet
       integer nbin_fmu,nbin_mu,nbin_tv,nbin_a,nbin2_tvism
       integer nbin_tbg1,nbin_tbg2,nbin_xi,nbin_sfr,nbin_ld
@@ -1004,6 +1006,7 @@ c theSkyNet
          write(31,806)
  806     format('# ... f_mu (SFH) ...')
          do ibin=1,nbin2_fmu
+c theSkyNet
             write(31,807) fmu2_hist(ibin),psfh2(ibin)
          enddo
          write(31,60)
@@ -1017,6 +1020,7 @@ c theSkyNet
          write(31,808)
  808     format('# ... f_mu (IR) ...')
          do ibin=1,nbin2_fmu
+c theSkyNet
             write(31,807) fmu2_hist(ibin),pir2(ibin)
          enddo
          write(31,60)
@@ -1030,6 +1034,7 @@ c theSkyNet
          write(31,809)
  809     format('# ... mu parameter ...')
          do ibin=1,nbin2_mu
+c theSkyNet
             write(31,807) mu2_hist(ibin),pmu2(ibin)
          enddo
          write(31,60)
@@ -1043,6 +1048,7 @@ c theSkyNet
          write(31,810)
  810     format('# ... tau_V ...')
          do ibin=1,nbin2_tv
+c theSkyNet
             write(31,807) tv2_hist(ibin),ptv2(ibin)
          enddo
          write(31,60)
@@ -1056,6 +1062,7 @@ c theSkyNet
          write(31,811)
  811     format('# ... sSFR_0.1Gyr ...')
          do ibin=1,nbin2_ssfr
+c theSkyNet
             write(31,812) ssfr2_hist(ibin),pssfr2(ibin)
          enddo
  812     format(1p2e12.3e3)
@@ -1070,6 +1077,7 @@ c theSkyNet
          write(31,813)
  813     format('# ... M(stars) ...')
          do ibin=1,nbin2_a
+c theSkyNet
             write(31,812) a2_hist(ibin),pa2(ibin)
          enddo
          write(31,60)
@@ -1083,6 +1091,7 @@ c theSkyNet
          write(31,814)
  814     format('# ... Ldust ...')
          do ibin=1,nbin2_ld
+c theSkyNet
             write(31,812) ld2_hist(ibin),pldust2(ibin)
          enddo
          write(31,60)
@@ -1096,6 +1105,7 @@ c theSkyNet
          write(31,815)
  815     format('# ... T_C^ISM ...')
          do ibin=1,nbin2_tbg2
+c theSkyNet
             write(31,807) tbg2_2_hist(ibin),ptbg2_2(ibin)
          enddo
          write(31,60)
@@ -1109,6 +1119,7 @@ c theSkyNet
          write(31,820)
  820     format('# ... T_W^BC ...')
          do ibin=1,nbin2_tbg1
+c theSkyNet
             write(31,807) tbg1_2_hist(ibin),ptbg1_2(ibin)
          enddo
          write(31,60)
@@ -1122,6 +1133,7 @@ c theSkyNet
          write(31,821)
  821     format('# ... xi_C^tot ...')
          do ibin=1,nbin2_fmu_ism
+c theSkyNet
             write(31,807) fmuism2_hist(ibin),pism2(ibin)
          enddo
          write(31,60)
@@ -1135,6 +1147,7 @@ c theSkyNet
          write(31,816)
  816     format('# ... xi_PAH^tot ...')
          do ibin=1,nbin2_xi
+c theSkyNet
             write(31,807) xi2_hist(ibin),pxi1_2(ibin)
          enddo
          write(31,60)
@@ -1148,6 +1161,7 @@ c theSkyNet
          write(31,817)
  817     format('# ... xi_MIR^tot ...')
          do ibin=1,nbin2_xi
+c theSkyNet
             write(31,807) xi2_hist(ibin),pxi2_2(ibin)
          enddo
          write(31,60)
@@ -1161,6 +1175,7 @@ c theSkyNet
          write(31,818)
  818     format('# ... xi_W^tot ...')
          do ibin=1,nbin2_xi
+c theSkyNet
             write(31,807) xi2_hist(ibin),pxi3_2(ibin)
          enddo
          write(31,60)
@@ -1174,6 +1189,7 @@ c theSkyNet
          write(31,81)
  81      format('# ... tau_V^ISM...')
          do ibin=1,nbin2_tvism
+c theSkyNet
             write(31,807) tvism2_hist(ibin),ptvism2(ibin)
          enddo
          write(31,60)
@@ -1187,6 +1203,7 @@ c theSkyNet
          write(31,888)
  888     format('# ... M(dust)...')
          do ibin=1,nbin2_md
+c theSkyNet
             write(31,807) md2_hist(ibin),pmd_2(ibin)
          enddo
          write(31,60)
@@ -1200,6 +1217,7 @@ c theSkyNet
          write(31,889)
  889     format('# ... SFR_0.1Gyr ...')
          do ibin=1,nbin2_sfr
+c theSkyNet
             write(31,812) sfr2_hist(ibin),psfr2(ibin)
          enddo
          write(31,60)

@@ -2,8 +2,107 @@ DROP SCHEMA IF EXISTS magphys;
 CREATE SCHEMA magphys;
 USE magphys;
 
+CREATE TABLE filter (
+  filter_id     SMALLINT UNSIGNED NOT NULL PRIMARY KEY,
+  name          VARCHAR(30) NOT NULL,
+  eff_lambda    DECIMAL(10, 4) NOT NULL,
+  filter_number SMALLINT NOT NULL,
+  sort_order    SMALLINT NOT NULL,
+  ultraviolet   TINYINT(1) NOT NULL,
+  optical       TINYINT(1) NOT NULL,
+  infrared      TINYINT(1) NOT NULL,
+  label         VARCHAR(20) NOT NULL,
+
+  INDEX (filter_number),
+  INDEX (name)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+INSERT INTO filter VALUES (0,  'GALEXFUV', 0.152,  123, 0,  1, 0, 0, 'FUV');
+INSERT INTO filter VALUES (1,  'GALEXNUV', 0.231,  124, 1,  1, 0, 0, 'NUV');
+INSERT INTO filter VALUES (2,  'SDSSu',    0.3534, 229, 2,  0, 1, 0, 'u');
+INSERT INTO filter VALUES (3,  'SDSSg',    0.4742, 230, 3,  0, 1, 0, 'g');
+INSERT INTO filter VALUES (4,  'PS1g',     0.481,  323, 4,  0, 1, 0, 'g');
+INSERT INTO filter VALUES (5,  'PS1r',     0.617,  324, 5,  0, 1, 0, 'r');
+INSERT INTO filter VALUES (6,  'SDSSr',    0.6189, 231, 6,  0, 1, 0, 'r');
+INSERT INTO filter VALUES (7,  'PS1i',     0.752,  325, 7,  0, 1, 0, 'i');
+INSERT INTO filter VALUES (8,  'SDSSi',    0.7595, 232, 8,  0, 1, 0, 'i');
+INSERT INTO filter VALUES (9,  'PS1z',     0.866,  326, 9,  0, 1, 0, 'z');
+INSERT INTO filter VALUES (10, 'SDSSz',    0.9032, 233, 10, 0, 1, 0, 'z');
+INSERT INTO filter VALUES (11, 'PS1y',     0.962,  327, 11, 0, 1, 0, 'y');
+INSERT INTO filter VALUES (12, 'WISEW1',   3.4,    280, 12, 0, 0, 1, '3.4μm');
+INSERT INTO filter VALUES (13, 'IRAC3.6',  3.550,  153, 13, 0, 0, 1, '3.6μm');
+INSERT INTO filter VALUES (14, 'IRAC4.5',  4.493,  154, 14, 0, 0, 1, '4.5μm');
+INSERT INTO filter VALUES (15, 'WISEW2',   4.6,    281, 15, 0, 0, 1, '4.6μm');
+INSERT INTO filter VALUES (16, 'IRAC5.8',  5.731,  155, 16, 0, 0, 1, '5.8μm');
+INSERT INTO filter VALUES (17, 'IRAC8.0',  7.872,  156, 17, 0, 0, 1, '8.0μm');
+INSERT INTO filter VALUES (18, 'WISEW3',   12.0,   282, 18, 0, 0, 1, '12μm');
+INSERT INTO filter VALUES (19, 'WISEW4',   22.0,   283, 19, 0, 0, 1, '22μm');
+INSERT INTO filter VALUES (20, 'MIPS24',   23.68,  157, 20, 0, 0, 1, '24μm');
+INSERT INTO filter VALUES (21, 'MIPS70',   71.42,  158, 21, 0, 0, 1, '70μm');
+INSERT INTO filter VALUES (22, 'PACS75',   75.0,   169, 22, 0, 0, 1, '75μm');
+INSERT INTO filter VALUES (23, 'PACS110',  110.0,  170, 23, 0, 0, 1, '110μm');
+INSERT INTO filter VALUES (24, 'MIPS160',  155.9,  159, 24, 0, 0, 1, '160μm');
+INSERT INTO filter VALUES (25, 'PACS170',  170.0,  171, 25, 0, 0, 1, '170μm');
+INSERT INTO filter VALUES (26, 'SPIRE250', 250.0,  172, 26, 0, 0, 1, '250μm');
+INSERT INTO filter VALUES (27, 'SPIRE350', 350.0,  173, 27, 0, 0, 1, '350μm');
+INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 28, 0, 0, 1, '500μm');
+
+CREATE TABLE run (
+  run_id            BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  short_description VARCHAR(250) NOT NULL,
+  long_description  VARCHAR(1000) NOT NULL,
+  directory         VARCHAR(1000) NOT NULL,
+
+  INDEX (short_description)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE filter_id (
+  run_filter_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  run_id        BIGINT UNSIGNED NOT NULL,
+  filter_id     BIGINT UNSIGNED NOT NULL,
+
+  FOREIGN KEY (run_id) REFERENCES run(run_id),
+  FOREIGN KEY (filter_id) REFERENCES filter(filter_id),
+
+  INDEX (run_id),
+  INDEX (filter_id)
+)  CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE run_file (
+  run_file_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  run_id      BIGINT UNSIGNED NOT NULL,
+  redshift    DECIMAL(7, 5) NOT NULL,
+  file_type   INTEGER NOT NULL,
+  file_name   VARCHAR(1000) NOT NULL,
+  size        BIGINT NOT NULL,
+  md5_hash    VARCHAR (100) NOT NULL,
+
+  FOREIGN KEY (run_id) REFERENCES run(run_id),
+
+  INDEX (run_id)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE register (
+  register_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  galaxy_name   VARCHAR(128) NOT NULL,
+  redshift      DECIMAL(7, 5) NOT NULL,
+  galaxy_type   VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
+  sigma         FLOAT NOT NULL,
+  filename      VARCHAR(1000) NOT NULL,
+  priority      INTEGER NOT NULL,
+  register_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  create_time   TIMESTAMP NULL DEFAULT NULL,
+  run_id        BIGINT UNSIGNED NOT NULL,
+
+  INDEX (galaxy_name),
+  INDEX (create_time, register_time),
+
+  FOREIGN KEY(run_id) REFERENCES run(run_id)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
 CREATE TABLE galaxy (
   galaxy_id        BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  run_id           BIGINT NOT NULL,
   name             VARCHAR(128) NOT NULL,
   dimension_x      INTEGER UNSIGNED NOT NULL,
   dimension_y      INTEGER UNSIGNED NOT NULL,
@@ -18,19 +117,24 @@ CREATE TABLE galaxy (
   ra_cent          FLOAT,
   dec_cent         FLOAT,
   pixel_count      INTEGER,
-  pixels_processed INTEGER
-) CHARACTER SET utf8 ENGINE=InnoDB;
+  pixels_processed INTEGER,
 
-CREATE INDEX galaxy_name_ix ON galaxy(name, version_number);
+  FOREIGN KEY (run_id) REFERENCES run(run_id),
+
+  INDEX (run_id),
+  INDEX (name, version_number)
+) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE fits_header (
   fitsheader_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   galaxy_id     BIGINT UNSIGNED NOT NULL,
   keyword       VARCHAR(128) NOT NULL,
-  value         VARCHAR(128) NOT NULL
-) CHARACTER SET utf8 ENGINE=InnoDB;
+  value         VARCHAR(128) NOT NULL,
 
-CREATE INDEX fits_header_galaxy_ix ON fits_header(galaxy_id);
+  FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id),
+
+  INDEX (galaxy_id)
+) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE area (
   area_id      BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -40,22 +144,24 @@ CREATE TABLE area (
   bottom_x     INTEGER UNSIGNED NOT NULL,
   bottom_y     INTEGER UNSIGNED NOT NULL,
   workunit_id  BIGINT UNSIGNED,
-  update_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-) CHARACTER SET utf8 ENGINE=InnoDB;
+  update_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-ALTER TABLE area ADD CONSTRAINT area_galaxy_fk FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id);
-CREATE INDEX area_galaxy_ix ON area(galaxy_id);
-CREATE UNIQUE INDEX area_ix ON area(galaxy_id, top_x, top_y, bottom_x, bottom_y);
+  FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id),
+
+  INDEX  (galaxy_id),
+  UNIQUE (galaxy_id, top_x, top_y, bottom_x, bottom_y)
+) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE area_user (
   areauser_id  BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   area_id      BIGINT UNSIGNED NOT NULL,
   userid       INTEGER NOT NULL,
-  create_time  TIMESTAMP
-) CHARACTER SET utf8 ENGINE=InnoDB;
+  create_time  TIMESTAMP,
 
-ALTER TABLE area_user ADD CONSTRAINT areauser_area_fk FOREIGN KEY(area_id) REFERENCES area(area_id);
-CREATE INDEX areauser_area_ix ON area_user(area_id);
+  FOREIGN KEY(area_id) REFERENCES area(area_id),
+
+  INDEX (area_id)
+) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE pixel_result (
   pxresult_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -88,13 +194,14 @@ CREATE TABLE pixel_result (
   dmstar      DOUBLE,
   dfmu_aux    DOUBLE,
   dz          DOUBLE,
-  KEY (pxresult_id)
+
+  KEY    (pxresult_id),
+  INDEX  (area_id),
+  UNIQUE (galaxy_id, x, y)
 ) CHARACTER SET utf8 ENGINE=InnoDB
 PARTITION BY KEY (galaxy_id)
 PARTITIONS 16;
 
-CREATE INDEX pixel_result_area_ix ON pixel_result(area_id);
-CREATE UNIQUE INDEX pixel_result_ix ON pixel_result(galaxy_id, x, y);
 
 CREATE TABLE pixel_filter (
   pxfilter_id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -108,7 +215,7 @@ CREATE TABLE pixel_filter (
 PARTITION BY KEY (pxresult_id)
 PARTITIONS 16;
 
-CREATE INDEX pxfilter_pxresult_ix ON pixel_filter(pxresult_id);
+CREATE INDEX pxresult_ix ON pixel_filter(pxresult_id);
 
 CREATE TABLE pixel_parameter (
   pxparameter_id    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -128,7 +235,7 @@ CREATE TABLE pixel_parameter (
 PARTITION BY KEY (pxresult_id)
 PARTITIONS 16;
 
-CREATE INDEX pxparameter_pxresult_ix ON pixel_parameter(pxresult_id);
+CREATE INDEX pxresult_ix ON pixel_parameter(pxresult_id);
 
 CREATE TABLE pixel_histogram (
   pxhistogram_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -141,28 +248,13 @@ CREATE TABLE pixel_histogram (
 PARTITION BY KEY (pxresult_id)
 PARTITIONS 16;
 
-CREATE INDEX pxhistogram_pxresult_ix ON pixel_histogram(pxresult_id);
-CREATE INDEX pxhistogram_pxparameter_ix ON pixel_histogram(pxparameter_id);
+CREATE INDEX pxresult_ix ON pixel_histogram(pxresult_id);
+CREATE INDEX pxparameter_ix ON pixel_histogram(pxparameter_id);
 
 CREATE TABLE user_pixel (
   userid BIGINT UNSIGNED NOT NULL PRIMARY KEY,
   pixel_count INTEGER
 ) CHARACTER SET utf8 ENGINE=InnoDB;
-
-CREATE TABLE register (
-  register_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  galaxy_name   VARCHAR(128) NOT NULL,
-  redshift      FLOAT NOT NULL,
-  galaxy_type   VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
-  sigma         FLOAT NOT NULL,
-  filename      VARCHAR(1000) NOT NULL,
-  priority      INTEGER NOT NULL,
-  register_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  create_time   TIMESTAMP NULL DEFAULT NULL
-) CHARACTER SET utf8 ENGINE=InnoDB;
-
-CREATE INDEX register_galaxy_name_ix ON register(galaxy_name);
-CREATE INDEX register_time_ix ON register(create_time, register_time);
 
 CREATE TABLE parameter_name (
   parameter_name_id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
@@ -186,59 +278,18 @@ INSERT INTO parameter_name VALUES (14, 'tau_V^ISM');
 INSERT INTO parameter_name VALUES (15, 'M(dust)');
 INSERT INTO parameter_name VALUES (16, 'SFR_0.1Gyr');
 
-CREATE TABLE filter (
-  filter_id     TINYINT UNSIGNED NOT NULL PRIMARY KEY,
-  name          VARCHAR(30) NOT NULL,
-  eff_lambda    DECIMAL(10, 4) NOT NULL,
-  filter_number SMALLINT NOT NULL,
-  sort_order    SMALLINT NOT NULL,
-  ultraviolet   TINYINT(1) NOT NULL,
-  optical       TINYINT(1) NOT NULL,
-  infrared      TINYINT(1) NOT NULL,
-  label         VARCHAR(20) NOT NULL
-) CHARACTER SET utf8 ENGINE=InnoDB;
-
-CREATE INDEX filter_filter_number_ix ON filter(filter_number);
-CREATE INDEX filter_name_ix ON filter(name);
-
-INSERT INTO filter VALUES (0,  'GALEXFUV', 0.152,  123, 0,  1, 0, 0, 'FUV');
-INSERT INTO filter VALUES (1,  'GALEXNUV', 0.231,  124, 1,  1, 0, 0, 'NUV');
-INSERT INTO filter VALUES (2,  'SDSSu',    0.3534, 229, 2,  0, 1, 0, 'u');
-INSERT INTO filter VALUES (3,  'SDSSg',    0.4742, 230, 3,  0, 1, 0, 'g');
-INSERT INTO filter VALUES (4,  'PS1g',     0.481,  323, 4,  0, 1, 0, 'g');
-INSERT INTO filter VALUES (5,  'PS1r',     0.617,  324, 5,  0, 1, 0, 'r');
-INSERT INTO filter VALUES (6,  'SDSSr',    0.6189, 231, 6,  0, 1, 0, 'r');
-INSERT INTO filter VALUES (7,  'PS1i',     0.752,  325, 7,  0, 1, 0, 'i');
-INSERT INTO filter VALUES (8,  'SDSSi',    0.7595, 232, 8,  0, 1, 0, 'i');
-INSERT INTO filter VALUES (9,  'PS1z',     0.866,  326, 9,  0, 1, 0, 'z');
-INSERT INTO filter VALUES (10, 'SDSSz',    0.9032, 233, 10, 0, 1, 0, 'z');
-INSERT INTO filter VALUES (11, 'PS1y',     0.962,  327, 11, 0, 1, 0, 'y');
-INSERT INTO filter VALUES (12, 'WISEW1',   3.4,    280, 12, 0, 0, 1, '3.4μm');
-INSERT INTO filter VALUES (13, 'IRAC3.6',  3.550,  153, 13, 0, 0, 1, '3.6μm');
-INSERT INTO filter VALUES (14, 'IRAC4.5',  4.493,  154, 14, 0, 0, 1, '4.5μm');
-INSERT INTO filter VALUES (15, 'WISEW2',   4.6,    281, 15, 0, 0, 1, '4.6μm');
-INSERT INTO filter VALUES (16, 'IRAC5.8',  5.731,  155, 16, 0, 0, 1, '5.8μm');
-INSERT INTO filter VALUES (17, 'IRAC8.0',  7.872,  156, 17, 0, 0, 1, '8.0μm');
-INSERT INTO filter VALUES (18, 'WISEW3',   12.0,   282, 18, 0, 0, 1, '12μm');
-INSERT INTO filter VALUES (19, 'WISEW4',   22.0,   283, 19, 0, 0, 1, '22μm');
-INSERT INTO filter VALUES (20, 'MIPS24',   23.68,  157, 20, 0, 0, 1, '24μm');
-INSERT INTO filter VALUES (21, 'MIPS70',   71.42,  158, 21, 0, 0, 1, '70μm');
-INSERT INTO filter VALUES (22, 'PACS75',   75.0,   169, 22, 0, 0, 1, '75μm');
-INSERT INTO filter VALUES (23, 'PACS110',  110.0,  170, 23, 0, 0, 1, '110μm');
-INSERT INTO filter VALUES (24, 'MIPS160',  155.9,  159, 24, 0, 0, 1, '160μm');
-INSERT INTO filter VALUES (25, 'PACS170',  170.0,  171, 25, 0, 0, 1, '170μm');
-INSERT INTO filter VALUES (26, 'SPIRE250', 250.0,  172, 26, 0, 0, 1, '250μm');
-INSERT INTO filter VALUES (27, 'SPIRE350', 350.0,  173, 27, 0, 0, 1, '350μm');
-INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 28, 0, 0, 1, '500μm');
-
 CREATE TABLE image_filters_used (
   image_filters_used_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  file_name               VARCHAR(250) NOT NULL,
+  image_number            SMALLINT NOT NULL,
   galaxy_id               BIGINT UNSIGNED NOT NULL,
   filter_number_red       SMALLINT NOT NULL,
   filter_number_green     SMALLINT NOT NULL,
-  filter_number_blue      SMALLINT NOT NULL
-) CHARACTER SET utf8 ENGINE=InnoDB;
+  filter_number_blue      SMALLINT NOT NULL,
 
-CREATE INDEX image_filters_used_file_name_ix ON image_filters_used(file_name);
-CREATE INDEX image_filters_used_galaxy_id_ix ON image_filters_used(galaxy_id);
+  FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id),
+  FOREIGN KEY (filter_number_red) REFERENCES filter(filter_id),
+  FOREIGN KEY (filter_number_green) REFERENCES filter(filter_id),
+  FOREIGN KEY (filter_number_blue) REFERENCES filter(filter_id),
+
+  INDEX (galaxy_id, image_number)
+) CHARACTER SET utf8 ENGINE=InnoDB;

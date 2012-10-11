@@ -1,4 +1,28 @@
 #! /usr/bin/env python2.7
+#
+#    (c) UWA, The University of Western Australia
+#    M468/35 Stirling Hwy
+#    Perth WA 6009
+#    Australia
+#
+#    Copyright by UWA, 2012
+#    All rights reserved
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+#    MA 02111-1307  USA
+#
 """
 Register a FITS file ready to be converted into Work Units
 """
@@ -21,6 +45,7 @@ parser.add_argument('galaxy_name', nargs=1, help='the name of the galaxy')
 parser.add_argument('type', nargs=1, help='the hubble type')
 parser.add_argument('sigma', type=float, nargs=1, help='the error in the observations')
 parser.add_argument('priority', type=int, nargs=1, help='the higher the number the higher the priority')
+parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')
 
 args = vars(parser.parse_args())
 
@@ -30,6 +55,7 @@ GALAXY_NAME = args['galaxy_name'][0]
 GALAXY_TYPE = args['type'][0]
 PRIORITY = args['priority'][0]
 SIGMA = args['sigma'][0]
+RUN_ID = args['run_id'][0]
 
 # Make sure the file exists
 if not os.path.isfile(INPUT_FILE):
@@ -50,6 +76,7 @@ register.galaxy_type = GALAXY_TYPE
 register.filename = INPUT_FILE
 register.priority = PRIORITY
 register.register_time = datetime.now()
+register.run_id = RUN_ID
 session.add(register)
 session.commit()
 

@@ -1,3 +1,27 @@
+#
+#    (c) UWA, The University of Western Australia
+#    M468/35 Stirling Hwy
+#    Perth WA 6009
+#    Australia
+#
+#    Copyright by UWA, 2012
+#    All rights reserved
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+#    MA 02111-1307  USA
+#
 """
 Fabric to be run on the BOINC server to configure things
 """
@@ -126,9 +150,6 @@ def copy_files(app_version):
         local('mkdir -p /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
 
         for file in glob('/home/ec2-user/boinc-magphys/client/platforms/{0}/*'.format(platform)):
-            head, tail = split(file)
-            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name, tail))
-        for file in glob('/home/ec2-user/boinc-magphys/client/platforms/common/*'):
             head, tail = split(file)
             local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name, tail))
         if platform in WINDOWS_PLATFORMS:
@@ -278,12 +299,13 @@ def edit_files():
   </daemons>'''.format(env.project_name))
     file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>',to='''
     <prefer_primary_platform>1</prefer_primary_platform>
-    <one_result_per_user_per_wu/>
     <max_wus_in_progress>10</max_wus_in_progress>
     <shmem_work_items>200</shmem_work_items>
     <feeder_query_size>300</feeder_query_size>
     <reliable_priority_on_over>5</reliable_priority_on_over>
     <delete_delay_hours>24</delete_delay_hours>
+    <msg_to_host/>
+    <one_result_per_user_per_wu/>
     <one_result_per_host_per_wu/>''')
     file_editor('/home/ec2-user/projects/{0}/config.xml'.format(env.project_name))
 

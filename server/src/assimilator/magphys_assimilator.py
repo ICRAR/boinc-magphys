@@ -1,4 +1,28 @@
 #! /usr/bin/env python2.7
+#
+#    (c) UWA, The University of Western Australia
+#    M468/35 Stirling Hwy
+#    Perth WA 6009
+#    Australia
+#
+#    Copyright by UWA, 2012
+#    All rights reserved
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+#    MA 02111-1307  USA
+#
 """
 The Assimilator for the MagPhys code
 """
@@ -81,11 +105,10 @@ class MagphysAssimilator(assimilator.Assimilator):
         parameter and histogram rows.
         """
         if is_gzip(outFile):
-            self.logDebug('Is GZIP\n')
             f = gzip.open(outFile , "rb")
         else:
-            self.logDebug('Is not GZIP\n')
             f = open(outFile, "r")
+
         lineNo = 0
         pxresult = None
         parameter = None
@@ -94,6 +117,8 @@ class MagphysAssimilator(assimilator.Assimilator):
         skynet_next1 = False
         skynet_next2 = False
         result_count = 0
+        histogram_count1 = 0
+        histogram_count2 = 0
         try:
             for line in f:
                 lineNo += 1
@@ -101,6 +126,8 @@ class MagphysAssimilator(assimilator.Assimilator):
                 if line.startswith(" ####### "):
                     if pxresult:
                         self.saveResult(session, pxresult)
+                        self.logDebug('%.3f seconds for %d - %d : %d histogram entries\n', time.time() - start_time, pxresult.pxresult_id, histogram_count1, histogram_count2)
+                    start_time = time.time()
                     values = line.split()
                     pointName = values[1]
                     pxresultId = pointName[3:].rstrip()
@@ -201,9 +228,11 @@ class MagphysAssimilator(assimilator.Assimilator):
                             parameter.percentile97_5 = float(values[4])
                             percentiles_next = False
                         elif histogram_next:
+                            histogram_count1 += 1
                             values = line.split()
                             hist_value = float(values[1])
                             if hist_value > MIN_HIST_VALUE and not math.isnan(hist_value):
+                                histogram_count1 += 2
                                 hist = PixelHistogram()
                                 hist.pxresult_id = pxresult.pxresult_id
                                 hist.x_axis = float(values[0])

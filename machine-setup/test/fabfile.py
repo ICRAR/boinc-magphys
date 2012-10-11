@@ -1,3 +1,27 @@
+#
+#    (c) UWA, The University of Western Australia
+#    M468/35 Stirling Hwy
+#    Perth WA 6009
+#    Australia
+#
+#    Copyright by UWA, 2012
+#    All rights reserved
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+#    MA 02111-1307  USA
+#
 """
 Fabric file for installing the servers
 
@@ -19,7 +43,7 @@ import time
 from fabric.api import run, sudo, put, env, require
 from fabric.context_managers import cd
 from fabric.contrib.console import confirm
-from fabric.contrib.files import append, sed, comment
+from fabric.contrib.files import append, comment
 from fabric.decorators import task, serial
 from fabric.operations import prompt
 from fabric.utils import puts, abort, fastprint
@@ -287,7 +311,7 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
 
     # Copy the config files
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
-    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/index.php /home/ec2-user/projects/{0}/html/user/index.php'.format(env.project_name))
+    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/* /home/ec2-user/projects/{0}/html/user/'.format(env.project_name))
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/hr_info.txt /home/ec2-user/projects/{0}/hr_info.txt'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_archive'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_tmp'.format(env.project_name))

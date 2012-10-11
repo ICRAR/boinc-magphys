@@ -1,12 +1,44 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger, Boolean
-from sqlalchemy.orm import relationship, backref
-
+#
+#    (c) UWA, The University of Western Australia
+#    M468/35 Stirling Hwy
+#    Perth WA 6009
+#    Australia
+#
+#    Copyright by UWA, 2012
+#    All rights reserved
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+#    MA 02111-1307  USA
+#
 # The database is partitioned to improve performance, this means there are no primary
 # keys, but the ORM mapping of sqlalchemy needs them - doesn't seem to hurt having
 # them even though they don't really exist
 
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger, Boolean
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.schema import Table
+
 Base = declarative_base()
+
+# The many-to-many join table
+run_filter_association_table = Table('run_filter',
+    Base.metadata,
+    Column('run_id', BigInteger, ForeignKey('run.run_id')),
+    Column('filter_id', BigInteger, ForeignKey('filter.filter_id')))
+
 class Galaxy(Base):
     __tablename__ = 'galaxy'
 
@@ -153,6 +185,7 @@ class Register(Base):
     priority      = Column(Integer)
     register_time = Column(TIMESTAMP)
     create_time   = Column(TIMESTAMP)
+    run_id        = Column(Integer, ForeignKey('runs.run_id'))
 
 class ParameterName(Base):
     __tablename__ = 'parameter_name'
@@ -162,6 +195,7 @@ class ParameterName(Base):
 
 class Filter(Base):
     __tablename__ = 'filter'
+
     filter_id     = Column(Integer, primary_key=True)
     name          = Column(String(30))
     eff_lambda    = Column(Float)
@@ -175,8 +209,31 @@ class ImageFiltersUsed(Base):
     __tablename__ = 'image_filters_used'
 
     image_filters_used_id = Column(BigInteger, primary_key=True)
-    file_name             = Column(String(250))
-    galaxy_id             = Column(BigInteger)
-    filter_number_red     = Column(Integer)
-    filter_number_green   = Column(Integer)
-    filter_number_blue    = Column(Integer)
+    image_number          = Column(Integer)
+    galaxy_id             = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
+    filter_number_red     = Column(Integer, ForeignKey('filter.filter_id'))
+    filter_number_green   = Column(Integer, ForeignKey('filter.filter_id'))
+    filter_number_blue    = Column(Integer, ForeignKey('filter.filter_id'))
+
+class Run(Base):
+    __tablename__ = 'run'
+
+    run_id            = Column(BigInteger, primary_key=True)
+    short_description = Column(String(250))
+    long_description  = Column(String(1000))
+    directory         = Column(String(1000))
+
+    registrations = relationship('Register', backref=backref('run'))
+    run_files     = relationship('RunFile', backref=backref('run'))
+    filters       = relationship('Filter', secondary=run_filter_association_table, backref='runs')
+
+class RunFile(Base):
+    __tablename__ = 'run_file'
+
+    run_file_id = Column(BigInteger, primary_key=True)
+    run_id      = Column(BigInteger, ForeignKey('run.run_id'))
+    redshift    = Column(Float)
+    file_type   = Column(Integer)
+    file_name   = Column(String(1000))
+    size        = Column(BigInteger)
+    md5_hash    = Column(String(100))
