@@ -30,7 +30,7 @@ class Galaxy(models.Model):
     dimension_x = models.IntegerField()
     dimension_y = models.IntegerField()
     dimension_z = models.IntegerField()
-    redshift    = models.FloatField()
+    redshift    = models.DecimalField(max_digits=7, decimal_places=5)
 
     class Meta:
         db_table = u'galaxy'
