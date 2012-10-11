@@ -30,6 +30,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger, Boolean
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import Table
+from sqlalchemy.types import Numeric
 
 Base = declarative_base()
 
@@ -47,7 +48,7 @@ class Galaxy(Base):
     dimension_x      = Column(Integer)
     dimension_y      = Column(Integer)
     dimension_z      = Column(Integer)
-    redshift         = Column(Float)
+    redshift         = Column(Numeric(7,5))
     create_time      = Column(TIMESTAMP)
     image_time       = Column(TIMESTAMP)
     version_number   = Column(Integer)
@@ -55,7 +56,7 @@ class Galaxy(Base):
     galaxy_type      = Column(String(10))
     ra_cent          = Column(Float)
     dec_cent         = Column(Float)
-    sigma            = Column(Float)
+    sigma            = Column(Numeric(3,2))
     pixel_count      = Column(Integer)
     pixels_processed = Column(Integer)
 
@@ -178,8 +179,8 @@ class Register(Base):
 
     register_id   = Column(BigInteger, primary_key=True)
     galaxy_name   = Column(String(128))
-    redshift      = Column(Float)
-    sigma         = Column(Float)
+    redshift      = Column(Numeric(7,5))
+    sigma         = Column(Numeric(3,2))
     galaxy_type   = Column(String(10))
     filename      = Column(String(1000))
     priority      = Column(Integer)
@@ -198,7 +199,7 @@ class Filter(Base):
 
     filter_id     = Column(Integer, primary_key=True)
     name          = Column(String(30))
-    eff_lambda    = Column(Float)
+    eff_lambda    = Column(Numeric(10,4))
     filter_number = Column(Integer)
     sort_order    = Column(Integer)
     ultraviolet   = Column(Integer)
@@ -232,7 +233,7 @@ class RunFile(Base):
 
     run_file_id = Column(BigInteger, primary_key=True)
     run_id      = Column(BigInteger, ForeignKey('run.run_id'))
-    redshift    = Column(Float)
+    redshift    = Column(Numeric(10,4))
     file_type   = Column(Integer)
     file_name   = Column(String(1000))
     size        = Column(BigInteger)
