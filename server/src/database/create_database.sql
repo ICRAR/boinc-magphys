@@ -102,7 +102,7 @@ CREATE TABLE register (
 
 CREATE TABLE galaxy (
   galaxy_id        BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  run_id           BIGINT NOT NULL,
+  run_id           BIGINT UNSIGNED NOT NULL,
   name             VARCHAR(128) NOT NULL,
   dimension_x      INTEGER UNSIGNED NOT NULL,
   dimension_y      INTEGER UNSIGNED NOT NULL,
@@ -282,9 +282,9 @@ CREATE TABLE image_filters_used (
   image_filters_used_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   image_number            SMALLINT NOT NULL,
   galaxy_id               BIGINT UNSIGNED NOT NULL,
-  filter_number_red       SMALLINT NOT NULL,
-  filter_number_green     SMALLINT NOT NULL,
-  filter_number_blue      SMALLINT NOT NULL,
+  filter_number_red       SMALLINT UNSIGNED NOT NULL,
+  filter_number_green     SMALLINT UNSIGNED NOT NULL,
+  filter_number_blue      SMALLINT UNSIGNED NOT NULL,
 
   FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id),
   FOREIGN KEY (filter_number_red) REFERENCES filter(filter_id),
