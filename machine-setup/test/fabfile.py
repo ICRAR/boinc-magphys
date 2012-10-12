@@ -343,21 +343,15 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
 
     # Copy files into place
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        run('fab --set project_name={0} setup_postfix'.format(env.project_name))
+        run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
         run('fab --set project_name={0} create_first_version'.format(env.project_name))
         run('fab --set project_name={0} start_daemons'.format(env.project_name))
+        run('fab --set project_name={0},django_superuser={1},django_password={2},django_email={3} configure_django'.format(env.project_name, env.ops_username, env.ops_password, env.gmail_account))
 
     # Setup the crontab job to keep things ticking
     run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
     run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
     run('crontab /tmp/crontab.txt')
-
-    # Mark the python scripts as executable
-    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py')
-    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/work_generation/fits2wu.py')
-    run('chmod oug+x /home/ec2-user/boinc-magphys/server/src/credit/assign_credit.py')
-    run('chmod oug+x /home/ec2-user/boinc-magphys/post-processing/src/build_fits_image.py')
-    run('chmod oug+x /home/ec2-user/boinc-magphys/post-processing/src/build_png_image.py')
 
     # Setup the ops area password
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):

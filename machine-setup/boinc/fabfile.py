@@ -71,7 +71,8 @@ def create_version_xml(platform, app_version, directory, exe):
     outfile.close()
 
 def copy_files(app_version):
-    """Copy the application files
+    """
+    Copy the application files
 
     Copy the application files to where they need to live
     """
@@ -87,7 +88,8 @@ def copy_files(app_version):
             create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name), '')
 
 def sign_files(app_version):
-    """Sign the files
+    """
+    Sign the files
 
     Sign the application files
     """
@@ -102,6 +104,9 @@ def sign_files(app_version):
 
 @task
 def edit_files():
+    """
+    Edit the files as we need them
+    """
     # Edit project.inc
     file_editor = FileEditor()
     file_editor.substitute('REPLACE WITH PROJECT NAME', to='theSkyNet {0} - the PS1 Optical Galaxy Survey'.format(env.project_name.upper()))
@@ -240,19 +245,21 @@ def edit_files():
 
 @task
 def setup_postfix():
-    """Setup the relocated file
+    """
+    Setup the relocated file
 
     The relocated file needs the hostname
     """
     host_name = socket.gethostname()
-    local('''sudo su -l root -c 'echo "ec2-user@{0}.ec2.internal  theskynet.boinc@gmail.com
-root@{0}.ec2.internal      theskynet.boinc@gmail.com
-apache@{0}.ec2.internal    theskynet.boinc@gmail.com" >> /etc/postfix/generic' '''.format(host_name))
+    local('''sudo su -l root -c 'echo "ec2-user@{0}.ec2.internal  {1}@gmail.com
+root@{0}.ec2.internal      {1}@gmail.com
+apache@{0}.ec2.internal    {1}@gmail.com" >> /etc/postfix/generic' '''.format(host_name, env.gmail_account))
     local('sudo postmap /etc/postfix/generic')
 
 @task
 def setup_website():
-    """Setup the website
+    """
+    Setup the website
 
     Copy the config files and restart the httpd daemon
     """
@@ -261,7 +268,8 @@ def setup_website():
 
 @task
 def create_first_version():
-    """Create the first version
+    """
+    Create the first version
 
     Create the first versions of the files
     """
@@ -277,7 +285,8 @@ def create_first_version():
 
 @task
 def create_new_version():
-    """Create a new version
+    """
+    Create a new version
 
     Create a new version of the application
     """
@@ -291,8 +300,27 @@ def create_new_version():
 
 @task
 def start_daemons():
-    """Start the BOINC daemons
+    """
+    Start the BOINC daemons
 
     Run the BOINC script to start the daemons
     """
     local('cd /home/ec2-user/projects/{0}; bin/start'.format(env.project_name))
+
+@task
+def configure_django():
+    """
+    Configure django
+
+    Django needs its user screens activated
+    """
+    local('''echo "#!/bin/bash
+python27 manage.py syncdb << EOF
+yes
+{0}
+{1}
+{2}
+{2}
+EOF" > /home/ec2-user/server/src/pogsite/setup.sh'''.format(env.django_superuser, env.django_email, env.django_password))
+    local('chmod +x /home/ec2-user/server/src/pogsite/setup.sh')
+    local('cd /home/ec2-user/server/src/pogsite; setup.sh')
