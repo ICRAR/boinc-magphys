@@ -19,6 +19,9 @@ package { 'gcc':
 package { 'gcc-c++':
     ensure => installed,
 }
+package { 'libstdc++46-static':
+    ensure => installed,
+}
 package { 'gdb':
     ensure => installed,
 }
