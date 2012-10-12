@@ -49,7 +49,7 @@ from fabric.operations import prompt
 from fabric.utils import puts, abort, fastprint
 
 USERNAME = 'ec2-user'
-AMI_ID = 'ami-aecd60c7'
+AMI_ID = 'ami-1624987f'
 INSTANCE_TYPE = 'm1.small'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
@@ -179,7 +179,7 @@ def base_install():
 
     # Puppet and git should be installed by the python
     with cd('/home/ec2-user/boinc-magphys/machine-setup'):
-        sudo('puppet boinc-magphys.pp')
+        sudo('puppet apply boinc-magphys.pp')
 
     # Setup postfix
     sudo('service sendmail stop')
