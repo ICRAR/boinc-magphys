@@ -30,5 +30,5 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^pogs/', include('pogs.urls')),
-    #url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls)),
 )
