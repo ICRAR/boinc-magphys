@@ -321,7 +321,7 @@ yes
 {1}
 {2}
 {2}
-EOF" > /home/ec2-user/boinc-magphys/server/src/pogsite/setup.sh'''.format(env.django_superuser, env.django_email, env.django_password))
-    local('chmod +x /home/ec2-user/boinc-magphys/server/src/pogsite/setup.sh')
-    local('cd /home/ec2-user/boinc-magphys/server/src/pogsite; setup.sh')
-    local('rm /home/ec2-user/boinc-magphys/server/src/pogsite/setup.sh')
+EOF" > /home/ec2-user/boinc-magphys/server/src/pogssite/setup.sh'''.format(env.django_superuser, env.django_email, env.django_password))
+    local('chmod +x /home/ec2-user/boinc-magphys/server/src/pogssite/setup.sh')
+    local('cd /home/ec2-user/boinc-magphys/server/src/pogssite; setup.sh')
+    local('rm /home/ec2-user/boinc-magphys/server/src/pogssite/setup.sh')
