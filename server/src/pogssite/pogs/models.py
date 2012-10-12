@@ -123,7 +123,7 @@ class PixelParameter(models.Model):
 class PixelHistogram(models.Model):
     pxhistogram_id = models.BigIntegerField(primary_key=True)
     parameter      = models.ForeignKey(PixelParameter, db_column='pxparameter_id', related_name='histograms', on_delete=models.PROTECT)
-    pxresult_id    = models.BigIntegerField()
+    pixelResult    = models.ForeignKey(PixelResult, db_column='pxresult_id', related_name='histograms', on_delete=models.PROTECT)
     x_axis         = models.FloatField()
     hist_value     = models.FloatField()
 
@@ -154,3 +154,11 @@ class Run(models.Model):
 
     class Meta:
         db_table = u'run'
+
+class RunFile(models.Model):
+    run_file_id = models.BigIntegerField(primary_key=True)
+    redshift    = models.DecimalField(max_digits=10, decimal_places=4)
+    file_type   = models.IntegerField()
+    file_name   = models.CharField(max_length=1000)
+    size        = models.BigIntegerField()
+    md5_hash    = models.CharField(max_length=100)
