@@ -26,8 +26,10 @@
 The models that can be admined
 """
 from django.contrib import admin
-from pogs.models import Run, Filter, RunFile
+from pogs.models import Run, Filter, RunFile, Register
 
 admin.site.register(Run)
 admin.site.register(Filter)
+admin.site.register(RunFile)
+admin.site.register(Register)
 admin.site.register(RunFile)

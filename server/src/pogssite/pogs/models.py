@@ -157,8 +157,28 @@ class Run(models.Model):
 
 class RunFile(models.Model):
     run_file_id = models.BigIntegerField(primary_key=True)
+    run         = models.ForeignKey(Run, db_column='run_id', related_name='run_files', on_delete=models.PROTECT)
     redshift    = models.DecimalField(max_digits=10, decimal_places=4)
     file_type   = models.IntegerField()
     file_name   = models.CharField(max_length=1000)
     size        = models.BigIntegerField()
     md5_hash    = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = u'run_file'
+
+class Register(models.Model):
+    register_id   = models.BigIntegerField(primary_key=True)
+    galaxy_name   = models.CharField(max_length=128)
+    redshift      = models.DecimalField(max_digits=7, decimal_places=5)
+    sigma         = models.DecimalField(max_digits=3, decimal_places=2)
+    galaxy_type   = models.CharField(max_length=10)
+    filename      = models.CharField(max_length=1000)
+    priority      = models.IntegerField()
+    register_time = models.DateTimeField()
+    create_time   = models.DateTimeField()
+    run_id        = models.ForeignKey(Run, db_column='run_id', related_name='registrations', on_delete=models.PROTECT)
+
+    class Meta:
+        db_table = u'register'
+
