@@ -186,7 +186,7 @@ class Register(Base):
     priority      = Column(Integer)
     register_time = Column(TIMESTAMP)
     create_time   = Column(TIMESTAMP)
-    run_id        = Column(Integer, ForeignKey('runs.run_id'))
+    run_id        = Column(BigInteger, ForeignKey('run.run_id'))
 
 class ParameterName(Base):
     __tablename__ = 'parameter_name'
