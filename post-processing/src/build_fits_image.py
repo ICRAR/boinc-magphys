@@ -209,27 +209,28 @@ for galaxy in galaxies:
 
         if median or highest_prob_bin_v_:
             for pixel_parameter in session.query(PixelParameter).filter(PixelParameter.pxresult_id == row.pxresult_id).all():
-                index = get_index(pixel_parameter.parameter_name_id)
-                if median:
-                    array_median[row.y, row.x, index] = pixel_parameter.percentile50
+                if 1 <= pixel_parameter.parameter_name_id <= 16:
+                    index = get_index(pixel_parameter.parameter_name_id)
+                    if median:
+                        array_median[row.y, row.x, index] = pixel_parameter.percentile50
 
-                if highest_prob_bin_v_:
-                    # Have we worked this value out before
-                    if pixel_parameter.high_prob_bin is None:
-                        mhv = session.query(func.max(PixelHistogram.hist_value).label('max_hist_value')).filter(
-                            and_(PixelHistogram.pxresult_id == row.pxresult_id,
-                                PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id)).subquery('mhv')
-                        pixel_histogram = session.query(PixelHistogram).filter(
-                            and_(PixelHistogram.pxresult_id == row.pxresult_id,
-                                PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id,
-                                PixelHistogram.hist_value == mhv.c.max_hist_value)).first()
+                    if highest_prob_bin_v_:
+                        # Have we worked this value out before
+                        if pixel_parameter.high_prob_bin is None:
+                            mhv = session.query(func.max(PixelHistogram.hist_value).label('max_hist_value')).filter(
+                                and_(PixelHistogram.pxresult_id == row.pxresult_id,
+                                    PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id)).subquery('mhv')
+                            pixel_histogram = session.query(PixelHistogram).filter(
+                                and_(PixelHistogram.pxresult_id == row.pxresult_id,
+                                    PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id,
+                                    PixelHistogram.hist_value == mhv.c.max_hist_value)).first()
 
-                        if pixel_histogram is not None:
-                            array_highest_prob_bin_v[row.y, row.x, index] = pixel_histogram.x_axis
-                            pixel_parameter.high_prob_bin = pixel_histogram.x_axis
+                            if pixel_histogram is not None:
+                                array_highest_prob_bin_v[row.y, row.x, index] = pixel_histogram.x_axis
+                                pixel_parameter.high_prob_bin = pixel_histogram.x_axis
 
-                    else:
-                        array_highest_prob_bin_v[row.y, row.x, index] = pixel_parameter.high_prob_bin
+                        else:
+                            array_highest_prob_bin_v[row.y, row.x, index] = pixel_parameter.high_prob_bin
 
     # Commit any changes
     session.commit()
