@@ -332,5 +332,5 @@ expect "Password (again): "
 send "{2}\r"
 ' > /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp'''.format(env.django_superuser, env.django_email, env.django_password))
     local('chmod +x /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp')
-    #local('cd /home/ec2-user/boinc-magphys/server/src/pogssite ; ./setup.exp')
-    #local('rm /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp')
+    local('cd /home/ec2-user/boinc-magphys/server/src/pogssite ; ./setup.exp')
+    local('rm /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp')

@@ -48,7 +48,7 @@ INSERT INTO filter VALUES (27, 'SPIRE350', 350.0,  173, 27, 0, 0, 1, '350μm');
 INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 28, 0, 0, 1, '500μm');
 
 CREATE TABLE run (
-  run_id            BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  run_id            BIGINT UNSIGNED NOT NULL PRIMARY KEY,
   short_description VARCHAR(250) NOT NULL,
   long_description  VARCHAR(1000) NOT NULL,
   directory         VARCHAR(1000) NOT NULL,

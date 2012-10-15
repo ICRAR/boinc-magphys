@@ -41,4 +41,3 @@ HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
 
 STAR_FORMATION_FILE = 1
 INFRARED_FILE       = 2
-FILTERS_FILE        = 3

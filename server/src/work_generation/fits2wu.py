@@ -28,8 +28,6 @@ Convert a FITS file ready to be converted into Work Units
 """
 from __future__ import print_function
 import argparse
-from datetime import datetime
-
 import logging
 import os
 import json
@@ -38,6 +36,7 @@ import math
 import pyfits
 import subprocess
 
+from datetime import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.expression import desc, and_
