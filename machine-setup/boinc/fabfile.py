@@ -314,15 +314,23 @@ def configure_django():
 
     Django needs its user screens activated
     """
-    local('''echo "#!/bin/bash
-cd /home/ec2-user/boinc-magphys/server/src/pogssite
-python27 manage.py syncdb << EOF
-yes
-{0}
-{1}@gmail.com
-{2}
-{2}
-EOF" > /home/ec2-user/boinc-magphys/server/src/pogssite/setup.sh'''.format(env.django_superuser, env.django_email, env.django_password))
-    local('chmod +x /home/ec2-user/boinc-magphys/server/src/pogssite/setup.sh')
-    #local('/home/ec2-user/boinc-magphys/server/src/pogssite/setup.sh')
-    #local('rm /home/ec2-user/boinc-magphys/server/src/pogssite/setup.sh')
+    local('''echo "#!/usr/bin/expect
+spawn python27 manage.py syncdb
+expect "Would you like to create one now? (yes/no): "
+send "yes\r"
+
+expect "Username (leave blank to use 'ec2-user'): "
+send "{0}\r"
+
+expect "E-mail address: "
+send "{1}@gmail.com\r"
+
+expect "Password: "
+send "{2}\r"
+
+expect "Password (again): "
+send "{2}\r"
+" > /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp'''.format(env.django_superuser, env.django_email, env.django_password))
+    local('chmod +x /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp')
+    #local('/home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp')
+    #local('rm /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp')

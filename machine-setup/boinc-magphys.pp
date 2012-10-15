@@ -85,8 +85,10 @@ package { 'php-fpm':
 package { 'postfix':
     ensure => installed,
 }
-
 package { 'ca-certificates':
+    ensure => installed,
+}
+package { 'expect-devel':
     ensure => installed,
 }
 
