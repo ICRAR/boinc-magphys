@@ -319,7 +319,7 @@ cd /home/ec2-user/boinc-magphys/server/src/pogssite
 python27 manage.py syncdb << EOF
 yes
 {0}
-{1}
+{1}@gmail.com
 {2}
 {2}
 EOF" > /home/ec2-user/boinc-magphys/server/src/pogssite/setup.sh'''.format(env.django_superuser, env.django_email, env.django_password))
