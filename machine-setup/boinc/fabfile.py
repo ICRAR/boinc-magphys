@@ -314,7 +314,7 @@ def configure_django():
 
     Django needs its user screens activated
     """
-    local('''echo "#!/usr/bin/expect
+    local('''echo '#!/usr/bin/expect
 spawn python27 manage.py syncdb
 expect "Would you like to create one now? (yes/no): "
 send "yes\r"
@@ -330,7 +330,7 @@ send "{2}\r"
 
 expect "Password (again): "
 send "{2}\r"
-" > /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp'''.format(env.django_superuser, env.django_email, env.django_password))
+' > /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp'''.format(env.django_superuser, env.django_email, env.django_password))
     local('chmod +x /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp')
-    #local('/home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp')
+    #local('cd /home/ec2-user/boinc-magphys/server/src/pogssite ; ./setup.exp')
     #local('rm /home/ec2-user/boinc-magphys/server/src/pogssite/setup.exp')
