@@ -64,9 +64,9 @@ def get_redshift(filename):
     Find and return the read shift
     """
     index = filename.index('_z')
-    redshift = filename[index+1:]
+    redshift = filename[index+2:]
     redshift = redshift[:-7]
-    LOG.info('Read shift = $s', redshift)
+    LOG.info('Read shift = %s', redshift)
     return Decimal(redshift)
 
 def get_md5(filename):
