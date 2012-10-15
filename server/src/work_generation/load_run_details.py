@@ -36,7 +36,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
 from config import DB_LOGIN
 from database.database_support import Run, Filter, RunFile
-from work_generation import STAR_FORMATION_FILE
+from work_generation import STAR_FORMATION_FILE, INFRARED_FILE
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -66,7 +66,6 @@ def get_redshift(filename):
     index = filename.index('_z')
     redshift = filename[index+2:]
     redshift = redshift[:-7]
-    LOG.info('Read shift = %s', redshift)
     return Decimal(redshift)
 
 def get_md5(filename):
@@ -137,6 +136,7 @@ else:
     commit = True
     # Build the run
     run = Run()
+    run.run_id = RUN_ID
     run.directory = INPUT_DIR
     run.short_description = DESCRIPTION
     run.long_description = DESCRIPTION
@@ -158,13 +158,15 @@ else:
                 if filter is None:
                     commit = False
                     LOG.error('The filter {0} {1} does not exist in the database'.format(details[0], details[2]))
-
-                run.filters.append(filter)
+                else:
+                    LOG.info('Adding the filter %s %s', details[0], details[2])
+                    run.filters.append(filter)
 
     file.close()
 
     # Add the star formation files
     star_form_hist_files = glob.glob('{0}/starformhist_cb07_z*.lbr.gz'.format(INPUT_DIR))
+    star_form_hist_files.sort()
     for star_form_hist in star_form_hist_files:
         (head, file_1) = os.path.split(star_form_hist)
         run_file = RunFile()
@@ -173,10 +175,22 @@ else:
         run_file.md5_hash = get_md5(star_form_hist)
         run_file.redshift = get_redshift(file_1)
         run_file.size = os.path.getsize(star_form_hist)
+        LOG.info('Adding %s', file_1)
         run.run_files.append(run_file)
 
     # Add the infrared files
-    infrareds = glob.glob('{0}/infrared_dce08_z*.lbr.gz'.format(INPUT_DIR))
+    infrared_files = glob.glob('{0}/infrared_dce08_z*.lbr.gz'.format(INPUT_DIR))
+    infrared_files.sort()
+    for infrared in infrared_files:
+        (head, file_1) = os.path.split(infrared)
+        run_file = RunFile()
+        run_file.file_name = '{0}/{1}'.format(URL_STEM, file_1)
+        run_file.file_type = INFRARED_FILE
+        run_file.md5_hash = get_md5(infrared)
+        run_file.redshift = get_redshift(file_1)
+        run_file.size = os.path.getsize(infrared)
+        LOG.info('Adding %s', file_1)
+        run.run_files.append(run_file)
 
     if commit:
         session.commit()
