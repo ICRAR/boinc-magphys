@@ -43,7 +43,7 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql.expression import desc, and_
 from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT
 from database.boinc_database_support import Result
-from database.database_support import Register, FitsHeader, Galaxy, Area, PixelResult, Filter, RunFile, Run
+from database.database_support import Register, FitsHeader, Galaxy, Area, PixelResult, RunFile, Run
 from image.fitsimage import FitsImage
 from work_generation import HEADER_PATTERNS, STAR_FORMATION_FILE, INFRARED_FILE
 
@@ -52,6 +52,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--register', type=int, help='the registration id of a galaxy')
+parser.add_argument('-l', '--lint', type=int, help='only generate N workunits from this galaxy (for testing)')
 args = vars(parser.parse_args())
 
 count = None

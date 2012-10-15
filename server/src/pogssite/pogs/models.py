@@ -26,7 +26,7 @@ from django.db import models
 
 class Galaxy(models.Model):
     galaxy_id   = models.BigIntegerField(primary_key=True)
-    name        = models.CharField(max_length=384, unique=True)
+    name        = models.CharField(max_length=128, unique=True)
     dimension_x = models.IntegerField()
     dimension_y = models.IntegerField()
     dimension_z = models.IntegerField()
