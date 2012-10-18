@@ -51,7 +51,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--register', type=int, help='the registration id of a galaxy')
-parser.add_argument('-l', '--lint', type=int, help='only generate N workunits from this galaxy (for testing)')
+parser.add_argument('-l', '--limit', type=int, help='only generate N workunits from this galaxy (for testing)')
 args = vars(parser.parse_args())
 
 count = None
@@ -68,6 +68,10 @@ if args['register'] is None:
     if count >= WG_THRESHOLD:
         LOG.info('Nothing to do')
         exit(0)
+
+LIMIT = None
+if args['limit'] is not None:
+    LIMIT = args['limit'][0]
 
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = WG_BOINC_PROJECT_ROOT + '/bin'
@@ -105,18 +109,14 @@ class Pixel:
         self.pixels = pixels
         self.pixel_id = None
 
-class Status:
-    """
-    The status of the run
-    """
-    def __init__(self):
-        self.pixel_count = 0
-        self.work_units_added = 0
-
 class Fit2Wu:
     """
     Convert a fit file to a wu
     """
+    def __init__(self):
+        self._pixel_count = 0
+        self._work_units_added = 0
+
     def process_file(self, registration):
         """
         Process a registration.
@@ -181,8 +181,8 @@ class Fit2Wu:
         self._build_template_file()
 
         # Now break up the galaxy into chunks
-        status = self._break_up_galaxy()
-        galaxy.pixel_count = status.pixel_count
+        self._break_up_galaxy()
+        galaxy.pixel_count = self._pixel_count
         session.flush()
 
         LOG.info('Building the images')
@@ -191,18 +191,15 @@ class Fit2Wu:
 
         shutil.copyfile(registration.filename, image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
 
-        return status
+        return self._work_units_added, self._pixel_count
 
     def _break_up_galaxy(self):
         """
         Break up the galaxy into small pieces
         """
-        status = Status()
         start_y = 0
         for pix_y in range(start_y, self._end_y, WG_ROW_HEIGHT):
-            self._create_areas(status, pix_y)
-
-        return status
+            self._create_areas(pix_y)
 
     def _build_template_file(self):
         """
@@ -278,12 +275,16 @@ class Fit2Wu:
 </input_template>'''.format(self._rounded_redshift, star_formation.file_name, star_formation.md5_hash, star_formation.size, infrared.file_name, infrared.md5_hash, infrared.size))
             file.close()
 
-    def _create_areas(self, status, pix_y):
+    def _create_areas(self, pix_y):
         """
         Create a area - we try to make them squares, but they aren't as the images have dead zones
         """
         pix_x = 0
         while pix_x < self._end_x:
+            # Are we limiting the number created
+            if LIMIT is not None and self._work_units_added > LIMIT:
+                break
+
             max_x, pixels = self._get_pixels(pix_x, pix_y)
             if len(pixels) > 0:
                 area = Area()
@@ -305,11 +306,11 @@ class Fit2Wu:
                     session.flush()
 
                     pixel.pixel_id = pixel_result.pxresult_id
-                    status.pixel_count += 1
+                    self._pixel_count += 1
 
                 # Write the pixels
                 self._create_output_file(area, pixels)
-                status.work_units_added += 1
+                self._work_units_added += 1
 
             pix_x = max_x + 1
 
@@ -658,9 +659,9 @@ if args['register'] is None:
             if os.path.isfile(registration.filename):
                 LOG.info('Processing %s %d', registration.galaxy_name, registration.priority)
                 fit2wu = Fit2Wu()
-                status = fit2wu.process_file(registration)
+                (work_units_added, pixel_count) = fit2wu.process_file(registration)
                 # One WU = MIN_QUORUM Results
-                files_processed += (status.work_units_added * MIN_QUORUM)
+                files_processed += (work_units_added * MIN_QUORUM)
                 os.remove(registration.filename)
                 registration.create_time = datetime.now()
             else:
@@ -678,8 +679,8 @@ else:
         if os.path.isfile(registration.filename):
             LOG.info('Processing %s %d', registration.galaxy_name, registration.priority)
             fit2wu = Fit2Wu()
-            status = fit2wu.process_file(registration)
-            files_processed = status.work_units_added * MIN_QUORUM
+            (work_units_added, pixel_count) = fit2wu.process_file(registration)
+            files_processed = work_units_added * MIN_QUORUM
             os.remove(registration.filename)
             registration.create_time = datetime.now()
         else:

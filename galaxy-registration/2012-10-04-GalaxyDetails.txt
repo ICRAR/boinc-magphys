@@ -1,257 +1,257 @@
-# Program   Filename    Redshift    Galaxy  Type    Sigma   Priority
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1211883.fits    0.0500  PGC1211883  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071534.fits    0.0942  PGC1071534  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1136122.fits    0.0639  PGC1136122  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1115312.fits    0.0500  PGC1115312  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191062.fits 0.0493  PGC191062   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC170383.fits 0.0267  PGC170383   E   0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067849.fits 0.0270  PGC067849   E   0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC091724.fits 0.0274  PGC091724   Sd  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1094258.fits    0.0274  PGC1094258  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1227505.fits    0.0500  PGC1227505  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067858.fits 0.0270  PGC067858   Sb  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7181.fits   0.0262  NGC7181 S0  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191147.fits 0.0500  PGC191147   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7182.fits   0.0268  NGC7182 S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1162816.fits    0.0641  PGC1162816  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1092847.fits    0.0493  PGC1092847  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC11876.fits  0.0134  UGC11876    Sc  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7189.fits   0.0303  NGC7189 SBb 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1425.fits    0.0322  IC1425  E   0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191161.fits 0.0267  PGC191161   S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067958.fits 0.0264  PGC067958   Sa  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1069967.fits    0.0500  PGC1069967  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067969.fits 0.0327  PGC067969   Sbc 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1237767.fits    0.0500  PGC1237767  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067982.fits 0.0425  PGC067982   S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1428.fits    0.0410  IC1428  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC091726.fits 0.0330  PGC091726   Sc  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067998.fits 0.0411  PGC067998   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ220458.71-002752.1.fits   0.0158  SDSSJ220458.71-002752.1 Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7198.fits   0.0160  NGC7198 S0  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191315.fits 0.0318  PGC191315   S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191337.fits 0.0311  PGC191337   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1156494.fits    0.0500  PGC1156494  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1237186.fits    0.0500  PGC1237186  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1205930.fits    0.0500  PGC1205930  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068032.fits 0.0485  PGC068032   E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC11907.fits  0.0407  UGC11907    S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1076535.fits    0.0284  PGC1076535  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ220634.97+000327.6.fits   0.0500  SDSSJ220634.97+000327.6 Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068042.fits 0.0500  PGC068042   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068072.fits 0.0296  PGC068072   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068095.fits 0.0562  PGC068095   SABb    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22080447+0108060.fits    0.0855  2MASXJ22080447+0108060  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7215.fits   0.0134  NGC7215 S0  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1072442.fits    0.0241  PGC1072442  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1254476.fits    0.0500  PGC1254476  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1094054.fits    0.0532  PGC1094054  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1204485.fits    0.0500  PGC1204485  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068149.fits 0.0129  PGC068149   Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1236665.fits    0.0500  PGC1236665  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068167.fits 0.0337  PGC068167   Sbc 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1086643.fits    0.0500  PGC1086643  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1088268.fits    0.0098  PGC1088268  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1083917.fits    0.0554  PGC1083917  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1197963.fits    0.0500  PGC1197963  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1179165.fits    0.0894  PGC1179165  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068206.fits 0.0455  PGC068206   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1091774.fits    0.0490  PGC1091774  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7222.fits   0.0413  NGC7222 SBab    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1220485.fits    0.0500  PGC1220485  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068229.fits 0.0500  PGC068229   Sa  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1203369.fits    0.0500  PGC1203369  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1128634.fits    0.0342  PGC1128634  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1153158.fits    0.0524  PGC1153158  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068240.fits 0.0258  PGC068240   S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1228547.fits    0.0500  PGC1228547  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1225072.fits    0.0332  PGC1225072  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1139795.fits    0.0468  PGC1139795  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068251.fits 0.0330  PGC068251   Sa  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1191673.fits    0.0500  PGC1191673  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068258.fits 0.0333  PGC068258   SBbc    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068264.fits 0.0163  PGC068264   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1150961.fits    0.0584  PGC1150961  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1127166.fits    0.0561  PGC1127166  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1134507.fits    0.0339  PGC1134507  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22131883+0032262.fits    0.0874  2MASXJ22131883+0032262  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1109092.fits    0.0500  PGC1109092  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1211625.fits    0.0500  PGC1211625  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1073911.fits    0.0500  PGC1073911  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1216524.fits    0.0500  PGC1216524  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1173010.fits    0.0429  PGC1173010  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1082530.fits    0.0546  PGC1082530  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1142613.fits    0.0348  PGC1142613  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068357.fits 0.0298  PGC068357   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1092914.fits    0.0922  PGC1092914  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1066166.fits    0.0500  PGC1066166  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1096363.fits    0.0500  PGC1096363  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068387.fits 0.0523  PGC068387   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1175917.fits    0.0441  PGC1175917  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1078764.fits    0.0547  PGC1078764  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1113662.fits    0.0486  PGC1113662  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1068487.fits    0.0560  PGC1068487  E   0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1156435.fits    0.0453  PGC1156435  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1099189.fits    0.0480  PGC1099189  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1126253.fits    0.0474  PGC1126253  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1437.fits    0.0298  IC1437  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1258513.fits    0.0500  PGC1258513  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ221602.78+001251.0.fits   0.0500  SDSSJ221602.78+001251.0 Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1083374.fits    0.0559  PGC1083374  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070270.fits    0.0500  PGC1070270  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC11970.fits  0.0386  UGC11970    SBb 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1130217.fits    0.0768  PGC1130217  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1068274.fits    0.0500  PGC1068274  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191801.fits 0.0500  PGC191801   S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191813.fits 0.0565  PGC191813   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191829.fits 0.0610  PGC191829   S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1069382.fits    0.0500  PGC1069382  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1224771.fits    0.0500  PGC1224771  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191857.fits 0.0918  PGC191857   Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191860.fits 0.0579  PGC191860   Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071858.fits    0.0500  PGC1071858  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071910.fits    0.0500  PGC1071910  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191900.fits 0.0571  PGC191900   Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191903.fits 0.0561  PGC191903   S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191908.fits 0.0556  PGC191908   Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22183385-0041169.fits    0.1142  2MASXJ22183385-0041169  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068549.fits 0.0166  PGC068549   SABc    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1078788.fits    0.0892  PGC1078788  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC11982.fits  0.0164  UGC11982    SBc 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1076406.fits    0.0563  PGC1076406  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070276.fits    0.0500  PGC1070276  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070345.fits    0.0500  PGC1070345  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070754.fits    0.0878  PGC1070754  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1225555.fits    0.0500  PGC1225555  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070711.fits    0.0500  PGC1070711  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068568.fits 0.0500  PGC068568   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1074282.fits    0.0500  PGC1074282  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1069369.fits    0.0500  PGC1069369  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070267.fits    0.0617  PGC1070267  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1207487.fits    0.0500  PGC1207487  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1077467.fits    0.0908  PGC1077467  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1074663.fits    0.0560  PGC1074663  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068590.fits 0.0567  PGC068590   Sb  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1244747.fits    0.0500  PGC1244747  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1098852.fits    0.0421  PGC1098852  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1163530.fits    0.0612  PGC1163530  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1125220.fits    0.0377  PGC1125220  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1083253.fits    0.0565  PGC1083253  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1181410.fits    0.0570  PGC1181410  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071526.fits    0.0553  PGC1071526  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1072169.fits    0.0500  PGC1072169  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1197947.fits    0.0500  PGC1197947  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1240632.fits    0.0500  PGC1240632  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1230366.fits    0.0500  PGC1230366  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1125126.fits    0.1006  PGC1125126  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1241148.fits    0.0394  PGC1241148  Sb  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1235956.fits    0.0319  PGC1235956  Sb  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12000.fits  0.0320  UGC12000    Sc  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068677.fits 0.0323  PGC068677   Sb  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1093512.fits    0.0567  PGC1093512  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1078021.fits    0.0500  PGC1078021  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1077709.fits    0.0551  PGC1077709  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1068443.fits    0.0102  PGC1068443  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1198066.fits    0.0500  PGC1198066  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1238991.fits    0.0500  PGC1238991  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1094417.fits    0.0563  PGC1094417  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1084588.fits    0.0500  PGC1084588  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC095688.fits 0.0894  PGC095688   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192076.fits 0.0633  PGC192076   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192092.fits 0.0500  PGC192092   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192093.fits 0.0514  PGC192093   Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC095698.fits 0.0899  PGC095698   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192109.fits 0.0581  PGC192109   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068767.fits 0.0585  PGC068767   Sbc 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC095707.fits 0.0932  PGC095707   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192122.fits 0.0582  PGC192122   Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1233948.fits    0.0500  PGC1233948  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1229356.fits    0.0500  PGC1229356  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1072419.fits    0.0500  PGC1072419  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC095711.fits 0.0908  PGC095711   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1100060.fits    0.0500  PGC1100060  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1106727.fits    0.0574  PGC1106727  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1076380.fits    0.0500  PGC1076380  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1246259.fits    0.0500  PGC1246259  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1101543.fits    0.0410  PGC1101543  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1088988.fits    0.0556  PGC1088988  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ222516.58-005435.9.fits   0.0159  SDSSJ222516.58-005435.9 Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1131621.fits    0.0163  PGC1131621  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1067527.fits    0.0500  PGC1067527  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1247588.fits    0.0500  PGC1247588  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC096867.fits 0.0500  PGC096867   Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1156950.fits    0.0580  PGC1156950  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC096875.fits 0.0544  PGC096875   S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068840.fits 0.0346  PGC068840   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1100345.fits    0.0572  PGC1100345  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1106821.fits    0.0564  PGC1106821  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1252639.fits    0.0500  PGC1252639  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1098021.fits    0.0567  PGC1098021  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1093467.fits    0.0500  PGC1093467  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1098097.fits    0.0563  PGC1098097  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1169469.fits    0.0679  PGC1169469  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068855.fits 0.0577  PGC068855   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1064891.fits    0.0500  PGC1064891  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1106313.fits    0.0556  PGC1106313  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1113641.fits    0.0500  PGC1113641  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1138323.fits    0.0497  PGC1138323  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068864.fits 0.0364  PGC068864   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1069185.fits    0.0500  PGC1069185  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068869.fits 0.0343  PGC068869   E   0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1238888.fits    0.0500  PGC1238888  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068877.fits 0.0162  PGC068877   Sbc 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1255641.fits    0.0500  PGC1255641  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1243713.fits    0.0500  PGC1243713  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1088324.fits    0.0543  PGC1088324  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1174593.fits    0.0580  PGC1174593  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1136234.fits    0.0568  PGC1136234  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1211336.fits    0.0500  PGC1211336  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ222720.56-004045.0.fits   0.0569  SDSSJ222720.56-004045.0 Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068901.fits 0.0407  PGC068901   S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1137407.fits    0.0569  PGC1137407  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1125254.fits    0.0601  PGC1125254  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1114408.fits    0.0500  PGC1114408  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1094837.fits    0.0540  PGC1094837  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1081347.fits    0.0500  PGC1081347  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1074056.fits    0.0500  PGC1074056  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1115538.fits    0.0786  PGC1115538  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071957.fits    0.0500  PGC1071957  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1218567.fits    0.0500  PGC1218567  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1168760.fits    0.0585  PGC1168760  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1230477.fits    0.0500  PGC1230477  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1118258.fits    0.0500  PGC1118258  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068963.fits 0.0363  PGC068963   SBa 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1177848.fits    0.0896  PGC1177848  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192434.fits 0.0588  PGC192434   SBab    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192440.fits 0.0359  PGC192440   S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192446.fits 0.0388  PGC192446   E-SO    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1246362.fits    0.0500  PGC1246362  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1085555.fits    0.0391  PGC1085555  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22294675+0014162.fits    0.0828  2MASXJ22294675+0014162  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1199803.fits    0.0500  PGC1199803  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1237533.fits    0.0500  PGC1237533  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1147127.fits    0.0816  PGC1147127  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ223016.67-002424.6.fits   0.0636  SDSSJ223016.67-002424.6 Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1106604.fits    0.0557  PGC1106604  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1182266.fits    0.0370  PGC1182266  E?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1125371.fits    0.0561  PGC1125371  S0-a    0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1065293.fits    0.0500  PGC1065293  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1092512.fits    0.0172  PGC1092512  Sab 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1065726.fits    0.0500  PGC1065726  Unk 0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1105280.fits    0.0500  PGC1105280  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1186987.fits    0.0368  PGC1186987  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1169503.fits    0.0886  PGC1169503  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22314979+0026495.fits    0.0488  2MASXJ22314979+0026495  S?  0.1 0
-./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1229618.fits    0.0598  PGC1229618  S?  0.1 0
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
+# Program   Filename    Redshift    Galaxy  Type    Sigma   Priority    Run_Id
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1211883.fits    0.0500  PGC1211883  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071534.fits    0.0942  PGC1071534  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1136122.fits    0.0639  PGC1136122  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1115312.fits    0.0500  PGC1115312  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191062.fits 0.0493  PGC191062   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC170383.fits 0.0267  PGC170383   E   0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067849.fits 0.0270  PGC067849   E   0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC091724.fits 0.0274  PGC091724   Sd  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1094258.fits    0.0274  PGC1094258  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1227505.fits    0.0500  PGC1227505  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067858.fits 0.0270  PGC067858   Sb  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7181.fits   0.0262  NGC7181 S0  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191147.fits 0.0500  PGC191147   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7182.fits   0.0268  NGC7182 S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1162816.fits    0.0641  PGC1162816  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1092847.fits    0.0493  PGC1092847  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC11876.fits  0.0134  UGC11876    Sc  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7189.fits   0.0303  NGC7189 SBb 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1425.fits    0.0322  IC1425  E   0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191161.fits 0.0267  PGC191161   S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067958.fits 0.0264  PGC067958   Sa  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1069967.fits    0.0500  PGC1069967  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067969.fits 0.0327  PGC067969   Sbc 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1237767.fits    0.0500  PGC1237767  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067982.fits 0.0425  PGC067982   S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1428.fits    0.0410  IC1428  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC091726.fits 0.0330  PGC091726   Sc  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC067998.fits 0.0411  PGC067998   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ220458.71-002752.1.fits   0.0158  SDSSJ220458.71-002752.1 Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7198.fits   0.0160  NGC7198 S0  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191315.fits 0.0318  PGC191315   S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191337.fits 0.0311  PGC191337   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1156494.fits    0.0500  PGC1156494  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1237186.fits    0.0500  PGC1237186  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1205930.fits    0.0500  PGC1205930  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068032.fits 0.0485  PGC068032   E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC11907.fits  0.0407  UGC11907    S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1076535.fits    0.0284  PGC1076535  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ220634.97+000327.6.fits   0.0500  SDSSJ220634.97+000327.6 Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068042.fits 0.0500  PGC068042   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068072.fits 0.0296  PGC068072   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068095.fits 0.0562  PGC068095   SABb    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22080447+0108060.fits    0.0855  2MASXJ22080447+0108060  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7215.fits   0.0134  NGC7215 S0  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1072442.fits    0.0241  PGC1072442  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1254476.fits    0.0500  PGC1254476  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1094054.fits    0.0532  PGC1094054  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1204485.fits    0.0500  PGC1204485  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068149.fits 0.0129  PGC068149   Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1236665.fits    0.0500  PGC1236665  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068167.fits 0.0337  PGC068167   Sbc 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1086643.fits    0.0500  PGC1086643  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1088268.fits    0.0098  PGC1088268  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1083917.fits    0.0554  PGC1083917  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1197963.fits    0.0500  PGC1197963  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1179165.fits    0.0894  PGC1179165  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068206.fits 0.0455  PGC068206   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1091774.fits    0.0490  PGC1091774  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7222.fits   0.0413  NGC7222 SBab    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1220485.fits    0.0500  PGC1220485  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068229.fits 0.0500  PGC068229   Sa  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1203369.fits    0.0500  PGC1203369  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1128634.fits    0.0342  PGC1128634  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1153158.fits    0.0524  PGC1153158  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068240.fits 0.0258  PGC068240   S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1228547.fits    0.0500  PGC1228547  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1225072.fits    0.0332  PGC1225072  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1139795.fits    0.0468  PGC1139795  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068251.fits 0.0330  PGC068251   Sa  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1191673.fits    0.0500  PGC1191673  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068258.fits 0.0333  PGC068258   SBbc    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068264.fits 0.0163  PGC068264   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1150961.fits    0.0584  PGC1150961  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1127166.fits    0.0561  PGC1127166  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1134507.fits    0.0339  PGC1134507  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22131883+0032262.fits    0.0874  2MASXJ22131883+0032262  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1109092.fits    0.0500  PGC1109092  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1211625.fits    0.0500  PGC1211625  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1073911.fits    0.0500  PGC1073911  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1216524.fits    0.0500  PGC1216524  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1173010.fits    0.0429  PGC1173010  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1082530.fits    0.0546  PGC1082530  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1142613.fits    0.0348  PGC1142613  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068357.fits 0.0298  PGC068357   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1092914.fits    0.0922  PGC1092914  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1066166.fits    0.0500  PGC1066166  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1096363.fits    0.0500  PGC1096363  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068387.fits 0.0523  PGC068387   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1175917.fits    0.0441  PGC1175917  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1078764.fits    0.0547  PGC1078764  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1113662.fits    0.0486  PGC1113662  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1068487.fits    0.0560  PGC1068487  E   0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1156435.fits    0.0453  PGC1156435  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1099189.fits    0.0480  PGC1099189  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1126253.fits    0.0474  PGC1126253  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1437.fits    0.0298  IC1437  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1258513.fits    0.0500  PGC1258513  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ221602.78+001251.0.fits   0.0500  SDSSJ221602.78+001251.0 Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1083374.fits    0.0559  PGC1083374  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070270.fits    0.0500  PGC1070270  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC11970.fits  0.0386  UGC11970    SBb 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1130217.fits    0.0768  PGC1130217  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1068274.fits    0.0500  PGC1068274  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191801.fits 0.0500  PGC191801   S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191813.fits 0.0565  PGC191813   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191829.fits 0.0610  PGC191829   S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1069382.fits    0.0500  PGC1069382  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1224771.fits    0.0500  PGC1224771  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191857.fits 0.0918  PGC191857   Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191860.fits 0.0579  PGC191860   Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071858.fits    0.0500  PGC1071858  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071910.fits    0.0500  PGC1071910  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191900.fits 0.0571  PGC191900   Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191903.fits 0.0561  PGC191903   S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC191908.fits 0.0556  PGC191908   Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22183385-0041169.fits    0.1142  2MASXJ22183385-0041169  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068549.fits 0.0166  PGC068549   SABc    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1078788.fits    0.0892  PGC1078788  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC11982.fits  0.0164  UGC11982    SBc 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1076406.fits    0.0563  PGC1076406  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070276.fits    0.0500  PGC1070276  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070345.fits    0.0500  PGC1070345  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070754.fits    0.0878  PGC1070754  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1225555.fits    0.0500  PGC1225555  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070711.fits    0.0500  PGC1070711  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068568.fits 0.0500  PGC068568   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1074282.fits    0.0500  PGC1074282  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1069369.fits    0.0500  PGC1069369  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1070267.fits    0.0617  PGC1070267  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1207487.fits    0.0500  PGC1207487  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1077467.fits    0.0908  PGC1077467  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1074663.fits    0.0560  PGC1074663  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068590.fits 0.0567  PGC068590   Sb  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1244747.fits    0.0500  PGC1244747  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1098852.fits    0.0421  PGC1098852  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1163530.fits    0.0612  PGC1163530  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1125220.fits    0.0377  PGC1125220  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1083253.fits    0.0565  PGC1083253  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1181410.fits    0.0570  PGC1181410  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071526.fits    0.0553  PGC1071526  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1072169.fits    0.0500  PGC1072169  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1197947.fits    0.0500  PGC1197947  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1240632.fits    0.0500  PGC1240632  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1230366.fits    0.0500  PGC1230366  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1125126.fits    0.1006  PGC1125126  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1241148.fits    0.0394  PGC1241148  Sb  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1235956.fits    0.0319  PGC1235956  Sb  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12000.fits  0.0320  UGC12000    Sc  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068677.fits 0.0323  PGC068677   Sb  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1093512.fits    0.0567  PGC1093512  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1078021.fits    0.0500  PGC1078021  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1077709.fits    0.0551  PGC1077709  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1068443.fits    0.0102  PGC1068443  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1198066.fits    0.0500  PGC1198066  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1238991.fits    0.0500  PGC1238991  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1094417.fits    0.0563  PGC1094417  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1084588.fits    0.0500  PGC1084588  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC095688.fits 0.0894  PGC095688   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192076.fits 0.0633  PGC192076   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192092.fits 0.0500  PGC192092   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192093.fits 0.0514  PGC192093   Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC095698.fits 0.0899  PGC095698   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192109.fits 0.0581  PGC192109   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068767.fits 0.0585  PGC068767   Sbc 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC095707.fits 0.0932  PGC095707   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192122.fits 0.0582  PGC192122   Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1233948.fits    0.0500  PGC1233948  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1229356.fits    0.0500  PGC1229356  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1072419.fits    0.0500  PGC1072419  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC095711.fits 0.0908  PGC095711   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1100060.fits    0.0500  PGC1100060  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1106727.fits    0.0574  PGC1106727  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1076380.fits    0.0500  PGC1076380  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1246259.fits    0.0500  PGC1246259  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1101543.fits    0.0410  PGC1101543  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1088988.fits    0.0556  PGC1088988  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ222516.58-005435.9.fits   0.0159  SDSSJ222516.58-005435.9 Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1131621.fits    0.0163  PGC1131621  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1067527.fits    0.0500  PGC1067527  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1247588.fits    0.0500  PGC1247588  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC096867.fits 0.0500  PGC096867   Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1156950.fits    0.0580  PGC1156950  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC096875.fits 0.0544  PGC096875   S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068840.fits 0.0346  PGC068840   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1100345.fits    0.0572  PGC1100345  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1106821.fits    0.0564  PGC1106821  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1252639.fits    0.0500  PGC1252639  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1098021.fits    0.0567  PGC1098021  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1093467.fits    0.0500  PGC1093467  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1098097.fits    0.0563  PGC1098097  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1169469.fits    0.0679  PGC1169469  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068855.fits 0.0577  PGC068855   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1064891.fits    0.0500  PGC1064891  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1106313.fits    0.0556  PGC1106313  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1113641.fits    0.0500  PGC1113641  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1138323.fits    0.0497  PGC1138323  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068864.fits 0.0364  PGC068864   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1069185.fits    0.0500  PGC1069185  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068869.fits 0.0343  PGC068869   E   0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1238888.fits    0.0500  PGC1238888  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068877.fits 0.0162  PGC068877   Sbc 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1255641.fits    0.0500  PGC1255641  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1243713.fits    0.0500  PGC1243713  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1088324.fits    0.0543  PGC1088324  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1174593.fits    0.0580  PGC1174593  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1136234.fits    0.0568  PGC1136234  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1211336.fits    0.0500  PGC1211336  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ222720.56-004045.0.fits   0.0569  SDSSJ222720.56-004045.0 Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068901.fits 0.0407  PGC068901   S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1137407.fits    0.0569  PGC1137407  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1125254.fits    0.0601  PGC1125254  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1114408.fits    0.0500  PGC1114408  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1094837.fits    0.0540  PGC1094837  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1081347.fits    0.0500  PGC1081347  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1074056.fits    0.0500  PGC1074056  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1115538.fits    0.0786  PGC1115538  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1071957.fits    0.0500  PGC1071957  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1218567.fits    0.0500  PGC1218567  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1168760.fits    0.0585  PGC1168760  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1230477.fits    0.0500  PGC1230477  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1118258.fits    0.0500  PGC1118258  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC068963.fits 0.0363  PGC068963   SBa 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1177848.fits    0.0896  PGC1177848  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192434.fits 0.0588  PGC192434   SBab    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192440.fits 0.0359  PGC192440   S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC192446.fits 0.0388  PGC192446   E-SO    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1246362.fits    0.0500  PGC1246362  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1085555.fits    0.0391  PGC1085555  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22294675+0014162.fits    0.0828  2MASXJ22294675+0014162  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1199803.fits    0.0500  PGC1199803  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1237533.fits    0.0500  PGC1237533  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1147127.fits    0.0816  PGC1147127  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_SDSSJ223016.67-002424.6.fits   0.0636  SDSSJ223016.67-002424.6 Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1106604.fits    0.0557  PGC1106604  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1182266.fits    0.0370  PGC1182266  E?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1125371.fits    0.0561  PGC1125371  S0-a    0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1065293.fits    0.0500  PGC1065293  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1092512.fits    0.0172  PGC1092512  Sab 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1065726.fits    0.0500  PGC1065726  Unk 0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1105280.fits    0.0500  PGC1105280  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1186987.fits    0.0368  PGC1186987  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1169503.fits    0.0886  PGC1169503  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22314979+0026495.fits    0.0488  2MASXJ22314979+0026495  S?  0.1 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1229618.fits    0.0598  PGC1229618  S?  0.1 0   1
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
