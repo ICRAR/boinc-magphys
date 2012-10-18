@@ -206,7 +206,7 @@ class Fit2Wu:
         """
         Build the template files we need if they don't exist
         """
-        self._template_file = '{0}/{1:=4d}/fitsed_wu_{2}.xml'.format(TEMPLATES_PATH2, self._registration.run_id, self._rounded_redshift)
+        self._template_file = '{0}/{1:=04d}/fitsed_wu_{2}.xml'.format(TEMPLATES_PATH2, self._registration.run_id, self._rounded_redshift)
         if not os.path.isfile(self._template_file):
             (star_formation, infrared) = self._get_model_files()
             file = open(self._template_file, 'wb')
@@ -493,8 +493,8 @@ class Fit2Wu:
         """
         Create a unique model name for the run to be stored on the client
         """
-        star_formation_history = '{0:=4d}_starformhist_cb07_z{1}.lbr'.format(self._registration.run_id, self._rounded_redshift)
-        infrared =  '{0:=4d}_infrared_dce08_z{1}.lbr'.format(self._registration.run_id, self._rounded_redshift)
+        star_formation_history = '{0:=04d}_starformhist_cb07_z{1}.lbr'.format(self._registration.run_id, self._rounded_redshift)
+        infrared =  '{0:=04d}_infrared_dce08_z{1}.lbr'.format(self._registration.run_id, self._rounded_redshift)
         return star_formation_history, infrared
 
     def _get_pixels(self, pix_x, pix_y):
