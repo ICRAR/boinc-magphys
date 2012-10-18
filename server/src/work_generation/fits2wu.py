@@ -71,7 +71,7 @@ if args['register'] is None:
 
 LIMIT = None
 if args['limit'] is not None:
-    LIMIT = args['limit'][0]
+    LIMIT = args['limit']
 
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = WG_BOINC_PROJECT_ROOT + '/bin'
