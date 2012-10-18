@@ -25,8 +25,8 @@
 """
 Fabric file for installing the servers
 
-Test is simple as it only runs on one server
-fab test_env test_deploy_with_db
+Single server is simple as it only runs on one server
+fab setup_env deploy_with_db
 
 Production is more complex as we have three servers to configure.
 Each needs the BOINC project structure installed, but that means recreating the database 3 times
@@ -346,7 +346,6 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
         run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
         run('fab --set project_name={0} create_first_version'.format(env.project_name))
         run('fab --set project_name={0} start_daemons'.format(env.project_name))
-        run('fab --set project_name={0},django_superuser={1},django_password={2},django_email={3} configure_django'.format(env.project_name, env.ops_username, env.ops_password, env.gmail_account))
 
     # Setup the crontab job to keep things ticking
     run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
@@ -369,6 +368,7 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
   copytruncate
 }}" > /etc/logrotate.d/boinc'''.format(env.project_name))
 
+
 def build_mod_wsgi():
     run('mkdir -p /home/ec2-user/build')
 
@@ -383,10 +383,18 @@ def build_mod_wsgi():
     # Clean up
     sudo('rm -rf /home/ec2-user/build')
 
+def final_messages():
+# Print the final messages
+    puts('''
+You need to do the following manual steps:
+1) Go to '/home/ec2-user/boinc-magphys/server/src/pogssite' and run 'python27 manage.py syncdb' to initialise the django database
+''')
+
+
 @task
 @serial
-def test_env():
-    """Configure the test environment
+def setup_env():
+    """Configure the single server environment
 
     Ask a series of questions before deploying to the cloud.
 
@@ -430,28 +438,30 @@ def test_env():
 
 @task
 @serial
-def test_deploy_with_db():
-    """Deploy the test environment
+def deploy_with_db():
+    """Deploy the single server environment
 
-    Deploy the test system in the AWS cloud with everything running on a single server
+    Deploy the single server system in the AWS cloud with everything running on a single server
     """
-    require('hosts', provided_by=[test_env])
+    require('hosts', provided_by=[setup_env])
 
     copy_public_keys()
     base_install()
     build_mod_wsgi()
     single_install(True)
+    final_messages()
 
 @task
 @serial
-def test_deploy_without_db():
-    """Deploy the test environment
+def deploy_without_db():
+    """Deploy the single server environment
 
-    Deploy the test system in the AWS cloud with everything running on a single server
+    Deploy the single server system in the AWS cloud with everything running on a single server
     """
-    require('hosts', provided_by=[test_env])
+    require('hosts', provided_by=[setup_env])
 
     copy_public_keys()
     base_install()
     build_mod_wsgi()
     single_install(False)
+    final_messages()

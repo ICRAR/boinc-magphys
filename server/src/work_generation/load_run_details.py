@@ -92,16 +92,40 @@ def get_md5(filename):
     return hex_hash
 
 
+def check_starts_with_number(filename):
+    """
+    Check the filename starts with the run id
+    """
+    # Find the first _
+    index = filename.index('_')
+    if index > 0:
+        number_str = filename[0:index]
+        if len(number_str) < 4:
+            return False
+
+        try:
+            number = int(number_str)
+            if number != RUN_ID:
+                return False
+
+            return True
+
+        except ValueError:
+            return False
+
+    return False
+
 # Check things exist
 errors = []
+
 if os.path.isdir(INPUT_DIR):
     # Is the filters file there
     if not os.path.isfile('{0}/filters.dat'.format(INPUT_DIR)):
         errors.append('The file {0}/filters.dat does not exist'.format(INPUT_DIR))
 
     # Check we have matching star formation and infrared files
-    star_form_hist = glob.glob('{0}/starformhist_cb07_z*.lbr.gz'.format(INPUT_DIR))
-    infrared = glob.glob('{0}/infrared_dce08_z*.lbr.gz'.format(INPUT_DIR))
+    star_form_hist = glob.glob('{0}/*_starformhist_cb07_z*.lbr.gz'.format(INPUT_DIR))
+    infrared = glob.glob('{0}/*_infrared_dce08_z*.lbr.gz'.format(INPUT_DIR))
 
     if len(star_form_hist) != len(infrared):
         errors.append('The number of starformhist files ({0}) does not match the number of infrared files ({1})'.format(len(star_form_hist), len(infrared)))
@@ -111,6 +135,13 @@ if os.path.isdir(INPUT_DIR):
         # Check we have matching files
         star_form_hist.sort()
         infrared.sort()
+
+        # First check all the file names are in the correct format - nnnn_Filename
+        for file_list in [star_form_hist, infrared]:
+            for filename in file_list:
+                (head, file) = os.path.split(filename)
+                if not check_starts_with_number(file):
+                    errors.append('The file {0} does not start with the run_id')
 
         for i in range(len(infrared)):
             (head, file_1) = os.path.split(star_form_hist[i])

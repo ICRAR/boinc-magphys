@@ -113,7 +113,6 @@ class Status:
         self.pixel_count = 0
         self.work_units_added = 0
 
-
 class Fit2Wu:
     """
     Convert a fit file to a wu
@@ -394,7 +393,8 @@ class Fit2Wu:
         file_name_job = filename + '.job.xml'
         file_name_zlib = filename + '.zlib.dat'
         file_name_filters = filename + '.filters.dat'
-        args_files = [filename, file_name_job, file_name_filters, file_name_zlib]
+        (file_name_star_formation_history, file_name_infrared) = self._get_model_names()
+        args_files = [filename, file_name_job, file_name_filters, file_name_zlib, file_name_star_formation_history, file_name_infrared]
         cmd_create_work = [
             BIN_PATH + "/create_work"
         ]
@@ -486,6 +486,14 @@ class Fit2Wu:
                 break
 
         return star_formation, infrared
+
+    def _get_model_names(self):
+        """
+        Create a unique model name for the run to be stored on the client
+        """
+        star_formation_history = '{0:=4d}_starformhist_cb07_z{1}.lbr'.format(self._registration.run_id, self._rounded_redshift)
+        infrared =  '{0:=4d}_infrared_dce08_z{1}.lbr'.format(self._registration.run_id, self._rounded_redshift)
+        return star_formation_history, infrared
 
     def _get_pixels(self, pix_x, pix_y):
         """
