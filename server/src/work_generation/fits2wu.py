@@ -138,7 +138,7 @@ class Fit2Wu:
         self._end_y = self._hdu_list[0].data.shape[0]
         self._end_x = self._hdu_list[0].data.shape[1]
 
-        LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':self._end_x,'y':self._end_y,'z':self._hdu_list,'pix':self._end_x*self._end_y/1000000.0})
+        LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':self._end_x,'y':self._end_y,'z':self._layer_count,'pix':self._end_x*self._end_y/1000000.0})
 
         # Update the version number
         version_number = self._get_version_number()
