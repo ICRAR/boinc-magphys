@@ -423,6 +423,8 @@ class Fit2Wu:
         """
         Are there enough layers with data in them to warrant counting this pixel?
         """
+        #TODO
+        LOG.debug('{0}'.format(pixels))
         uv_layers = 0
         for layer_id in self._ultraviolet_bands.values():
             if pixels[layer_id] > 0:
