@@ -166,6 +166,7 @@ class Fit2Wu:
         galaxy.current = True
         galaxy.pixel_count = 0
         galaxy.pixels_processed = 0
+        galaxy.run_id = registration.run_id
         session.add(galaxy)
 
         # Flush to the DB so we can get the id

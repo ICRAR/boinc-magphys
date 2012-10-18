@@ -44,6 +44,7 @@ class Galaxy(Base):
     __tablename__ = 'galaxy'
 
     galaxy_id        = Column(BigInteger, primary_key=True)
+    run_id           = Column(BigInteger, ForeignKey('run.run_id'))
     name             = Column(String(128))
     dimension_x      = Column(Integer)
     dimension_y      = Column(Integer)
