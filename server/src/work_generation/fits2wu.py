@@ -172,7 +172,7 @@ class Fit2Wu:
         # Flush to the DB so we can get the id
         session.flush()
         self._galaxy = galaxy
-        LOG.info("Wrote %s to database", galaxy.name)
+        LOG.info("Writing %s to database", galaxy.name)
 
         # Store the fits header
         self._store_fits_header()
@@ -424,7 +424,7 @@ class Fit2Wu:
         Are there enough layers with data in them to warrant counting this pixel?
         """
         #TODO
-        LOG.info('{0}'.format(pixels))
+        LOG.info('Pixels = {0}'.format(pixels))
         uv_layers = 0
         for layer_id in self._ultraviolet_bands.values():
             if pixels[layer_id] > 0:
