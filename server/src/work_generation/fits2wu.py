@@ -123,9 +123,6 @@ class Fit2Wu:
         """
         self._registration = registration
 
-        # Get the filters we're using for this run
-        self._get_filters()
-
         # Have we files that we can use for this?
         self._rounded_redshift = self._get_rounded_redshift()
         if self._rounded_redshift is None:
@@ -176,7 +173,9 @@ class Fit2Wu:
 
         # Store the fits header
         self._store_fits_header()
-        self._sort_layers()
+
+        # Get the filters we're using for this run and sort the layers
+        self._get_filters_sort_layers()
 
         # Build the template file we need if necessary
         self._build_template_file()
@@ -316,7 +315,7 @@ class Fit2Wu:
             pix_x = max_x + 1
 
     def _create_filters_dat(self, file_name_filters):
-        source = '{0}/runs/{1}/filters.dat'.format(TEMPLATES_PATH2, self._registration.run_id)
+        source = '{0}/{1:=04d}/filters.dat'.format(TEMPLATES_PATH2, self._registration.run_id)
         new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name_filters]).rstrip()
         shutil.copy(source, new_full_path)
 
@@ -423,8 +422,6 @@ class Fit2Wu:
         """
         Are there enough layers with data in them to warrant counting this pixel?
         """
-        #TODO
-        LOG.info('Pixels = {0}'.format(pixels))
         uv_layers = 0
         for layer_id in self._ultraviolet_bands.values():
             if pixels[layer_id] > 0:
@@ -449,29 +446,63 @@ class Fit2Wu:
         # Not enough layers
         return False
 
-    def _get_filters(self):
+    def _get_filters_sort_layers(self):
         """
         Get the filters we'll be using for this run
         """
         # Build the filter tables I need
-        self._filter_bands = []
         self._ultraviolet_bands = {}
         self._optical_bands = {}
         self._infrared_bands = {}
 
+        # Get the filters associated with this run
         run = session.query(Run).filter(Run.run_id == self._registration.run_id).first()
-
+        list_filters = []
         for filter in run.filters:
-            self._filter_bands.append(filter.name)
+            list_filters.append(filter)
 
-            if filter.infrared == 1:
-                self._infrared_bands[filter.name] = filter.sort_order
+        # Sort list by wavelength
+        sorted(list_filters, key=lambda filter: filter.eff_lambda)
 
-            if filter.optical == 1:
-                self._optical_bands[filter.name] = filter.sort_order
+        # The order of the filters will be there order in the fits file so record the name and its position
+        names = []
+        for layer in range(self._layer_count):
+            hdu = self._hdu_list[layer]
+            filter_name = hdu.header['MAGPHYSN']
+            if filter_name is None:
+                raise LookupError('The layer {0} does not have MAGPHYSN in it'.format(layer))
+            names.append(filter_name)
 
-            if filter.ultraviolet == 1:
-                self._ultraviolet_bands[filter.name] = filter.sort_order
+            found_filter = False
+            for filter in list_filters:
+                if filter_name == filter.name:
+                    found_filter = True
+                    break
+
+            if not found_filter:
+                raise LookupError('The filter {0} in the fits file is not expected'.format(filter_name))
+
+        layers = []
+        for filter in list_filters:
+            found_it = False
+            for i in range(len(names)):
+                if names[i] == filter.name:
+                    layers.append(i)
+                    if filter.infrared == 1:
+                        self._infrared_bands[filter.name] = i
+
+                    if filter.optical == 1:
+                        self._optical_bands[filter.name] = i
+
+                    if filter.ultraviolet == 1:
+                        self._ultraviolet_bands[filter.name] = i
+                    found_it = True
+                    break
+
+            if not found_it:
+                layers.append(-1)
+
+        self._layer_order = layers
 
     def _get_model_files(self):
         """
@@ -580,40 +611,6 @@ class Fit2Wu:
         """
         count = session.query(Galaxy).filter(Galaxy.name == self._registration.galaxy_name).count()
         return count + 1
-
-    def _sort_layers(self):
-        """
-        Look at the layers of a HDU and order them based on the effective wavelength stored in the header
-        """
-        names = []
-        for layer in range(self._layer_count):
-            hdu = self._hdu_list[layer]
-            filter_name = hdu.header['MAGPHYSN']
-            if filter_name is None:
-                raise LookupError('The layer {0} does not have MAGPHYSN in it'.format(layer))
-            names.append(filter_name)
-
-            found_filter = False
-            for name in self._filter_bands:
-                if filter_name == name:
-                    found_filter = True
-                    break
-
-            if not found_filter:
-                raise LookupError('The filter {0} in the fits file is not expected'.format(filter_name))
-
-        layers = []
-        for filter_name in self._filter_bands:
-            found_it = False
-            for i in range(len(names)):
-                if names[i] == filter_name:
-                    layers.append(i)
-                    found_it = True
-                    break
-            if not found_it:
-                layers.append(-1)
-
-        self._layer_order = layers
 
     def _store_fits_header(self):
         """

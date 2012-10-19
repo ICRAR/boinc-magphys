@@ -202,7 +202,6 @@ class Filter(Base):
     name          = Column(String(30))
     eff_lambda    = Column(Numeric(10,4))
     filter_number = Column(Integer)
-    sort_order    = Column(Integer)
     ultraviolet   = Column(Integer)
     optical       = Column(Integer)
     infrared      = Column(Integer)
