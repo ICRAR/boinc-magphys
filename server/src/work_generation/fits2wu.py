@@ -344,6 +344,20 @@ class Fit2Wu:
         file.write('</job_desc>\n')
         file.close()
 
+    def _create_model_files(self, file_name_star_formation_history, file_name_infrared):
+        """
+        Create dummy model files
+        """
+        new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name_star_formation_history]).rstrip()
+        file = open(new_full_path, 'wb')
+        file.write(' 1  {0}'.format(self._rounded_redshift))
+        file.close()
+
+        new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name_infrared]).rstrip()
+        file = open(new_full_path, 'wb')
+        file.write(' 1  {0}'.format(self._rounded_redshift))
+        file.close()
+
     def _create_observation_file(self, filename, data, pixels):
         """
         Create an observation file
@@ -393,7 +407,7 @@ class Fit2Wu:
         file_name_zlib = filename + '.zlib.dat'
         file_name_filters = filename + '.filters.dat'
         (file_name_star_formation_history, file_name_infrared) = self._get_model_names()
-        args_files = [filename, file_name_job, file_name_filters, file_name_zlib]
+        args_files = [filename, file_name_job, file_name_filters, file_name_zlib, file_name_star_formation_history, file_name_infrared]
         cmd_create_work = [
             BIN_PATH + "/create_work"
         ]
@@ -406,6 +420,7 @@ class Fit2Wu:
         self._create_job_xml(file_name_job, pixels_in_area)
         self._create_filters_dat(file_name_filters)
         self._create_zlib_dat(file_name_zlib)
+        self._create_model_files(file_name_star_formation_history, file_name_infrared)
 
         # And "create work" = create the work unit
         subprocess.call(cmd_create_work)
