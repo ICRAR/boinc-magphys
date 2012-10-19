@@ -59,38 +59,6 @@ engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-def get_redshift(filename):
-    """
-    Find and return the read shift
-    """
-    index = filename.index('_z')
-    redshift = filename[index+2:]
-    redshift = redshift[:-7]
-    return Decimal(redshift)
-
-def get_md5(filename):
-    """
-    Get the md5sum for the file
-    >>> get_md5(/Users/kevinvinsen/Documents/ICRAR/work/boinc-magphys/server/runs/0001/infrared_dce08_z0.0000.lbr.gz)
-    65671c99ba116f2c0e3b87f6e20f6e43
-    >>> get_md5(/Users/kevinvinsen/Documents/ICRAR/work/boinc-magphys/server/runs/0001/starformhist_cb07_z0.0000.lbr.gz)
-    a646f7f23f058e6519d1151508a448fa
-    """
-    file = open(filename, "rb")
-    hash = hashlib.md5()
-    hex_hash = None
-    while True:
-        piece = file.read(10240)
-
-        if piece:
-            hash.update(piece)
-        else: # we're at end of file
-            hex_hash = hash.hexdigest()
-            break
-
-    file.close()
-    return hex_hash
-
 # Check things exist
 errors = []
 
@@ -99,25 +67,8 @@ if os.path.isdir(INPUT_DIR):
     if not os.path.isfile('{0}/filters.dat'.format(INPUT_DIR)):
         errors.append('The file {0}/filters.dat does not exist'.format(INPUT_DIR))
 
-    # Check we have matching star formation and infrared files
-    star_form_hist = glob.glob('{0}/starformhist_cb07_z*.lbr.gz'.format(INPUT_DIR))
-    infrared = glob.glob('{0}/infrared_dce08_z*.lbr.gz'.format(INPUT_DIR))
-
-    if len(star_form_hist) != len(infrared):
-        errors.append('The number of starformhist files ({0}) does not match the number of infrared files ({1})'.format(len(star_form_hist), len(infrared)))
-    elif not len(infrared):
-        errors.append('There are no starformhist or infrared files')
-    else:
-        # Check we have matching files
-        star_form_hist.sort()
-        infrared.sort()
-
-        for i in range(len(infrared)):
-            (head, file_1) = os.path.split(star_form_hist[i])
-            (head, file_2) = os.path.split(infrared[i])
-
-            if file_1[18:] != file_2[15:]:
-                errors.append('{0} does not match {1}'.format(file_1, file_2))
+    if not os.path.isfile('{0}/file_details.dat'.format(INPUT_DIR)):
+        errors.append('The file {0}/file_details.dat does not exist'.format(INPUT_DIR))
 
     count = session.query(Run).filter(Run.run_id == RUN_ID).count()
     if count > 0:
@@ -143,60 +94,48 @@ else:
     session.add(run)
 
     # Read the filters file
-    file = open('{0}/filters.dat'.format(INPUT_DIR), 'rb')
-    for line in file:
-        line = line.strip()
-        if line.startswith('#'):
-            # It's a comment so we can ignore it
-            pass
-        elif len(line) > 0:
-            details = line.split()
+    with open('{0}/filters.dat'.format(INPUT_DIR), 'rb') as file:
+        for line in file:
+            line = line.strip()
+            if line.startswith('#'):
+                # It's a comment so we can ignore it
+                pass
+            elif len(line) > 0:
+                details = line.split()
 
-            # We should have 4 items
-            if len(details) == 4:
-                filter = session.query(Filter).filter(Filter.filter_number == details[2]).first()
-                if filter is None:
-                    commit = False
-                    LOG.error('The filter {0} {1} does not exist in the database'.format(details[0], details[2]))
-                else:
-                    LOG.info('Adding the filter %s %s', details[0], details[2])
-                    run.filters.append(filter)
+                # We should have 4 items
+                if len(details) == 4:
+                    filter = session.query(Filter).filter(Filter.filter_number == details[2]).first()
+                    if filter is None:
+                        commit = False
+                        LOG.error('The filter {0} {1} does not exist in the database'.format(details[0], details[2]))
+                    else:
+                        LOG.info('Adding the filter %s %s', details[0], details[2])
+                        run.filters.append(filter)
 
-    file.close()
+    # Add the file details
+    with open('{0}/file_details.dat'.format(INPUT_DIR), 'rb') as file:
+        for line in file:
+            line = line.strip()
+            if line.startswith('#'):
+                # It's a comment so we can ignore it
+                pass
+            elif len(line) > 0:
+                details = line.split()
 
-    # Add the star formation files
-    star_form_hist_files = glob.glob('{0}/starformhist_cb07_z*.lbr'.format(INPUT_DIR))
-    star_form_hist_files.sort()
-    for star_form_hist in star_form_hist_files:
-        (head, file_1) = os.path.split(star_form_hist)
-        run_file = RunFile()
-        if URL_STEM.endswith('/'):
-            run_file.file_name = '{0}{1}'.format(URL_STEM, file_1)
-        else:
-            run_file.file_name = '{0}/{1}'.format(URL_STEM, file_1)
-        run_file.file_type = STAR_FORMATION_FILE
-        run_file.md5_hash = get_md5(star_form_hist)
-        run_file.redshift = get_redshift(file_1)
-        run_file.size = os.path.getsize(star_form_hist)
-        LOG.info('Adding %s', file_1)
-        run.run_files.append(run_file)
-
-    # Add the infrared files
-    infrared_files = glob.glob('{0}/infrared_dce08_z*.lbr'.format(INPUT_DIR))
-    infrared_files.sort()
-    for infrared in infrared_files:
-        (head, file_1) = os.path.split(infrared)
-        run_file = RunFile()
-        if URL_STEM.endswith('/'):
-            run_file.file_name = '{0}{1}'.format(URL_STEM, file_1)
-        else:
-            run_file.file_name = '{0}/{1}'.format(URL_STEM, file_1)
-        run_file.file_type = INFRARED_FILE
-        run_file.md5_hash = get_md5(infrared)
-        run_file.redshift = get_redshift(file_1)
-        run_file.size = os.path.getsize(infrared)
-        LOG.info('Adding %s', file_1)
-        run.run_files.append(run_file)
+                # We should have 5 items
+                if len(details) == 5:
+                    run_file = RunFile()
+                    if URL_STEM.endswith('/'):
+                        run_file.file_name = '{0}{1}'.format(URL_STEM, details[0])
+                    else:
+                        run_file.file_name = '{0}/{1}'.format(URL_STEM, details[0])
+                    run_file.file_type = int(details[1])
+                    run_file.md5_hash = details[2]
+                    run_file.redshift = Decimal(details[3])
+                    run_file.size = long(details[4])
+                    LOG.info('Adding %s', details[0])
+                    run.run_files.append(run_file)
 
     if commit:
         session.commit()
