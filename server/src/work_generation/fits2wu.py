@@ -187,7 +187,7 @@ class Fit2Wu:
 
         LOG.info('Building the images')
         image = FitsImage()
-        image.buildImage(registration.filename, WG_IMAGE_DIRECTORY, filePrefixName, "asinh", False, False, False, session, galaxy.galaxy_id)
+        image.buildImage(registration.filename, WG_IMAGE_DIRECTORY, filePrefixName, False, session, galaxy.galaxy_id)
 
         shutil.copyfile(registration.filename, image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
 

@@ -278,17 +278,17 @@ INSERT INTO parameter_name VALUES (15, 'M(dust)');
 INSERT INTO parameter_name VALUES (16, 'SFR_0.1Gyr');
 
 CREATE TABLE image_filters_used (
-  image_filters_used_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  image_number            SMALLINT NOT NULL,
-  galaxy_id               BIGINT UNSIGNED NOT NULL,
-  filter_number_red       SMALLINT UNSIGNED NOT NULL,
-  filter_number_green     SMALLINT UNSIGNED NOT NULL,
-  filter_number_blue      SMALLINT UNSIGNED NOT NULL,
+  image_filters_used_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  image_number          SMALLINT NOT NULL,
+  galaxy_id             BIGINT UNSIGNED NOT NULL,
+  filter_id_red         SMALLINT UNSIGNED NOT NULL,
+  filter_id_green       SMALLINT UNSIGNED NOT NULL,
+  filter_id_blue        SMALLINT UNSIGNED NOT NULL,
 
   FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id),
-  FOREIGN KEY (filter_number_red) REFERENCES filter(filter_id),
-  FOREIGN KEY (filter_number_green) REFERENCES filter(filter_id),
-  FOREIGN KEY (filter_number_blue) REFERENCES filter(filter_id),
+  FOREIGN KEY (filter_id_red) REFERENCES filter(filter_id),
+  FOREIGN KEY (filter_id_green) REFERENCES filter(filter_id),
+  FOREIGN KEY (filter_id_blue) REFERENCES filter(filter_id),
 
   INDEX (galaxy_id, image_number)
 ) CHARACTER SET utf8 ENGINE=InnoDB;

@@ -212,9 +212,9 @@ class ImageFiltersUsed(Base):
     image_filters_used_id = Column(BigInteger, primary_key=True)
     image_number          = Column(Integer)
     galaxy_id             = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
-    filter_number_red     = Column(Integer, ForeignKey('filter.filter_id'))
-    filter_number_green   = Column(Integer, ForeignKey('filter.filter_id'))
-    filter_number_blue    = Column(Integer, ForeignKey('filter.filter_id'))
+    filter_id_red         = Column(Integer, ForeignKey('filter.filter_id'))
+    filter_id_green       = Column(Integer, ForeignKey('filter.filter_id'))
+    filter_id_blue        = Column(Integer, ForeignKey('filter.filter_id'))
 
 class Run(Base):
     __tablename__ = 'run'

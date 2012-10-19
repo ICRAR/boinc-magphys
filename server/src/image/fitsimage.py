@@ -30,7 +30,7 @@ import pyfits
 import math
 import os, hashlib
 import numpy
-from database.database_support import Galaxy, Area, AreaUser, ImageFiltersUsed
+from database.database_support import Galaxy, Area, AreaUser, ImageFiltersUsed, Filter
 from PIL import Image
 
 LOG = logging.getLogger(__name__)
@@ -84,9 +84,13 @@ class ImageBuilder:
         image_filters_used.image_number = image_number
         image_filters_used.file_name = imageFileName
         image_filters_used.galaxy_id = galaxy_id
-        image_filters_used.filter_number_red = redFilter
-        image_filters_used.filter_number_blue = blueFilter
-        image_filters_used.filter_number_green = greenFilter
+        image_filters_used.filter_id_red = self._get_filter_id(session, redFilter)
+        image_filters_used.filter_id_blue = self._get_filter_id(session, blueFilter)
+        image_filters_used.filter_id_green = self._get_filter_id(session, greenFilter)
+
+    def _get_filter_id(self, session, filter_number):
+        filter = session.query(Filter).filter(Filter.filter_number == filter_number).first()
+        return filter.filter_id
 
     def setData(self, filter, data):
         values = []
@@ -200,19 +204,14 @@ class FitsImage:
     def __init__(self):
         self.sigma = None
 
-    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug, session, galaxy_id):
+    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, debug, session, galaxy_id):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
+        # Use the new asinh algorithm.
+        self._buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre, session, galaxy_id)
 
-        if method == "asinh":
-            # Use the new asinh algorithm.
-            self.buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre, session, galaxy_id)
-        else:
-            # Use the old algorithm.
-            self.buildImageOld(fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug)
-
-    def get_image_filters(self, hdulist):
+    def _get_image_filters(self, hdulist):
         """
         Get the combinations to use
         """
@@ -251,7 +250,7 @@ class FitsImage:
 
         return image1_filters, image2_filters, image3_filters, image4_filters
 
-    def buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre, session, galaxy_id):
+    def _buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre, session, galaxy_id):
         """
         Build Three Colour Images using the asinh() function.
         """
@@ -273,7 +272,7 @@ class FitsImage:
         width = hdu.header['NAXIS1']
         height = hdu.header['NAXIS2']
 
-        (image1_filters, image2_filters, image3_filters, image4_filters) = self.get_image_filters(hdulist)
+        (image1_filters, image2_filters, image3_filters, image4_filters) = self._get_image_filters(hdulist)
 
         # Create Three Colour Images
         image1 = ImageBuilder(1, self.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
@@ -303,271 +302,6 @@ class FitsImage:
                 image.saveImage()
             else:
                 print 'not valid'
-
-        hdulist.close()
-
-    def buildImageOld(self, fitsFileName, imageDirName, imagePrefixName, method, createBWImages, createLog, debug):
-        """
-        Build Three Colour Images, and optionally black and white and white and black images for each image.
-        """
-
-        if imageDirName[-1] != "/":
-            imageDirName += "/"
-        if os.path.isfile(imageDirName):
-            LOG.info('Directory %s exists', imageDirName)
-            return 1
-        elif os.path.isdir(imageDirName):
-            pass
-        else:
-            os.mkdir(imageDirName)
-
-        hdulist = pyfits.open(fitsFileName, memmap=True)
-        if debug:
-            hdulist.info()
-
-        blackRGB = (0, 0, 0)
-        black = (0)
-        white = (255)
-
-        hdu = hdulist[0]
-        width = hdu.header['NAXIS1']
-        height = hdu.header['NAXIS2']
-
-        cards = ['MAGPHYSL', 'MAGPHYSN', 'MAGPHYSI', 'MAGPHYSF', 'BITPIX', 'NAXIS', 'NAXIS2', 'CRPIX1', 'CRPIX2', 'CRVAL1', 'CRVAL2', 'BZERO', 'BSCALE', 'OBJECT']
-
-        # Create Three Colour Images
-        image1Filters = [118, 117, 116] # i, r, g
-        image2Filters = [117, 116, 124] # r, g, NUV
-        image3Filters = [280, 116, 124] # 3.6, g, NUV
-        image4Filters = [283, 117, 124] # 22, r, NUV
-
-        image1 = Image.new("RGB", (width, height), blackRGB)
-        image2 = Image.new("RGB", (width, height), blackRGB)
-        image3 = Image.new("RGB", (width, height), blackRGB)
-        image4 = Image.new("RGB", (width, height), blackRGB)
-
-        images = [image1, image2, image3, image4]
-        imageFilters = [image1Filters, image2Filters, image3Filters, image4Filters]
-
-        file = 0
-        for hdu in hdulist:
-            file += 1
-            if debug:
-                print hdu,
-                print file
-
-            width = hdu.header['NAXIS1']
-            height = hdu.header['NAXIS2']
-            filter = hdu.header['MAGPHYSI']
-
-            # Get the Three Colour Images that require this filter.
-            rImages = []
-            gImages = []
-            bImages = []
-            for idx in range(len(imageFilters)):
-                img = images[idx]
-                filters = imageFilters[idx]
-                if filters[0] == filter:
-                    rImages.append(img)
-                if filters[1] == filter:
-                    gImages.append(img)
-                if filters[2] == filter:
-                    bImages.append(img)
-
-            xoffset = 0
-            minorigvalue = 99999999.0
-            maxorigvalue = -99999999.0
-            zerocount = 0
-            sumsq = 0
-            sum = 0
-            count = 0
-            valuerange = []
-            avg = 0
-            stddev = 0
-            loCut = 0
-            hiCut = 0
-            for z in range(0, 256):
-                valuerange.append(0)
-
-            if self.useHighCut:
-                minvalue = 0
-                minorigvalue = 0
-                if filter == 115:
-                    hiCut = 0.000291644721334
-                if filter == 116:
-                    hiCut = 0.000432029634664
-                if filter == 117:
-                    hiCut = 0.000490767257621
-                if filter == 118:
-                    hiCut = 0.000740360468626
-                if filter == 119:
-                    hiCut = 0.00211978228098
-                if filter == 123:
-                    hiCut = 5.12672716825e-06
-                if filter == 124:
-                    hiCut = 9.56274295407e-06
-                if filter == 280:
-                    hiCut = 0.00868070504761
-                if filter == 281:
-                    hiCut = 0.0136214713233
-                if filter == 282:
-                    hiCut = 0.0781642428067
-                if filter == 283:
-                    hiCut = 0.444458113518
-                maxorigvalue = hiCut
-
-                maxvalue = self.applyFunc(maxorigvalue, method)
-                mult = 255.0 / (maxvalue - minvalue)
-            else:
-                values = []
-                for x in range(0, width-1):
-                    for y in range(0, height-1):
-                        value =  hdu.data[y + xoffset,x + xoffset]
-                        if not math.isnan(value) and value >= 0:
-                            if value > 0:
-                                values.append(value)
-                            if value < minorigvalue:
-                                minorigvalue = value
-                            if value > maxorigvalue:
-                                maxorigvalue = value
-                            if value == 0:
-                                zerocount += 1
-                                continue
-                            value = self.applyFunc(value, method)
-                            if not math.isnan(value) and value > 0:
-                                sum += value
-                                sumsq += value * value
-                                count += 1
-                avg = 0
-                if count > 0:
-                    avg = sum / count
-                #if debug:
-                #    print sumsq, count, avg
-                stddev=0.0
-                #if count > 0:
-                #    stddev = math.sqrt((sumsq/count) - (avg*avg))
-
-                bottomIdx = 0
-                bottomValue = 0
-                values.sort()
-                for val in values:
-                    bottomValue = val
-                    if bottomIdx > 20:
-                        break
-                    bottomIdx += 1
-                loCut = bottomValue
-
-                topIdx = 0
-                topValue = 0
-                values.reverse()
-                for val in values:
-                    topValue = val
-                    if topIdx > 200:
-                        break
-                    topIdx += 1
-
-                hiCut = topValue
-                minvalue = self.applyFunc(bottomValue, method)
-                maxvalue = self.applyFunc(topValue, method)
-
-                #if method == 'linear':
-                #    minvalue = 0.0
-                #    #hiCut = avg + (15*stddev)
-                #    #if hiCut > maxvalue:
-                #    #    maxvalue = hiCut
-                #if method == 'log':
-                #    minvalue = 0.0
-                #
-                #minvalue = 0.0
-
-                #if method == 'asinh':
-                #    minvalue = 0.0
-
-                if maxvalue == minvalue:
-                    mult = 255.0
-                else:
-                    mult = 255.0 / (maxvalue - minvalue)
-
-            sminvalue = 99999999
-            smaxvalue = 0
-            pixelcount = 0
-
-            #if method == 'asinh':
-            #    slope = 255.0 / ((10000)/sigma)
-            #
-            #    scaledMean = slope * math.asinh((avg) /sigma);
-            #    # now we can get the scale for each colour as
-            #    mult = scaledMean/avg;
-            #    minvalue = 0.0
-            #    #mult = 255.0 / ((maxvalue - minvalue)/sigma)
-
-            if debug:
-                print 'Min-Orig', minorigvalue, 'Max-Orig', maxorigvalue, 'Min-Adj', minvalue, 'Max-Adj', maxvalue, 'Multiplier', mult, 'Zeroes', zerocount
-
-            if createBWImages:
-                imagebw = Image.new("L", (width, height), black)
-                imagewb = Image.new("L", (width, height), white)
-
-            for x in range(0, width-1):
-                for y in range(0, height-1):
-                    value =  hdu.data[y + xoffset,x + xoffset]
-                    if not math.isnan(value) and value > 0:
-                        value = self.applyFunc(value, method)
-                        adjvalue = value - minvalue
-                        value = int(adjvalue*mult)
-
-                        if value < 0:
-                            value = 0
-                        if value > 255:
-                            value = 255
-
-                        if value < sminvalue:
-                            sminvalue = value
-                        if value > smaxvalue:
-                            smaxvalue = value
-                        valuerange[value] += 1
-                        #print 'x', x, 'y', width-y-1, 'Value', value, 'Width', width, 'Height', height
-                        if createBWImages:
-                            imagebw.putpixel((x,width-y-1), (value))
-                            imagewb.putpixel((x,width-y-1), (255-value))
-                        if value > 0:
-                            pixelcount += 1
-                        for img in rImages:
-                            px = img.getpixel((x,width-y-1))
-                            img.putpixel((x,width-y-1), (value, px[1], px[2]))
-                        for img in gImages:
-                            px = img.getpixel((x,width-y-1))
-                            img.putpixel((x,width-y-1), (px[0], value, px[2]))
-                        for img in bImages:
-                            px = img.getpixel((x,width-y-1))
-                            img.putpixel((x,width-y-1), (px[0], px[1], value))
-
-            if debug:
-                print 'Scaled: Min', sminvalue, 'Max', smaxvalue
-                print 'Pixel Count', pixelcount
-
-            if createLog:
-                logFile = open(imageDirName + imagePrefixName + '_' + str(file) + '.txt', 'w')
-                logFile.write('Scaling method: {}\n'.format(method))
-                self.printCardsToFile(logFile, hdu.header, cards)
-                logFile.write('\n')
-                logFile.write('Count {} Avg {} StdDev {} Pixels {} PercentWithValue {}\n'.format(count, avg, stddev, width*height, ((count-zerocount)*100.0)/(width*height)))
-                #logFile.write('Possible LoCut {} HiCut {}\n'.format(avg - (10*stddev), avg + (15*stddev)))
-                logFile.write('Min-Orig {} Max-Orig {} Min-Adj {} Max-Adj {} Zeroes {}\n'.format(minorigvalue, maxorigvalue, minvalue, maxvalue, zerocount))
-                logFile.write('LoCut {} HiCut {} Multiplier {}\n'.format(loCut, hiCut, mult))
-                logFile.write('\n')
-
-                for z in range(0, 256):
-                    logFile.write('{0:3d} {1}\n'.format(z, valuerange[z]))
-                logFile.close()
-            if createBWImages:
-                imagebw.save(self.get_bw_image_path(imageDirName, imagePrefixName, file, True))
-                imagewb.save(self.get_wb_image_path(imageDirName, imagePrefixName, file, True))
-
-        image1.save(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True))
-        image2.save(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True))
-        image3.save(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True))
-        image4.save(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True))
 
         hdulist.close()
 
