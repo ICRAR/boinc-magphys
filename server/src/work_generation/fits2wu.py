@@ -218,17 +218,23 @@ class Fit2Wu:
     </file_info>
     <file_info>
         <number>2</number>
-        <sticky/>
-        <no_delete/>
     </file_info>
     <file_info>
         <number>3</number>
     </file_info>
     <file_info>
         <number>4</number>
+        <sticky/>
+        <gzipped_url>{1}</gzipped_url>
+        <md5_chksum>{2}</md5_chksum>
+        <nbytes>{3}</nbytes>
     </file_info>
     <file_info>
         <number>5</number>
+        <sticky/>
+        <gzipped_url>{4}</gzipped_url>
+        <md5_chksum>{5}</md5_chksum>
+        <nbytes>{6}</nbytes>
     </file_info>
 
     <workunit>
@@ -256,19 +262,11 @@ class Fit2Wu:
             <file_number>4</file_number>
             <open_name>starformhist_cb07_z{0}.lbr</open_name>
             <copy_file/>
-            <sticky/>
-            <gzipped_url>{1}</gzipped_url>
-            <md5_chksum>{2}</md5_chksum>
-            <nbytes>{3}</nbytes>
         </file_ref>
         <file_ref>
             <file_number>5</file_number>
             <open_name>infrared_dce08_z{0}.lbr</open_name>
             <copy_file/>
-            <sticky/>
-            <gzipped_url>{4}</gzipped_url>
-            <md5_chksum>{5}</md5_chksum>
-            <nbytes>{6}</nbytes>
         </file_ref>
         <rsc_disk_bound>500000000</rsc_disk_bound>
     </workunit>
