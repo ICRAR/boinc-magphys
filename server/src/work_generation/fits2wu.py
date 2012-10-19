@@ -225,14 +225,14 @@ class Fit2Wu:
     <file_info>
         <number>4</number>
         <sticky/>
-        <gzipped_url>{1}</gzipped_url>
+        <url>{1}</url>
         <md5_cksum>{2}</md5_cksum>
         <nbytes>{3}</nbytes>
     </file_info>
     <file_info>
         <number>5</number>
         <sticky/>
-        <gzipped_url>{4}</gzipped_url>
+        <url>{4}</url>
         <md5_cksum>{5}</md5_cksum>
         <nbytes>{6}</nbytes>
     </file_info>
