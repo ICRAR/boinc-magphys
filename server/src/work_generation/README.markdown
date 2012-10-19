@@ -16,7 +16,7 @@ The WU generator takes a image and breaks in into WU and loads them into the BOI
 
 To avoid having to store 100's of MBs of model files on the server we do this in two stages
 
-### Step 1
+### Step 1  (Local machine)
 
 $ ./create_file_details input_dir output_dir
 $ ./create_file_details ~/boinc-magphys/runs/0001 ~/boinc-magphys/server/runs/0001
@@ -24,7 +24,7 @@ $ ./create_file_details ~/boinc-magphys/runs/0001 ~/boinc-magphys/server/runs/00
 * **input_dir** where the *.lbr files are stored
 * **output_dir** where the output file is written
 
-### Step 2
+### Step 2 (Boinc Server)
 
 $ ./load_run_details.py run_id dir_with_files url_prefix comment
 $ ./load_run_details.py 1 /home/ec2-user/boinc-magphys/server/runs/0001 http://boinc-download.icrar.org/runs/0001/ 'PS Filters + SDSSu'

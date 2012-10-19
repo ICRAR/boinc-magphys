@@ -135,7 +135,6 @@ class Filter(models.Model):
     name          = models.CharField(max_length=30)
     eff_lambda    = models.DecimalField(max_digits=10, decimal_places=4)
     filter_number = models.IntegerField()
-    sort_order    = models.IntegerField()
     ultraviolet   = models.BooleanField()
     optical       = models.BooleanField()
     infrared      = models.BooleanField()
