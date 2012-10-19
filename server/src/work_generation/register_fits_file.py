@@ -80,4 +80,4 @@ register.run_id = RUN_ID
 session.add(register)
 session.commit()
 
-LOG.info('Registered %s %s %f %s %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY)
+LOG.info('Registered %s %s %f %s %d %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY, RUN_ID)
