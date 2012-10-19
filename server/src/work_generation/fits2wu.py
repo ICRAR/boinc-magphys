@@ -360,7 +360,7 @@ class Fit2Wu:
         for pixel in pixels:
             outfile.write('pix%(id)s %(pixel_redshift)s ' % {'id':pixel.pixel_id, 'pixel_redshift':self._galaxy.redshift})
             for value in pixel.pixels:
-                outfile.write("{0}  {1}  ".format(value, value * self._galaxy.sigma))
+                outfile.write("{0}  {1}  ".format(value, value * float(self._galaxy.sigma)))
 
             outfile.write('\n')
             row_num += 1

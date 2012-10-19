@@ -15,7 +15,7 @@ The WU generator takes a image and breaks in into WU and loads them into the BOI
 ## Registering Runs
 
 $ ./load_run_details.py run_id dir_with_files url_prefix comment
-$ ./load_run_details.py 1 /home/ec2-user/boinc-magphys/server/runs/0001 http://boinc-download.icrar.org/runs/0001/ 'PS FIlers + SDSSu'
+$ ./load_run_details.py 1 /home/ec2-user/boinc-magphys/server/runs/0001 http://boinc-download.icrar.org/runs/0001/ 'PS Filters + SDSSu'
 
 * **run_id** is the run id to be used
 * **dir_with_files** where the gzip files can be find as we need to record the md5sum and size

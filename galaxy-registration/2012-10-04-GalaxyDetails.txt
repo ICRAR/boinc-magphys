@@ -244,14 +244,3 @@
 ./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MASXJ22314979+0026495.fits    0.0488  2MASXJ22314979+0026495  S?  0.1 0   1
 ./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_PGC1229618.fits    0.0598  PGC1229618  S?  0.1 0   1
                             
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
