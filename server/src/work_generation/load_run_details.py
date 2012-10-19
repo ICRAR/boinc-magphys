@@ -165,7 +165,7 @@ else:
     file.close()
 
     # Add the star formation files
-    star_form_hist_files = glob.glob('{0}/starformhist_cb07_z*.lbr.gz'.format(INPUT_DIR))
+    star_form_hist_files = glob.glob('{0}/starformhist_cb07_z*.lbr'.format(INPUT_DIR))
     star_form_hist_files.sort()
     for star_form_hist in star_form_hist_files:
         (head, file_1) = os.path.split(star_form_hist)
@@ -182,7 +182,7 @@ else:
         run.run_files.append(run_file)
 
     # Add the infrared files
-    infrared_files = glob.glob('{0}/infrared_dce08_z*.lbr.gz'.format(INPUT_DIR))
+    infrared_files = glob.glob('{0}/infrared_dce08_z*.lbr'.format(INPUT_DIR))
     infrared_files.sort()
     for infrared in infrared_files:
         (head, file_1) = os.path.split(infrared)
