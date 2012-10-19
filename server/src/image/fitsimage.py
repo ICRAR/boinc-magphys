@@ -94,9 +94,7 @@ class ImageBuilder:
         image_filters_used.filter_id_green = filter_id_green
 
     def _get_filter_id(self, session, filter_number):
-        LOG.info('Filter_number = %d ', filter_number)
         filter = session.query(Filter).filter(Filter.filter_number == filter_number).first()
-        LOG.info('Filter_id = %d ', filter.filter_id)
         return filter.filter_id
 
     def setData(self, filter, data):

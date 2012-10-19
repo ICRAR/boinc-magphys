@@ -170,7 +170,10 @@ else:
     for star_form_hist in star_form_hist_files:
         (head, file_1) = os.path.split(star_form_hist)
         run_file = RunFile()
-        run_file.file_name = '{0}/{1}'.format(URL_STEM, file_1)
+        if URL_STEM.endswith('/'):
+            run_file.file_name = '{0}{1}'.format(URL_STEM, file_1)
+        else:
+            run_file.file_name = '{0}/{1}'.format(URL_STEM, file_1)
         run_file.file_type = STAR_FORMATION_FILE
         run_file.md5_hash = get_md5(star_form_hist)
         run_file.redshift = get_redshift(file_1)
@@ -184,7 +187,10 @@ else:
     for infrared in infrared_files:
         (head, file_1) = os.path.split(infrared)
         run_file = RunFile()
-        run_file.file_name = '{0}/{1}'.format(URL_STEM, file_1)
+        if URL_STEM.endswith('/'):
+            run_file.file_name = '{0}{1}'.format(URL_STEM, file_1)
+        else:
+            run_file.file_name = '{0}/{1}'.format(URL_STEM, file_1)
         run_file.file_type = INFRARED_FILE
         run_file.md5_hash = get_md5(infrared)
         run_file.redshift = get_redshift(file_1)
