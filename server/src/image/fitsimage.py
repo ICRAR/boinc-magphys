@@ -76,6 +76,11 @@ class ImageBuilder:
         self.centre = centre
         self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
 
+        # Get the id's before we build as SqlAlchemy flushes which will cause an error as
+        filter_id_red = self._get_filter_id(session, redFilter)
+        filter_id_blue = self._get_filter_id(session, blueFilter)
+        filter_id_green = self._get_filter_id(session, greenFilter)
+
         image_filters_used = session.query(ImageFiltersUsed).filter(ImageFiltersUsed.galaxy_id == galaxy_id).first()
         if image_filters_used is None:
             image_filters_used = ImageFiltersUsed()
@@ -84,9 +89,9 @@ class ImageBuilder:
         image_filters_used.image_number = image_number
         image_filters_used.file_name = imageFileName
         image_filters_used.galaxy_id = galaxy_id
-        image_filters_used.filter_id_red = self._get_filter_id(session, redFilter)
-        image_filters_used.filter_id_blue = self._get_filter_id(session, blueFilter)
-        image_filters_used.filter_id_green = self._get_filter_id(session, greenFilter)
+        image_filters_used.filter_id_red = filter_id_red
+        image_filters_used.filter_id_blue = filter_id_blue
+        image_filters_used.filter_id_green = filter_id_green
 
     def _get_filter_id(self, session, filter_number):
         LOG.info('Filter_number = %d ', filter_number)
