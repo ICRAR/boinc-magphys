@@ -64,7 +64,7 @@ class ImageBuilder:
 
     centre = 0.6
 
-    def __init__(self, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre, session, galaxy_id):
+    def __init__(self, image_number, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre, session, galaxy_id):
         self.imageFileName = imageFileName
         self.thumbnailFileName = thumbnailFileName
         self.redFilter = redFilter
@@ -81,6 +81,7 @@ class ImageBuilder:
             image_filters_used = ImageFiltersUsed()
             session.add(image_filters_used)
 
+        image_filters_used.image_number = image_number
         image_filters_used.file_name = imageFileName
         image_filters_used.galaxy_id = galaxy_id
         image_filters_used.filter_number_red = redFilter
@@ -275,14 +276,14 @@ class FitsImage:
         (image1_filters, image2_filters, image3_filters, image4_filters) = self.get_image_filters(hdulist)
 
         # Create Three Colour Images
-        image1 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
+        image1 = ImageBuilder(1, self.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
             self.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True),
             image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, session, galaxy_id) # i, r, g
-        image2 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None,
+        image2 = ImageBuilder(2, self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None,
             image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, session, galaxy_id) # r, g, NUV
-        image3 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None,
+        image3 = ImageBuilder(3, self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None,
             image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, session, galaxy_id) # 3.6, g, NUV
-        image4 = ImageBuilder(self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None,
+        image4 = ImageBuilder(4, self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None,
             image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, session, galaxy_id) # 22, r, NUV
         images = [image1, image2, image3, image4]
 
