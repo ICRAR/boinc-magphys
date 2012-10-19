@@ -393,7 +393,7 @@ class Fit2Wu:
         file_name_zlib = filename + '.zlib.dat'
         file_name_filters = filename + '.filters.dat'
         (file_name_star_formation_history, file_name_infrared) = self._get_model_names()
-        args_files = [filename, file_name_job, file_name_filters, file_name_zlib, file_name_star_formation_history, file_name_infrared]
+        args_files = [filename, file_name_job, file_name_filters, file_name_zlib]
         cmd_create_work = [
             BIN_PATH + "/create_work"
         ]
