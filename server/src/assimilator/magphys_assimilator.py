@@ -117,8 +117,6 @@ class MagphysAssimilator(assimilator.Assimilator):
         skynet_next1 = False
         skynet_next2 = False
         result_count = 0
-        histogram_count1 = 0
-        histogram_count2 = 0
         try:
             for line in f:
                 lineNo += 1
@@ -126,7 +124,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 if line.startswith(" ####### "):
                     if pxresult:
                         self.saveResult(session, pxresult)
-                        self.logDebug('%.3f seconds for %d - %d : %d histogram entries\n', time.time() - start_time, pxresult.pxresult_id, histogram_count1, histogram_count2)
+                        self.logDebug('%.3f seconds for %d\n', time.time() - start_time, pxresult.pxresult_id2)
                     start_time = time.time()
                     values = line.split()
                     pointName = values[1]
@@ -228,11 +226,9 @@ class MagphysAssimilator(assimilator.Assimilator):
                             parameter.percentile97_5 = float(values[4])
                             percentiles_next = False
                         elif histogram_next:
-                            histogram_count1 += 1
                             values = line.split()
                             hist_value = float(values[1])
                             if hist_value > MIN_HIST_VALUE and not math.isnan(hist_value):
-                                histogram_count1 += 2
                                 hist = PixelHistogram()
                                 hist.pxresult_id = pxresult.pxresult_id
                                 hist.x_axis = float(values[0])
