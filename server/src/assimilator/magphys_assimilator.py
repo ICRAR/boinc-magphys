@@ -124,7 +124,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 if line.startswith(" ####### "):
                     if pxresult:
                         self.saveResult(session, pxresult)
-                        self.logDebug('%.3f seconds for %d\n', time.time() - start_time, pxresult.pxresult_id2)
+                        self.logDebug('%.3f seconds for %d\n', time.time() - start_time, pxresult.pxresult_id)
                     start_time = time.time()
                     values = line.split()
                     pointName = values[1]
