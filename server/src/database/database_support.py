@@ -233,7 +233,7 @@ class RunFile(Base):
 
     run_file_id = Column(BigInteger, primary_key=True)
     run_id      = Column(BigInteger, ForeignKey('run.run_id'))
-    redshift    = Column(Numeric(10,4))
+    redshift    = Column(Numeric(7,5))
     file_type   = Column(Integer)
     file_name   = Column(String(1000))
     size        = Column(BigInteger)
