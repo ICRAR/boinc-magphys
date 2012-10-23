@@ -32,6 +32,7 @@ import glob
 import logging
 from datetime import datetime
 import os
+from string import maketrans
 import numpy
 import pyfits
 from sqlalchemy.engine import create_engine
@@ -39,7 +40,7 @@ from sqlalchemy.orm.session import sessionmaker
 import sys
 from sqlalchemy.sql.expression import func, and_
 from config import DB_LOGIN
-from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area, PixelHistogram
+from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area, PixelHistogram, ParameterName
 from utils.writeable_dir import WriteableDir
 
 LOG = logging.getLogger(__name__)
@@ -58,61 +59,6 @@ output_directory = args['output_dir']
 engine = create_engine(DB_LOGIN)
 Session = sessionmaker(bind=engine)
 session = Session()
-
-if len(args['names']) > 0:
-    LOG.info('Building FITS files for the galaxies {0}'.format(args['names']))
-    query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
-else:
-    LOG.info('Building FITS files for all the galaxies')
-    query = session.query(Galaxy)
-
-galaxies = query.all()
-
-PARAMETER_NAMES = { 1 : ['f_mu_ir',      0],
-                    2 : ['f_mu_sfh',     1],
-                    3 : ['ldust',        2],
-                    4 : ['m_dust',       3],
-                    5 : ['m_stars',      4],
-                    6 : ['mu_paramater', 5],
-                    7 : ['sfr',          6],
-                    8 : ['s_sfr',        7],
-                    9 : ['tau_v',        8],
-                    10 : ['tau_v_ism',    9],
-                    11 : ['t_c_ism',      10],
-                    12 : ['t_w_bc',       11],
-                    13 : ['xi_c_tot',     12],
-                    14 : ['xi_mir_tot',   13],
-                    15 : ['xi_pah_tot',   14],
-                    16 : ['xi_w_tot',     15],
-                  }
-
-IMAGE_NAMES = [ 'fmu_sfh',
-                'fmu_ir',
-                'mu',
-                'tauv',
-                's_sfr',
-                'm',
-                'ldust',
-                't_w_bc',
-                't_c_ism',
-                'xi_c_tot',
-                'xi_pah_tot',
-                'xi_mir_tot',
-                'x_w_tot',
-                'tvism',
-                'mdust',
-                'sfr',
-              ]
-
-def get_index(parameter_name_id):
-    """
-    Find the plane we should be using
-    """
-    tuple = PARAMETER_NAMES[parameter_name_id]
-    if tuple is not None:
-        return tuple[1]
-
-    raise AttributeError('Invalid parameter {0}'.format(pixel_parameter.parameter_name_id))
 
 def check_need_to_run(directory, galaxy):
     """
@@ -139,6 +85,19 @@ def check_need_to_run(directory, galaxy):
         return False
     return update_time[0] > min_mtime
 
+TRANSLATE_TABLE = maketrans(' ^', '__')
+IMAGE_NAMES = []
+for parameter_name in session.query(ParameterName).order_by(ParameterName.parameter_name_id).all():
+    IMAGE_NAMES.append(parameter_name.name.translate(TRANSLATE_TABLE, '()'))
+
+if len(args['names']) > 0:
+    LOG.info('Building FITS files for the galaxies {0}'.format(args['names']))
+    query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
+else:
+    LOG.info('Building FITS files for all the galaxies')
+    query = session.query(Galaxy)
+
+galaxies = query.all()
 median = args['median']
 highest_prob_bin_v_ = args['highest_prob_bin_v']
 
@@ -170,12 +129,12 @@ for galaxy in galaxies:
 
     array_median = None
     if median:
-        array_median = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(PARAMETER_NAMES)), dtype=numpy.float)
+        array_median = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
         array_median.fill(numpy.NaN)
 
     array_highest_prob_bin_v = None
     if highest_prob_bin_v_:
-        array_highest_prob_bin_v = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(PARAMETER_NAMES)), dtype=numpy.float)
+        array_highest_prob_bin_v = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
         array_highest_prob_bin_v.fill(numpy.NaN)
 
     # Get the header values
@@ -210,7 +169,7 @@ for galaxy in galaxies:
         if median or highest_prob_bin_v_:
             for pixel_parameter in session.query(PixelParameter).filter(PixelParameter.pxresult_id == row.pxresult_id).all():
                 if 1 <= pixel_parameter.parameter_name_id <= 16:
-                    index = get_index(pixel_parameter.parameter_name_id)
+                    index = pixel_parameter.parameter_name_id - 1
                     if median:
                         array_median[row.y, row.x, index] = pixel_parameter.percentile50
 
@@ -236,12 +195,13 @@ for galaxy in galaxies:
     session.commit()
 
     name_count = 0
+    utc_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S')
     for name in IMAGE_NAMES:
         hdu = pyfits.PrimaryHDU(array_best_fit[:,:,name_count])
         hdu_list = pyfits.HDUList([hdu])
         # Write the header
         hdu_list[0].header.update('MAGPHYST', name, 'MAGPHYS Parameter')
-        hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
+        hdu_list[0].header.update('DATE', utc_now)
         hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
         hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
         hdu_list[0].header.update('REDSHIFT', str(galaxy.redshift), 'The POGS Galaxy redshift')
@@ -258,12 +218,13 @@ for galaxy in galaxies:
 
     # If the medians are required produce them
     if median and array_median is not None:
-        for k, tuple in PARAMETER_NAMES.iteritems():
-            hdu = pyfits.PrimaryHDU(array_median[:,:,tuple[1]])
+        name_count = 0
+        for name in IMAGE_NAMES:
+            hdu = pyfits.PrimaryHDU(array_median[:,:,name_count])
             hdu_list = pyfits.HDUList([hdu])
             # Write the header
-            hdu_list[0].header.update('MAGPHYST', k, 'MAGPHYS Parameter Median')
-            hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
+            hdu_list[0].header.update('MAGPHYST', name, 'MAGPHYS Parameter Median')
+            hdu_list[0].header.update('DATE', utc_now)
             hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
             hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
             hdu_list[0].header.update('REDSHIFT', str(galaxy.redshift), 'The POGS Galaxy redshift')
@@ -273,17 +234,19 @@ for galaxy in galaxies:
                 hdu_list[0].header.update(key, value)
 
             if galaxy.version_number == 1:
-                hdu_list.writeto('{0}/{1}_{2}_median.fits'.format(directory, galaxy.name, tuple[0]), clobber=True)
+                hdu_list.writeto('{0}/{1}_{2}_median.fits'.format(directory, galaxy.name, name), clobber=True)
             else:
-                hdu_list.writeto('{0}/{1}_V{3}_{2}_median.fits'.format(directory, galaxy.name, tuple[0], galaxy.version_number), clobber=True)
+                hdu_list.writeto('{0}/{1}_V{3}_{2}_median.fits'.format(directory, galaxy.name, name, galaxy.version_number), clobber=True)
+            name_count += 1
 
     if highest_prob_bin_v_ and array_highest_prob_bin_v is not None:
-        for k, tuple in PARAMETER_NAMES.iteritems():
-            hdu = pyfits.PrimaryHDU(array_highest_prob_bin_v[:,:,tuple[1]])
+        name_count = 0
+        for name in IMAGE_NAMES:
+            hdu = pyfits.PrimaryHDU(array_highest_prob_bin_v[:,:,name_count])
             hdu_list = pyfits.HDUList([hdu])
             # Write the header
-            hdu_list[0].header.update('MAGPHYST', k, 'MAGPHYS Parameter Highest Probability Bin Value')
-            hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
+            hdu_list[0].header.update('MAGPHYST', name, 'MAGPHYS Parameter Highest Probability Bin Value')
+            hdu_list[0].header.update('DATE', utc_now)
             hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
             hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
             hdu_list[0].header.update('REDSHIFT', str(galaxy.redshift), 'The POGS Galaxy redshift')
@@ -293,8 +256,8 @@ for galaxy in galaxies:
                 hdu_list[0].header.update(key, value)
 
             if galaxy.version_number == 1:
-                hdu_list.writeto('{0}/{1}_{2}_high_prob_bin.fits'.format(directory, galaxy.name, tuple[0]), clobber=True)
+                hdu_list.writeto('{0}/{1}_{2}_high_prob_bin.fits'.format(directory, galaxy.name, name), clobber=True)
             else:
-                hdu_list.writeto('{0}/{1}_V{3}_{2}_high_prob_bin.fits'.format(directory, galaxy.name, tuple[0], galaxy.version_number), clobber=True)
+                hdu_list.writeto('{0}/{1}_V{3}_{2}_high_prob_bin.fits'.format(directory, galaxy.name, name, galaxy.version_number), clobber=True)
 
 LOG.info('Done')
