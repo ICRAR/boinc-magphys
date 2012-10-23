@@ -244,7 +244,7 @@ for galaxy in galaxies:
         hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
         hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
         hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
-        hdu_list[0].header.update('REDSHIFT', galaxy.redshift, 'The POGS Galaxy redshift')
+        hdu_list[0].header.update('REDSHIFT', str(galaxy.redshift), 'The POGS Galaxy redshift')
         hdu_list[0].header.update('SIGMA', galaxy.sigma, 'The POGS Galaxy sigma')
 
         for key, value in header.items():
@@ -266,7 +266,7 @@ for galaxy in galaxies:
             hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
             hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
             hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
-            hdu_list[0].header.update('REDSHIFT', galaxy.redshift, 'The POGS Galaxy redshift')
+            hdu_list[0].header.update('REDSHIFT', str(galaxy.redshift), 'The POGS Galaxy redshift')
             hdu_list[0].header.update('SIGMA', galaxy.sigma, 'The POGS Galaxy sigma')
 
             for key, value in header.items():
@@ -286,7 +286,7 @@ for galaxy in galaxies:
             hdu_list[0].header.update('DATE', datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S'))
             hdu_list[0].header.update('GALAXYID', galaxy.galaxy_id, 'The POGS Galaxy Id')
             hdu_list[0].header.update('VRSNNMBR', galaxy.version_number, 'The POGS Galaxy Version Number')
-            hdu_list[0].header.update('REDSHIFT', galaxy.redshift, 'The POGS Galaxy redshift')
+            hdu_list[0].header.update('REDSHIFT', str(galaxy.redshift), 'The POGS Galaxy redshift')
             hdu_list[0].header.update('SIGMA', galaxy.sigma, 'The POGS Galaxy sigma')
 
             for key, value in header.items():

@@ -301,8 +301,8 @@ image_dir = "/home/ec2-user/galaxyImages"' >> /home/ec2-user/boinc-magphys/serve
     run('''echo 'image_directory = "/home/ec2-user/galaxyImages"
 min_pixels_per_file = "15"
 row_height = "6"
-threshold = "1500"
-high_water_mark = "1500"
+threshold = "2000"
+high_water_mark = "2000"
 boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
 
     # Setup Apache for Django.
