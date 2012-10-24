@@ -33,6 +33,7 @@ import numpy
 import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import and_
 from config import DB_LOGIN
 from config import DJANGO_IMAGE_DIR
 from image import fitsimage
@@ -62,7 +63,7 @@ elif args['all']:
     query = query.order_by(GALAXY.c.name)
 else:
     LOG.info('Building PNG files for updated galaxies')
-    query = query.where(AREA.c.galaxy_id == GALAXY.c.galaxy_id).filter(AREA.c.update_time >= GALAXY.c.image_time)
+    query = query.where(and_(AREA.c.galaxy_id == GALAXY.c.galaxy_id, AREA.c.update_time >= GALAXY.c.image_time))
 
 IMAGE_NAMES = [ 'fmu_sfh',
                 'fmu_ir',
