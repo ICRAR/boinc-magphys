@@ -32,11 +32,11 @@ import math
 import numpy
 import datetime
 from sqlalchemy.engine import create_engine
-from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy.sql import select
 from config import DB_LOGIN
 from config import DJANGO_IMAGE_DIR
 from image import fitsimage
-from database.database_support import Galaxy, Area, PixelResult
+from database.database_support_core import AREA, GALAXY, PIXEL_RESULT
 from PIL import Image
 
 LOG = logging.getLogger(__name__)
@@ -51,20 +51,18 @@ output_directory = DJANGO_IMAGE_DIR
 
 # First check the galaxy exists in the database
 engine = create_engine(DB_LOGIN)
-Session = sessionmaker(bind=engine)
-session = Session()
+connection = engine.connect()
 
+query = select([GALAXY])
 if len(args['names']) > 0:
     LOG.info('Building PNG files for the galaxies {0}'.format(args['names']))
-    query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
+    query = query.where(GALAXY.c.name.in_(args['names']))
 elif args['all']:
     LOG.info('Building PNG files for all the galaxies')
-    query = session.query(Galaxy).order_by(Galaxy.name)
+    query = query.order_by(GALAXY.c.name)
 else:
     LOG.info('Building PNG files for updated galaxies')
-    query = session.query(Galaxy).filter(Area.galaxy_id == Galaxy.galaxy_id).filter(Area.update_time >= Galaxy.image_time)
-
-galaxies = query.all()
+    query = query.where(AREA.c.galaxy_id == GALAXY.c.galaxy_id).filter(AREA.c.update_time >= GALAXY.c.image_time)
 
 IMAGE_NAMES = [ 'fmu_sfh',
                 'fmu_ir',
@@ -133,8 +131,8 @@ FIRE_B = [0,7,15,22,30,38,45,53,61,65,69,74,78,
        255,255,255,255,255,255,255]
 
 fimage = fitsimage.FitsImage()
-
-for galaxy in galaxies:
+galaxy_count = 0
+for galaxy in connection.execute(query):
     LOG.info('Working on galaxy %s', galaxy.name)
     array = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
     array.fill(numpy.NaN)
@@ -142,34 +140,36 @@ for galaxy in galaxies:
     # Return the rows
     pixel_count = 0
     pixels_processed = 0
-    for row in session.query(PixelResult).filter(PixelResult.galaxy_id == galaxy.galaxy_id).all():
+    for row in connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])):
+        row__x = row[PIXEL_RESULT.c.x]
+        row__y = row[PIXEL_RESULT.c.y]
         pixel_count += 1
-        if row.workunit_id != None:
+        if row[PIXEL_RESULT.c.workunit_id] is not None:
             pixels_processed += 1
-        array[row.y, row.x, 0] = row.fmu_sfh
-        array[row.y, row.x, 1] = row.fmu_ir
-        array[row.y, row.x, 2] = row.mu
-        array[row.y, row.x, 3] = row.tauv
-        array[row.y, row.x, 4] = row.s_sfr
-        array[row.y, row.x, 5] = row.m
-        array[row.y, row.x, 6] = row.ldust
-        array[row.y, row.x, 7] = row.t_w_bc
-        array[row.y, row.x, 8] = row.t_c_ism
-        array[row.y, row.x, 9] = row.xi_c_tot
-        array[row.y, row.x, 10] = row.xi_pah_tot
-        array[row.y, row.x, 11] = row.xi_mir_tot
-        array[row.y, row.x, 12] = row.x_w_tot
-        array[row.y, row.x, 13] = row.tvism
-        array[row.y, row.x, 14] = row.mdust
-        array[row.y, row.x, 15] = row.sfr
+        array[row__y, row__x, 0] =  row[PIXEL_RESULT.c.fmu_sfh]
+        array[row__y, row__x, 1] =  row[PIXEL_RESULT.c.fmu_ir]
+        array[row__y, row__x, 2] =  row[PIXEL_RESULT.c.mu]
+        array[row__y, row__x, 3] =  row[PIXEL_RESULT.c.tauv]
+        array[row__y, row__x, 4] =  row[PIXEL_RESULT.c.s_sfr]
+        array[row__y, row__x, 5] =  row[PIXEL_RESULT.c.m]
+        array[row__y, row__x, 6] =  row[PIXEL_RESULT.c.ldust]
+        array[row__y, row__x, 7] =  row[PIXEL_RESULT.c.t_w_bc]
+        array[row__y, row__x, 8] =  row[PIXEL_RESULT.c.t_c_ism]
+        array[row__y, row__x, 9] =  row[PIXEL_RESULT.c.xi_c_tot]
+        array[row__y, row__x, 10] = row[PIXEL_RESULT.c.xi_pah_tot]
+        array[row__y, row__x, 11] = row[PIXEL_RESULT.c.xi_mir_tot]
+        array[row__y, row__x, 12] = row[PIXEL_RESULT.c.x_w_tot]
+        array[row__y, row__x, 13] = row[PIXEL_RESULT.c.tvism]
+        array[row__y, row__x, 14] = row[PIXEL_RESULT.c.mdust]
+        array[row__y, row__x, 15] = row[PIXEL_RESULT.c.sfr]
 
     name_count = 0
 
     blackRGB = (0, 0, 0)
     for name in PNG_IMAGE_NAMES:
         value = 0
-        height = galaxy.dimension_y
-        width = galaxy.dimension_x
+        height = galaxy[GALAXY.c.dimension_y]
+        width  = galaxy[GALAXY.c.dimension_x]
         idx = 0
         if name == 'mu':
             idx = 2
@@ -217,12 +217,14 @@ for galaxy in galaxies:
                     green = FIRE_G[value]
                     blue = FIRE_B[value]
                     image.putpixel((x, width-y-1), (red, green, blue))
-        outname = fimage.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy.name, galaxy.version_number, name), True)
+        outname = fimage.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
         image.save(outname)
-        galaxy.image_time = datetime.datetime.now()
-        galaxy.pixel_count = pixel_count
-        galaxy.pixels_processed = pixels_processed
-        session.commit()
+        transaction = connection.begin()
+        connection.execute(GALAXY.update().
+            where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).
+            values(image_time = datetime.datetime.now(), pixel_count = pixel_count, pixels_processed = pixels_processed))
+        transaction.commit()
+        galaxy_count += 1
 
-LOG.info('Built images for %d galaxies', len(galaxies))
+LOG.info('Built images for %d galaxies', galaxy_count)
 
