@@ -54,7 +54,7 @@ output_directory = DJANGO_IMAGE_DIR
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 
-query = select([GALAXY])
+query = select([GALAXY]).distinct()
 if len(args['names']) > 0:
     LOG.info('Building PNG files for the galaxies {0}'.format(args['names']))
     query = query.where(GALAXY.c.name.in_(args['names']))
