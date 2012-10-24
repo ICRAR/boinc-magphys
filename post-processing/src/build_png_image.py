@@ -134,8 +134,8 @@ FIRE_B = [0,7,15,22,30,38,45,53,61,65,69,74,78,
 fimage = fitsimage.FitsImage()
 galaxy_count = 0
 for galaxy in connection.execute(query):
-    LOG.info('Working on galaxy %s', galaxy.name)
-    array = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
+    LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
+    array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(IMAGE_NAMES)), dtype=numpy.float)
     array.fill(numpy.NaN)
 
     # Return the rows
