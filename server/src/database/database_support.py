@@ -22,15 +22,32 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 #    MA 02111-1307  USA
 #
-# The database is partitioned to improve performance, this means there are no primary
-# keys, but the ORM mapping of sqlalchemy needs them - doesn't seem to hurt having
-# them even though they don't really exist
+"""
+The SQLAlchemy ORM tables
+
+The database is partitioned to improve performance, this means there are no primary
+keys, but the ORM mapping of sqlalchemy needs them - doesn't seem to hurt having
+them even though they don't really exist
+"""
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger, Boolean
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import Table
 from sqlalchemy.types import Numeric
+
+##########################################################################
+##########################################################################
+
+##########################################################################
+#
+# If you change this file change the database_support_core.py file to
+# match the change
+#
+##########################################################################
+
+##########################################################################
+##########################################################################
 
 Base = declarative_base()
 
@@ -66,6 +83,7 @@ class Galaxy(Base):
 
 class FitsHeader(Base):
     __tablename__ = 'fits_header'
+
     fitsheader_id = Column(BigInteger, primary_key=True)
     galaxy_id     = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
     keyword       = Column(String(128))
@@ -75,6 +93,7 @@ class FitsHeader(Base):
 
 class Area(Base):
     __tablename__ = 'area'
+
     area_id      = Column(BigInteger, primary_key=True)
     galaxy_id    = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
     top_x        = Column(Integer)

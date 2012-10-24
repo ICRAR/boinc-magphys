@@ -30,17 +30,17 @@ from __future__ import print_function
 import argparse
 import glob
 import logging
-from datetime import datetime
 import os
-from string import maketrans
 import numpy
 import pyfits
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm.session import sessionmaker
 import sys
+from string import maketrans
+from datetime import datetime
+from sqlalchemy.engine import create_engine
+from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import func, and_
 from config import DB_LOGIN
-from database.database_support import Galaxy, PixelResult, FitsHeader, PixelParameter, Area, PixelHistogram, ParameterName
+from database.database_support_core import PARAMETER_NAME, AREA, GALAXY, FITS_HEADER, PIXEL_RESULT, PIXEL_PARAMETER, PIXEL_HISTOGRAM
 from utils.writeable_dir import WriteableDir
 
 LOG = logging.getLogger(__name__)
@@ -53,12 +53,11 @@ parser.add_argument('-p', '--highest_prob_bin_v', action='store_true', help='als
 parser.add_argument('names', nargs='*', help='optional the name of tha galaxies to produce')
 args = vars(parser.parse_args())
 
-output_directory = args['output_dir']
+OUTPUT_DIRECTORY = args['output_dir']
 
 # First check the galaxy exists in the database
 engine = create_engine(DB_LOGIN)
-Session = sessionmaker(bind=engine)
-session = Session()
+connection = engine.connect()
 
 def check_need_to_run(directory, galaxy):
     """
@@ -79,39 +78,43 @@ def check_need_to_run(directory, galaxy):
     # Convert to a datetime
     min_mtime = datetime.fromtimestamp(min_mtime)
 
-    update_time = session.query(func.max(Area.update_time)).filter('galaxy_id = :galaxy_id').params(galaxy_id=galaxy.galaxy_id).first()
-    LOG.info('{0}_V{1} file min_mtime = {2} - DB update_time = {3}'.format(galaxy.name, galaxy.version_number, min_mtime, update_time[0]))
+    update_time = connection.execute(select([func.max([AREA.c.update_time])]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])).scalar()
+    LOG.info('{0}_V{1} file min_mtime = {2} - DB update_time = {3}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], min_mtime, update_time[0]))
     if update_time[0] is None:
         return False
     return update_time[0] > min_mtime
 
 TRANSLATE_TABLE = maketrans(' ^', '__')
 IMAGE_NAMES = []
-for parameter_name in session.query(ParameterName).order_by(ParameterName.parameter_name_id).all():
-    IMAGE_NAMES.append(parameter_name.name.translate(TRANSLATE_TABLE, '()'))
+for parameter_name in connection.execute(select([PARAMETER_NAME.c.name]).order_by(PARAMETER_NAME.c.parameter_name_id)):
+    IMAGE_NAMES.append(parameter_name[0].translate(TRANSLATE_TABLE, '()'))
 
+
+query = select([GALAXY])
 if len(args['names']) > 0:
     LOG.info('Building FITS files for the galaxies {0}'.format(args['names']))
-    query = session.query(Galaxy).filter(Galaxy.name.in_(args['names']))
+    query = query.where(GALAXY.c.name.in_(args['names']))
 else:
     LOG.info('Building FITS files for all the galaxies')
-    query = session.query(Galaxy)
 
-galaxies = query.all()
 median = args['median']
 highest_prob_bin_v_ = args['highest_prob_bin_v']
 
-for galaxy in galaxies:
-    LOG.info('Working on galaxy %s (%d) %d x %d', galaxy.name, galaxy.version_number, galaxy.dimension_x, galaxy.dimension_y)
+for galaxy in connection.execute(query):
+    galaxy__name = galaxy[GALAXY.c.name]
+    galaxy__version_number = galaxy[GALAXY.c.version_number]
+    galaxy__dimension_x = galaxy[GALAXY.c.dimension_x]
+    galaxy__dimension_y = galaxy[GALAXY.c.dimension_y]
+    LOG.info('Working on galaxy %s (%d) %d x %d', galaxy__name, galaxy__version_number, galaxy__dimension_x, galaxy__dimension_y)
 
     # Do we have an old version
     need_to_run = True
 
     # Create the directory to hold the fits files
-    if galaxy.version_number == 1:
-        directory = '{0}/{1}'.format(output_directory, galaxy.name)
+    if galaxy__version_number == 1:
+        directory = '{0}/{1}'.format(OUTPUT_DIRECTORY, galaxy__name)
     else:
-        directory = '{0}/{1}_V{2}'.format(output_directory, galaxy.name, galaxy.version_number)
+        directory = '{0}/{1}_V{2}'.format(OUTPUT_DIRECTORY, galaxy__name, galaxy__version_number)
 
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -124,75 +127,85 @@ for galaxy in galaxies:
 
     # A vagary of PyFits/NumPy is the order of the x & y indexes is reversed
     # See page 13 of the PyFITS User Guide
-    array_best_fit = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
+    array_best_fit = numpy.empty((galaxy__dimension_y, galaxy__dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
     array_best_fit.fill(numpy.NaN)
 
     array_median = None
     if median:
-        array_median = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
+        array_median = numpy.empty((galaxy__dimension_y, galaxy__dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
         array_median.fill(numpy.NaN)
 
     array_highest_prob_bin_v = None
     if highest_prob_bin_v_:
-        array_highest_prob_bin_v = numpy.empty((galaxy.dimension_y, galaxy.dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
+        array_highest_prob_bin_v = numpy.empty((galaxy__dimension_y, galaxy__dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
         array_highest_prob_bin_v.fill(numpy.NaN)
 
     # Get the header values
     header = {}
-    for row in session.query(FitsHeader).filter(FitsHeader.galaxy_id == galaxy.galaxy_id).all():
-        header[row.keyword] = row.value
+    for row in connection.execute(select([FITS_HEADER]).where(FITS_HEADER.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])):
+        header[row[FITS_HEADER.c.keyword]] = row[FITS_HEADER.c.value]
+
+    # Begin the transaction
+    transaction = connection.begin()
 
     # Return the rows
     previous_x = -1
-    for row in session.query(PixelResult).filter(PixelResult.galaxy_id == galaxy.galaxy_id).all():
-        if row.x != previous_x:
-            previous_x = row.x
+    for row in connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])):
+        row__x = row[PIXEL_RESULT.c.x]
+        row__y = row[PIXEL_RESULT.c.y]
+        if row__x != previous_x:
+            previous_x = row__x
             print("Processing row {0}".format(previous_x), end="\r")
             sys.stdout.flush()
-        array_best_fit[row.y, row.x, 0] = row.fmu_sfh
-        array_best_fit[row.y, row.x, 1] = row.fmu_ir
-        array_best_fit[row.y, row.x, 2] = row.mu
-        array_best_fit[row.y, row.x, 3] = row.tauv
-        array_best_fit[row.y, row.x, 4] = row.s_sfr
-        array_best_fit[row.y, row.x, 5] = row.m
-        array_best_fit[row.y, row.x, 6] = row.ldust
-        array_best_fit[row.y, row.x, 7] = row.t_w_bc
-        array_best_fit[row.y, row.x, 8] = row.t_c_ism
-        array_best_fit[row.y, row.x, 9] = row.xi_c_tot
-        array_best_fit[row.y, row.x, 10] = row.xi_pah_tot
-        array_best_fit[row.y, row.x, 11] = row.xi_mir_tot
-        array_best_fit[row.y, row.x, 12] = row.x_w_tot
-        array_best_fit[row.y, row.x, 13] = row.tvism
-        array_best_fit[row.y, row.x, 14] = row.mdust
-        array_best_fit[row.y, row.x, 15] = row.sfr
+        array_best_fit[row__y, row__x, 0]  = row[PIXEL_RESULT.c.fmu_sfh]
+        array_best_fit[row__y, row__x, 1]  = row[PIXEL_RESULT.c.fmu_ir]
+        array_best_fit[row__y, row__x, 2]  = row[PIXEL_RESULT.c.mu]
+        array_best_fit[row__y, row__x, 3]  = row[PIXEL_RESULT.c.tauv]
+        array_best_fit[row__y, row__x, 4]  = row[PIXEL_RESULT.c.s_sfr]
+        array_best_fit[row__y, row__x, 5]  = row[PIXEL_RESULT.c.m]
+        array_best_fit[row__y, row__x, 6]  = row[PIXEL_RESULT.c.ldust]
+        array_best_fit[row__y, row__x, 7]  = row[PIXEL_RESULT.c.t_w_bc]
+        array_best_fit[row__y, row__x, 8]  = row[PIXEL_RESULT.c.t_c_ism]
+        array_best_fit[row__y, row__x, 9]  = row[PIXEL_RESULT.c.xi_c_tot]
+        array_best_fit[row__y, row__x, 10] = row[PIXEL_RESULT.c.xi_pah_tot]
+        array_best_fit[row__y, row__x, 11] = row[PIXEL_RESULT.c.xi_mir_tot]
+        array_best_fit[row__y, row__x, 12] = row[PIXEL_RESULT.c.x_w_tot]
+        array_best_fit[row__y, row__x, 13] = row[PIXEL_RESULT.c.tvism]
+        array_best_fit[row__y, row__x, 14] = row[PIXEL_RESULT.c.mdust]
+        array_best_fit[row__y, row__x, 15] = row[PIXEL_RESULT.c.sfr]
 
         if median or highest_prob_bin_v_:
-            for pixel_parameter in session.query(PixelParameter).filter(PixelParameter.pxresult_id == row.pxresult_id).all():
-                if 1 <= pixel_parameter.parameter_name_id <= 16:
-                    index = pixel_parameter.parameter_name_id - 1
+            for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id])):
+                if 1 <= pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] <= 16:
+                    index = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
                     if median:
-                        array_median[row.y, row.x, index] = pixel_parameter.percentile50
+                        array_median[row__y, row__x, index] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
 
                     if highest_prob_bin_v_:
                         # Have we worked this value out before
-                        if pixel_parameter.high_prob_bin is None:
-                            mhv = session.query(func.max(PixelHistogram.hist_value).label('max_hist_value')).filter(
-                                and_(PixelHistogram.pxresult_id == row.pxresult_id,
-                                    PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id)).subquery('mhv')
-                            pixel_histogram = session.query(PixelHistogram).filter(
-                                and_(PixelHistogram.pxresult_id == row.pxresult_id,
-                                    PixelHistogram.pxparameter_id == pixel_parameter.pxparameter_id,
-                                    PixelHistogram.hist_value == mhv.c.max_hist_value)).first()
+                        if pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] is None:
+                            pixel_histogram = connection.execute([PIXEL_HISTOGRAM]).where(
+                                and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
+                                     PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id],
+                                     PIXEL_HISTOGRAM.c.hist_value ==
+                                        select([func.max(PIXEL_HISTOGRAM.c.hist_value)]).
+                                            where(and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
+                                                       PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id])))).first()
+
 
                             if pixel_histogram is not None:
-                                array_highest_prob_bin_v[row.y, row.x, index] = pixel_histogram.x_axis
-                                pixel_parameter.high_prob_bin = pixel_histogram.x_axis
+                                array_highest_prob_bin_v[row__y, row__x, index] = pixel_histogram[PIXEL_HISTOGRAM.c.x_axis]
+
+                                # Update the database
+                                connection.execute(PIXEL_PARAMETER.update().
+                                    where(PIXEL_PARAMETER.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id]).
+                                    values(high_prob_bin = pixel_histogram[PIXEL_HISTOGRAM.c.x_axis]))
 
                         else:
-                            array_highest_prob_bin_v[row.y, row.x, index] = pixel_parameter.high_prob_bin
+                            array_highest_prob_bin_v[row__y, row__x, index] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin]
 
     # Commit any changes
-    session.commit()
+    transaction.commit()
 
     name_count = 0
     utc_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S')
@@ -211,9 +224,9 @@ for galaxy in galaxies:
             hdu_list[0].header.update(key, value)
 
         if galaxy.version_number == 1:
-            hdu_list.writeto('{0}/{1}_{2}.fits'.format(directory, galaxy.name, name), clobber=True)
+            hdu_list.writeto('{0}/{1}_{2}.fits'.format(directory, galaxy__name, name), clobber=True)
         else:
-            hdu_list.writeto('{0}/{1}_V{3}_{2}.fits'.format(directory, galaxy.name, name, galaxy.version_number), clobber=True)
+            hdu_list.writeto('{0}/{1}_V{3}_{2}.fits'.format(directory, galaxy__name, name, galaxy.version_number), clobber=True)
         name_count += 1
 
     # If the medians are required produce them
@@ -234,9 +247,9 @@ for galaxy in galaxies:
                 hdu_list[0].header.update(key, value)
 
             if galaxy.version_number == 1:
-                hdu_list.writeto('{0}/{1}_{2}_median.fits'.format(directory, galaxy.name, name), clobber=True)
+                hdu_list.writeto('{0}/{1}_{2}_median.fits'.format(directory, galaxy__name, name), clobber=True)
             else:
-                hdu_list.writeto('{0}/{1}_V{3}_{2}_median.fits'.format(directory, galaxy.name, name, galaxy.version_number), clobber=True)
+                hdu_list.writeto('{0}/{1}_V{3}_{2}_median.fits'.format(directory, galaxy__name, name, galaxy.version_number), clobber=True)
             name_count += 1
 
     if highest_prob_bin_v_ and array_highest_prob_bin_v is not None:
@@ -256,8 +269,8 @@ for galaxy in galaxies:
                 hdu_list[0].header.update(key, value)
 
             if galaxy.version_number == 1:
-                hdu_list.writeto('{0}/{1}_{2}_high_prob_bin.fits'.format(directory, galaxy.name, name), clobber=True)
+                hdu_list.writeto('{0}/{1}_{2}_high_prob_bin.fits'.format(directory, galaxy__name, name), clobber=True)
             else:
-                hdu_list.writeto('{0}/{1}_V{3}_{2}_high_prob_bin.fits'.format(directory, galaxy.name, name, galaxy.version_number), clobber=True)
+                hdu_list.writeto('{0}/{1}_V{3}_{2}_high_prob_bin.fits'.format(directory, galaxy__name, name, galaxy.version_number), clobber=True)
 
 LOG.info('Done')
