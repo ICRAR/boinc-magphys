@@ -188,7 +188,7 @@ for galaxy in connection.execute(query):
                                 and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
                                      PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id],
                                      PIXEL_HISTOGRAM.c.hist_value ==
-                                        select([func.max(PIXEL_HISTOGRAM.c.hist_value)]).
+                                        select(func.max(PIXEL_HISTOGRAM.c.hist_value)).
                                             where(and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
                                                        PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id])))).first()
 
