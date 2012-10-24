@@ -166,6 +166,14 @@ for galaxy in connection.execute(query):
 
     name_count = 0
 
+    transaction = connection.begin()
+    connection.execute(GALAXY.update().
+        where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).
+        values(image_time = datetime.datetime.now(), pixel_count = pixel_count, pixels_processed = pixels_processed))
+    transaction.commit()
+    galaxy_count += 1
+
+    # Now right the files
     blackRGB = (0, 0, 0)
     for name in PNG_IMAGE_NAMES:
         value = 0
@@ -220,12 +228,6 @@ for galaxy in connection.execute(query):
                     image.putpixel((x, width-y-1), (red, green, blue))
         outname = fimage.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
         image.save(outname)
-        transaction = connection.begin()
-        connection.execute(GALAXY.update().
-            where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).
-            values(image_time = datetime.datetime.now(), pixel_count = pixel_count, pixels_processed = pixels_processed))
-        transaction.commit()
-        galaxy_count += 1
 
 LOG.info('Built images for %d galaxies', galaxy_count)
 
