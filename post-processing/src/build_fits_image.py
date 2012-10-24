@@ -184,13 +184,13 @@ for galaxy in connection.execute(query):
                     if highest_prob_bin_v_:
                         # Have we worked this value out before
                         if pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] is None:
-                            pixel_histogram = connection.execute([PIXEL_HISTOGRAM]).where(
+                            pixel_histogram = connection.execute(select([PIXEL_HISTOGRAM]).where(
                                 and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
                                      PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id],
                                      PIXEL_HISTOGRAM.c.hist_value ==
-                                        select(func.max(PIXEL_HISTOGRAM.c.hist_value)).
+                                        select([func.max(PIXEL_HISTOGRAM.c.hist_value)]).
                                             where(and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
-                                                       PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id])))).first()
+                                                       PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id]))))).first()
 
 
                             if pixel_histogram is not None:
