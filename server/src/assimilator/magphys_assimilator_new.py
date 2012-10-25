@@ -46,8 +46,6 @@ class MagphysAssimilator(assimilator.Assimilator):
     def __init__(self):
         assimilator.Assimilator.__init__(self)
 
-        self._area_id = None
-        self._error_wu_id = None
         # Login is set in the database package
         connection = ENGINE.connect()
         self._map_parameter_name = {}
@@ -60,14 +58,14 @@ class MagphysAssimilator(assimilator.Assimilator):
 
         self.logNormal('Starting assimilator')
 
-
-    def get_output_file_infos(self, result, list):
-        """
-        Get the file names
-        """
-        dom = parseString(result.xml_doc_in)
-        for node in dom.getElementsByTagName('file_name'):
-            list.append(node.firstChild.nodeValue)
+    # TODO Can this be deleted
+    #def _get_output_file_infos(self, result, list):
+    #    """
+    #    Get the file names
+    #    """
+    #    dom = parseString(result.xml_doc_in)
+    #    for node in dom.getElementsByTagName('file_name'):
+    #        list.append(node.firstChild.nodeValue)
 
     def _get_pixel_result(self, connection, pxresult_id):
         """
@@ -118,7 +116,7 @@ class MagphysAssimilator(assimilator.Assimilator):
             f = open(outFile, "r")
 
         self._area_id = None
-        self._pixel_found = False
+        self._pxresult_id = False
         lineNo = 0
         percentiles_next = False
         histogram_next = False
@@ -341,13 +339,8 @@ class MagphysAssimilator(assimilator.Assimilator):
                 connection.close()
             print "Unexpected error:", sys.exc_info()[0]
             traceback.print_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
-            if wu.id == self.error_wu_id:
-                self.logCritical("Unexpected error occurred, stop after second attempt\n")
-                raise
-            else:
-                self.error_wu_id = wu.id
-                self.logCritical("Unexpected error occurred, retrying...\n")
-                return -1
+            self.logCritical("Unexpected error occurred, retrying...\n")
+            return -1
 
         return 0
 
