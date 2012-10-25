@@ -89,13 +89,14 @@ class MagphysAssimilator(assimilator.Assimilator):
         """
         if self._pxresult_id is not None and not self.noinsert:
             # Update the filters
-            connection.execute(PIXEL_RESULT).update().where(PIXEL_RESULT.c.pxresult_id == self._pxresult_id).values(map_pixel_results)
+            self.logDebug('%s\n%s\n', str(self._pxresult_id), str(map_pixel_results))
+            connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == self._pxresult_id).values(map_pixel_results))
 
-            PIXEL_FILTER.insert().values(list_insert_filters)
+            connection.execute(PIXEL_FILTER.insert().values(list_insert_filters))
 
             # Because I need to get the PK back we have to do each one separately
             for pixel_parameter in list_pixel_parameters:
-                result = PIXEL_PARAMETER.insert().values(pixel_parameter)
+                result = connection.execute(PIXEL_PARAMETER.insert().values(pixel_parameter))
                 id = result.inserted_primary_key
 
                 # Add the ID to the list
@@ -103,7 +104,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 for map_values in list_pixel_histograms:
                     map_values['pxparameter_id'] = id
 
-                PIXEL_HISTOGRAM.insert().values(list_pixel_histograms)
+                connection.execute(PIXEL_HISTOGRAM.insert().values(list_pixel_histograms))
 
     def _process_result(self, connection, outFile, wu):
         """
