@@ -116,7 +116,7 @@ class MagphysAssimilator(assimilator.Assimilator):
             f = open(outFile, "r")
 
         self._area_id = None
-        self._pxresult_id = False
+        self._pxresult_id = None
         lineNo = 0
         percentiles_next = False
         histogram_next = False
