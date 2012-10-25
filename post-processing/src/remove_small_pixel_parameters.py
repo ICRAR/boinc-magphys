@@ -30,6 +30,7 @@ import argparse
 import logging
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import and_
 from config import DB_LOGIN, MIN_HIST_VALUE
 from database.database_support_core import GALAXY, PIXEL_RESULT, PIXEL_HISTOGRAM
 
@@ -65,7 +66,7 @@ for galaxy_id_str in galaxy_ids:
         transaction = connection.begin()
         for pxresult_id in connection.execute(select([PIXEL_RESULT.c.pxresult_id]).where(PIXEL_RESULT.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).order_by(PIXEL_RESULT.c.pxresult_id)):
             LOG.info('Deleting low pixel_histogram values from galaxy {0} pixel {1} : Deleted total {2} galaxy {3}'.format(galaxy[GALAXY.c.galaxy_id], pxresult_id[0], deleted_total, deleted_galaxy))
-            result_proxy = connection.execute(PIXEL_HISTOGRAM.delete().where(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id[0]))
+            result_proxy = connection.execute(PIXEL_HISTOGRAM.delete().where(and_(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id[0], PIXEL_HISTOGRAM.c.hist_value < MIN_HIST_VALUE)))
             deleted_total += result_proxy.rowcount
             deleted_galaxy += result_proxy.rowcount
 
