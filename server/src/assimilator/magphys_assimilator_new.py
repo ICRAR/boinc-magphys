@@ -148,7 +148,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                     pointName = values[1]
                     pxresult_id = pointName[3:].rstrip()
                     self._get_pixel_result(connection, pxresult_id)
-                    if self._pixel_found:
+                    if self._pxresult_id is not None:
                         map_pixel_results['workunit_id'] = wu.id
                     lineNo = 0
                     percentiles_next = False
