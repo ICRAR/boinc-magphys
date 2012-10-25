@@ -72,7 +72,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         Get the pixel result row from the database
         """
         self._area_id = None
-        self._pxresult_id = False
+        self._pxresult_id = None
         if not self.noinsert:
             pxresult = connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.pxresult_id == pxresult_id)).first()
 
@@ -87,7 +87,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         """
         Add the pixel to the database
         """
-        if self._pxresult_id is None and not self.noinsert:
+        if self._pxresult_id is not None and not self.noinsert:
             # Update the filters
             connection.execute(PIXEL_RESULT).update().where(PIXEL_RESULT.c.pxresult_id == self._pxresult_id).values(map_pixel_results)
 
@@ -304,7 +304,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                         if not resultCount:
                             self.logCritical("No results were found in the output file\n")
 
-                        if self.area is None:
+                        if self._area_id is None:
                             self.logDebug("The Area was not found\n")
                         else:
                             connection.execute(AREA.update().
