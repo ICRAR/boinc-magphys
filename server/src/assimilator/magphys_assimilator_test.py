@@ -28,7 +28,7 @@ import os, re, signal, sys, time, hashlib
 import boinc_path_config
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 from xml.dom.minidom import parseString
-import magphys_assimilator
+import magphys_assimilator_new
 
 class DummyWorkUnit:
     id = 1
@@ -42,10 +42,10 @@ class DummyConfig:
     upload_dir = ""
     uldl_dir_fanout = 1
 
-class MagphysAssimilatorTest(magphys_assimilator.MagphysAssimilator):
+class MagphysAssimilatorTest(magphys_assimilator_new.MagphysAssimilator):
 
     def __init__(self):
-        magphys_assimilator.MagphysAssimilator.__init__(self)
+        magphys_assimilator_new.MagphysAssimilator.__init__(self)
 
     def test(self, uploadDir, outFile):
         str_list = []
@@ -69,13 +69,6 @@ class MagphysAssimilatorTest(magphys_assimilator.MagphysAssimilator):
         str_list.append("        <copy_file/>\n")
         str_list.append("    </file_ref>\n")
         str_list.append("</result>\n")
-        #str_list.append("<?xml version=\"1.0\" ?>\n")
-        #str_list.append("<output>\n")
-        #str_list.append("  <file_name>")
-        #str_list.append(outFile)
-        #str_list.append("</file_name>\n")
-        #str_list.append("</output>")
-        #print ''.join(str_list)
 
         self.config = DummyConfig()
         self.config.upload_dir = uploadDir
@@ -93,10 +86,6 @@ class MagphysAssimilatorTest(magphys_assimilator.MagphysAssimilator):
         wu = DummyWorkUnit()
         wu.canonical_result = result1
         self.assimilate_handler(wu, results, canonical_result)
-
-        #session = self.Session()
-        #self.processResult(session, sedFile, fitFile, results)
-        #session.commit()
 
 if __name__ == '__main__':
     asm = MagphysAssimilatorTest()

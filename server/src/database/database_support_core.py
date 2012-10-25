@@ -44,6 +44,34 @@ from sqlalchemy import MetaData, Table, Column,Integer, String, Float, TIMESTAMP
 
 MAGPHYS_METADATA = MetaData()
 
+AREA = Table('area',
+    MAGPHYS_METADATA,
+    Column('area_id'    , BigInteger, primary_key=True),
+    Column('galaxy_id'  , BigInteger, ForeignKey('galaxy.galaxy_id')),
+    Column('top_x'      , Integer),
+    Column('top_y'      , Integer),
+    Column('bottom_x'   , Integer),
+    Column('bottom_y'   , Integer),
+    Column('workunit_id', BigInteger),
+    Column('update_time', TIMESTAMP)
+)
+
+AREA_USER = Table('area_user',
+    MAGPHYS_METADATA,
+    Column('areauser_id', BigInteger, primary_key=True),
+    Column('area_id'    , BigInteger, ForeignKey('area.area_id')),
+    Column('userid'     , Integer),
+    Column('create_time', TIMESTAMP)
+)
+
+FITS_HEADER = Table('fits_header',
+    MAGPHYS_METADATA,
+    Column('fitsheader_id', BigInteger, primary_key=True),
+    Column('galaxy_id'    , BigInteger, ForeignKey('galaxy.galaxy_id')),
+    Column('keyword'      , String(128)),
+    Column('value'        , String(128))
+)
+
 GALAXY = Table('galaxy',
     MAGPHYS_METADATA,
     Column('galaxy_id'       , BigInteger, primary_key=True),
@@ -65,16 +93,45 @@ GALAXY = Table('galaxy',
     Column('pixels_processed', Integer)
 )
 
-AREA = Table('area',
+PARAMETER_NAME = Table('parameter_name',
     MAGPHYS_METADATA,
-    Column('area_id'    , BigInteger, primary_key=True),
-    Column('galaxy_id'  , BigInteger, ForeignKey('galaxy.galaxy_id')),
-    Column('top_x'      , Integer),
-    Column('top_y'      , Integer),
-    Column('bottom_x'   , Integer),
-    Column('bottom_y'   , Integer),
-    Column('workunit_id', BigInteger),
-    Column('update_time', TIMESTAMP)
+    Column('parameter_name_id', Integer, primary_key=True),
+    Column('name'             , String(100))
+)
+
+PIXEL_FILTER = Table('pixel_filter',
+    MAGPHYS_METADATA,
+    Column('pxfilter_id'              , BigInteger, primary_key=True),
+    Column('pxresult_id'              , BigInteger, ForeignKey('pixel_result.pxresult_id')),
+    Column('filter_name'              , String(100)),
+    Column('observed_flux'            , Float),
+    Column('observational_uncertainty', Float),
+    Column('flux_bfm'                 , Float)
+)
+
+PIXEL_HISTOGRAM = Table('pixel_histogram',
+    MAGPHYS_METADATA,
+    Column('pxhistogram_id', BigInteger, primary_key=True),
+    Column('pxparameter_id', BigInteger, ForeignKey('pixel_parameter.pxparameter_id')),
+    Column('pxresult_id'   , BigInteger, ForeignKey('pixel_result.pxresult_id')),
+    Column('x_axis'        , Float),
+    Column('hist_value'    , Float)
+)
+
+PIXEL_PARAMETER = Table('pixel_parameter',
+    MAGPHYS_METADATA,
+    Column('pxparameter_id'   , BigInteger, primary_key=True),
+    Column('pxresult_id'      , BigInteger, ForeignKey('pixel_result.pxresult_id')),
+    Column('parameter_name_id', Integer),
+    Column('percentile2_5'    , Float),
+    Column('percentile16'     , Float),
+    Column('percentile50'     , Float),
+    Column('percentile84'     , Float),
+    Column('percentile97_5'   , Float),
+    Column('high_prob_bin'    , Float),
+    Column('first_prob_bin'   , Float),
+    Column('last_prob_bin'    , Float),
+    Column('bin_step'         , Float)
 )
 
 PIXEL_RESULT = Table('pixel_result',
@@ -111,41 +168,3 @@ PIXEL_RESULT = Table('pixel_result',
     Column('dz'         , Float)
 )
 
-FITS_HEADER = Table('fits_header',
-    MAGPHYS_METADATA,
-    Column('fitsheader_id', BigInteger, primary_key=True),
-    Column('galaxy_id'    , BigInteger, ForeignKey('galaxy.galaxy_id')),
-    Column('keyword'      , String(128)),
-    Column('value'        , String(128))
-)
-
-PIXEL_PARAMETER = Table('pixel_parameter',
-    MAGPHYS_METADATA,
-    Column('pxparameter_id'   , BigInteger, primary_key=True),
-    Column('pxresult_id'      , BigInteger, ForeignKey('pixel_result.pxresult_id')),
-    Column('parameter_name_id', Integer),
-    Column('percentile2_5'    , Float),
-    Column('percentile16'     , Float),
-    Column('percentile50'     , Float),
-    Column('percentile84'     , Float),
-    Column('percentile97_5'   , Float),
-    Column('high_prob_bin'    , Float),
-    Column('first_prob_bin'   , Float),
-    Column('last_prob_bin'    , Float),
-    Column('bin_step'         , Float)
-)
-
-PARAMETER_NAME = Table('parameter_name',
-    MAGPHYS_METADATA,
-    Column('parameter_name_id', Integer, primary_key=True),
-    Column('name'             , String(100))
-)
-
-PIXEL_HISTOGRAM = Table('pixel_histogram',
-    MAGPHYS_METADATA,
-    Column('pxhistogram_id', BigInteger, primary_key=True),
-    Column('pxparameter_id', BigInteger, ForeignKey('pixel_parameter.pxparameter_id')),
-    Column('pxresult_id'   , BigInteger, ForeignKey('pixel_result.pxresult_id')),
-    Column('x_axis'        , Float),
-    Column('hist_value'    , Float)
-)

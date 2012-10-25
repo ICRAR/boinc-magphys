@@ -160,7 +160,7 @@ class PixelFilter(Base):
     filter_name               = Column(String(100))
     observed_flux             = Column(Float)
     observational_uncertainty = Column(Float)
-    flux_bfm = Column(Float)
+    flux_bfm                  = Column(Float)
 
     result = relationship("PixelResult", backref=backref('filters', order_by=pxfilter_id))
 
