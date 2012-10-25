@@ -65,7 +65,7 @@ for galaxy_id_str in galaxy_ids:
         transaction = connection.begin()
         for pxresult_id in connection.execute(select([PIXEL_RESULT.c.pxresult_id]).where(PIXEL_RESULT.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).order_by(PIXEL_RESULT.c.pxresult_id)):
             LOG.info('Deleting low pixel_histogram values from galaxy {0} pixel {1} : Deleted total {2} galaxy {3}'.format(galaxy[GALAXY.c.galaxy_id], pxresult_id[0], deleted_total, deleted_galaxy))
-            result_proxy = PIXEL_HISTOGRAM.delete().where(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id[0])
+            result_proxy = connection.execute(PIXEL_HISTOGRAM.delete().where(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id[0]))
             deleted_total += result_proxy.rowcount
             deleted_galaxy += result_proxy.rowcount
 
