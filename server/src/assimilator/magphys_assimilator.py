@@ -58,15 +58,6 @@ class MagphysAssimilator(assimilator.Assimilator):
 
         self.logNormal('Starting assimilator')
 
-    # TODO Can this be deleted
-    #def _get_output_file_infos(self, result, list):
-    #    """
-    #    Get the file names
-    #    """
-    #    dom = parseString(result.xml_doc_in)
-    #    for node in dom.getElementsByTagName('file_name'):
-    #        list.append(node.firstChild.nodeValue)
-
     def _get_pixel_result(self, connection, pxresult_id):
         """
         Get the pixel result row from the database

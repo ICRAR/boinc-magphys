@@ -97,4 +97,4 @@ else:
 ############### Work Generation Settings ###############
 
 # Any probability in the pixel histogram less than this is considered to be 0 and ignored
-MIN_HIST_VALUE = 0.00001
+MIN_HIST_VALUE = 0.01
