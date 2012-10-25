@@ -89,7 +89,6 @@ class MagphysAssimilator(assimilator.Assimilator):
         """
         if self._pxresult_id is not None and not self.noinsert:
             # Update the filters
-            self.logDebug('%s\n%s\n', str(self._pxresult_id), str(map_pixel_results))
             connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == self._pxresult_id).values(map_pixel_results))
 
             connection.execute(PIXEL_FILTER.insert(), list_insert_filters)
@@ -102,7 +101,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 # Add the ID to the list
                 list_pixel_histograms = map_pixel_histograms[pixel_parameter['parameter_name_id']]
                 for map_values in list_pixel_histograms:
-                    map_values['pxparameter_id'] = id
+                    map_values['pxparameter_id'] = id[0]
 
                 connection.execute(PIXEL_HISTOGRAM.insert(), list_pixel_histograms)
 
