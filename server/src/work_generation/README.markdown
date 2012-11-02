@@ -38,6 +38,7 @@ $ ./load_run_details.py 1 /home/ec2-user/boinc-magphys/server/runs/0001 http://b
 
 $ ./register_fits_file.py Filename Redshift Galaxy Type Sigma Priority Run_id
 $ ./register_fits_file.py /home/ec2-user/galaxies/POGS_IC0089.fits    0.0181  IC0089   S0     0.05    0  1
+$ ./register_fits_file.py /home/ec2-user/galaxies/POGS_IC0089.fits    0.0181  IC0089   S0     /home/ec-user/galaxies/POGSNR_IC0089.fits    0  1
 
 * **Filename** is the absolute path to the FITS file contain the image of the galaxy
 * **Redshift** is the redshift of the Galaxy

@@ -713,8 +713,8 @@ if args['register'] is None:
             if not os.path.isfile(registration.filename):
                 LOG.error('The file %s does not exist', registration.filename)
                 registration.create_time = datetime.now()
-            elif registration.sigma_filname is not None and not os.path.isfile(registration.sigma_filname):
-                LOG.error('The file %s does not exist', registration.sigma_filname)
+            elif registration.sigma_filename is not None and not os.path.isfile(registration.sigma_filename):
+                LOG.error('The file %s does not exist', registration.sigma_filename)
                 registration.create_time = datetime.now()
             else:
                 LOG.info('Processing %s %d', registration.galaxy_name, registration.priority)
@@ -723,8 +723,8 @@ if args['register'] is None:
                 # One WU = MIN_QUORUM Results
                 files_processed += (work_units_added * MIN_QUORUM)
                 os.remove(registration.filename)
-                if registration.sigma_filname is not None:
-                    os.remove(registration.sigma_filname)
+                if registration.sigma_filename is not None:
+                    os.remove(registration.sigma_filename)
                 registration.create_time = datetime.now()
 
             session.commit()
@@ -738,8 +738,8 @@ else:
         if not os.path.isfile(registration.filename):
             LOG.error('The file %s does not exist', registration.filename)
             registration.create_time = datetime.now()
-        elif registration.sigma_filname is not None and not os.path.isfile(registration.sigma_filname):
-            LOG.error('The file %s does not exist', registration.sigma_filname)
+        elif registration.sigma_filename is not None and not os.path.isfile(registration.sigma_filename):
+            LOG.error('The file %s does not exist', registration.sigma_filename)
             registration.create_time = datetime.now()
         else:
             LOG.info('Processing %s %d', registration.galaxy_name, registration.priority)
@@ -747,8 +747,8 @@ else:
             (work_units_added, pixel_count) = fit2wu.process_file(registration)
             files_processed = work_units_added * MIN_QUORUM
             os.remove(registration.filename)
-            if registration.sigma_filname is not None:
-                os.remove(registration.sigma_filname)
+            if registration.sigma_filename is not None:
+                os.remove(registration.sigma_filename)
             registration.create_time = datetime.now()
 
         session.commit()
