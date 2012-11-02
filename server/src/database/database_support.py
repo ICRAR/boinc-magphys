@@ -197,16 +197,17 @@ class PixelHistogram(Base):
 class Register(Base):
     __tablename__ = 'register'
 
-    register_id   = Column(BigInteger, primary_key=True)
-    galaxy_name   = Column(String(128))
-    redshift      = Column(Numeric(7,5))
-    sigma         = Column(Numeric(3,2))
-    galaxy_type   = Column(String(10))
-    filename      = Column(String(1000))
-    priority      = Column(Integer)
-    register_time = Column(TIMESTAMP)
-    create_time   = Column(TIMESTAMP)
-    run_id        = Column(BigInteger, ForeignKey('run.run_id'))
+    register_id    = Column(BigInteger, primary_key=True, nullable=False)
+    galaxy_name    = Column(String(128), nullable=False)
+    redshift       = Column(Numeric(7,5), nullable=False)
+    sigma          = Column(Numeric(3,2), nullable=False)
+    galaxy_type    = Column(String(10), nullable=False)
+    filename       = Column(String(1000), nullable=False)
+    sigma_filename = Column(String(1000))
+    priority       = Column(Integer, nullable=False)
+    register_time  = Column(TIMESTAMP, nullable=False)
+    create_time    = Column(TIMESTAMP)
+    run_id         = Column(BigInteger, ForeignKey('run.run_id'), nullable=False)
 
 class ParameterName(Base):
     __tablename__ = 'parameter_name'

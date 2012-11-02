@@ -99,6 +99,14 @@ session = Session()
 ##
 ## ######################################################################## ##
 
+class PixelValue:
+    """
+    The pixel value
+    """
+    def __init__(self, value, sigma):
+        self.value = value
+        self.sigma = sigma
+
 class Pixel:
     """
     A pixel
@@ -116,6 +124,7 @@ class Fit2Wu:
     def __init__(self):
         self._pixel_count = 0
         self._work_units_added = 0
+        self._signal_noise_hdu = None
 
     def process_file(self, registration):
         """
@@ -131,6 +140,16 @@ class Fit2Wu:
 
         self._hdu_list = pyfits.open(registration.filename, memmap=True)
         self._layer_count = len(self._hdu_list)
+
+        # Do we need to open and sort the S/N Ratio file
+        if registration.sigma_filname is not None:
+            self._sigma = 0.0
+            self._signal_noise_hdu = pyfits.open(registration.sigma_filname, memmap=True)
+            if self._layer_count != len(self._signal_noise_hdu):
+                LOG.error('The layer counts do not match %d vs %d', self._layer_count, len(self._signal_noise_hdu))
+                return 0, 0
+        else:
+            self._sigma = float(registration.sigma)
 
         self._end_y = self._hdu_list[0].data.shape[0]
         self._end_x = self._hdu_list[0].data.shape[1]
@@ -371,8 +390,8 @@ class Fit2Wu:
         row_num = 0
         for pixel in pixels:
             outfile.write('pix%(id)s %(pixel_redshift)s ' % {'id':pixel.pixel_id, 'pixel_redshift':self._galaxy.redshift})
-            for value in pixel.pixels:
-                outfile.write("{0}  {1}  ".format(value, value * float(self._galaxy.sigma)))
+            for pixel_value in pixel.pixels:
+                outfile.write("{0}  {1}  ".format(pixel_value.value, pixel_value.sigma))
 
             outfile.write('\n')
             row_num += 1
@@ -437,17 +456,17 @@ class Fit2Wu:
         """
         uv_layers = 0
         for layer_id in self._ultraviolet_bands.values():
-            if pixels[layer_id] > 0:
+            if pixels[layer_id].value > 0:
                 uv_layers += 1
 
         optical_layers = 0
         for layer_id in self._optical_bands.values():
-            if pixels[layer_id] > 0:
+            if pixels[layer_id].value > 0:
                 optical_layers += 1
 
         ir_layers = 0
         for layer_id in self._infrared_bands.values():
-            if pixels[layer_id] > 0:
+            if pixels[layer_id].value > 0:
                 ir_layers += 1
 
         if optical_layers >= 4:
@@ -494,6 +513,24 @@ class Fit2Wu:
 
             if not found_filter:
                 raise LookupError('The filter {0} in the fits file is not expected'.format(filter_name))
+
+        # If the fit is using a S/N ratio file check the order is correct
+        if self._signal_noise_hdu is not None:
+            names_snr = []
+            for layer in range(self._layer_count):
+                hdu = self._signal_noise_hdu[layer]
+                filter_name = hdu.header['MAGPHYSN']
+                if filter_name is None:
+                    raise LookupError('The layer {0} does not have MAGPHYSN in it'.format(layer))
+                names_snr.append(filter_name)
+
+            # Make sure they match
+            if len(names) == len(names_snr):
+                for index in range(len(names)):
+                    if names[index] != names_snr[index]:
+                        raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
+            else:
+                raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
 
         layers = []
         for filter in list_filters:
@@ -563,16 +600,20 @@ class Fit2Wu:
                 for layer in self._layer_order:
                     if layer == -1:
                         # The layer is missing
-                        pixels.append(0)
+                        pixels.append(PixelValue(0,0))
                     else:
                         # A vagary of PyFits/NumPy is the order of the x & y indexes is reversed
                         # See page 13 of the PyFITS User Guide
                         pixel = self._hdu_list[layer].data[y, x]
                         if math.isnan(pixel) or pixel == 0.0:
                             # A zero tells MAGPHYS - we have no value here
-                            pixels.append(0)
+                            pixels.append(PixelValue(0,0))
                         else:
-                            pixels.append(pixel)
+                            if self._signal_noise_hdu is not None:
+                                sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
+                            else:
+                                sigma = pixel * self._sigma
+                            pixels.append(PixelValue(pixel, sigma))
 
                 if self._enough_layers(pixels):
                     result.append(Pixel(x, y, pixels))
@@ -669,16 +710,21 @@ if args['register'] is None:
             LOG.info('No registrations waiting')
             break
         else:
-            if os.path.isfile(registration.filename):
+            if not os.path.isfile(registration.filename):
+                LOG.error('The file %s does not exist', registration.filename)
+                registration.create_time = datetime.now()
+            elif registration.sigma_filname is not None and not os.path.isfile(registration.sigma_filname):
+                LOG.error('The file %s does not exist', registration.sigma_filname)
+                registration.create_time = datetime.now()
+            else:
                 LOG.info('Processing %s %d', registration.galaxy_name, registration.priority)
                 fit2wu = Fit2Wu()
                 (work_units_added, pixel_count) = fit2wu.process_file(registration)
                 # One WU = MIN_QUORUM Results
                 files_processed += (work_units_added * MIN_QUORUM)
                 os.remove(registration.filename)
-                registration.create_time = datetime.now()
-            else:
-                LOG.error('The file %s does not exist', registration.filename)
+                if registration.sigma_filname is not None:
+                    os.remove(registration.sigma_filname)
                 registration.create_time = datetime.now()
 
             session.commit()
@@ -689,15 +735,20 @@ else:
     if registration is None:
         LOG.info('No registration waiting with the id %d', args['register'])
     else:
-        if os.path.isfile(registration.filename):
+        if not os.path.isfile(registration.filename):
+            LOG.error('The file %s does not exist', registration.filename)
+            registration.create_time = datetime.now()
+        elif registration.sigma_filname is not None and not os.path.isfile(registration.sigma_filname):
+            LOG.error('The file %s does not exist', registration.sigma_filname)
+            registration.create_time = datetime.now()
+        else:
             LOG.info('Processing %s %d', registration.galaxy_name, registration.priority)
             fit2wu = Fit2Wu()
             (work_units_added, pixel_count) = fit2wu.process_file(registration)
             files_processed = work_units_added * MIN_QUORUM
             os.remove(registration.filename)
-            registration.create_time = datetime.now()
-        else:
-            LOG.error('The file %s does not exist', registration.filename)
+            if registration.sigma_filname is not None:
+                os.remove(registration.sigma_filname)
             registration.create_time = datetime.now()
 
         session.commit()

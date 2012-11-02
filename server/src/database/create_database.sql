@@ -82,16 +82,17 @@ CREATE TABLE run_file (
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE register (
-  register_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  galaxy_name   VARCHAR(128) NOT NULL,
-  redshift      DECIMAL(7, 5) NOT NULL,
-  galaxy_type   VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
-  sigma         DECIMAL(3,2) NOT NULL,
-  filename      VARCHAR(1000) NOT NULL,
-  priority      INTEGER NOT NULL,
-  register_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  create_time   TIMESTAMP NULL DEFAULT NULL,
-  run_id        BIGINT UNSIGNED NOT NULL,
+  register_id    BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  galaxy_name    VARCHAR(128) NOT NULL,
+  redshift       DECIMAL(7, 5) NOT NULL,
+  galaxy_type    VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
+  sigma          DECIMAL(3,2) NOT NULL,
+  filename       VARCHAR(1000) NOT NULL,
+  sigma_filename VARCHAR(1000) NULL,
+  priority       INTEGER NOT NULL,
+  register_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  create_time    TIMESTAMP NULL DEFAULT NULL,
+  run_id         BIGINT UNSIGNED NOT NULL,
 
   INDEX (galaxy_name),
   INDEX (create_time, register_time),

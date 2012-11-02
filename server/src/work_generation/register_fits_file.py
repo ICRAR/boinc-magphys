@@ -32,6 +32,7 @@ import logging
 import os
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import sessionmaker
+from validate import is_float
 from config import DB_LOGIN
 from database.database_support import Register
 
@@ -43,7 +44,7 @@ parser.add_argument('FITS_file', nargs=1, help='the input FITS file containing t
 parser.add_argument('redshift', type=float, nargs=1, help='the redshift of the galaxy')
 parser.add_argument('galaxy_name', nargs=1, help='the name of the galaxy')
 parser.add_argument('type', nargs=1, help='the hubble type')
-parser.add_argument('sigma', type=float, nargs=1, help='the error in the observations')
+parser.add_argument('sigma', nargs=1, help='the error in the observations or the file with the per pixel error')
 parser.add_argument('priority', type=int, nargs=1, help='the higher the number the higher the priority')
 parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')
 
@@ -71,12 +72,19 @@ session = Session()
 register = Register()
 register.galaxy_name = GALAXY_NAME
 register.redshift = REDSHIFT
-register.sigma = SIGMA
 register.galaxy_type = GALAXY_TYPE
 register.filename = INPUT_FILE
 register.priority = PRIORITY
 register.register_time = datetime.now()
 register.run_id = RUN_ID
+
+# If it is a float store it as the sigma otherwise assume it is a string pointing to a file containing the sigmas
+try:
+    register.sigma = float(SIGMA)
+except ValueError:
+    register.sigma = 0
+    register.sigma_filename = SIGMA
+
 session.add(register)
 session.commit()
 
