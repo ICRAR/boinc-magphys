@@ -142,9 +142,9 @@ class Fit2Wu:
         self._layer_count = len(self._hdu_list)
 
         # Do we need to open and sort the S/N Ratio file
-        if registration.sigma_filname is not None:
+        if registration.sigma_filename is not None:
             self._sigma = 0.0
-            self._signal_noise_hdu = pyfits.open(registration.sigma_filname, memmap=True)
+            self._signal_noise_hdu = pyfits.open(registration.sigma_filename, memmap=True)
             if self._layer_count != len(self._signal_noise_hdu):
                 LOG.error('The layer counts do not match %d vs %d', self._layer_count, len(self._signal_noise_hdu))
                 return 0, 0
