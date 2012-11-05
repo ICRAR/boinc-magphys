@@ -31,10 +31,8 @@ from datetime import datetime
 import logging
 import os
 from sqlalchemy.engine import create_engine
-from sqlalchemy.orm.session import sessionmaker
-from validate import is_float
 from config import DB_LOGIN
-from database.database_support import Register
+from database.database_support_core import REGISTER
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -64,28 +62,29 @@ if not os.path.isfile(INPUT_FILE):
     exit(1)
 
 # Connect to the database - the login string is set in the database package
-engine = create_engine(DB_LOGIN)
-Session = sessionmaker(bind=engine)
-session = Session()
-
-# Create and save the object
-register = Register()
-register.galaxy_name = GALAXY_NAME
-register.redshift = REDSHIFT
-register.galaxy_type = GALAXY_TYPE
-register.filename = INPUT_FILE
-register.priority = PRIORITY
-register.register_time = datetime.now()
-register.run_id = RUN_ID
+ENGINE = create_engine(DB_LOGIN)
+connection = ENGINE.connect()
+transaction = connection.begin()
 
 # If it is a float store it as the sigma otherwise assume it is a string pointing to a file containing the sigmas
 try:
-    register.sigma = float(SIGMA)
+    sigma = float(SIGMA)
+    sigma_filename = None
 except ValueError:
-    register.sigma = 0
-    register.sigma_filename = SIGMA
+    sigma = 0.0
+    sigma_filename = SIGMA
 
-session.add(register)
-session.commit()
+
+connection.execute(REGISTER.insert(),
+    galaxy_name = GALAXY_NAME,
+    redshift = REDSHIFT,
+    galaxy_type = GALAXY_TYPE,
+    filename = INPUT_FILE,
+    priority = PRIORITY,
+    register_time = datetime.now(),
+    run_id = RUN_ID,
+    sigma = sigma,
+    sigma_filename = sigma_filename)
+transaction.commit()
 
 LOG.info('Registered %s %s %f %s %d %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY, RUN_ID)

@@ -27,13 +27,12 @@
 Load the run details into the database
 """
 import argparse
-from decimal import Decimal
 import glob
 import logging
 import os
-import hashlib
 
 from work_generation import STAR_FORMATION_FILE, INFRARED_FILE
+from work_generation.create_file_details_mod import get_md5, get_redshift
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -46,38 +45,6 @@ args = vars(parser.parse_args())
 
 INPUT_DIR = args['input_dir'][0]
 OUTPUT_DIR = args['output_dir'][0]
-
-def get_redshift(filename):
-    """
-    Find and return the read shift
-    """
-    index = filename.index('_z')
-    redshift = filename[index+2:]
-    redshift = redshift[:-5]
-    return Decimal(redshift)
-
-def get_md5(filename):
-    """
-    Get the md5sum for the file
-    >>> get_md5(/Users/kevinvinsen/Documents/ICRAR/work/boinc-magphys/server/runs/0001/infrared_dce08_z0.0000.lbr.gz)
-    65671c99ba116f2c0e3b87f6e20f6e43
-    >>> get_md5(/Users/kevinvinsen/Documents/ICRAR/work/boinc-magphys/server/runs/0001/starformhist_cb07_z0.0000.lbr.gz)
-    a646f7f23f058e6519d1151508a448fa
-    """
-    file = open(filename, "rb")
-    hash = hashlib.md5()
-    hex_hash = None
-    while True:
-        piece = file.read(10240)
-
-        if piece:
-            hash.update(piece)
-        else: # we're at end of file
-            hex_hash = hash.hexdigest()
-            break
-
-    file.close()
-    return hex_hash
 
 # Check things exist
 errors = []

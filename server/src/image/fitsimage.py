@@ -30,8 +30,10 @@ import pyfits
 import math
 import os, hashlib
 import numpy
-from database.database_support import Galaxy, Area, AreaUser, ImageFiltersUsed, Filter
 from PIL import Image
+from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import and_
+from database.database_support_core import IMAGE_FILTERS_USED, FILTER, AREA, AREA_USER, GALAXY
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -64,7 +66,7 @@ class ImageBuilder:
 
     centre = 0.6
 
-    def __init__(self, image_number, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre, session, galaxy_id):
+    def __init__(self, image_number, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre, connection, galaxy_id):
         self.imageFileName = imageFileName
         self.thumbnailFileName = thumbnailFileName
         self.redFilter = redFilter
@@ -77,25 +79,30 @@ class ImageBuilder:
         self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
 
         # Get the id's before we build as SqlAlchemy flushes which will cause an error as
-        filter_id_red = self._get_filter_id(session, redFilter)
-        filter_id_blue = self._get_filter_id(session, blueFilter)
-        filter_id_green = self._get_filter_id(session, greenFilter)
+        filter_id_red = self._get_filter_id(connection, redFilter)
+        filter_id_blue = self._get_filter_id(connection, blueFilter)
+        filter_id_green = self._get_filter_id(connection, greenFilter)
 
-        image_filters_used = session.query(ImageFiltersUsed).filter(ImageFiltersUsed.galaxy_id == galaxy_id).first()
+        image_filters_used = connection.execute(select([IMAGE_FILTERS_USED]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id)).first()
         if image_filters_used is None:
-            image_filters_used = ImageFiltersUsed()
-            session.add(image_filters_used)
+            IMAGE_FILTERS_USED.insert().values(image_number = image_number,
+                file_name = imageFileName,
+                galaxy_id = galaxy_id,
+                filter_id_red = filter_id_red,
+                filter_id_blue = filter_id_blue,
+                filter_id_green = filter_id_green)
+        else:
+            IMAGE_FILTERS_USED.update().where(IMAGE_FILTERS_USED.c.image_filters_used_id == image_filters_used[IMAGE_FILTERS_USED.c.image_filters_used_id]).values(image_number = image_number,
+                file_name = imageFileName,
+                galaxy_id = galaxy_id,
+                filter_id_red = filter_id_red,
+                filter_id_blue = filter_id_blue,
+                filter_id_green = filter_id_green)
 
-        image_filters_used.image_number = image_number
-        image_filters_used.file_name = imageFileName
-        image_filters_used.galaxy_id = galaxy_id
-        image_filters_used.filter_id_red = filter_id_red
-        image_filters_used.filter_id_blue = filter_id_blue
-        image_filters_used.filter_id_green = filter_id_green
 
-    def _get_filter_id(self, session, filter_number):
-        filter = session.query(Filter).filter(Filter.filter_number == filter_number).first()
-        return filter.filter_id
+    def _get_filter_id(self, connection, filter_number):
+        filter = connection.execute(select([FILTER]).where(FILTER.c.filter_number == filter_number)).first()
+        return filter[FILTER.c.filter_id]
 
     def setData(self, filter, data):
         values = []
@@ -206,15 +213,16 @@ class FitsImage:
     includeHash = True
     centre = 0.5
 
-    def __init__(self):
+    def __init__(self, connection):
         self.sigma = None
+        self._connection = connection
 
-    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, debug, session, galaxy_id):
+    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, debug, galaxy_id):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
         # Use the new asinh algorithm.
-        self._buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre, session, galaxy_id)
+        self._buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre, galaxy_id)
 
     def _get_image_filters(self, hdulist):
         """
@@ -255,7 +263,7 @@ class FitsImage:
 
         return image1_filters, image2_filters, image3_filters, image4_filters
 
-    def _buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre, session, galaxy_id):
+    def _buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre, galaxy_id):
         """
         Build Three Colour Images using the asinh() function.
         """
@@ -282,13 +290,13 @@ class FitsImage:
         # Create Three Colour Images
         image1 = ImageBuilder(1, self.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
             self.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True),
-            image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, session, galaxy_id) # i, r, g
+            image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, self._connection, galaxy_id) # i, r, g
         image2 = ImageBuilder(2, self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None,
-            image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, session, galaxy_id) # r, g, NUV
+            image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, self._connection, galaxy_id) # r, g, NUV
         image3 = ImageBuilder(3, self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None,
-            image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, session, galaxy_id) # 3.6, g, NUV
+            image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, self._connection, galaxy_id) # 3.6, g, NUV
         image4 = ImageBuilder(4, self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None,
-            image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, session, galaxy_id) # 22, r, NUV
+            image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, self._connection, galaxy_id) # 22, r, NUV
         images = [image1, image2, image3, image4]
 
         file = 0
@@ -392,7 +400,7 @@ class FitsImage:
         """
         return self.get_file_path(imageDirName, imagePrefixName + "_" + str(file) + '_wb.png', create)
 
-    def markImage(self, session, inImageFileName, outImageFileName, galaxy_id, userid):
+    def markImage(self, inImageFileName, outImageFileName, galaxy_id, userid):
         """
         Read the image for the galaxy and generate an image that highlights the areas
         that the specified user has generated results.
@@ -400,15 +408,11 @@ class FitsImage:
         image = Image.open(inImageFileName, "r").convert("RGBA")
         width, height = image.size
 
-        areas = session.query(Area, AreaUser).filter(AreaUser.userid == userid)\
-          .filter(Area.area_id == AreaUser.area_id)\
-          .filter(Area.galaxy_id == galaxy_id)\
-          .order_by(Area.top_x, Area.top_y).all()
+        areas = self._connection.execute(select([AREA]).join(AREA_USER).where(and_(AREA_USER.c.userid == userid, AREA.c.galaxy_id == galaxy_id)).order_by(AREA.c.top_x, AREA.c.top_y))
 
-        for areax in areas:
-            area = areax.Area
-            for x in range(area.top_x, area.bottom_x):
-                for y in range(area.top_y, area.bottom_y):
+        for area in areas:
+            for x in range(area[AREA.c.top_x], area[AREA.c.bottom_x]):
+                for y in range(area[AREA.c.top_y], area[AREA.c.bottom_y]):
                     if x < height and y < width:
                         self.markPixel(image, x, width-y-1)
 
@@ -437,32 +441,9 @@ class FitsImage:
             b = 85
         image.putpixel((x,y), (r, g, b))
 
-    def userGalaxies(self, session, userid):
+    def userGalaxies(self, userid):
         """
         Determines the galaxies that the selected user has generated results.  Returns an array of
         galaxy_ids.
         """
-        stmt = session.query(Galaxy.galaxy_id).join(Area).join(AreaUser).filter(AreaUser.userid == userid).subquery()
-        return session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)).order_by(Galaxy.name, Galaxy.version_number)
-
-    def userGalaxyIds(self, session, userid):
-        """
-        Determines the galaxies that the selected user has generated results.  Returns an array of
-        galaxy_ids.
-        """
-        stmt = session.query(Galaxy.galaxy_id).join(Area).join(AreaUser).filter(AreaUser.userid == userid).subquery()
-
-        galaxyIds = []
-        for galaxy in session.query(Galaxy).filter(Galaxy.galaxy_id.in_(stmt)):
-           galaxyIds.append(galaxy.galaxy_id)
-
-        return galaxyIds
-
-    def printCardsToFile(self, outFile, header, keys):
-        for key in keys:
-            try:
-                outFile.write('{0:8} {1}\n'.format(key, header[key]))
-            except KeyError:
-                pass
-
-
+        return self._connection.execute(select([GALAXY]).join(AREA).join(AREA_USER).where(AREA_USER.c.userid == userid).order_by(GALAXY.c.name, GALAXY.c.version_number))

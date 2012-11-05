@@ -64,6 +64,17 @@ AREA_USER = Table('area_user',
     Column('create_time', TIMESTAMP)
 )
 
+FILTER = Table('filter',
+    MAGPHYS_METADATA,
+    Column('filter_id'    , Integer, primary_key=True),
+    Column('name'         , String(30)),
+    Column('eff_lambda'   , Numeric(10,4)),
+    Column('filter_number', Integer),
+    Column('ultraviolet'  , Integer),
+    Column('optical'      , Integer),
+    Column('infrared'     , Integer)
+)
+
 FITS_HEADER = Table('fits_header',
     MAGPHYS_METADATA,
     Column('fitsheader_id', BigInteger, primary_key=True, autoincrement=True),
@@ -91,6 +102,16 @@ GALAXY = Table('galaxy',
     Column('sigma'           , Numeric(3,2)),
     Column('pixel_count'     , Integer),
     Column('pixels_processed', Integer)
+)
+
+IMAGE_FILTERS_USED = Table('image_filters_used',
+    MAGPHYS_METADATA,
+    Column('image_filters_used_id', BigInteger, primary_key=True),
+    Column('image_number'         , Integer),
+    Column('galaxy_id'            , BigInteger, ForeignKey('galaxy.galaxy_id')),
+    Column('filter_id_red'        , Integer, ForeignKey('filter.filter_id')),
+    Column('filter_id_green'      , Integer, ForeignKey('filter.filter_id')),
+    Column('filter_id_blue'       , Integer, ForeignKey('filter.filter_id')),
 )
 
 PARAMETER_NAME = Table('parameter_name',
@@ -168,3 +189,42 @@ PIXEL_RESULT = Table('pixel_result',
     Column('dz'         , Float)
 )
 
+REGISTER = Table('register',
+    MAGPHYS_METADATA,
+    Column('register_id'   , BigInteger, primary_key=True, nullable=False),
+    Column('galaxy_name'   , String(128), nullable=False),
+    Column('redshift'      , Numeric(7,5), nullable=False),
+    Column('sigma'         , Numeric(3,2), nullable=False),
+    Column('galaxy_type'   , String(10), nullable=False),
+    Column('filename'      , String(1000), nullable=False),
+    Column('sigma_filename', String(1000)),
+    Column('priority'      , Integer, nullable=False),
+    Column('register_time' , TIMESTAMP, nullable=False),
+    Column('create_time'   , TIMESTAMP),
+    Column('run_id'        , BigInteger, ForeignKey('run.run_id'), nullable=False)
+)
+
+RUN = Table('run',
+    MAGPHYS_METADATA,
+    Column('run_id'           , BigInteger, primary_key=True),
+    Column('short_description', String(250)),
+    Column('long_description' , String(1000)),
+    Column('directory'        , String(1000))
+)
+
+RUN_FILE = Table('run_file',
+    MAGPHYS_METADATA,
+    Column('run_file_id', BigInteger, primary_key=True),
+    Column('run_id'     , BigInteger, ForeignKey('run.run_id')),
+    Column('redshift'   , Numeric(7,5)),
+    Column('file_type'  , Integer),
+    Column('file_name'  , String(1000)),
+    Column('size'       , BigInteger),
+    Column('md5_hash'   , String(100))
+)
+
+RUN_FILTER = Table('run_filter',
+    MAGPHYS_METADATA,
+    Column('run_id'   , BigInteger, ForeignKey('run.run_id')),
+    Column('filter_id', BigInteger, ForeignKey('filter.filter_id'))
+)

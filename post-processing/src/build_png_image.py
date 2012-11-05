@@ -131,7 +131,7 @@ FIRE_B = [0,7,15,22,30,38,45,53,61,65,69,74,78,
        152,160,167,175,183,191,199,207,215,223,227,231,235,239,243,247,251,255,
        255,255,255,255,255,255,255]
 
-fimage = fitsimage.FitsImage()
+fits_image = fitsimage.FitsImage(connection)
 galaxy_count = 0
 for galaxy in connection.execute(query):
     LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
@@ -226,7 +226,7 @@ for galaxy in connection.execute(query):
                     green = FIRE_G[value]
                     blue = FIRE_B[value]
                     image.putpixel((x, width-y-1), (red, green, blue))
-        outname = fimage.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
+        outname = fits_image.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
         image.save(outname)
 
 LOG.info('Built images for %d galaxies', galaxy_count)

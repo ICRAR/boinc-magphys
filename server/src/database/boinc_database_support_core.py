@@ -22,7 +22,24 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 #    MA 02111-1307  USA
 #
-from sqlalchemy import create_engine
-from config import DB_LOGIN
+"""
+Connect to the BOINC database
+"""
+from sqlalchemy import Column, MetaData, BigInteger, String, Table
 
-pogs_engine = create_engine(DB_LOGIN)
+BOINC_METADATA = MetaData()
+
+RESULT = Table('result',
+    BOINC_METADATA,
+    Column('id'          , BigInteger, primary_key=True, autoincrement=True),
+    Column('server_state', BigInteger),
+    Column('workunitid'  , BigInteger),
+    Column('appid'       , BigInteger)
+)
+
+WORK_UNIT = Table('workunit',
+    BOINC_METADATA,
+    Column('id'              , BigInteger, primary_key=True, autoincrement=True),
+    Column('name'            , String),
+    Column('assimilate_state', BigInteger)
+)

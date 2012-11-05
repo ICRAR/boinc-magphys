@@ -30,13 +30,14 @@ and to remove the rows from "credited_job" table once they have been assigned to
 
 import sys
 import boinc_path_config
-from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages, db_base
 import logging
 
+from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages, db_base
+from sqlalchemy.engine import create_engine
+from sqlalchemy.sql import select
 from config import DB_LOGIN
-from database.database_support import Area, AreaUser
-from sqlalchemy import create_engine, and_
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import and_
+from database.database_support_core import AREA_USER, AREA
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -45,7 +46,7 @@ class AssignCredit:
     def __init__(self):
         # Login is set in the database package
         engine = create_engine(DB_LOGIN)
-        self.Session = sessionmaker(bind=engine)
+        self._connection = engine.connect()
 
     def parse_args(self, args):
         """
@@ -56,7 +57,7 @@ class AssignCredit:
         """
 
         args.reverse()
-        while(len(args)):
+        while len(args):
             arg = args.pop()
             if arg == '-app':
                 arg = args.pop()
@@ -72,11 +73,12 @@ class AssignCredit:
         database.connect()
         app=database.Apps.find1(name=self.appname)
 
-        session = self.Session()
         conn = db_base.get_dbconnection()
 
         userCount = 0
         creditCount = 0
+
+        transaction = self._connection.begin()
 
         qryCursor = conn.cursor()
         delCursor = conn.cursor()
@@ -84,29 +86,24 @@ class AssignCredit:
         results = qryCursor.fetchall()
         for result in results:
             userCount += 1
-            userid = result['userid']
-            areaid = result['workunitid']
-            areauser = session.query(AreaUser).filter(and_(AreaUser.userid == userid, AreaUser.area_id == areaid)).first()
-            if areauser == None:
-                area = session.query(Area).filter(Area.area_id == areaid).first()
-                if area == None:
-                    print 'Area', areaid, 'not found, User', userid, 'not Credited'
+            user_id = result['userid']
+            area_id = result['workunitid']
+            area_user = self._connection.execute(select([AREA_USER]).where(and_(AREA_USER.c.userid == user_id, AREA_USER.c.area_id == area_id))).first()
+            if area_user is None:
+                area = self._connection.execute(select([AREA]).where(AREA.c.area_id == area_id)).first()
+                if area is None:
+                    print 'Area', area_id, 'not found, User', user_id, 'not Credited'
                 else:
-                    areauser = AreaUser()
-                    areauser.userid = userid
-                    areauser.area_id =  areaid
-                    session.add(areauser)
-                    session.commit()
-                    print 'User', userid, 'Credited for Area', areaid
+                    AREA_USER.insert().values(userid = user_id, area_id =  area_id)
+                    print 'User', user_id, 'Credited for Area', area_id
                     creditCount += 1
-            #else:
-            #    print 'User', userid, 'already Credited for Area', areaid
 
-            delCursor.execute("delete from credited_job where userid = " + str(userid) + "  and workunitid = " + str(areaid))
+            delCursor.execute("delete from credited_job where userid = " + str(user_id) + "  and workunitid = " + str(area_id))
 
+        transaction.commit()
         conn.commit()
         database.close()
-        session.close()
+        self._connection.close()
         print userCount, 'Users', creditCount, 'Credited'
 
 if __name__ == '__main__':

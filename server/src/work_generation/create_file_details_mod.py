@@ -24,37 +24,43 @@
 #    MA 02111-1307  USA
 #
 """
-Update all the images from the fits image
+Module for loading the run details into the database
 """
-
-import os
+from decimal import Decimal
 import logging
-import time
-from image.fitsimage import FitsImage
-from sqlalchemy import create_engine
-from config import DB_LOGIN, WG_IMAGE_DIRECTORY
-
+import hashlib
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-engine = create_engine(DB_LOGIN)
-connection =  engine.connect()
-transaction = connection.begin()
-image = FitsImage(connection)
+def get_redshift(filename):
+    """
+    Find and return the read shift
+    """
+    index = filename.index('_z')
+    redshift = filename[index+2:]
+    redshift = redshift[:-5]
+    return Decimal(redshift)
 
-for galaxy in session.query(Galaxy).order_by(Galaxy.name).all():
-    transaction = connection.begin()
-    start = time.time()
-    filePrefixName = galaxy.name + "_" + str(galaxy.version_number)
-    fitsFileName = filePrefixName + ".fits"
+def get_md5(filename):
+    """
+    Get the md5sum for the file
+    >>> get_md5(/Users/kevinvinsen/Documents/ICRAR/work/boinc-magphys/server/runs/0001/infrared_dce08_z0.0000.lbr.gz)
+    65671c99ba116f2c0e3b87f6e20f6e43
+    >>> get_md5(/Users/kevinvinsen/Documents/ICRAR/work/boinc-magphys/server/runs/0001/starformhist_cb07_z0.0000.lbr.gz)
+    a646f7f23f058e6519d1151508a448fa
+    """
+    file = open(filename, "rb")
+    hash = hashlib.md5()
+    hex_hash = None
+    while True:
+        piece = file.read(10240)
 
-    LOG.info('Processing %s (%d)', galaxy.name, galaxy.version_number)
-    input_file = image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, False)
-    if os.path.isfile(input_file):
-        image.buildImage(input_file, WG_IMAGE_DIRECTORY, filePrefixName, False, galaxy.galaxy_id)
+        if piece:
+            hash.update(piece)
+        else: # we're at end of file
+            hex_hash = hash.hexdigest()
+            break
 
-    end = time.time()
-    LOG.info("Images generated in %.2f seconds", end - start)
-
-    transaction.commit()
+    file.close()
+    return hex_hash
