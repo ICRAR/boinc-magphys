@@ -622,8 +622,8 @@ class Fit2Wu:
         """
         Get the version number of the galaxy
         """
-        count = self._connection.execute(select([func.count(GALAXY.c.id)]).where(GALAXY.c.name == self._registration[REGISTER.c.galaxy_name]))
-        return count + 1
+        count = self._connection.execute(select([func.count(GALAXY.c.id)]).where(GALAXY.c.name == self._registration[REGISTER.c.galaxy_name])).first()
+        return count[0] + 1
 
     def _store_fits_header(self):
         """
