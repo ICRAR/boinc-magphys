@@ -452,9 +452,8 @@ class Fit2Wu:
 
         # Get the filters associated with this run
         list_filter_names = []
-        for filter in self._connection.execute(select([FILTER.c.name], distinct=True, from_obj=FILTER.join(RUN_FILTER, RUN_FILTER.c.run_id == self._registration[REGISTER.c.run_id])).order_by(FILTER.c.eff_lambda)):
-            LOG.info('{0}'.format(filter[0]))
-            list_filter_names.append(filter[0])
+        for filter in self._connection.execute(select([FILTER], distinct=True, from_obj=FILTER.join(RUN_FILTER, RUN_FILTER.c.run_id == self._registration[REGISTER.c.run_id])).order_by(FILTER.c.eff_lambda)):
+            list_filter_names.append(filter)
 
         # The order of the filters will be there order in the fits file so record the name and its position
         names = []
@@ -467,7 +466,7 @@ class Fit2Wu:
 
             found_filter = False
             for filter in list_filter_names:
-                if filter_name == filter:
+                if filter_name == filter[FILTER.c.name]:
                     found_filter = True
                     break
 
@@ -496,16 +495,16 @@ class Fit2Wu:
         for filter in list_filter_names:
             found_it = False
             for i in range(len(names)):
-                if names[i] == filter:
+                if names[i] == filter[FILTER.c.name]:
                     layers.append(i)
-                    if filter.infrared == 1:
-                        self._infrared_bands[filter] = i
+                    if filter[FILTER.c.infrared] == 1:
+                        self._infrared_bands[filter[FILTER.c.name]] = i
 
-                    if filter.optical == 1:
-                        self._optical_bands[filter] = i
+                    if filter[FILTER.c.optical] == 1:
+                        self._optical_bands[filter[FILTER.c.name]] = i
 
-                    if filter.ultraviolet == 1:
-                        self._ultraviolet_bands[filter] = i
+                    if filter[FILTER.c.ultraviolet] == 1:
+                        self._ultraviolet_bands[filter[FILTER.c.name]] = i
                     found_it = True
                     break
 
