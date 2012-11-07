@@ -452,9 +452,9 @@ class Fit2Wu:
 
         # Get the filters associated with this run
         list_filter_names = []
-        for filter in self._connection.execute(select([FILTER.c.name], from_obj=FILTER.join(RUN_FILTER, RUN_FILTER.c.run_id == self._registration[REGISTER.c.run_id])).order_by(FILTER.c.eff_lambda)):
-            LOG.info('{0}'.format(filter))
-            list_filter_names.append(filter)
+        for filter in self._connection.execute(select([FILTER.c.name], distinct=True, from_obj=FILTER.join(RUN_FILTER, RUN_FILTER.c.run_id == self._registration[REGISTER.c.run_id])).order_by(FILTER.c.eff_lambda)):
+            LOG.info('{0}'.format(filter[0]))
+            list_filter_names.append(filter[0])
 
         # The order of the filters will be there order in the fits file so record the name and its position
         names = []
