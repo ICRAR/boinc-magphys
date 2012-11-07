@@ -152,7 +152,7 @@ class Fit2Wu:
              pixel_count = 0,
              pixels_processed = 0,
              run_id = registration[REGISTER.c.run_id]))
-        self._galaxy_id = result.inserted_primary_key
+        self._galaxy_id = result.inserted_primary_key[0]
         self._galaxy_name = registration[REGISTER.c.galaxy_name]
         LOG.info("Writing %s to database", self._galaxy_name)
 
@@ -277,7 +277,7 @@ class Fit2Wu:
                     top_y = area.top_y,
                     bottom_x = area.bottom_x,
                     bottom_y = area.bottom_y))
-                area.area_id = result1.inserted_primary_key
+                area.area_id = result1.inserted_primary_key[0]
 
                 for pixel in pixels:
                     result2 = self._connection.execute(pixel_result_insert.values(galaxy_id = self._galaxy_id,
@@ -285,7 +285,7 @@ class Fit2Wu:
                         y = pixel.y,
                         x = pixel.x))
 
-                    pixel.pixel_id = result2.inserted_primary_key
+                    pixel.pixel_id = result2.inserted_primary_key[0]
                     self._pixel_count += 1
 
                 # Write the pixels
