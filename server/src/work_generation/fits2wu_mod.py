@@ -635,7 +635,7 @@ class Fit2Wu:
             for pattern in HEADER_PATTERNS:
                 if pattern.search(keyword):
                     value = header[keyword]
-                    LOG.info('{0} {1} {2} {3]'.format(self._galaxy_id, keyword, value, insert.values(galaxy_id = self._galaxy_id, keyword = keyword, value = value)))
+                    LOG.info('{0} {1} {2} {3}'.format(self._galaxy_id, keyword, value, insert.values(galaxy_id = self._galaxy_id, keyword = keyword, value = value)))
                     self._connection.execute(insert.values(galaxy_id = self._galaxy_id, keyword = keyword, value = value))
 
                     if keyword == 'RA_CENT':
