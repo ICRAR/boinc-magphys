@@ -453,6 +453,7 @@ class Fit2Wu:
         # Get the filters associated with this run
         list_filter_names = []
         for filter in self._connection.execute(select([FILTER.c.name], from_obj=FILTER.join(RUN_FILTER, RUN_FILTER.c.run_id == self._registration[REGISTER.c.run_id])).order_by(FILTER.c.eff_lambda)):
+            LOG.info('{0}'.format(filter))
             list_filter_names.append(filter)
 
         # The order of the filters will be there order in the fits file so record the name and its position
@@ -635,7 +636,6 @@ class Fit2Wu:
             for pattern in HEADER_PATTERNS:
                 if pattern.search(keyword):
                     value = header[keyword]
-                    LOG.info('{0} {1} {2} {3}'.format(self._galaxy_id, keyword, value, insert.values(galaxy_id = self._galaxy_id, keyword = keyword, value = value)))
                     self._connection.execute(insert.values(galaxy_id = self._galaxy_id, keyword = keyword, value = value))
 
                     if keyword == 'RA_CENT':
