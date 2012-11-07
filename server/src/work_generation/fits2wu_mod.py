@@ -36,7 +36,7 @@ import pyfits
 import subprocess
 
 from datetime import datetime
-from sqlalchemy.sql.expression import select, func
+from sqlalchemy.sql.expression import select, func, and_
 from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, RUN_FILE, FITS_HEADER
 from image.fitsimage import FitsImage
@@ -519,7 +519,7 @@ class Fit2Wu:
         """
         star_formation = None
         infrared = None
-        for run_file in self._connection.execute(select([RUN_FILE]).where(RUN_FILE.c.run_id == self._registration[REGISTER.c.run_id]).filter(RUN_FILE.c.redshift == self._rounded_redshift)):
+        for run_file in self._connection.execute(select([RUN_FILE]).where(and_(RUN_FILE.c.run_id == self._registration[REGISTER.c.run_id], RUN_FILE.c.redshift == self._rounded_redshift))):
             if run_file.file_type == STAR_FORMATION_FILE:
                 star_formation = run_file
             elif run_file.file_type == INFRARED_FILE:
