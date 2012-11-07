@@ -622,7 +622,7 @@ class Fit2Wu:
         """
         Get the version number of the galaxy
         """
-        count = self._connection.execute(select([func.count(GALAXY.c.id)]).where(GALAXY.c.name == self._registration[REGISTER.c.galaxy_name])).first()
+        count = self._connection.execute(select([func.count(GALAXY.c.galaxy_id)]).where(GALAXY.c.name == self._registration[REGISTER.c.galaxy_name])).first()
         return count[0] + 1
 
     def _store_fits_header(self):
@@ -638,9 +638,9 @@ class Fit2Wu:
                     self._connection.execute(insert.values(galaxy_id = self._galaxy_id, keyword = keyword, value = value))
 
                     if keyword == 'RA_CENT':
-                        self._connection.execute(GALAXY.update().where(GALAXY.c._galaxy_id == self._galaxy_id).values(ra_cent = float(value)))
+                        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(ra_cent = float(value)))
                     elif keyword == 'DEC_CENT':
-                        self._connection.execute(GALAXY.update().where(GALAXY.c._galaxy_id == self._galaxy_id).values(dec_cent = float(value)))
+                        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent = float(value)))
 
     def _update_current(self):
         """
