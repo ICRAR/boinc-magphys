@@ -52,7 +52,7 @@ if args['register'] is None:
     # select count(*) from result where server_state = 2
     ENGINE = create_engine(BOINC_DB_LOGIN)
     connection = ENGINE.connect()
-    count = connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2))[0]
+    count = connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()
     connection.close()
 
     LOG.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)

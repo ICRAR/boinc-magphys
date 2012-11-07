@@ -78,7 +78,7 @@ def check_need_to_run(directory, galaxy):
     # Convert to a datetime
     min_mtime = datetime.fromtimestamp(min_mtime)
 
-    update_time = connection.execute(select([func.max(AREA.c.update_time)]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])).scalar()
+    update_time = connection.execute(select([func.max(AREA.c.update_time)]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])).first()
     LOG.info('{0}_V{1} file min_mtime = {2} - DB update_time = {3}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], min_mtime, update_time))
     if update_time is None:
         return False
