@@ -27,6 +27,7 @@
 Convert a FITS file ready to be converted into Work Units
 """
 from __future__ import print_function
+import argparse
 import logging
 import os
 import json
@@ -36,14 +37,41 @@ import pyfits
 import subprocess
 
 from datetime import datetime
-from sqlalchemy.sql.expression import select, func, and_
-from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT
-from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, RUN_FILE, FITS_HEADER
+from sqlalchemy.engine import create_engine
+from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy.sql.expression import desc, and_
+from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT
+from database.boinc_database_support import Result
+from database.database_support import Register, FitsHeader, Galaxy, Area, PixelResult, RunFile, Run
 from image.fitsimage import FitsImage
 from work_generation import HEADER_PATTERNS, STAR_FORMATION_FILE, INFRARED_FILE
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-r', '--register', type=int, help='the registration id of a galaxy')
+parser.add_argument('-l', '--limit', type=int, help='only generate N workunits from this galaxy (for testing)')
+args = vars(parser.parse_args())
+
+count = None
+if args['register'] is None:
+    # select count(*) from result where server_state = 2
+    engine = create_engine(BOINC_DB_LOGIN)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    count = session.query(Result).filter(Result.server_state == 2).count()
+    session.close()
+
+    LOG.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
+
+    if count >= WG_THRESHOLD:
+        LOG.info('Nothing to do')
+        exit(0)
+
+LIMIT = None
+if args['limit'] is not None:
+    LIMIT = args['limit']
 
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = WG_BOINC_PROJECT_ROOT + '/bin'
@@ -57,15 +85,19 @@ FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*50                         # Maximum
 FPOPS_EXP = "e12"
 COBBLESTONE_SCALING_FACTOR = 8.85
 
-class Area:
-    """
-    An area
-    """
-    def __init__(self, top_x, top_y, bottom_x, bottom_y):
-        self.top_x = top_x
-        self.top_y = top_y
-        self.bottom_x = bottom_x
-        self.bottom_y = bottom_y
+# The BOINC scripts/apps do not feel at home outside their directory
+os.chdir(WG_BOINC_PROJECT_ROOT)
+
+# Connect to the database - the login string is set in the database package
+engine = create_engine(DB_LOGIN)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+## ######################################################################## ##
+##
+## FUNCTIONS AND STUFF
+##
+## ######################################################################## ##
 
 class PixelValue:
     """
@@ -89,44 +121,35 @@ class Fit2Wu:
     """
     Convert a fit file to a wu
     """
-    def __init__(self, connection, limit):
+    def __init__(self):
         self._pixel_count = 0
         self._work_units_added = 0
         self._signal_noise_hdu = None
-        self._connection = connection
-        self._limit = limit
 
     def process_file(self, registration):
         """
         Process a registration.
         """
-        self._filename = registration[REGISTER.c.filename]
-        self._galaxy_name = registration[REGISTER.c.galaxy_name]
-        self._galaxy_type = registration[REGISTER.c.galaxy_type]
-        self._priority = registration[REGISTER.c.priority]
-        self._redshift = registration[REGISTER.c.redshift]
-        self._run_id = registration[REGISTER.c.run_id]
-        self._sigma = registration[REGISTER.c.sigma]
-        self._sigma_filename = registration[REGISTER.c.sigma_filename]
+        self._registration = registration
 
         # Have we files that we can use for this?
         self._rounded_redshift = self._get_rounded_redshift()
         if self._rounded_redshift is None:
-            LOG.error('No models matching the redshift of %.4f', self._redshift)
+            LOG.error('No models matching the redshift of %.4f', registration.redshift)
             return 0
 
-        self._hdu_list = pyfits.open(self._filename, memmap=True)
+        self._hdu_list = pyfits.open(registration.filename, memmap=True)
         self._layer_count = len(self._hdu_list)
 
         # Do we need to open and sort the S/N Ratio file
-        if self._sigma_filename is not None:
+        if registration.sigma_filename is not None:
             self._sigma = 0.0
-            self._signal_noise_hdu = pyfits.open(self._sigma_filename, memmap=True)
+            self._signal_noise_hdu = pyfits.open(registration.sigma_filename, memmap=True)
             if self._layer_count != len(self._signal_noise_hdu):
                 LOG.error('The layer counts do not match %d vs %d', self._layer_count, len(self._signal_noise_hdu))
                 return 0, 0
         else:
-            self._sigma = float(self._sigma)
+            self._sigma = float(registration.sigma)
 
         self._end_y = self._hdu_list[0].data.shape[0]
         self._end_x = self._hdu_list[0].data.shape[1]
@@ -138,29 +161,34 @@ class Fit2Wu:
         if version_number > 1:
             self._update_current()
 
-        filePrefixName = self._galaxy_name + "_" + str(version_number)
+        filePrefixName = registration.galaxy_name + "_" + str(version_number)
         fitsFileName = filePrefixName + ".fits"
 
         # Create and save the object
+        galaxy = Galaxy()
+        galaxy.name = registration.galaxy_name
+        galaxy.dimension_x = self._end_x
+        galaxy.dimension_y = self._end_y
+        galaxy.dimension_z = self._layer_count
+        galaxy.redshift = registration.redshift
+        galaxy.sigma = registration.sigma
         datetime_now = datetime.now()
-        result = self._connection.execute(GALAXY.insert().values(name = self._galaxy_name,
-             dimension_x = self._end_x,
-             dimension_y = self._end_y,
-             dimension_z = self._layer_count,
-             redshift = self._redshift,
-             sigma = self._sigma,
-             create_time = datetime_now,
-             image_time = datetime_now,
-             version_number = version_number,
-             galaxy_type = self._galaxy_type,
-             ra_cent = 0,
-             dec_cent = 0,
-             current = True,
-             pixel_count = 0,
-             pixels_processed = 0,
-             run_id = self._run_id))
-        self._galaxy_id = result.inserted_primary_key[0]
-        LOG.info("Writing %s to database", self._galaxy_name)
+        galaxy.create_time = datetime_now
+        galaxy.image_time = datetime_now
+        galaxy.version_number = version_number
+        galaxy.galaxy_type = registration.galaxy_type
+        galaxy.ra_cent = 0
+        galaxy.dec_cent = 0
+        galaxy.current = True
+        galaxy.pixel_count = 0
+        galaxy.pixels_processed = 0
+        galaxy.run_id = registration.run_id
+        session.add(galaxy)
+
+        # Flush to the DB so we can get the id
+        session.flush()
+        self._galaxy = galaxy
+        LOG.info("Writing %s to database", galaxy.name)
 
         # Store the fits header
         self._store_fits_header()
@@ -173,13 +201,14 @@ class Fit2Wu:
 
         # Now break up the galaxy into chunks
         self._break_up_galaxy()
-        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count = self._pixel_count))
+        galaxy.pixel_count = self._pixel_count
+        session.flush()
 
         LOG.info('Building the images')
-        image = FitsImage(self._connection)
-        image.buildImage(self._filename, WG_IMAGE_DIRECTORY, filePrefixName, False, self._galaxy_id)
+        image = FitsImage()
+        image.buildImage(registration.filename, WG_IMAGE_DIRECTORY, filePrefixName, False, session, galaxy.galaxy_id)
 
-        shutil.copyfile(self._filename, image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
+        shutil.copyfile(registration.filename, image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
 
         return self._work_units_added, self._pixel_count
 
@@ -195,7 +224,7 @@ class Fit2Wu:
         """
         Build the template files we need if they don't exist
         """
-        self._template_file = '{0}/{1:=04d}/fitsed_wu_{2}.xml'.format(TEMPLATES_PATH2, self._run_id, self._rounded_redshift)
+        self._template_file = '{0}/{1:=04d}/fitsed_wu_{2}.xml'.format(TEMPLATES_PATH2, self._registration.run_id, self._rounded_redshift)
         if not os.path.isfile(self._template_file):
             (star_formation, infrared) = self._get_model_files()
             file = open(self._template_file, 'wb')
@@ -267,31 +296,33 @@ class Fit2Wu:
         """
         Create a area - we try to make them squares, but they aren't as the images have dead zones
         """
-        area_insert = AREA.insert()
-        pixel_result_insert = PIXEL_RESULT.insert()
         pix_x = 0
         while pix_x < self._end_x:
             # Are we limiting the number created
-            if self._limit is not None and self._work_units_added > self._limit:
+            if LIMIT is not None and self._work_units_added > LIMIT:
                 break
 
             max_x, pixels = self._get_pixels(pix_x, pix_y)
             if len(pixels) > 0:
-                area = Area(pix_x, pix_y, max_x, min(pix_y + WG_ROW_HEIGHT, self._end_y))
-                result1 = self._connection.execute(area_insert.values(galaxy_id = self._galaxy_id,
-                    top_x = area.top_x,
-                    top_y = area.top_y,
-                    bottom_x = area.bottom_x,
-                    bottom_y = area.bottom_y))
-                area.area_id = result1.inserted_primary_key[0]
+                area = Area()
+                area.galaxy_id = self._galaxy.galaxy_id
+                area.top_x = pix_x
+                area.top_y = pix_y
+                area.bottom_x = max_x
+                area.bottom_y = min(pix_y + WG_ROW_HEIGHT, self._end_y)
+                session.add(area)
+                session.flush()
 
                 for pixel in pixels:
-                    result2 = self._connection.execute(pixel_result_insert.values(galaxy_id = self._galaxy_id,
-                        area_id = area.area_id,
-                        y = pixel.y,
-                        x = pixel.x))
+                    pixel_result = PixelResult()
+                    pixel_result.galaxy_id = self._galaxy.galaxy_id
+                    pixel_result.area_id = area.area_id
+                    pixel_result.x = pixel.x
+                    pixel_result.y = pixel.y
+                    session.add(pixel_result)
+                    session.flush()
 
-                    pixel.pixel_id = result2.inserted_primary_key[0]
+                    pixel.pixel_id = pixel_result.pxresult_id
                     self._pixel_count += 1
 
                 # Write the pixels
@@ -301,7 +332,7 @@ class Fit2Wu:
             pix_x = max_x + 1
 
     def _create_filters_dat(self, file_name_filters):
-        source = '{0}/{1:=04d}/filters.dat'.format(TEMPLATES_PATH2, self._run_id)
+        source = '{0}/{1:=04d}/filters.dat'.format(TEMPLATES_PATH2, self._registration.run_id)
         new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name_filters]).rstrip()
         shutil.copy(source, new_full_path)
 
@@ -336,12 +367,12 @@ class Fit2Wu:
         """
         Create dummy model files
         """
-        new_full_path = subprocess.check_output([BIN_PATH + '/dir_hier_path', file_name_star_formation_history]).rstrip()
+        new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name_star_formation_history]).rstrip()
         file = open(new_full_path, 'wb')
         file.write(' 1  {0}'.format(self._rounded_redshift))
         file.close()
 
-        new_full_path = subprocess.check_output([BIN_PATH + '/dir_hier_path', file_name_infrared]).rstrip()
+        new_full_path = subprocess.check_output([BIN_PATH + "/dir_hier_path", file_name_infrared]).rstrip()
         file = open(new_full_path, 'wb')
         file.write(' 1  {0}'.format(self._rounded_redshift))
         file.close()
@@ -358,7 +389,7 @@ class Fit2Wu:
 
         row_num = 0
         for pixel in pixels:
-            outfile.write('pix%(id)s %(pixel_redshift)s ' % {'id':pixel.pixel_id, 'pixel_redshift':self._redshift})
+            outfile.write('pix%(id)s %(pixel_redshift)s ' % {'id':pixel.pixel_id, 'pixel_redshift':self._galaxy.redshift})
             for pixel_value in pixel.pixels:
                 outfile.write("{0}  {1}  ".format(pixel_value.value, pixel_value.sigma))
 
@@ -371,7 +402,7 @@ class Fit2Wu:
         Write an output file for this area
         """
         pixels_in_area = len(pixels)
-        filename = '%(galaxy)s_area%(area)s' % { 'galaxy':self._galaxy_name, 'area':area.area_id}
+        filename = '%(galaxy)s_area%(area)s' % { 'galaxy':self._galaxy.name, 'area':area.area_id}
         LOG.info("Creating work unit %s : %d pixels", filename, pixels_in_area)
 
         args_params = [
@@ -389,7 +420,7 @@ class Fit2Wu:
             "--rsc_disk_bound", "1e8",
             "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_area*COBBLESTONE_SCALING_FACTOR},
             "--opaque",   str(area.area_id),
-            "--priority", '{0}'.format(self._priority)
+            "--priority", '{0}'.format(self._registration.priority)
         ]
         file_name_job = filename + '.job.xml'
         file_name_zlib = filename + '.zlib.dat'
@@ -403,7 +434,7 @@ class Fit2Wu:
         cmd_create_work.extend(args_files)
 
         # Copy files into BOINC's download hierarchy
-        data = [{'galaxy':self._galaxy_name, 'area_id':area.area_id, 'pixels':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,}]
+        data = [{'galaxy':self._galaxy.name, 'area_id':area.area_id, 'pixels':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y,}]
         self._create_observation_file(filename, data, pixels)
         self._create_job_xml(file_name_job, pixels_in_area)
         self._create_filters_dat(file_name_filters)
@@ -457,9 +488,13 @@ class Fit2Wu:
         self._infrared_bands = {}
 
         # Get the filters associated with this run
-        list_filter_names = []
-        for filter in self._connection.execute(select([FILTER], distinct=True, from_obj=FILTER.join(RUN_FILTER)).where(RUN_FILTER.c.run_id == self._run_id).order_by(FILTER.c.eff_lambda)):
-            list_filter_names.append(filter)
+        run = session.query(Run).filter(Run.run_id == self._registration.run_id).first()
+        list_filters = []
+        for filter in run.filters:
+            list_filters.append(filter)
+
+        # Sort list by wavelength
+        sorted(list_filters, key=lambda filter: filter.eff_lambda)
 
         # The order of the filters will be there order in the fits file so record the name and its position
         names = []
@@ -471,8 +506,8 @@ class Fit2Wu:
             names.append(filter_name)
 
             found_filter = False
-            for filter in list_filter_names:
-                if filter_name == filter[FILTER.c.name]:
+            for filter in list_filters:
+                if filter_name == filter.name:
                     found_filter = True
                     break
 
@@ -498,19 +533,19 @@ class Fit2Wu:
                 raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
 
         layers = []
-        for filter in list_filter_names:
+        for filter in list_filters:
             found_it = False
             for i in range(len(names)):
-                if names[i] == filter[FILTER.c.name]:
+                if names[i] == filter.name:
                     layers.append(i)
-                    if filter[FILTER.c.infrared] == 1:
-                        self._infrared_bands[filter[FILTER.c.name]] = i
+                    if filter.infrared == 1:
+                        self._infrared_bands[filter.name] = i
 
-                    if filter[FILTER.c.optical] == 1:
-                        self._optical_bands[filter[FILTER.c.name]] = i
+                    if filter.optical == 1:
+                        self._optical_bands[filter.name] = i
 
-                    if filter[FILTER.c.ultraviolet] == 1:
-                        self._ultraviolet_bands[filter[FILTER.c.name]] = i
+                    if filter.ultraviolet == 1:
+                        self._ultraviolet_bands[filter.name] = i
                     found_it = True
                     break
 
@@ -525,7 +560,7 @@ class Fit2Wu:
         """
         star_formation = None
         infrared = None
-        for run_file in self._connection.execute(select([RUN_FILE]).where(and_(RUN_FILE.c.run_id == self._run_id, RUN_FILE.c.redshift == self._rounded_redshift))):
+        for run_file in session.query(RunFile).filter(RunFile.run_id == self._registration.run_id).filter(RunFile.redshift == self._rounded_redshift).all():
             if run_file.file_type == STAR_FORMATION_FILE:
                 star_formation = run_file
             elif run_file.file_type == INFRARED_FILE:
@@ -541,8 +576,8 @@ class Fit2Wu:
         """
         Create a unique model name for the run to be stored on the client
         """
-        star_formation_history = '{0:=04d}_starformhist_cb07_z{1}.lbr'.format(self._run_id, self._rounded_redshift)
-        infrared =  '{0:=04d}_infrared_dce08_z{1}.lbr'.format(self._run_id, self._rounded_redshift)
+        star_formation_history = '{0:=04d}_starformhist_cb07_z{1}.lbr'.format(self._registration.run_id, self._rounded_redshift)
+        infrared =  '{0:=04d}_infrared_dce08_z{1}.lbr'.format(self._registration.run_id, self._rounded_redshift)
         return star_formation_history, infrared
 
     def _get_pixels(self, pix_x, pix_y):
@@ -565,14 +600,14 @@ class Fit2Wu:
                 for layer in self._layer_order:
                     if layer == -1:
                         # The layer is missing
-                        pixels.append(PixelValue(0, 0))
+                        pixels.append(PixelValue(0,0))
                     else:
                         # A vagary of PyFits/NumPy is the order of the x & y indexes is reversed
                         # See page 13 of the PyFITS User Guide
                         pixel = self._hdu_list[layer].data[y, x]
                         if math.isnan(pixel) or pixel == 0.0:
                             # A zero tells MAGPHYS - we have no value here
-                            pixels.append(PixelValue(0, 0))
+                            pixels.append(PixelValue(0,0))
                         else:
                             if self._signal_noise_hdu is not None:
                                 sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
@@ -595,31 +630,31 @@ class Fit2Wu:
         """
         Select the template for the red shift
         """
-        if self._redshift < 0.005:
+        if self._registration.redshift < 0.005:
             return '0.0000'
-        elif self._redshift < 0.015:
+        elif self._registration.redshift < 0.015:
             return '0.0100'
-        elif self._redshift < 0.025:
+        elif self._registration.redshift < 0.025:
             return '0.0200'
-        elif self._redshift < 0.035:
+        elif self._registration.redshift < 0.035:
             return '0.0300'
-        elif self._redshift < 0.045:
+        elif self._registration.redshift < 0.045:
             return '0.0400'
-        elif self._redshift < 0.055:
+        elif self._registration.redshift < 0.055:
             return '0.0500'
-        elif self._redshift < 0.065:
+        elif self._registration.redshift < 0.065:
             return '0.0600'
-        elif self._redshift < 0.075:
+        elif self._registration.redshift < 0.075:
             return '0.0700'
-        elif self._redshift < 0.085:
+        elif self._registration.redshift < 0.085:
             return '0.0800'
-        elif self._redshift < 0.095:
+        elif self._registration.redshift < 0.095:
             return '0.0900'
-        elif self._redshift < 0.105:
+        elif self._registration.redshift < 0.105:
             return '0.1000'
-        elif self._redshift < 0.115:
+        elif self._registration.redshift < 0.115:
             return '0.1100'
-        elif self._redshift < 0.125:
+        elif self._registration.redshift < 0.125:
             return '0.1200'
         else:
             return None
@@ -628,28 +663,94 @@ class Fit2Wu:
         """
         Get the version number of the galaxy
         """
-        count = self._connection.execute(select([func.count(GALAXY.c.galaxy_id)]).where(GALAXY.c.name == self._galaxy_name)).first()
-        return count[0] + 1
+        count = session.query(Galaxy).filter(Galaxy.name == self._registration.galaxy_name).count()
+        return count + 1
 
     def _store_fits_header(self):
         """
         Store the FITS headers we need to remember
         """
-        insert = FITS_HEADER.insert()
         header = self._hdu_list[0].header
         for keyword in header:
             for pattern in HEADER_PATTERNS:
                 if pattern.search(keyword):
-                    value = header[keyword]
-                    self._connection.execute(insert.values(galaxy_id = self._galaxy_id, keyword = keyword, value = value))
+                    fh = FitsHeader()
+                    fh.galaxy_id = self._galaxy.galaxy_id
+                    fh.keyword = keyword
+                    fh.value = header[keyword]
+                    session.add(fh)
 
                     if keyword == 'RA_CENT':
-                        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(ra_cent = float(value)))
+                        self._galaxy.ra_cent = float(fh.value)
                     elif keyword == 'DEC_CENT':
-                        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent = float(value)))
+                        self._galaxy.dec_cent = float(fh.value)
 
     def _update_current(self):
         """
         The current galaxy is current - mark all the others as npot
         """
-        self._connection.execute(GALAXY.update().where(GALAXY.c.name == self._galaxy_name).values(current = False))
+        session.execute("update galaxy set current = false where name = '"+ self._registration.galaxy_name + "'")
+
+## ######################################################################## ##
+##
+## Where it all starts
+##
+## ######################################################################## ##
+
+# Normal operation
+files_processed = 0
+if args['register'] is None:
+    FILES_TO_PROCESS = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
+
+    # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
+    while files_processed < FILES_TO_PROCESS:
+        LOG.info("Added %d of %d", files_processed, FILES_TO_PROCESS)
+        registration = session.query(Register).filter(Register.create_time == None).order_by(desc(Register.priority), Register.register_time).first()
+        if registration is None:
+            LOG.info('No registrations waiting')
+            break
+        else:
+            if not os.path.isfile(registration.filename):
+                LOG.error('The file %s does not exist', registration.filename)
+                registration.create_time = datetime.now()
+            elif registration.sigma_filename is not None and not os.path.isfile(registration.sigma_filename):
+                LOG.error('The file %s does not exist', registration.sigma_filename)
+                registration.create_time = datetime.now()
+            else:
+                LOG.info('Processing %s %d', registration.galaxy_name, registration.priority)
+                fit2wu = Fit2Wu()
+                (work_units_added, pixel_count) = fit2wu.process_file(registration)
+                # One WU = MIN_QUORUM Results
+                files_processed += (work_units_added * MIN_QUORUM)
+                os.remove(registration.filename)
+                if registration.sigma_filename is not None:
+                    os.remove(registration.sigma_filename)
+                registration.create_time = datetime.now()
+
+            session.commit()
+
+# We want an explict galaxy to load
+else:
+    registration = session.query(Register).filter(and_(Register.register_id == args['register'], Register.create_time == None)).first()
+    if registration is None:
+        LOG.info('No registration waiting with the id %d', args['register'])
+    else:
+        if not os.path.isfile(registration.filename):
+            LOG.error('The file %s does not exist', registration.filename)
+            registration.create_time = datetime.now()
+        elif registration.sigma_filename is not None and not os.path.isfile(registration.sigma_filename):
+            LOG.error('The file %s does not exist', registration.sigma_filename)
+            registration.create_time = datetime.now()
+        else:
+            LOG.info('Processing %s %d', registration.galaxy_name, registration.priority)
+            fit2wu = Fit2Wu()
+            (work_units_added, pixel_count) = fit2wu.process_file(registration)
+            files_processed = work_units_added * MIN_QUORUM
+            os.remove(registration.filename)
+            if registration.sigma_filename is not None:
+                os.remove(registration.sigma_filename)
+            registration.create_time = datetime.now()
+
+        session.commit()
+
+LOG.info('Done - added %d Results', files_processed)

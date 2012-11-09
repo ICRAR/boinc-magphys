@@ -28,15 +28,12 @@ Load the run details into the database
 """
 import argparse
 from decimal import Decimal
-import glob
 import logging
 import os
-import hashlib
 from sqlalchemy.engine import create_engine
-from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy.sql import select, func
 from config import DB_LOGIN
-from database.database_support import Run, Filter, RunFile
-from work_generation import STAR_FORMATION_FILE, INFRARED_FILE
+from database.database_support_core import RUN, FILTER, RUN_FILE, RUN_FILTER
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -55,9 +52,8 @@ URL_STEM = args['url_stem'][0]
 DESCRIPTION = args['description'][0]
 
 # Connect to the database - the login string is set in the database package
-engine = create_engine(DB_LOGIN)
-Session = sessionmaker(bind=engine)
-session = Session()
+ENGINE = create_engine(DB_LOGIN)
+connection = ENGINE.connect()
 
 # Check things exist
 errors = []
@@ -70,8 +66,8 @@ if os.path.isdir(INPUT_DIR):
     if not os.path.isfile('{0}/file_details.dat'.format(INPUT_DIR)):
         errors.append('The file {0}/file_details.dat does not exist'.format(INPUT_DIR))
 
-    count = session.query(Run).filter(Run.run_id == RUN_ID).count()
-    if count > 0:
+    count = connection.execute(select([func.count(RUN.c.run_id)]).where(RUN.c.run_id == RUN_ID)).first()
+    if count[0] > 0:
         errors.append('The run id {0} already exists'. format(RUN_ID))
 
 else:
@@ -84,14 +80,10 @@ if len(errors) > 0:
 
 else:
     # Now we build everything
+    transaction = connection.begin()
     commit = True
     # Build the run
-    run = Run()
-    run.run_id = RUN_ID
-    run.directory = INPUT_DIR
-    run.short_description = DESCRIPTION
-    run.long_description = DESCRIPTION
-    session.add(run)
+    connection.execute(RUN.insert().values(run_id = RUN_ID, directory = INPUT_DIR, short_description = DESCRIPTION, long_description = DESCRIPTION))
 
     # Read the filters file
     with open('{0}/filters.dat'.format(INPUT_DIR), 'rb') as file:
@@ -105,13 +97,13 @@ else:
 
                 # We should have 4 items
                 if len(details) == 4:
-                    filter = session.query(Filter).filter(Filter.filter_number == details[2]).first()
+                    filter = connection.execute(select([FILTER]).where(FILTER.c.filter_number == details[2])).first()
                     if filter is None:
                         commit = False
                         LOG.error('The filter {0} {1} does not exist in the database'.format(details[0], details[2]))
                     else:
                         LOG.info('Adding the filter %s %s', details[0], details[2])
-                        run.filters.append(filter)
+                        connection.execute(RUN_FILTER.insert().values(run_id = RUN_ID, filter_id = filter[FILTER.c.filter_id]))
 
     # Add the file details
     with open('{0}/file_details.dat'.format(INPUT_DIR), 'rb') as file:
@@ -125,19 +117,21 @@ else:
 
                 # We should have 5 items
                 if len(details) == 5:
-                    run_file = RunFile()
                     if URL_STEM.endswith('/'):
-                        run_file.file_name = '{0}{1}'.format(URL_STEM, details[0])
+                        file_name = '{0}{1}'.format(URL_STEM, details[0])
                     else:
-                        run_file.file_name = '{0}/{1}'.format(URL_STEM, details[0])
-                    run_file.file_type = int(details[1])
-                    run_file.md5_hash = details[2]
-                    run_file.redshift = Decimal(details[3])
-                    run_file.size = long(details[4])
+                        file_name = '{0}/{1}'.format(URL_STEM, details[0])
+                    connection.execute(RUN_FILE.insert().values(run_id = RUN_ID,
+                        file_name = file_name,
+                        file_type = int(details[1]),
+                        md5_hash = details[2],
+                        redshift = Decimal(details[3]),
+                        size = long(details[4])))
                     LOG.info('Adding %s', details[0])
-                    run.run_files.append(run_file)
 
     if commit:
-        session.commit()
+        transaction.commit()
     else:
-        session.rollback()
+        transaction.rollback()
+
+connection.close()
