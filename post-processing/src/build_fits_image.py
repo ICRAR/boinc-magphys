@@ -82,7 +82,7 @@ def check_need_to_run(directory, galaxy):
     LOG.info('{0}_V{1} file min_mtime = {2} - DB update_time = {3}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], min_mtime, update_time))
     if update_time is None:
         return False
-    return update_time > min_mtime
+    return update_time[0] > min_mtime
 
 TRANSLATE_TABLE = maketrans(' ^', '__')
 IMAGE_NAMES = []
