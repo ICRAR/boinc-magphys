@@ -90,7 +90,7 @@ for i in range(len(galaxy_details)):
 # Now compare them all
 LOG.info('Comparing them all')
 for i in range(len(args['galaxy_id']) - 1):
-    for j in range(i, len(args['galaxy_id'])):
+    for j in range(i + 1, len(args['galaxy_id'])):
         mean_squared_error = [ErrorValues() for x in range(LEN_NAMES_MSE)]
 
         pixel_count = 0
@@ -122,7 +122,7 @@ ldust    , {8}
 mdust    , {9}
 sfr      , {10}
 '''.format(galaxy_details[i].name,                                     # 00
-        galaxy_details[i + 1].name,                                    # 01
+        galaxy_details[j].name,                                        # 01
         pixel_count,                                                   # 02
         print_mean_square_error(mean_squared_error[0], pixel_count),   # 03
         print_mean_square_error(mean_squared_error[1], pixel_count),   # 04
