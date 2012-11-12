@@ -109,11 +109,6 @@ for x in range(galaxy_details[0].dimension_x):
                 if array01[x][y][z][0] != array01[x][y][z][1]:
                      mean_squared_error[z - len(IMAGE_NAMES_AE)] += math.pow(array01[x][y][z][0] - array01[x][y][z][1], 2)
 
-LOG.info('Absolute Error {0}'.format(absolute_error))
-LOG.info('Pixel Count %d', pixel_count)
-LOG.info('Opt {0:.2f}% IR {1:.2f}%'.format(absolute_error[0] * 100.0 / pixel_count, absolute_error[1] * 100.0 / pixel_count))
-LOG.info('M {0:.2f} '.format(mean_squared_error[0] / pixel_count))
-
 LOG.info('''
 Galaxy {0} vs {1}
 Different i_sfh = {2} i_ir = {3}
