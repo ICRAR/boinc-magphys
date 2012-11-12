@@ -90,28 +90,29 @@ for i in range(len(galaxy_details)):
 # Now compare them all
 LOG.info('Comparing them all')
 for i in range(len(args['galaxy_id']) - 1):
-    mean_squared_error = [ErrorValues() for x in range(LEN_NAMES_MSE)]
+    for j in range(i, len(args['galaxy_id'])):
+        mean_squared_error = [ErrorValues() for x in range(LEN_NAMES_MSE)]
 
-    pixel_count = 0
-    for x in range(galaxy_details[0].dimension_x):
-        for y in range(galaxy_details[0].dimension_y):
-            if array01[x][y][0][i].value is not None and array01[x][y][0][i + 1].value is not None:
-                pixel_count += 1
-            for z in range(LEN_NAMES_MSE):
-                if array01[x][y][z][i].value is not None and array01[x][y][z][i + 1].value is not None:
-                    update(array01[x][y][z][i].value, array01[x][y][z][i + 1].value, mean_squared_error[z].value)
-                if array01[x][y][z][i].value is not None and array01[x][y][z][i + 1].value is not None:
-                    update(array01[x][y][z][i].median, array01[x][y][z][i + 1].median, mean_squared_error[z].median)
-                if array01[x][y][z][i].value is not None and array01[x][y][z][i + 1].value is not None:
-                    update(array01[x][y][z][i].highest_prob_bin, array01[x][y][z][i + 1].highest_prob_bin, mean_squared_error[z].highest_prob_bin)
+        pixel_count = 0
+        for x in range(galaxy_details[0].dimension_x):
+            for y in range(galaxy_details[0].dimension_y):
+                if array01[x][y][0][i].value is not None and array01[x][y][0][j].value is not None:
+                    pixel_count += 1
+                for z in range(LEN_NAMES_MSE):
+                    if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
+                        update(array01[x][y][z][i].value, array01[x][y][z][j].value, mean_squared_error[z].value)
+                    if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
+                        update(array01[x][y][z][i].median, array01[x][y][z][j].median, mean_squared_error[z].median)
+                    if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
+                        update(array01[x][y][z][i].highest_prob_bin, array01[x][y][z][j].highest_prob_bin, mean_squared_error[z].highest_prob_bin)
 
 
 
-    LOG.info('''
+        LOG.info('''
 Galaxy, {0}, {1}
 Pixel Count, {2}
 Mean Squared Error
-Parameter,      Value,  Match, Mismatch,    Median,  Match, Mismatch, Highest Prob Bin, Match, Mismatch
+Parameter,      Value,    Match, Mismatch,     Median,    Match, Mismatch, High Prob, Match, Mismatch
 fmu_sfh  , {3}
 fmu_ir   , {4}
 mu       , {5}
