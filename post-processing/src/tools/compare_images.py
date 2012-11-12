@@ -110,8 +110,8 @@ for i in range(len(args['galaxy_id']) - 1):
     LOG.info('''
 Galaxy {0} vs {1}
 Pixell Count = {2}
-                Mean Squared Error
-           Value     Median   Highest Prob Bin
+                          Mean Squared Error
+           Value  (Match, Mismatch)    Median  (Match, Mismatch) Highest Prob Bin (Match, Mismatch)
 fmu_sfh = {3}
 fmu_ir  = {4}
 mu      = {5}
