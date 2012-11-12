@@ -82,7 +82,7 @@ array01 = [[[[None for galaxies in range(len(galaxy_details))] for depth in rang
 
 # Load the data
 for i in range(len(galaxy_details)):
-    LOG.info('Loading %s...', galaxy_details[i].name)
+    LOG.info('Loading %s', galaxy_details[i].name)
     for pixel in connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy_details[i].galaxy_id)):
         array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][0][i] = pixel[PIXEL_RESULT.c.fmu_sfh]
         array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][1][i] = pixel[PIXEL_RESULT.c.fmu_ir]
@@ -102,7 +102,7 @@ for i in range(len(galaxy_details)):
             array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][j][i] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin]
 
 # Now compare them all
-
+LOG.info('Comparing them all')
 for i in range(len(args['galaxy_id']) - 1):
     mean_squared_error = [0.0 for x in range(LEN_NAMES_MSE * 3)]
 
@@ -117,19 +117,19 @@ for i in range(len(args['galaxy_id']) - 1):
                          mean_squared_error[z] += math.pow(array01[x][y][z][i] - array01[x][y][z][i + 1], 2)
 
     LOG.info('''
-    Galaxy {0} vs {1}
-    Pixel Count = {2}
+Galaxy {0} vs {1}
+Pixel Count = {2}
 
-    Mean Squared Error
-                  Value     Median   Highest Prob Bin
-    fmu_sfh = {3:10.2f} {11:10.2f} {12:10.2f}
-    fmu_ir  = {4:10.2f} {13:10.2f} {14:10.2f}
-    mu      = {5:10.2f} {15:10.2f} {16:10.2f}
-    s_sfr   = {6:10.2f} {17:10.2f} {18:10.2f}
-    m       = {7:10.2g} {19:10.2g} {20:10.2g}
-    ldust   = {8:10.2g} {21:10.2g} {22:10.2g}
-    mdust   = {9:10.2g} {23:10.2g} {24:10.2g}
-    sfr     = {10:10.2f} {25:10.2f} {26:10.2f}
+                   Mean Squared Error
+               Value     Median   Highest Prob Bin
+fmu_sfh = {3:10.2f} {11:10.2f} {12:10.2f}
+fmu_ir  = {4:10.2f} {13:10.2f} {14:10.2f}
+mu      = {5:10.2f} {15:10.2f} {16:10.2f}
+s_sfr   = {6:10.2f} {17:10.2f} {18:10.2f}
+m       = {7:10.2g} {19:10.2g} {20:10.2g}
+ldust   = {8:10.2g} {21:10.2g} {22:10.2g}
+mdust   = {9:10.2g} {23:10.2g} {24:10.2g}
+sfr     = {10:10.2f} {25:10.2f} {26:10.2f}
     '''.format(galaxy_details[i].name,                      # 00
         galaxy_details[i + 1].name,                         # 01
         pixel_count,                                        # 02
