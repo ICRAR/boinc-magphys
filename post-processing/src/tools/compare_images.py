@@ -108,18 +108,18 @@ for i in range(len(args['galaxy_id']) - 1):
 
 
     LOG.info('''
-Galaxy {0} vs {1}
-Pixell Count = {2}
-                          Mean Squared Error
-           Value  (Match, Mismatch)    Median  (Match, Mismatch) Highest Prob Bin (Match, Mismatch)
-fmu_sfh = {3}
-fmu_ir  = {4}
-mu      = {5}
-s_sfr   = {6}
-m       = {7}
-ldust   = {8}
-mdust   = {9}
-sfr     = {10}
+Galaxy, {0}, {1}
+Pixel Count, {2}
+Mean Squared Error
+Parameter,           Value,  Match, Mismatch,    Median,  Match, Mismatch, Highest Prob Bin, Match, Mismatch
+fmu_sfh  , {3}
+fmu_ir   , {4}
+mu       , {5}
+s_sfr    , {6}
+m        , {7}
+ldust    , {8}
+mdust    , {9}
+sfr      , {10}
 '''.format(galaxy_details[i].name,                                     # 00
         galaxy_details[i + 1].name,                                    # 01
         pixel_count,                                                   # 02
