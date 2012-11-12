@@ -130,13 +130,14 @@ i_sfh = {5:.2f}%
 i_ir  = {6:.2f}%
 
 Mean Squared Error
+           Value     Median   Highest Prob Bin
 fmu_sfh = {7:10.2f} {15:10.2f} {16:10.2f}
 fmu_ir  = {8:10.2f} {17:10.2f} {18:10.2f}
 mu      = {9:10.2f} {19:10.2f} {20:10.2f}
 s_sfr   = {10:10.2f} {21:10.2f} {22:10.2f}
-m       = {11:10.2f} {23:10.2f} {24:10.2f}
-ldust   = {12:10.2f} {25:10.2f} {26:10.2f}
-mdust   = {13:10.2f} {27:10.2f} {28:10.2f}
+m       = {11:10.2g} {23:10.2g} {24:10.2g}
+ldust   = {12:10.2g} {25:10.2g} {26:10.2g}
+mdust   = {13:10.2g} {27:10.2g} {28:10.2g}
 sfr     = {14:10.2f} {29:10.2f} {30:10.2f}
 '''.format(galaxy_details[0].name,                      # 00
     galaxy_details[1].name,                             # 01
