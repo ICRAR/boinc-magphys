@@ -78,7 +78,7 @@ for i in range(len(args['galaxy_id']) - 1):
         LOG.error('The galaxies are different sizes (%d x %d) vs (%d x %d)', galaxy_details[i].dimension_x, galaxy_details[i].dimension_y, galaxy_details[i + 1].dimension_x, galaxy_details[i + 1].dimension_y)
         exit(1)
 
-array01 = [[[[None for galaxies in len(galaxy_details)] for depth in range(LEN_NAMES_MSE * 3)] for col in range(galaxy_details[0].dimension_y)] for row in range(galaxy_details[0].dimension_x)]
+array01 = [[[[None for galaxies in range(len(galaxy_details))] for depth in range(LEN_NAMES_MSE * 3)] for col in range(galaxy_details[0].dimension_y)] for row in range(galaxy_details[0].dimension_x)]
 
 # Load the data
 for i in len(galaxy_details):
