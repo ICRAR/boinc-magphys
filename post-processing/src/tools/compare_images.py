@@ -46,7 +46,7 @@ args = vars(parser.parse_args())
 
 OUTPUT_DIRECTORY = args['output_dir']
 IMAGE_NAMES_AE = ['i_sfh', 'i_ir']
-IMAGE_NAMES_MSE = ['fmu_sfh', 'fmu_ir', 'mu', 'm']
+IMAGE_NAMES_MSE = ['fmu_sfh', 'fmu_ir', 'mu', 's_sfr', 'm', 'ldust', 'mdust', 'sfr']
 
 # First check the galaxy exists in the database
 engine = create_engine(DB_LOGIN)
@@ -84,7 +84,11 @@ for i in range(2):
         array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][2][i] = pixel[PIXEL_RESULT.c.fmu_sfh]
         array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][3][i] = pixel[PIXEL_RESULT.c.fmu_ir]
         array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][4][i] = pixel[PIXEL_RESULT.c.mu]
-        array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][5][i] = pixel[PIXEL_RESULT.c.m]
+        array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][5][i] = pixel[PIXEL_RESULT.c.s_sfr]
+        array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][6][i] = pixel[PIXEL_RESULT.c.m]
+        array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][7][i] = pixel[PIXEL_RESULT.c.ldust]
+        array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][8][i] = pixel[PIXEL_RESULT.c.mdust]
+        array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][9][i] = pixel[PIXEL_RESULT.c.sfr]
 
 array02 = numpy.empty((galaxy_details[0].dimension_y, galaxy_details[0].dimension_x, len(IMAGE_NAMES_AE) + len(IMAGE_NAMES_MSE)), dtype=numpy.float)
 
@@ -119,7 +123,7 @@ Absolute Error
 i_sfh = {5:.2f}% i_ir = {6:.2f}%
 
 Mean Squared Error
-fmu_sfh = {7:.2f} fmu_ir = {8:.2f} mu = {9:.2f} m = {10:.2f}
+fmu_sfh = {7:.2f} fmu_ir = {8:.2f} mu = {9:.2f} s_sfr = {10:.2f} m = {11:.2f} ldust = {12:.2f} mdust = {13:.2f} sfr = {14:.2f}
 '''.format(galaxy_details[0].name,
     galaxy_details[1].name,
     absolute_error[0],
@@ -130,4 +134,8 @@ fmu_sfh = {7:.2f} fmu_ir = {8:.2f} mu = {9:.2f} m = {10:.2f}
     mean_squared_error[0] / pixel_count,
     mean_squared_error[1] / pixel_count,
     mean_squared_error[2] / pixel_count,
-    mean_squared_error[3] / pixel_count))
+    mean_squared_error[3] / pixel_count,
+    mean_squared_error[4] / pixel_count,
+    mean_squared_error[5] / pixel_count,
+    mean_squared_error[6] / pixel_count,
+    mean_squared_error[7] / pixel_count))
