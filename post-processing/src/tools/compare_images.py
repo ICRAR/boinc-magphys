@@ -82,6 +82,7 @@ array01 = [[[[None for galaxies in len(galaxy_details)] for depth in range(LEN_N
 
 # Load the data
 for i in len(galaxy_details):
+    LOG.info('Loading %s...', galaxy_details[i].name)
     for pixel in connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy_details[i].galaxy_id)):
         array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][0][i] = pixel[PIXEL_RESULT.c.fmu_sfh]
         array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][1][i] = pixel[PIXEL_RESULT.c.fmu_ir]
@@ -129,8 +130,8 @@ for i in range(len(args['galaxy_id']) - 1):
     ldust   = {8:10.2g} {21:10.2g} {22:10.2g}
     mdust   = {9:10.2g} {23:10.2g} {24:10.2g}
     sfr     = {10:10.2f} {25:10.2f} {26:10.2f}
-    '''.format(galaxy_details[0].name,                      # 00
-        galaxy_details[1].name,                             # 01
+    '''.format(galaxy_details[i].name,                      # 00
+        galaxy_details[i + 1].name,                         # 01
         pixel_count,                                        # 02
         mean_squared_error[0] / pixel_count,                # 03
         mean_squared_error[1] / pixel_count,                # 04
