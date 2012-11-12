@@ -100,7 +100,7 @@ def update(value1, value2, mean_squared_error, max_min):
 
 
 def print_mean_square_error(mean_square_error, pixel_count, max_mins):
-    return '{0:10.2g}, {1:10.2g}, {2:10.2g}, {3:8d}, {4:8d}, {5:10.2g}, {6:10.2g}, {7:10.2g}, {8:8d}, {9:8d}, {10:10.2g}, {11:10.2g}, {12:10.2g}, {14:8d}, {15:8d}'.format(
+    return '{0:10.2g}, {1:10.2g}, {2:10.2g}, {3:8d}, {4:8d}, {5:10.2g}, {6:10.2g}, {7:10.2g}, {8:8d}, {9:8d}, {10:10.2g}, {11:10.2g}, {12:10.2g}, {13:8d}, {14:8d}'.format(
         mean_square_error.value.error / pixel_count,
         max_mins.value.max,
         max_mins.value.min,
