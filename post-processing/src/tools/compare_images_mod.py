@@ -75,7 +75,7 @@ def update(value1, value2, mean_squared_error):
 
 
 def print_mean_square_error(mean_square_error, pixel_count):
-    return '{0:10.2g}, {1:5d}, {2:5d}, {3:10.2g}, {4:5d}, {5:5d}, {6:10.2g}, {7:5d}, {8:5d}'.format(mean_square_error.value.error / pixel_count,
+    return '{0:10.2g}, {1:8d}, {2:8d}, {3:10.2g}, {4:8d}, {5:8d}, {6:10.2g}, {7:8d}, {8:8d}'.format(mean_square_error.value.error / pixel_count,
         mean_square_error.value.match,
         mean_square_error.value.mismatch,
         mean_square_error.median.error / pixel_count,

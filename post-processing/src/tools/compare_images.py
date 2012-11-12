@@ -111,7 +111,7 @@ for i in range(len(args['galaxy_id']) - 1):
 Galaxy, {0}, {1}
 Pixel Count, {2}
 Mean Squared Error
-Parameter,           Value,  Match, Mismatch,    Median,  Match, Mismatch, Highest Prob Bin, Match, Mismatch
+Parameter,      Value,  Match, Mismatch,    Median,  Match, Mismatch, Highest Prob Bin, Match, Mismatch
 fmu_sfh  , {3}
 fmu_ir   , {4}
 mu       , {5}
