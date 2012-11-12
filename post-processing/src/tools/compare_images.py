@@ -34,7 +34,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
 from config import DB_LOGIN
 from database.database_support_core import GALAXY, PIXEL_RESULT, PIXEL_PARAMETER
-from tools.compare_images_mod import Galaxy, Values, ErrorValues, update, print_mean_square_error
+from tools.compare_images_mod import Galaxy, Values, ErrorValues, update, print_mean_square_error, MaxMins
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -93,6 +93,7 @@ for i in range(len(args['galaxy_id']) - 1):
     for j in range(i + 1, len(args['galaxy_id'])):
         mean_squared_error = [ErrorValues() for x in range(LEN_NAMES_MSE)]
 
+        max_min = [MaxMins() for x in range(LEN_NAMES_MSE)]
         pixel_count = 0
         for x in range(galaxy_details[0].dimension_x):
             for y in range(galaxy_details[0].dimension_y):
@@ -100,11 +101,11 @@ for i in range(len(args['galaxy_id']) - 1):
                     pixel_count += 1
                 for z in range(LEN_NAMES_MSE):
                     if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
-                        update(array01[x][y][z][i].value, array01[x][y][z][j].value, mean_squared_error[z].value)
-                    if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
-                        update(array01[x][y][z][i].median, array01[x][y][z][j].median, mean_squared_error[z].median)
-                    if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
-                        update(array01[x][y][z][i].highest_prob_bin, array01[x][y][z][j].highest_prob_bin, mean_squared_error[z].highest_prob_bin)
+                        update(array01[x][y][z][i].value, array01[x][y][z][j].value, mean_squared_error[z].value, max_min[z].value)
+                    if array01[x][y][z][i].median is not None and array01[x][y][z][j].median is not None:
+                        update(array01[x][y][z][i].median, array01[x][y][z][j].median, mean_squared_error[z].median, max_min[z].median)
+                    if array01[x][y][z][i].highest_prob_bin is not None and array01[x][y][z][j].highest_prob_bin is not None:
+                        update(array01[x][y][z][i].highest_prob_bin, array01[x][y][z][j].highest_prob_bin, mean_squared_error[z].highest_prob_bin, max_min[z].highest_prob_bin)
 
 
 
@@ -112,7 +113,7 @@ for i in range(len(args['galaxy_id']) - 1):
 Galaxy, {0}, {1}
 Pixel Count, {2}
 Mean Squared Error
-Parameter,      Value,    Match, Mismatch,     Median,    Match, Mismatch,  High Prob,    Match, Mismatch
+Parameter,      Value,   Max, Min, Match, Mismatch,     Median,    Max, Min, Match, Mismatch,  High Prob,   Max, Min, Match, Mismatch
 fmu_sfh  , {3}
 fmu_ir   , {4}
 mu       , {5}
@@ -121,15 +122,15 @@ m        , {7}
 ldust    , {8}
 mdust    , {9}
 sfr      , {10}
-'''.format(galaxy_details[i].name,                                     # 00
-        galaxy_details[j].name,                                        # 01
-        pixel_count,                                                   # 02
-        print_mean_square_error(mean_squared_error[0], pixel_count),   # 03
-        print_mean_square_error(mean_squared_error[1], pixel_count),   # 04
-        print_mean_square_error(mean_squared_error[2], pixel_count),   # 05
-        print_mean_square_error(mean_squared_error[3], pixel_count),   # 06
-        print_mean_square_error(mean_squared_error[4], pixel_count),   # 07
-        print_mean_square_error(mean_squared_error[5], pixel_count),   # 08
-        print_mean_square_error(mean_squared_error[6], pixel_count),   # 09
-        print_mean_square_error(mean_squared_error[7], pixel_count),   # 10
+'''.format(galaxy_details[i].name,                                                 # 00
+        galaxy_details[j].name,                                                    # 01
+        pixel_count,                                                               # 02
+        print_mean_square_error(mean_squared_error[0], pixel_count, max_min[0]),   # 03
+        print_mean_square_error(mean_squared_error[1], pixel_count, max_min[1]),   # 04
+        print_mean_square_error(mean_squared_error[2], pixel_count, max_min[2]),   # 05
+        print_mean_square_error(mean_squared_error[3], pixel_count, max_min[3]),   # 06
+        print_mean_square_error(mean_squared_error[4], pixel_count, max_min[4]),   # 07
+        print_mean_square_error(mean_squared_error[5], pixel_count, max_min[5]),   # 08
+        print_mean_square_error(mean_squared_error[6], pixel_count, max_min[6]),   # 09
+        print_mean_square_error(mean_squared_error[7], pixel_count, max_min[7]),   # 10
 ))
