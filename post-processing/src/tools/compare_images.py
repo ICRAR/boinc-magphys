@@ -81,7 +81,7 @@ for i in range(len(args['galaxy_id']) - 1):
 array01 = [[[[None for galaxies in range(len(galaxy_details))] for depth in range(LEN_NAMES_MSE * 3)] for col in range(galaxy_details[0].dimension_y)] for row in range(galaxy_details[0].dimension_x)]
 
 # Load the data
-for i in len(galaxy_details):
+for i in range(len(galaxy_details)):
     LOG.info('Loading %s...', galaxy_details[i].name)
     for pixel in connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy_details[i].galaxy_id)):
         array01[pixel[PIXEL_RESULT.c.x]][pixel[PIXEL_RESULT.c.y]][0][i] = pixel[PIXEL_RESULT.c.fmu_sfh]
