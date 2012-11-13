@@ -82,6 +82,9 @@ class MaxMins:
         self.highest_prob_bin = MaxMin()
 
 def update(value1, value2, mean_squared_error, max_min):
+    """
+    Update the values
+    """
     # Record the maximum and minimums
     if max_min.max is None:
         max_min.max = max(value1, value2)
@@ -100,6 +103,9 @@ def update(value1, value2, mean_squared_error, max_min):
 
 
 def print_mean_square_error(mean_square_error, pixel_count, max_mins):
+    """
+    Print the mean square error values
+    """
     return '{0:10.2g}, {1:10.2g}, {2:10.2g}, {3:8d}, {4:8d}, {5:10.2g}, {6:10.2g}, {7:10.2g}, {8:8d}, {9:8d}, {10:10.2g}, {11:10.2g}, {12:10.2g}, {13:8d}, {14:8d}'.format(
         mean_square_error.value.error / pixel_count,
         max_mins.value.max,
@@ -117,3 +123,38 @@ def print_mean_square_error(mean_square_error, pixel_count, max_mins):
         mean_square_error.highest_prob_bin.match,
         mean_square_error.highest_prob_bin.mismatch,
     )
+
+def matches(name1, name2):
+    """
+    Compare the names of galaxies to see if they match.
+
+    Basically only the the last character is allowed to be different
+    >>> matches('2MASXJ22080447+0108060c', '2MASXJ22080447+0108060d')
+    True
+    >>> matches('2MASXJ22080447+0108060', '2MASXJ22080447+0108060d')
+    True
+    >>> matches('2MASXJ22080447+0108060c', '2MASXJ22080447+0108060')
+    True
+    >>> matches('2MASXJ22080447+0108060', '2MASXJ22080447+0108060')
+    True
+    >>> matches('2MASXJ22080447+0108061c', '2MASXJ22080447+0108060d')
+    False
+    >>> matches('2MASXJ22080447+0108061', '2MASXJ22080447+0108060d')
+    False
+    >>> matches('2MASXJ22080447+0108061c', '2MASXJ22080447+0108060')
+    False
+    >>> matches('2MASXJ22080447+0108061', '2MASXJ22080447+0108060')
+    False
+    """
+    # Strings ending in a digit should be the same
+    if name1[-1:].isdigit() and name2[-1:].isdigit():
+        return name1 == name2
+
+    # The last character of one is a digit
+    if name1[-1:].isdigit():
+        return  name1 == name2[0:-1]
+
+    if name2[-1:].isdigit():
+        return  name1[0:-1] == name2
+
+    return name1[0:-1] == name2[0:-1]
