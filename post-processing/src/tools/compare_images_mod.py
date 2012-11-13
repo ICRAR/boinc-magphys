@@ -146,6 +146,9 @@ def matches(name1, name2):
     >>> matches('2MASXJ22080447+0108061', '2MASXJ22080447+0108060')
     False
     """
+    if name1 is None or name2 is None:
+        return False
+
     # Strings ending in a digit should be the same
     if name1[-1:].isdigit() and name2[-1:].isdigit():
         return name1 == name2

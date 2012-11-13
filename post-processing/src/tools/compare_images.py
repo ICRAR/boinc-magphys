@@ -60,7 +60,6 @@ else:
     list_galaxy_ids = []
     name = None
     galaxy_ids = []
-    list_galaxy_ids.append(galaxy_ids)
     for galaxy_details in connection.execute(select([GALAXY.c.name, GALAXY.c.galaxy_id]).where(GALAXY.c.run_id.in_(args['ids'])).order_by(GALAXY.c.name)):
         LOG.info('{0}'.format(galaxy_details))
         if matches(name, galaxy_details[0]):
