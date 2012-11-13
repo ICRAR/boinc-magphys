@@ -129,7 +129,7 @@ for galaxy_ids in list_galaxy_ids:
 
 
 
-            print('''
+            LOG.info('''
 Galaxy, {0}, {1}
 Pixel Count, {2}
 Parameter,  MSE Value,       Max,         Min,    Match, Mismatch, MSE Median,        Max,        Min,    Match, Mismatch, MSE High P,        Max,        Min,    Match, Mismatch
