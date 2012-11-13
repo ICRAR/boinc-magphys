@@ -37,6 +37,7 @@ from database.database_support_core import GALAXY, PIXEL_RESULT, PIXEL_PARAMETER
 from tools.compare_images_mod import Galaxy, Values, ErrorValues, update, print_mean_square_error, MaxMins, matches
 
 LOG = logging.getLogger(__name__)
+LOG.addHandler(logging.FileHandler('compare_images.log'))
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 parser = argparse.ArgumentParser('Compare a number of galaxies')
@@ -61,7 +62,6 @@ else:
     name = None
     galaxy_ids = []
     for galaxy_details in connection.execute(select([GALAXY.c.name, GALAXY.c.galaxy_id]).where(GALAXY.c.run_id.in_(args['ids'])).order_by(GALAXY.c.name)):
-        LOG.info('{0}'.format(galaxy_details))
         if matches(name, galaxy_details[0]):
             galaxy_ids.append(galaxy_details[1])
         else:
