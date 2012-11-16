@@ -110,13 +110,6 @@ file { "/home/ec2-user/galaxies":
     mode   => 775,
 }
 
-file { "/home/ec2-user/f2wu":
-    ensure => "directory",
-    owner  => ec2-user,
-    group  => ec2-user,
-    mode   => 775,
-}
-
 file { "/home/ec2-user/boinc":
     ensure => "directory",
     owner  => ec2-user,

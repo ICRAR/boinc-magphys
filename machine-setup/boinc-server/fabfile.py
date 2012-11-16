@@ -35,7 +35,6 @@ so we must ensure the download server runs last as it actually adds things to th
 fab prod_env prod_deploy_stage01 prod_deploy_stage02 prod_deploy_stage03 prod_deploy_stage04
 """
 import glob
-
 import boto
 import os
 import time
@@ -56,34 +55,18 @@ AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
 SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys')
-WEB_HOST = 0
-UPLOAD_HOST = 1
-DOWNLOAD_HOST = 2
 
-def create_instance(names, use_elastic_ip, public_ips):
-    """Create the AWS instance
-
-    :param names: the name to be used for this instance
-    :type names: list of strings
-    :param boolean use_elastic_ip: is this instance to use an Elastic IP address
-
-    :rtype: string
-    :return: The public host name of the AWS instance
+def create_instance(stub_name, number_instances, ebs_size):
     """
+    Create the AWS instance
 
-    puts('Creating instances {0} [{1}:{2}]'.format(names, use_elastic_ip, public_ips))
-    number_instances = len(names)
-    if number_instances != len(public_ips):
-        abort('The lists do not match in length')
+    :type ebs_size: int
+    :param ebs_size: The size of the new volume, in GiB
+    """
+    puts('Creating {0} instances with {1} as the stub'.format(number_instances, stub_name))
 
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     conn = boto.connect_ec2()
-
-    if use_elastic_ip:
-        # Disassociate the public IP
-        for public_ip in public_ips:
-            if not conn.disassociate_address(public_ip=public_ip):
-                abort('Could not disassociate the IP {0}'.format(public_ip))
 
     reservations = conn.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, min_count=number_instances, max_count=number_instances)
     instances = reservations.instances
@@ -93,7 +76,7 @@ def create_instance(names, use_elastic_ip, public_ips):
         time.sleep(5)
 
     # Are we running yet?
-    for i in range(number_instances):
+    for i in range(int(number_instances)):
         while not instances[i].update() == 'running':
             fastprint('.')
             time.sleep(5)
@@ -105,25 +88,30 @@ def create_instance(names, use_elastic_ip, public_ips):
     puts('.')
 
     # Tag the instance
-    for i in range(number_instances):
-        conn.create_tags([instances[i].id], {'Name': names[i]})
+    for i in range(int(number_instances)):
+        conn.create_tags([instances[i].id], {'Name': '{0}-{1:02d}'.format(stub_name, i)})
 
-    # Associate the IP if needed
-    if use_elastic_ip:
-        for i in range(number_instances):
-            puts('Current DNS name is {0}. About to associate the Elastic IP'.format(instances[i].dns_name))
-            if not conn.associate_address(instance_id=instances[i].id, public_ip=public_ips[i]):
-                abort('Could not associate the IP {0} to the instance {1}'.format(public_ips[i], instances[i].id))
+    # Associate an Elastic IP
+    for instance in instances:
+        puts('Current DNS name is {0}. About to get an Elastic IP'.format(instance.dns_name))
+        public_ip = conn.allocate_address()
+        puts('{0} {1} {2}'.format(public_ip.public_ip, public_ip.allocation_id, public_ip.association_id))
+        if not conn.associate_address(instance_id=instance.id, allocation_id=public_ip.allocation_id):
+            abort('Could not associate the IP {0} to the instance {1}'.format(public_ip.public_ip, instance.id))
 
     # Give AWS time to switch everything over
     time.sleep(10)
 
     # Load the new instance data as the dns_name may have changed
-    for i in range(number_instances):
-        instances[i].update(True)
-    if use_elastic_ip:
-        for i in range(number_instances):
-            puts('Current DNS name is {0} after associating the Elastic IP'.format(instances[i].dns_name))
+    for instance in instances:
+        instance.update(True)
+    for instance in instances:
+        puts('Current DNS name is {0} after associating the Elastic IP'.format(instance.dns_name))
+
+    # Add the extra storage
+    for instance in instances:
+        volume = conn.create_volume(ebs_size, instance.placement)
+        conn.attach_volume(volume.volume_id, instance.id, '/dev/sdg')
 
     # The instance is started, but not useable (yet)
     puts('Started the instance(s) now waiting for the SSH daemon to start.')
@@ -134,13 +122,14 @@ def create_instance(names, use_elastic_ip, public_ips):
 
     # we have to return an ASCII string
     host_names = []
-    for i in range(number_instances):
-        host_names.append(str(instances[i].dns_name))
+    for instance in instances:
+        host_names.append(str(instance.dns_name))
     return host_names
 
 
 def to_boolean(choice, default=False):
-    """Convert the yes/no to true/false
+    """
+    Convert the yes/no to true/false
 
     :param choice: the text string input
     :type choice: string
@@ -417,24 +406,16 @@ def setup_env():
 
     Allow the user to select if a Elastic IP address is to be used
     """
-    if 'use_elastic_ip' in env:
-        use_elastic_ip = to_boolean(env.use_elastic_ip)
-    else:
-        use_elastic_ip = confirm('Do you want to assign an Elastic IP to this instance: ', False)
-
-    public_ip = None
-    if use_elastic_ip:
-        if 'public_ip' in env:
-            public_ip = env.public_ip
-        else:
-            public_ip = prompt('What is the public IP address: ', 'public_ip')
-
+    if 'instances' not in env:
+        prompt('Number of instances: ', 'instances')
+    if 'ebs_size' not in env:
+        prompt('EBS Size (GB): ', 'ebs_size')
     if 'ops_username' not in env:
         prompt('Ops area username: ', 'ops_username')
     if 'ops_password' not in env:
         prompt('Password: ', 'ops_password')
-    if 'instance_name' not in env:
-        prompt('AWS Instance name: ', 'instance_name')
+    if 'instance_stub_name' not in env:
+        prompt('AWS Instance name stub: ', 'instance_stub_name')
     if 'project_name' not in env:
         prompt('BOINC project name: ', 'project_name')
     if 'gmail_account' not in env:
@@ -443,15 +424,17 @@ def setup_env():
         prompt('GMail Password:', 'gmail_password')
 
     # Create the instance in AWS
-    host_names = create_instance([env.instance_name], use_elastic_ip, [public_ip])
+    host_names = create_instance(env.instance_stub_name, env.instances, env.ebs_size)
     env.hosts = host_names
     env.user = USERNAME
     env.key_filename = AWS_KEY
     env.roledefs = {
-        'web' : host_names,
-        'upload' : host_names,
-        'download' : host_names
+        'main' : [host_names[0]],
+        'additional' : host_names[1:]
     }
+
+
+
 
 @task
 @serial

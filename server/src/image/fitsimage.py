@@ -408,7 +408,7 @@ class FitsImage:
         image = Image.open(inImageFileName, "r").convert("RGBA")
         width, height = image.size
 
-        areas = self._connection.execute(select([AREA]).join(AREA_USER).where(and_(AREA_USER.c.userid == userid, AREA.c.galaxy_id == galaxy_id)).order_by(AREA.c.top_x, AREA.c.top_y))
+        areas = self._connection.execute(select([AREA], from_obj=AREA.join(AREA_USER)).where(and_(AREA_USER.c.userid == userid, AREA.c.galaxy_id == galaxy_id)).order_by(AREA.c.top_x, AREA.c.top_y))
 
         for area in areas:
             for x in range(area[AREA.c.top_x], area[AREA.c.bottom_x]):
@@ -446,4 +446,4 @@ class FitsImage:
         Determines the galaxies that the selected user has generated results.  Returns an array of
         galaxy_ids.
         """
-        return self._connection.execute(select([GALAXY]).join(AREA).join(AREA_USER).where(AREA_USER.c.userid == userid).order_by(GALAXY.c.name, GALAXY.c.version_number))
+        return self._connection.execute(select([GALAXY], from_obj= GALAXY.join(AREA).join(AREA_USER)).where(AREA_USER.c.userid == userid).order_by(GALAXY.c.name, GALAXY.c.version_number))
