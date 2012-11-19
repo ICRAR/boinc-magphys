@@ -127,8 +127,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     for user in env.list_of_users:
         sudo('useradd {0}'.format(user))
         if host0:
-            sudo('mv /home/{0} /mnt/data'.format(user))
-            sudo('ln -s /mnt/data/{0}/ /home/{0}'.format(user))
+            sudo('mv /home/{0} /mnt/data && ln -s /mnt/data/{0}/ /home/{0}'.format(user))
             sudo('chown {0}:{0} {0}'.format(user))
             sudo('mkdir /home/{0}/.ssh'.format(user))
             sudo('chmod 700 /home/{0}/.ssh'.format(user))
@@ -137,8 +136,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
             sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
             sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
         else:
-            sudo('rm -rf /home/{0}')
-            sudo('ln -s /mnt/data/{0}/ /home/{0}'.format(user))
+            sudo('rm -rf /home/{0} && ln -s /mnt/data/{0}/ /home/{0}'.format(user))
             sudo('chown {0}:{0} {0}'.format(user))
 
         # Add them to the sudoers
@@ -248,10 +246,10 @@ def create_shared_home():
     # Link the area so we have a common home
     if env.host_string == env.hosts[0]:
         sudo('mv /home/ec2-user /mnt/data && ln -s /mnt/data/ec2-user/ /home/ec2-user')
-        sudo('chown ec2-user:ec2-user ec2-user')
+        sudo('chown ec2-user:ec2-user /home/ec2-user')
     else:
         sudo('rm -rf /home/ec2-user && ln -s /mnt/data/ec2-user/ /home/ec2-user')
-        sudo('chown ec2-user:ec2-user ec2-user')
+        sudo('chown ec2-user:ec2-user /home/ec2-user')
 
 def final_messages(host0):
     """
@@ -516,6 +514,9 @@ def gluster1():
 
     yum_install()
     gluster_install()
+
+    # Wait for things to settle down
+    time.sleep(5)
     format_drive()
 
     # Wait for things to settle down
@@ -531,6 +532,9 @@ def gluster2():
 
     gluster_probe()
 
+    # Wait for things to settle down
+    time.sleep(5)
+
 @task
 @serial
 def gluster3():
@@ -540,7 +544,13 @@ def gluster3():
     require('hosts', provided_by=[setup_env])
 
     gluster_mount()
+
+    # Wait for things to settle down
+    time.sleep(5)
     create_shared_home()
+
+    # Wait for things to settle down
+    time.sleep(5)
 
 @task
 @serial
@@ -554,9 +564,18 @@ def deploy_with_db():
 
     copy_public_keys(env.host_string == env.hosts[0])
     base_install(env.host_string == env.hosts[0])
+
+    # Wait for things to settle down
+    time.sleep(5)
     build_mod_wsgi()
+
+    # Wait for things to settle down
+    time.sleep(5)
     if env.host_string == env.hosts[0]:
         single_install(True)
+
+    # Wait for things to settle down
+    time.sleep(5)
     final_messages(env.host_string == env.hosts[0])
 
 @task
@@ -571,7 +590,16 @@ def deploy_without_db():
 
     copy_public_keys(env.host_string == env.hosts[0])
     base_install(env.host_string == env.hosts[0])
+
+    # Wait for things to settle down
+    time.sleep(5)
     build_mod_wsgi()
+
+    # Wait for things to settle down
+    time.sleep(5)
     if env.host_string == env.hosts[0]:
         single_install(False)
+
+    # Wait for things to settle down
+    time.sleep(5)
     final_messages(env.host_string == env.hosts[0])
