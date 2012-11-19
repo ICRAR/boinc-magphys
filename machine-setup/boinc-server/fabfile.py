@@ -128,7 +128,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         sudo('useradd {0}'.format(user))
         if host0:
             sudo('mv /home/{0} /mnt/data && ln -s /mnt/data/{0}/ /home/{0}'.format(user))
-            sudo('chown {0}:{0} {0}'.format(user))
+            sudo('chown {0}:{0} /home/{0}'.format(user))
             sudo('mkdir /home/{0}/.ssh'.format(user))
             sudo('chmod 700 /home/{0}/.ssh'.format(user))
             sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
@@ -137,7 +137,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
             sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
         else:
             sudo('rm -rf /home/{0} && ln -s /mnt/data/{0}/ /home/{0}'.format(user))
-            sudo('chown {0}:{0} {0}'.format(user))
+            sudo('chown {0}:{0} /home/{0}'.format(user))
 
         # Add them to the sudoers
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
