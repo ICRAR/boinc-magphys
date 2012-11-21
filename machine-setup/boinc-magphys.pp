@@ -91,6 +91,18 @@ package { 'ca-certificates':
 package { 'expect-devel':
     ensure => installed,
 }
+package { 'freetype-devel':
+    ensure => installed,
+}
+package { 'freetype':
+    ensure => installed,
+}
+package { 'libpng-devel':
+    ensure => installed,
+}
+package { 'libpng':
+    ensure => installed,
+}
 
 user { 'apache':
   ensure  => present,

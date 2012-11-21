@@ -123,6 +123,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('pip-2.7 install fabric')
     sudo('pip-2.7 install configobj')
     sudo('pip-2.7 install MySQL-python')
+    sudo('pip-2.7 install matplotlib')
 
     for user in env.list_of_users:
         sudo('useradd {0}'.format(user))
@@ -250,33 +251,6 @@ def create_shared_home():
     else:
         sudo('rm -rf /home/ec2-user && ln -s /mnt/data/ec2-user/ /home/ec2-user')
         sudo('chown ec2-user:ec2-user /home/ec2-user')
-
-def final_messages(host0):
-    """
-    Print the final messages
-    """
-    if host0:
-        puts('''
-
-
-##########################################################################
-##########################################################################
-
-##########################################################################
-
-
-You need to do the following manual steps:
-
-Django
-1) Go to '/home/ec2-user/boinc-magphys/server/src/pogssite'
-2) run 'python27 manage.py syncdb' to initialise the django database
-
-
-##########################################################################
-
-##########################################################################
-##########################################################################
-''')
 
 def format_drive():
     """
@@ -446,6 +420,10 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
   copytruncate
 }}" > /etc/logrotate.d/boinc'''.format(env.project_name))
 
+    # Setup the ssh key
+    run('ssh-keygen -t rsa -N "" -f /home/ec2-user/.ssh/id_rsa')
+    run('cat /home/ec2-user/.ssh/id_rsa.pub >> /home/ec2-user/.ssh/authorized_keys')
+
 def to_boolean(choice, default=False):
     """
     Convert the yes/no to true/false
@@ -576,7 +554,6 @@ def deploy_with_db():
 
     # Wait for things to settle down
     time.sleep(5)
-    final_messages(env.host_string == env.hosts[0])
 
 @task
 @serial
@@ -602,4 +579,38 @@ def deploy_without_db():
 
     # Wait for things to settle down
     time.sleep(5)
-    final_messages(env.host_string == env.hosts[0])
+
+@task
+@serial
+def final_messages():
+    """
+    Print the final messages
+    """
+    if env.host_string == env.hosts[0]:
+        puts('''
+
+
+##########################################################################
+##########################################################################
+
+##########################################################################
+
+
+You need to do the following manual steps:
+
+Django
+1) Go to '/home/ec2-user/boinc-magphys/server/src/pogssite'
+2) run 'python27 manage.py syncdb' to initialise the django database
+
+SSH
+1) Edit the /etc/hosts file on each server and put in the hostname used
+   by BOINC for each server
+2) Connect to each of the servers from the other to ensure they can connect
+
+
+
+##########################################################################
+
+##########################################################################
+##########################################################################
+''')

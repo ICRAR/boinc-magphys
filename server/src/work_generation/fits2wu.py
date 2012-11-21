@@ -30,6 +30,7 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import sys
 
 from datetime import datetime
 from sqlalchemy.engine import create_engine
@@ -41,6 +42,11 @@ from work_generation.fits2wu_mod import Fit2Wu, MIN_QUORUM
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
+# Setup the Python Path as we may be running this via ssh
+sys.path.append('..')
+sys.path.append('../../../../boinc/py')
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--register', type=int, help='the registration id of a galaxy')
