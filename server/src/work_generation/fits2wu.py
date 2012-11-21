@@ -31,6 +31,12 @@ import argparse
 import logging
 import os
 
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
+# Setup the Python Path as we may be running this via ssh
+LOG.info('PYTHONPATH = {0}'.format(get_python_path()))
+
 from datetime import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import and_, func, select
@@ -39,12 +45,6 @@ from database.boinc_database_support_core import RESULT
 from database.database_support_core import REGISTER
 from work_generation import get_python_path
 from work_generation.fits2wu_mod import Fit2Wu, MIN_QUORUM
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
-
-# Setup the Python Path as we may be running this via ssh
-LOG.info('PYTHONPATH = {0}'.format(get_python_path()))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--register', type=int, help='the registration id of a galaxy')
