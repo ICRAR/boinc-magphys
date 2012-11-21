@@ -30,13 +30,14 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import sys
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
-from work_generation import get_python_path
-LOG.info('PYTHONPATH = {0}'.format(get_python_path()))
+sys.path.append('..')
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 from datetime import datetime
 from sqlalchemy.engine import create_engine
