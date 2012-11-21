@@ -36,7 +36,8 @@ LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
-sys.path.append('..')
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 from datetime import datetime
