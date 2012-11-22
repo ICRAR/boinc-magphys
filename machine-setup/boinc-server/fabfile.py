@@ -614,6 +614,11 @@ MYSQL
       create user 'root'@'hostname';
       grant all privileges on *.* to 'root'@'hostname' with grant option;
 
+BOINC
+1) Modify the config.xml to run tasks on the other nodes
+2) If the database is on one of the servers setup the DB host in
+   config.xml
+
 ##########################################################################
 
 ##########################################################################
