@@ -26,13 +26,26 @@
 """
 The Assimilator for the MagPhys code
 """
+
+import os
+import sys
+import logging
+
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../boinc/py')))
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
+
 import time
 import assimilator
 import boinc_path_config
 import math
-import gzip, os, sys, traceback, datetime
+import gzip, traceback, datetime
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
-from xml.dom.minidom import parseString
 from assimilator_utils import is_gzip
 from config import DB_LOGIN, MIN_HIST_VALUE
 from sqlalchemy import create_engine

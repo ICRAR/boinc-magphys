@@ -27,10 +27,20 @@
 Job to assign any credits in the "credited_job" table to the "area_user" table if not present,
 and to remove the rows from "credited_job" table once they have been assigned to the area.
 """
-
+import os
 import sys
-import boinc_path_config
 import logging
+
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../boinc/py')))
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
+
+import boinc_path_config
 
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages, db_base
 from sqlalchemy.engine import create_engine
@@ -39,8 +49,6 @@ from config import DB_LOGIN
 from sqlalchemy import and_
 from database.database_support_core import AREA_USER, AREA
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 class AssignCredit:
     def __init__(self):

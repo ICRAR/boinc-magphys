@@ -607,7 +607,12 @@ SSH
    by BOINC for each server
 2) Connect to each of the servers from the other to ensure they can connect
 
-
+MYSQL
+1) Modify the database.settings file to have the private hostname for the
+   DB server
+2) Allow DB root access from the other servers
+      create user 'root'@'hostname';
+      grant all privileges on *.* to 'root'@'hostname' with grant option;
 
 ##########################################################################
 

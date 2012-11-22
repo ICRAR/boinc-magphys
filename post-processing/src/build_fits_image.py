@@ -27,13 +27,24 @@
 Build a fits image from the data in the database
 """
 from __future__ import print_function
+
+import os
+import sys
+import logging
+
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '../server/src')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../boinc/py')))
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
+
 import argparse
 import glob
-import logging
-import os
 import numpy
 import pyfits
-import sys
 from string import maketrans
 from datetime import datetime
 from sqlalchemy.engine import create_engine
@@ -42,9 +53,6 @@ from sqlalchemy.sql.expression import func, and_
 from config import DB_LOGIN
 from database.database_support_core import PARAMETER_NAME, AREA, GALAXY, FITS_HEADER, PIXEL_RESULT, PIXEL_PARAMETER, PIXEL_HISTOGRAM
 from utils.writeable_dir import WriteableDir
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the images will be written')
