@@ -35,8 +35,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(base_path, '../server/src')))
-sys.path.append(os.path.abspath(os.path.join(base_path, '../../boinc/py')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../server/src')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../boinc/py')))
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import argparse
