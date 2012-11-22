@@ -189,7 +189,7 @@ def edit_files():
     </task>
     <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/fits2wu.py </cmd>
-      <period> 1 hour </period>
+      <period> 10 minutes </period>
       <disabled> 0 </disabled>
       <output> fits2wu.out </output>
     </task>

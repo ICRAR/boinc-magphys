@@ -446,4 +446,4 @@ class FitsImage:
         Determines the galaxies that the selected user has generated results.  Returns an array of
         galaxy_ids.
         """
-        return self._connection.execute(select([GALAXY], from_obj= GALAXY.join(AREA).join(AREA_USER)).where(AREA_USER.c.userid == userid).order_by(GALAXY.c.name, GALAXY.c.version_number))
+        return self._connection.execute(select([GALAXY], from_obj= GALAXY.join(AREA).join(AREA_USER)).distinct().where(AREA_USER.c.userid == userid).order_by(GALAXY.c.name, GALAXY.c.version_number))
