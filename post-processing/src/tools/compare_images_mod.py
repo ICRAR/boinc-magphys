@@ -29,7 +29,6 @@ import logging
 from database.database_support_core import GALAXY
 
 LOG = logging.getLogger(__name__)
-LOG.addHandler(logging.FileHandler('compare_images.log'))
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 class Galaxy:

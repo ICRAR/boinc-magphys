@@ -188,6 +188,18 @@ def edit_files():
       <output> build_png_image.out </output>
     </task>
     <task>
+      <cmd>
+        /home/ec2-user/boinc-magphys/post-processing/src/build_fits_image.py -o /home/ec2-user/output_fits
+      </cmd>
+      <period>
+        6 hours
+      </period>
+      <disabled>0</disabled>
+      <output>
+        build_fits_image.out
+      </output>
+    </task>
+    <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/fits2wu.py </cmd>
       <period> 10 minutes </period>
       <disabled> 0 </disabled>

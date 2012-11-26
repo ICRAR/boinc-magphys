@@ -30,50 +30,53 @@ from matplotlib import pyplot
 from matplotlib.backends.backend_pdf import PdfPages
 
 LOG = logging.getLogger(__name__)
-LOG.addHandler(logging.FileHandler('compare_images.log'))
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-def plot_differences(image_names, galaxy_details, array01, i, j):
+def plot_differences(image_names, galaxy_details, array01, len_galaxy_ids):
     """
     Calculate the raw differences and plot them
     """
-    LOG.info('Comparing %s with %s', galaxy_details[i].name, galaxy_details[j].name)
-    number_elements = len(image_names)
-    data = [[[] for _ in range(3)] for _ in range(number_elements)]
-    for x in range(galaxy_details[0].dimension_x):
-        for y in range(galaxy_details[0].dimension_y):
+    pdf_pages = PdfPages('plots-{0}.pdf'.format(galaxy_details[0].name))
+    for i in range(len_galaxy_ids - 1):
+        for j in range(i + 1, len_galaxy_ids):
+            LOG.info('Comparing %s with %s', galaxy_details[i].name, galaxy_details[j].name)
+            number_elements = len(image_names)
+            data = [[[] for _ in range(3)] for _ in range(number_elements)]
+            for x in range(galaxy_details[0].dimension_x):
+                for y in range(galaxy_details[0].dimension_y):
+                    for z in range(number_elements):
+                        if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
+                            data[z][0].append(array01[x][y][z][i].value - array01[x][y][z][j].value)
+                        if array01[x][y][z][i].median is not None and array01[x][y][z][j].median is not None:
+                            data[z][1].append(array01[x][y][z][i].median - array01[x][y][z][j].median)
+                        if array01[x][y][z][i].highest_prob_bin is not None and array01[x][y][z][j].highest_prob_bin is not None:
+                            data[z][2].append(array01[x][y][z][i].highest_prob_bin - array01[x][y][z][j].highest_prob_bin)
+
             for z in range(number_elements):
-                if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
-                    data[z][0].append(array01[x][y][z][i].value - array01[x][y][z][j].value)
-                if array01[x][y][z][i].median is not None and array01[x][y][z][j].median is not None:
-                    data[z][1].append(array01[x][y][z][i].median - array01[x][y][z][j].median)
-                if array01[x][y][z][i].highest_prob_bin is not None and array01[x][y][z][j].highest_prob_bin is not None:
-                    data[z][2].append(array01[x][y][z][i].highest_prob_bin - array01[x][y][z][j].highest_prob_bin)
+                figure = pyplot.figure()         # the z-th figure
+                figure.subplots_adjust(hspace=.6)
+                pyplot.subplot(3,1,1)             # the first subplot in the figure
+                pyplot.title('{0} - {1} Value - {2}'.format(galaxy_details[i].name, galaxy_details[j].name, image_names[z]))
+                pyplot.xlabel('Difference')
+                pyplot.ylabel('Number')
+                pyplot.text
+                pyplot.grid(True)
+                pyplot.hist(data[z][0], bins=99)
 
-    pdf_pages = PdfPages('plots-{0}-{1}.pdf'.format(galaxy_details[i].name, galaxy_details[j].name))
-    for z in range(number_elements):
-        figure = pyplot.figure()         # the z-th figure
-        figure.subplots_adjust(hspace=.6)
-        pyplot.subplot(3,1,1)             # the first subplot in the figure
-        pyplot.title('Value - {0}'.format(image_names[z]))
-        pyplot.xlabel('Difference')
-        pyplot.ylabel('Number')
-        pyplot.grid(True)
-        pyplot.hist(data[z][0], bins=100)
+                pyplot.subplot(3,1,2)             # the second subplot in the figure
+                pyplot.title('Median - {0}'.format(image_names[z]))
+                pyplot.xlabel('Difference')
+                pyplot.ylabel('Number')
+                pyplot.grid(True)
+                pyplot.hist(data[z][1], bins=99)
 
-        pyplot.subplot(3,1,2)             # the second subplot in the figure
-        pyplot.title('Median - {0}'.format(image_names[z]))
-        pyplot.xlabel('Difference')
-        pyplot.ylabel('Number')
-        pyplot.grid(True)
-        pyplot.hist(data[z][1], bins=100)
+                pyplot.subplot(3,1,3)             # the third subplot
+                pyplot.title('Highest Probability Bin - {0}'.format(image_names[z]))
+                pyplot.xlabel('Difference')
+                pyplot.ylabel('Number')
+                pyplot.grid(True)
+                pyplot.hist(data[z][2], bins=99)
 
-        pyplot.subplot(3,1,3)             # the third subplot
-        pyplot.title('Highest Probability Bin - {0}'.format(image_names[z]))
-        pyplot.xlabel('Difference')
-        pyplot.ylabel('Number')
-        pyplot.grid(True)
-        pyplot.hist(data[z][2], bins=100)
+                pdf_pages.savefig()
 
-        pdf_pages.savefig()
     pdf_pages.close()

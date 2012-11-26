@@ -38,7 +38,6 @@ from tools.compare_images_mod import Galaxy, Values, matches, calculate_mean_squ
 from tools.compare_images_plot import plot_differences
 
 LOG = logging.getLogger(__name__)
-LOG.addHandler(logging.FileHandler('compare_images.log'))
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 parser = argparse.ArgumentParser('Compare a number of galaxies')
@@ -111,9 +110,10 @@ for galaxy_ids in list_galaxy_ids:
 
     # Now compare them all
     LOG.info('Comparing them all')
-    for i in range(len_galaxy_ids - 1):
-        for j in range(i + 1, len_galaxy_ids):
-            if args['calc'] == 'mse':
-                calculate_mean_squared_error(range(LEN_NAMES), galaxy_details, array01, i, j)
-            else:
-                plot_differences(IMAGE_NAMES, galaxy_details, array01, i, j)
+    if args['calc'] == 'mse':
+        for i in range(len_galaxy_ids - 1):
+            for j in range(i + 1, len_galaxy_ids):
+                if args['calc'] == 'mse':
+                    calculate_mean_squared_error(range(LEN_NAMES), galaxy_details, array01, i, j)
+    else:
+        plot_differences(IMAGE_NAMES, galaxy_details, array01, len_galaxy_ids)
