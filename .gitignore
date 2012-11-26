@@ -4,3 +4,4 @@
 *.pyc
 *.settings
 *.lbr
+post-processing/src/tools/compare_images.log

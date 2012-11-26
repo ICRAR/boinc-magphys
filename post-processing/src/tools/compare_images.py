@@ -35,6 +35,7 @@ from sqlalchemy.sql.expression import and_
 from config import DB_LOGIN
 from database.database_support_core import GALAXY, PIXEL_RESULT, PIXEL_PARAMETER
 from tools.compare_images_mod import Galaxy, Values, matches, calculate_mean_squared_error
+from tools.compare_images_plot import plot_differences
 
 LOG = logging.getLogger(__name__)
 LOG.addHandler(logging.FileHandler('compare_images.log'))

@@ -26,32 +26,37 @@
 The plot routines
 """
 from matplotlib import pyplot
+from matplotlib.backends.backend_pdf import PdfPages
 
 def plot_differences(range_mse, galaxy_details, array01, i, j):
     """
     Calculate the raw differences and plot them
     """
+    data = [[[],[],[]] for values in range_mse]
     for x in range(galaxy_details[0].dimension_x):
         for y in range(galaxy_details[0].dimension_y):
             for z in range_mse:
                 if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
-                    pass # TODO
+                    data[z][0].append(array01[x][y][z][i].value - array01[x][y][z][j].value)
                 if array01[x][y][z][i].median is not None and array01[x][y][z][j].median is not None:
-                    pass #TODO
+                    data[z][1].append(array01[x][y][z][i].median - array01[x][y][z][j].median)
                 if array01[x][y][z][i].highest_prob_bin is not None and array01[x][y][z][j].highest_prob_bin is not None:
-                    pass #TODO
+                    data[z][2].append(array01[x][y][z][i].highest_prob_bin - array01[x][y][z][j].highest_prob_bin)
 
-figure = pyplot.figure(1)         # the first figure
-figure.subplots_adjust(hspace=.5)
-pyplot.subplot(3,1,1)             # the first subplot in the first figure
-pyplot.title('Value')
-pyplot.plot([1,2,3])
+    pdf_pages = PdfPages('plots.pdf')
+    for z in range_mse:
+        figure = pyplot.figure(z)         # the z-th figure
+        figure.subplots_adjust(hspace=.5)
+        pyplot.subplot(3,1,1)             # the first subplot in the figure
+        pyplot.title('Value {0}'.format(z))
+        pyplot.hist(data[z][0], bins=100)
 
-pyplot.subplot(3,1,2)             # the second subplot in the first figure
-pyplot.title('Median')
-pyplot.plot([4,5,6])
+        pyplot.subplot(3,1,2)             # the second subplot in the figure
+        pyplot.title('Median {0}'.format(z))
+        pyplot.plot(data[z][1], bins=100)
 
-pyplot.subplot(3,1,3)             # the third subplot
-pyplot.title('Highest Probability Bin')   # subplot 211 title
-
-pyplot.show()
+        pyplot.subplot(3,1,3)             # the third subplot
+        pyplot.title('Highest Probability Bin {0}'.format(z))
+        pyplot.plot(data[z][2], bins=100)
+        pdf_pages.savefig(z)
+    pdf_pages.close()
