@@ -75,5 +75,5 @@ def plot_differences(image_names, galaxy_details, array01, i, j):
         pyplot.grid(True)
         pyplot.hist(data[z][2], bins=100)
 
-        pdf_pages.savefig(z)
+        pdf_pages.savefig()
     pdf_pages.close()
