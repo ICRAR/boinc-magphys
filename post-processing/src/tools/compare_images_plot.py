@@ -59,7 +59,6 @@ def plot_differences(image_names, galaxy_details, array01, len_galaxy_ids):
                 pyplot.title('{0} - {1} Value - {2}'.format(galaxy_details[i].name, galaxy_details[j].name, image_names[z]))
                 pyplot.xlabel('Difference')
                 pyplot.ylabel('Number')
-                pyplot.text
                 pyplot.grid(True)
                 pyplot.hist(data[z][0], bins=99)
 
