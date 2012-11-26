@@ -47,8 +47,8 @@ parser.add_argument('type', choices=['run', 'galaxy'], help='are the ids galaxy 
 parser.add_argument('ids', nargs='*', type=int, help='the galaxy_ids of the galaxies to compare or the run_ids')
 args = vars(parser.parse_args())
 
-IMAGE_NAMES_MSE = ['fmu_sfh', 'fmu_ir', 'mu', 's_sfr', 'm', 'ldust', 'mdust', 'sfr']
-LEN_NAMES_MSE = len(IMAGE_NAMES_MSE)
+IMAGE_NAMES = ['fmu_sfh', 'fmu_ir', 'mu', 's_sfr', 'm', 'ldust', 'mdust', 'sfr']
+LEN_NAMES = len(IMAGE_NAMES)
 PARAMETER_NUMBERS = [1, 2, 3, 5, 6, 7, 15, 16]
 
 # First check the galaxy exists in the database
@@ -86,7 +86,7 @@ for galaxy_ids in list_galaxy_ids:
             LOG.error('The galaxies are different sizes (%d x %d) vs (%d x %d)', galaxy_details[i].dimension_x, galaxy_details[i].dimension_y, galaxy_details[i + 1].dimension_x, galaxy_details[i + 1].dimension_y)
             exit(1)
 
-    array01 = [[[[Values() for galaxies in range(len(galaxy_details))] for depth in range(LEN_NAMES_MSE)] for col in range(galaxy_details[0].dimension_y)] for row in range(galaxy_details[0].dimension_x)]
+    array01 = [[[[Values() for galaxies in range(len(galaxy_details))] for depth in range(LEN_NAMES)] for col in range(galaxy_details[0].dimension_y)] for row in range(galaxy_details[0].dimension_x)]
 
     # Load the data
     for i in range(len(galaxy_details)):
@@ -114,6 +114,6 @@ for galaxy_ids in list_galaxy_ids:
     for i in range(len_galaxy_ids - 1):
         for j in range(i + 1, len_galaxy_ids):
             if args['calc'] == 'mse':
-                calculate_mean_squared_error(range(LEN_NAMES_MSE), galaxy_details, array01, i, j)
+                calculate_mean_squared_error(range(LEN_NAMES), galaxy_details, array01, i, j)
             else:
-                plot_differences(range(LEN_NAMES_MSE), galaxy_details, array01, i, j)
+                plot_differences(LEN_NAMES, galaxy_details, array01, i, j)
