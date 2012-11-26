@@ -34,14 +34,15 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
 from config import DB_LOGIN
 from database.database_support_core import GALAXY, PIXEL_RESULT, PIXEL_PARAMETER
-from tools.compare_images_mod import Galaxy, Values, ErrorValues, update, print_mean_square_error, MaxMins, matches
+from tools.compare_images_mod import Galaxy, Values, matches, calculate_mean_squared_error
 
 LOG = logging.getLogger(__name__)
 LOG.addHandler(logging.FileHandler('compare_images.log'))
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 parser = argparse.ArgumentParser('Compare a number of galaxies')
-parser.add_argument('type', choices=['run', 'galaxy'])
+parser.add_argument('calc', choices=['mse', 'hist'], help='are we calculating mse or plotting differences')
+parser.add_argument('type', choices=['run', 'galaxy'], help='are the ids galaxy or run ids')
 parser.add_argument('ids', nargs='*', type=int, help='the galaxy_ids of the galaxies to compare or the run_ids')
 args = vars(parser.parse_args())
 
@@ -111,45 +112,7 @@ for galaxy_ids in list_galaxy_ids:
     LOG.info('Comparing them all')
     for i in range(len_galaxy_ids - 1):
         for j in range(i + 1, len_galaxy_ids):
-            mean_squared_error = [ErrorValues() for x in range(LEN_NAMES_MSE)]
-
-            max_min = [MaxMins() for x in range(LEN_NAMES_MSE)]
-            pixel_count = 0
-            for x in range(galaxy_details[0].dimension_x):
-                for y in range(galaxy_details[0].dimension_y):
-                    if array01[x][y][0][i].value is not None and array01[x][y][0][j].value is not None:
-                        pixel_count += 1
-                    for z in range(LEN_NAMES_MSE):
-                        if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
-                            update(array01[x][y][z][i].value, array01[x][y][z][j].value, mean_squared_error[z].value, max_min[z].value)
-                        if array01[x][y][z][i].median is not None and array01[x][y][z][j].median is not None:
-                            update(array01[x][y][z][i].median, array01[x][y][z][j].median, mean_squared_error[z].median, max_min[z].median)
-                        if array01[x][y][z][i].highest_prob_bin is not None and array01[x][y][z][j].highest_prob_bin is not None:
-                            update(array01[x][y][z][i].highest_prob_bin, array01[x][y][z][j].highest_prob_bin, mean_squared_error[z].highest_prob_bin, max_min[z].highest_prob_bin)
-
-
-
-            LOG.info('''
-Galaxy, {0}, {1}
-Pixel Count, {2}
-Parameter,  MSE Value,       Max,         Min,    Match, Mismatch, MSE Median,        Max,        Min,    Match, Mismatch, MSE High P,        Max,        Min,    Match, Mismatch
-fmu_sfh  , {3}
-fmu_ir   , {4}
-mu       , {5}
-s_sfr    , {6}
-m        , {7}
-ldust    , {8}
-mdust    , {9}
-sfr      , {10}
-'''.format(galaxy_details[i].name,                                                 # 00
-                galaxy_details[j].name,                                                    # 01
-                pixel_count,                                                               # 02
-                print_mean_square_error(mean_squared_error[0], pixel_count, max_min[0]),   # 03
-                print_mean_square_error(mean_squared_error[1], pixel_count, max_min[1]),   # 04
-                print_mean_square_error(mean_squared_error[2], pixel_count, max_min[2]),   # 05
-                print_mean_square_error(mean_squared_error[3], pixel_count, max_min[3]),   # 06
-                print_mean_square_error(mean_squared_error[4], pixel_count, max_min[4]),   # 07
-                print_mean_square_error(mean_squared_error[5], pixel_count, max_min[5]),   # 08
-                print_mean_square_error(mean_squared_error[6], pixel_count, max_min[6]),   # 09
-                print_mean_square_error(mean_squared_error[7], pixel_count, max_min[7]),   # 10
-            ))
+            if args['calc'] == 'mse':
+                calculate_mean_squared_error(range(LEN_NAMES_MSE), galaxy_details, array01, i, j)
+            else:
+                plot_differences(range(LEN_NAMES_MSE), galaxy_details, array01, i, j)

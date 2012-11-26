@@ -218,6 +218,7 @@ class Fit2Wu:
         <url>{1}</url>
         <md5_cksum>{2}</md5_cksum>
         <nbytes>{3}</nbytes>
+        <no_delete/>
     </file_info>
     <file_info>
         <number>5</number>
@@ -225,6 +226,7 @@ class Fit2Wu:
         <url>{4}</url>
         <md5_cksum>{5}</md5_cksum>
         <nbytes>{6}</nbytes>
+        <no_delete/>
     </file_info>
 
     <workunit>
@@ -322,7 +324,7 @@ class Fit2Wu:
 '''.format(i))
 
         file.write('''   <task>
-      <application>concat</application>
+      <application>concat</application>            ded
       <command_line>{0} output.fit</command_line>
       <stdout_filename>stdout_file</stdout_filename>
       <stderr_filename>stderr_file</stderr_filename>
@@ -337,14 +339,16 @@ class Fit2Wu:
         Create dummy model files
         """
         new_full_path = subprocess.check_output([BIN_PATH + '/dir_hier_path', file_name_star_formation_history]).rstrip()
-        file = open(new_full_path, 'wb')
-        file.write(' 1  {0}'.format(self._rounded_redshift))
-        file.close()
+        if not os.path.exists(new_full_path):
+            file = open(new_full_path, 'wb')
+            file.write(' 1  {0}'.format(self._rounded_redshift))
+            file.close()
 
         new_full_path = subprocess.check_output([BIN_PATH + '/dir_hier_path', file_name_infrared]).rstrip()
-        file = open(new_full_path, 'wb')
-        file.write(' 1  {0}'.format(self._rounded_redshift))
-        file.close()
+        if not os.path.exists(new_full_path):
+            file = open(new_full_path, 'wb')
+            file.write(' 1  {0}'.format(self._rounded_redshift))
+            file.close()
 
     def _create_observation_file(self, filename, data, pixels):
         """
