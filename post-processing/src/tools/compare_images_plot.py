@@ -32,7 +32,7 @@ def plot_differences(range_mse, galaxy_details, array01, i, j):
     """
     Calculate the raw differences and plot them
     """
-    data = [[[],[],[]] for values in range_mse]
+    data = [[[] for _ in range(3)] for _ in range_mse]
     for x in range(galaxy_details[0].dimension_x):
         for y in range(galaxy_details[0].dimension_y):
             for z in range_mse:
@@ -43,7 +43,7 @@ def plot_differences(range_mse, galaxy_details, array01, i, j):
                 if array01[x][y][z][i].highest_prob_bin is not None and array01[x][y][z][j].highest_prob_bin is not None:
                     data[z][2].append(array01[x][y][z][i].highest_prob_bin - array01[x][y][z][j].highest_prob_bin)
 
-    pdf_pages = PdfPages('plots.pdf')
+    pdf_pages = PdfPages('plots{0}-{1}.pdf'.format(galaxy_details[i].name, galaxy_details[j].name))
     for z in range_mse:
         figure = pyplot.figure(z)         # the z-th figure
         figure.subplots_adjust(hspace=.5)
@@ -53,10 +53,10 @@ def plot_differences(range_mse, galaxy_details, array01, i, j):
 
         pyplot.subplot(3,1,2)             # the second subplot in the figure
         pyplot.title('Median {0}'.format(z))
-        pyplot.plot(data[z][1], bins=100)
+        pyplot.hist(data[z][1], bins=100)
 
         pyplot.subplot(3,1,3)             # the third subplot
         pyplot.title('Highest Probability Bin {0}'.format(z))
-        pyplot.plot(data[z][2], bins=100)
+        pyplot.hist(data[z][2], bins=100)
         pdf_pages.savefig(z)
     pdf_pages.close()
