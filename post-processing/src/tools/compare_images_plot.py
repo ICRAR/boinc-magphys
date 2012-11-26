@@ -25,13 +25,19 @@
 """
 The plot routines
 """
+import logging
 from matplotlib import pyplot
 from matplotlib.backends.backend_pdf import PdfPages
+
+LOG = logging.getLogger(__name__)
+LOG.addHandler(logging.FileHandler('compare_images.log'))
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 def plot_differences(image_names, galaxy_details, array01, i, j):
     """
     Calculate the raw differences and plot them
     """
+    LOG.info('Comparing %s with %s', galaxy_details[i].name, galaxy_details[j].name)
     number_elements = len(image_names)
     data = [[[] for _ in range(3)] for _ in range(number_elements)]
     for x in range(galaxy_details[0].dimension_x):
@@ -46,26 +52,26 @@ def plot_differences(image_names, galaxy_details, array01, i, j):
 
     pdf_pages = PdfPages('plots-{0}-{1}.pdf'.format(galaxy_details[i].name, galaxy_details[j].name))
     for z in range(number_elements):
-        figure = pyplot.figure(z)         # the z-th figure
-        figure.subplots_adjust(hspace=.5)
+        figure = pyplot.figure()         # the z-th figure
+        figure.subplots_adjust(hspace=.6)
         pyplot.subplot(3,1,1)             # the first subplot in the figure
         pyplot.title('Value - {0}'.format(image_names[z]))
         pyplot.xlabel('Difference')
-        pyplot.ylabel('NUmber')
+        pyplot.ylabel('Number')
         pyplot.grid(True)
         pyplot.hist(data[z][0], bins=100)
 
         pyplot.subplot(3,1,2)             # the second subplot in the figure
         pyplot.title('Median - {0}'.format(image_names[z]))
         pyplot.xlabel('Difference')
-        pyplot.ylabel('NUmber')
+        pyplot.ylabel('Number')
         pyplot.grid(True)
         pyplot.hist(data[z][1], bins=100)
 
         pyplot.subplot(3,1,3)             # the third subplot
         pyplot.title('Highest Probability Bin - {0}'.format(image_names[z]))
         pyplot.xlabel('Difference')
-        pyplot.ylabel('NUmber')
+        pyplot.ylabel('Number')
         pyplot.grid(True)
         pyplot.hist(data[z][2], bins=100)
 
