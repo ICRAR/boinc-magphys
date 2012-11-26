@@ -116,4 +116,4 @@ for galaxy_ids in list_galaxy_ids:
             if args['calc'] == 'mse':
                 calculate_mean_squared_error(range(LEN_NAMES), galaxy_details, array01, i, j)
             else:
-                plot_differences(LEN_NAMES, galaxy_details, array01, i, j)
+                plot_differences(IMAGE_NAMES, galaxy_details, array01, i, j)
