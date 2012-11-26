@@ -55,8 +55,9 @@ def plot_differences(image_names, galaxy_details, array01, len_galaxy_ids):
             for z in range(number_elements):
                 figure = pyplot.figure()         # the z-th figure
                 figure.subplots_adjust(hspace=.6)
+                figure.suptitle('{0} vs {1}'.format(galaxy_details[i].name, galaxy_details[j].name))
                 pyplot.subplot(3,1,1)             # the first subplot in the figure
-                pyplot.title('{0} - {1} Value - {2}'.format(galaxy_details[i].name, galaxy_details[j].name, image_names[z]))
+                pyplot.title('Value - {0}'.format(image_names[z]))
                 pyplot.xlabel('Difference')
                 pyplot.ylabel('Number')
                 pyplot.grid(True)
