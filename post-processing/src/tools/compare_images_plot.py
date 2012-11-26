@@ -33,10 +33,10 @@ def plot_differences(image_names, galaxy_details, array01, i, j):
     Calculate the raw differences and plot them
     """
     number_elements = len(image_names)
-    data = [[[] for _ in range(3)] for _ in number_elements]
+    data = [[[] for _ in range(3)] for _ in range(number_elements)]
     for x in range(galaxy_details[0].dimension_x):
         for y in range(galaxy_details[0].dimension_y):
-            for z in number_elements:
+            for z in range(number_elements):
                 if array01[x][y][z][i].value is not None and array01[x][y][z][j].value is not None:
                     data[z][0].append(array01[x][y][z][i].value - array01[x][y][z][j].value)
                 if array01[x][y][z][i].median is not None and array01[x][y][z][j].median is not None:
@@ -45,7 +45,7 @@ def plot_differences(image_names, galaxy_details, array01, i, j):
                     data[z][2].append(array01[x][y][z][i].highest_prob_bin - array01[x][y][z][j].highest_prob_bin)
 
     pdf_pages = PdfPages('plots-{0}-{1}.pdf'.format(galaxy_details[i].name, galaxy_details[j].name))
-    for z in number_elements:
+    for z in range(number_elements):
         figure = pyplot.figure(z)         # the z-th figure
         figure.subplots_adjust(hspace=.5)
         pyplot.subplot(3,1,1)             # the first subplot in the figure
