@@ -56,8 +56,6 @@ from utils.writeable_dir import WriteableDir
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the images will be written')
-parser.add_argument('-m', '--median', action='store_true', help='also generate the images using the median value')
-parser.add_argument('-p', '--highest_prob_bin_v', action='store_true', help='also generate the images using the highest probability bin value')
 parser.add_argument('names', nargs='*', help='optional the name of tha galaxies to produce')
 args = vars(parser.parse_args())
 
@@ -105,9 +103,6 @@ if len(args['names']) > 0:
 else:
     LOG.info('Building FITS files for all the galaxies')
 
-median = args['median']
-highest_prob_bin_v_ = args['highest_prob_bin_v']
-
 for galaxy in connection.execute(query):
     galaxy__name = galaxy[GALAXY.c.name]
     galaxy__version_number = galaxy[GALAXY.c.version_number]
@@ -139,14 +134,12 @@ for galaxy in connection.execute(query):
     array_best_fit.fill(numpy.NaN)
 
     array_median = None
-    if median:
-        array_median = numpy.empty((galaxy__dimension_y, galaxy__dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
-        array_median.fill(numpy.NaN)
+    array_median = numpy.empty((galaxy__dimension_y, galaxy__dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
+    array_median.fill(numpy.NaN)
 
     array_highest_prob_bin_v = None
-    if highest_prob_bin_v_:
-        array_highest_prob_bin_v = numpy.empty((galaxy__dimension_y, galaxy__dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
-        array_highest_prob_bin_v.fill(numpy.NaN)
+    array_highest_prob_bin_v = numpy.empty((galaxy__dimension_y, galaxy__dimension_x, len(IMAGE_NAMES)), dtype=numpy.float)
+    array_highest_prob_bin_v.fill(numpy.NaN)
 
     # Get the header values
     header = {}
@@ -182,35 +175,32 @@ for galaxy in connection.execute(query):
         array_best_fit[row__y, row__x, 14] = row[PIXEL_RESULT.c.mdust]
         array_best_fit[row__y, row__x, 15] = row[PIXEL_RESULT.c.sfr]
 
-        if median or highest_prob_bin_v_:
-            for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id])):
-                if 1 <= pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] <= 16:
-                    index = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
-                    if median:
-                        array_median[row__y, row__x, index] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
+        for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id])):
+            if 1 <= pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] <= 16:
+                index = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
+                array_median[row__y, row__x, index] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
 
-                    if highest_prob_bin_v_:
-                        # Have we worked this value out before
-                        if pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] is None:
-                            pixel_histogram = connection.execute(select([PIXEL_HISTOGRAM]).where(
-                                and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
-                                     PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id],
-                                     PIXEL_HISTOGRAM.c.hist_value ==
-                                        select([func.max(PIXEL_HISTOGRAM.c.hist_value)]).
-                                            where(and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
-                                                       PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id]))))).first()
+                # Have we worked this value out before
+                if pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] is None:
+                    pixel_histogram = connection.execute(select([PIXEL_HISTOGRAM]).where(
+                        and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
+                             PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id],
+                             PIXEL_HISTOGRAM.c.hist_value ==
+                                select([func.max(PIXEL_HISTOGRAM.c.hist_value)]).
+                                    where(and_(PIXEL_HISTOGRAM.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id],
+                                               PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id]))))).first()
 
 
-                            if pixel_histogram is not None:
-                                array_highest_prob_bin_v[row__y, row__x, index] = pixel_histogram[PIXEL_HISTOGRAM.c.x_axis]
+                    if pixel_histogram is not None:
+                        array_highest_prob_bin_v[row__y, row__x, index] = pixel_histogram[PIXEL_HISTOGRAM.c.x_axis]
 
-                                # Update the database
-                                connection.execute(PIXEL_PARAMETER.update().
-                                    where(PIXEL_PARAMETER.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id]).
-                                    values(high_prob_bin = pixel_histogram[PIXEL_HISTOGRAM.c.x_axis]))
+                        # Update the database
+                        connection.execute(PIXEL_PARAMETER.update().
+                            where(PIXEL_PARAMETER.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id]).
+                            values(high_prob_bin = pixel_histogram[PIXEL_HISTOGRAM.c.x_axis]))
 
-                        else:
-                            array_highest_prob_bin_v[row__y, row__x, index] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin]
+                else:
+                    array_highest_prob_bin_v[row__y, row__x, index] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin]
 
     # Commit any changes
     transaction.commit()
@@ -238,7 +228,7 @@ for galaxy in connection.execute(query):
         name_count += 1
 
     # If the medians are required produce them
-    if median and array_median is not None:
+    if array_median is not None:
         name_count = 0
         for name in IMAGE_NAMES:
             hdu = pyfits.PrimaryHDU(array_median[:,:,name_count])
@@ -260,7 +250,7 @@ for galaxy in connection.execute(query):
                 hdu_list.writeto('{0}/{1}_V{3}_{2}_median.fits'.format(directory, galaxy__name, name, galaxy.version_number), clobber=True)
             name_count += 1
 
-    if highest_prob_bin_v_ and array_highest_prob_bin_v is not None:
+    if array_highest_prob_bin_v is not None:
         name_count = 0
         for name in IMAGE_NAMES:
             hdu = pyfits.PrimaryHDU(array_highest_prob_bin_v[:,:,name_count])
