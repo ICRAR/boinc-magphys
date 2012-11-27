@@ -248,6 +248,15 @@ class FitsImage:
             image2_filters = [325, 324, 323]
             image3_filters = [326, 324, 323]
             image4_filters = [327, 325, 323]
+        elif 229 in filters_used\
+            and 230 in filters_used\
+            and 231 in filters_used\
+            and 232 in filters_used\
+            and 233 in filters_used:
+            image1_filters = [232, 231, 230]
+            image2_filters = [231, 230, 229]
+            image3_filters = [232, 230, 229]
+            image4_filters = [233, 231, 229]
         elif 116 in filters_used \
             and 117 in filters_used \
             and 118 in filters_used \
