@@ -197,7 +197,7 @@ class ImageBuilder:
                     redValuerange[red] += 1
                     greenValuerange[green] += 1
                     blueValuerange[blue] += 1
-                    self.image.putpixel((x,self.width-y-1), (red, green, blue))
+                    self.image.putpixel((x, self.height-y-1), (red, green, blue))
         self.image.save(self.imageFileName)
 
         if self.thumbnailFileName:
