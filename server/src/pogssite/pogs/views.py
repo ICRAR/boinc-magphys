@@ -261,7 +261,7 @@ def galaxyList(request):
     connection = pogs_engine.connect()
     query = select([GALAXY]).where(GALAXY.c.current == True)
     if type == "S":
-        query = query.filter(and_(GALAXY.c.galaxy_type.like('S%'), not_(GALAXY.c.galaxy_type.like('SB%')), not_(GALAXY.c.galaxy_type.like('S0%'))))
+        query = query.where(and_(GALAXY.c.galaxy_type.like('S%'), not_(GALAXY.c.galaxy_type.like('SB%')), not_(GALAXY.c.galaxy_type.like('S0%'))))
     elif type == "SB":
         query = query.where(GALAXY.c.galaxy_type.like('SB%'))
     elif type == "L":
@@ -272,7 +272,7 @@ def galaxyList(request):
         query = query.where(GALAXY.c.galaxy_type.like('I%'))
 
     if name != "":
-        query = query.filter(GALAXY.c.name.like('" + name + "%'))
+        query = query.where(GALAXY.c.name.like('" + name + "%'))
 
     if ra_from != "" and ra_to != "":
         query = query.where(GALAXY.c.ra_cent.between(float(ra_from), float(ra_to)))

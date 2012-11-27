@@ -140,6 +140,12 @@ def edit_files():
       <output> update_uotd.out </output>
     </task>
     <task>
+      <cmd> run_in_ops ./autolock.php --ndays 30 </cmd>
+      <period> 1 days </period>
+      <disabled> 0 </disabled>
+      <output> autolock.out </output>
+    </task>
+    <task>
       <cmd> run_in_ops ./update_forum_activities.php </cmd>
       <period> 1 hour </period>
       <disabled> 0 </disabled>
