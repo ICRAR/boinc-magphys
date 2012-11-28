@@ -30,10 +30,10 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import Context, loader
 from sqlalchemy.sql.expression import select, and_, not_
 from config import DJANGO_IMAGE_DIR
-from database.database_support_core import GALAXY
 from image import fitsimage
 from pogs.models import Galaxy
 from pogs import pogs_engine
+from database.database_support_core import AREA, AREA_USER, GALAXY
 
 class GalaxyLine:
     def __init__(self):
@@ -86,12 +86,11 @@ def setReferrer(response, referer):
 
 def userGalaxies(request, userid):
     pogs_connection = pogs_engine.connect()
-    image = fitsimage.FitsImage(pogs_connection)
 
     user_galaxy_list = []
     idx = 0
     galaxy_line = GalaxyLine()
-    for galaxy in image.userGalaxies(userid):
+    for galaxy in user_galaxies(pogs_connection, userid):
         name = galaxy.name
         if galaxy.version_number > 1:
             name = galaxy.name + "[" + str(galaxy.version_number) + "]"
@@ -272,7 +271,7 @@ def galaxyList(request):
         query = query.where(GALAXY.c.galaxy_type.like('I%'))
 
     if name != "":
-        query = query.where(GALAXY.c.name.like('" + name + "%'))
+        query = query.where(GALAXY.c.name.like('"' + name + '"%'))
 
     if ra_from != "" and ra_to != "":
         query = query.where(GALAXY.c.ra_cent.between(float(ra_from), float(ra_to)))
@@ -296,6 +295,7 @@ def galaxyList(request):
         query = query.order_by(GALAXY.c.galaxy_type)
         query = query.order_by(GALAXY.c.name, GALAXY.c.version_number)
     elif sort == "USED":
+        query = query.order_by(GALAXY.c.image_time.desc())
         query = query.order_by(GALAXY.c.name, GALAXY.c.version_number)
     else:
         query = query.order_by(GALAXY.c.name, GALAXY.c.version_number)
@@ -429,3 +429,10 @@ def galaxyParameterImage(request, galaxy_id, name):
     response['Expires'] = expires
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
+
+def user_galaxies(connection, userid):
+    """
+    Determines the galaxies that the selected user has generated results.  Returns an array of
+    galaxy_ids.
+    """
+    return connection.execute(select([GALAXY], from_obj= GALAXY.join(AREA).join(AREA_USER)).distinct().where(AREA_USER.c.userid == userid).order_by(GALAXY.c.image_time.desc(), GALAXY.c.name, GALAXY.c.version_number))

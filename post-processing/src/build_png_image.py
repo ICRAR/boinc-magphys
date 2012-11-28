@@ -234,7 +234,7 @@ for galaxy in connection.execute(query):
                     red = FIRE_R[value]
                     green = FIRE_G[value]
                     blue = FIRE_B[value]
-                    image.putpixel((x, width-y-1), (red, green, blue))
+                    image.putpixel((x, height-y-1), (red, green, blue))
         outname = fits_image.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
         image.save(outname)
 

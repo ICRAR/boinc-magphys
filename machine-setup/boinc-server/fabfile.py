@@ -494,11 +494,11 @@ def gluster1():
     gluster_install()
 
     # Wait for things to settle down
-    time.sleep(5)
+    time.sleep(15)
     format_drive()
 
     # Wait for things to settle down
-    time.sleep(5)
+    time.sleep(15)
 
 @task
 @serial
@@ -511,7 +511,7 @@ def gluster2():
     gluster_probe()
 
     # Wait for things to settle down
-    time.sleep(5)
+    time.sleep(15)
 
 @task
 @serial
@@ -524,11 +524,11 @@ def gluster3():
     gluster_mount()
 
     # Wait for things to settle down
-    time.sleep(5)
+    time.sleep(15)
     create_shared_home()
 
     # Wait for things to settle down
-    time.sleep(5)
+    time.sleep(15)
 
 @task
 @serial

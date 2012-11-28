@@ -225,6 +225,7 @@ RUN_FILE = Table('run_file',
 
 RUN_FILTER = Table('run_filter',
     MAGPHYS_METADATA,
-    Column('run_id'   , BigInteger, ForeignKey('run.run_id')),
-    Column('filter_id', BigInteger, ForeignKey('filter.filter_id'))
+    Column('run_filter_id', BigInteger, primary_key=True),
+    Column('run_id'       , BigInteger, ForeignKey('run.run_id')),
+    Column('filter_id'    , BigInteger, ForeignKey('filter.filter_id'))
 )

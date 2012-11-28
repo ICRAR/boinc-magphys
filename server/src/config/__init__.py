@@ -36,6 +36,7 @@ DB_NAME = None
 BOINC_DB_NAME = None
 DB_LOGIN = None
 BOINC_DB_LOGIN = None
+PLEIADES_DB_LOGIN = None
 
 db_file_name = dirname(__file__) + '/database.settings'
 if exists(db_file_name):
@@ -47,6 +48,7 @@ if exists(db_file_name):
     BOINC_DB_NAME = config['boincDatabaseName']
     DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@" + DB_HOSTNAME + "/" + DB_NAME
     BOINC_DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@" + DB_HOSTNAME + "/" + BOINC_DB_NAME
+    PLEIADES_DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@pleiades01.icrar.org/" + DB_NAME
 
 else:
     DB_LOGIN = "mysql://root:@localhost/magphys"
@@ -94,7 +96,7 @@ else:
     WG_THRESHOLD = 1500
     WG_HIGH_WATER_MARK = 3000
 
-############### Work Generation Settings ###############
+############### Assimilator Settings ###############
 
 # Any probability in the pixel histogram less than this is considered to be 0 and ignored
 MIN_HIST_VALUE = 0.01

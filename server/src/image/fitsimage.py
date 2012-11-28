@@ -33,7 +33,7 @@ import numpy
 from PIL import Image
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
-from database.database_support_core import IMAGE_FILTERS_USED, FILTER, AREA, AREA_USER, GALAXY
+from database.database_support_core import IMAGE_FILTERS_USED, FILTER, AREA, AREA_USER
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -449,10 +449,3 @@ class FitsImage:
         if b < 85:
             b = 85
         image.putpixel((x,y), (r, g, b))
-
-    def userGalaxies(self, userid):
-        """
-        Determines the galaxies that the selected user has generated results.  Returns an array of
-        galaxy_ids.
-        """
-        return self._connection.execute(select([GALAXY], from_obj= GALAXY.join(AREA).join(AREA_USER)).distinct().where(AREA_USER.c.userid == userid).order_by(GALAXY.c.name, GALAXY.c.version_number))
