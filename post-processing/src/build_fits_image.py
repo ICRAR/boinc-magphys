@@ -116,9 +116,9 @@ for galaxy in connection.execute(query):
 
     # Create the directory to hold the fits files
     if galaxy__version_number == 1:
-        directory = directory_mod.get_file_path(OUTPUT_DIRECTORY, galaxy__name)
+        directory = directory_mod.get_file_path(OUTPUT_DIRECTORY, galaxy__name, True)
     else:
-        directory = directory_mod.get_file_path(OUTPUT_DIRECTORY, '{0}_V{1}'.format(galaxy__name, galaxy__version_number))
+        directory = directory_mod.get_file_path(OUTPUT_DIRECTORY, '{0}_V{1}'.format(galaxy__name, galaxy__version_number), True)
 
     if not os.path.exists(directory):
         os.makedirs(directory)

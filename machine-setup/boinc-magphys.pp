@@ -135,3 +135,10 @@ file { "/home/ec2-user/galaxyImages":
     group  => ec2-user,
     mode   => 775,
 }
+
+file { "/home/ec2-user/output_fits":
+    ensure => "directory",
+    owner  => ec2-user,
+    group  => ec2-user,
+    mode   => 775,
+}
