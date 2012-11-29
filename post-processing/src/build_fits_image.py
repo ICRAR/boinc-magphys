@@ -31,6 +31,7 @@ from __future__ import print_function
 import os
 import sys
 import logging
+from image import directory_mod
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -115,9 +116,9 @@ for galaxy in connection.execute(query):
 
     # Create the directory to hold the fits files
     if galaxy__version_number == 1:
-        directory = '{0}/{1}'.format(OUTPUT_DIRECTORY, galaxy__name)
+        directory = directory_mod.get_file_path(OUTPUT_DIRECTORY, galaxy__name)
     else:
-        directory = '{0}/{1}_V{2}'.format(OUTPUT_DIRECTORY, galaxy__name, galaxy__version_number)
+        directory = directory_mod.get_file_path(OUTPUT_DIRECTORY, '{0}_V{1}'.format(galaxy__name, galaxy__version_number))
 
     if not os.path.exists(directory):
         os.makedirs(directory)

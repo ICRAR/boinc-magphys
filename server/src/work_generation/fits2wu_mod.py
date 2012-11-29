@@ -39,6 +39,7 @@ from datetime import datetime
 from sqlalchemy.sql.expression import select, func, and_
 from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, RUN_FILE, FITS_HEADER
+from image import directory_mod
 from image.fitsimage import FitsImage
 from work_generation import HEADER_PATTERNS, STAR_FORMATION_FILE, INFRARED_FILE
 
@@ -179,7 +180,7 @@ class Fit2Wu:
         image = FitsImage(self._connection)
         image.buildImage(self._filename, WG_IMAGE_DIRECTORY, filePrefixName, False, self._galaxy_id)
 
-        shutil.copyfile(self._filename, image.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
+        shutil.copyfile(self._filename, directory_mod.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
 
         return self._work_units_added, self._pixel_count
 

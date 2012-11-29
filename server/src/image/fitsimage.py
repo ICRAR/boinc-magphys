@@ -28,12 +28,13 @@ Image generation
 import logging
 import pyfits
 import math
-import os, hashlib
+import os
 import numpy
 from PIL import Image
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
 from database.database_support_core import IMAGE_FILTERS_USED, FILTER, AREA, AREA_USER
+from image import directory_mod
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -210,7 +211,6 @@ class ImageBuilder:
 
 class FitsImage:
     useHighCut = False
-    includeHash = True
     centre = 0.5
 
     def __init__(self, connection):
@@ -297,14 +297,14 @@ class FitsImage:
         (image1_filters, image2_filters, image3_filters, image4_filters) = self._get_image_filters(hdulist)
 
         # Create Three Colour Images
-        image1 = ImageBuilder(1, self.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
-            self.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True),
+        image1 = ImageBuilder(1, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
+            directory_mod.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True),
             image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, self._connection, galaxy_id) # i, r, g
-        image2 = ImageBuilder(2, self.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None,
+        image2 = ImageBuilder(2, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None,
             image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, self._connection, galaxy_id) # r, g, NUV
-        image3 = ImageBuilder(3, self.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None,
+        image3 = ImageBuilder(3, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None,
             image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, self._connection, galaxy_id) # 3.6, g, NUV
-        image4 = ImageBuilder(4, self.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None,
+        image4 = ImageBuilder(4, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None,
             image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, self._connection, galaxy_id) # 22, r, NUV
         images = [image1, image2, image3, image4]
 
@@ -340,74 +340,6 @@ class FitsImage:
             return math.asinh(value / self.sigma)
         else:
            return value
-
-    def filename_hash(self, name, hash_fanout):
-        """
-        Accepts a filename (without path) and the hash fanout.
-        Returns the directory bucket where the file will reside.
-        The hash fanout is typically provided by the project config file.
-        """
-        h = hex(int(hashlib.md5(name).hexdigest()[:8], 16) % hash_fanout)[2:]
-
-        # check for the long L suffix. It seems like it should
-        # never be present but that isn't the case
-        if h.endswith('L'):
-            h = h[:-1]
-        return h
-
-    def get_file_path(self, dirName, fileName, create):
-        """
-        Accepts a directory name and file name and returns the relative path to the file.
-        This method accounts for file hashing and includes the directory
-        bucket in the path returned.
-        """
-        if self.includeHash:
-            fanout = 1024
-            hashed = self.filename_hash(fileName, fanout)
-            hashDirName = os.path.join(dirName,hashed)
-            if os.path.isfile(hashDirName):
-                pass
-            elif os.path.isdir(hashDirName):
-                pass
-            elif create:
-                os.mkdir(hashDirName)
-            return os.path.join(dirName,hashed,fileName)
-        else:
-            return os.path.join(dirName,fileName)
-
-    def get_colour_image_path(self, imageDirName, imagePrefixName, colour, create):
-        """
-        Generates the relative path to the file given the directory name, image prefix
-        and colour.  The file name is used to generate a hash to spread the files across
-        many directories to avoid having too many files in a single directory.
-        """
-        return self.get_file_path(imageDirName, imagePrefixName + "_colour_" + str(colour) + ".png", create)
-
-    def get_thumbnail_colour_image_path(self, imageDirName, imagePrefixName, colour, create):
-        """
-        Generates the relative path to the file given the directory name, image prefix
-        and colour.  The file name is used to generate a hash to spread the files across
-        many directories to avoid having too many files in a single directory.
-        """
-        return self.get_file_path(imageDirName, imagePrefixName + "_tn_colour_" + str(colour) + ".png", create)
-
-    def get_bw_image_path(self, imageDirName, imagePrefixName, file, create):
-        """
-        Generates the relative path to the file given the directory name, image prefix
-        and image number for the Black and White Image.  The file name is used to generate
-        a hash to spread the files across many directories to avoid having too many files
-        in a single directory.
-        """
-        return self.get_file_path(imageDirName, imagePrefixName + "_" + str(file) + '_bw.png', create)
-
-    def get_wb_image_path(self, imageDirName, imagePrefixName, file, create):
-        """
-        Generates the relative path to the file given the directory name, image prefix
-        and image number for the White and Black Image.  The file name is used to generate
-        a hash to spread the files across many directories to avoid having too many files
-        in a single directory.
-        """
-        return self.get_file_path(imageDirName, imagePrefixName + "_" + str(file) + '_wb.png', create)
 
     def markImage(self, inImageFileName, outImageFileName, galaxy_id, userid):
         """

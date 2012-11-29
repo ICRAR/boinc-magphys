@@ -30,7 +30,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import Context, loader
 from sqlalchemy.sql.expression import select, and_, not_
 from config import DJANGO_IMAGE_DIR
-from image import fitsimage
+from image import fitsimage, directory_mod
 from pogs.models import Galaxy
 from pogs import pogs_engine
 from database.database_support_core import AREA, AREA_USER, GALAXY
@@ -161,7 +161,7 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     imagePrefixName = galaxy[GALAXY.c.name] + "_" + str(galaxy[GALAXY.c.version_number])
 
     image = fitsimage.FitsImage(connection)
-    inImageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
+    inImageFileName = directory_mod.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
     image.markImage(inImageFileName, outImageFileName, galaxy_id, userid)
     connection.close()
 
@@ -381,9 +381,8 @@ def galaxyThumbnailImage(request, galaxy_id, colour):
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
-    image = fitsimage.FitsImage(connection)
     imagePrefixName = '{0}_{1}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number])
-    imageFileName = image.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, colour, False)
+    imageFileName = directory_mod.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, colour, False)
     connection.close()
 
     sizeBytes = os.path.getsize(imageFileName)
@@ -409,9 +408,8 @@ def galaxyParameterImage(request, galaxy_id, name):
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
-    image = fitsimage.FitsImage(connection)
     imageFileName = '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name)
-    filename = image.get_file_path(imageDirName, imageFileName, False)
+    filename = directory_mod.get_file_path(imageDirName, imageFileName, False)
     connection.close()
 
     sizeBytes = os.path.getsize(filename)

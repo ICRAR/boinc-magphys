@@ -48,7 +48,7 @@ from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
 from config import DB_LOGIN
 from config import DJANGO_IMAGE_DIR
-from image import fitsimage
+from image import fitsimage, directory_mod
 from database.database_support_core import AREA, GALAXY, PIXEL_RESULT, PIXEL_PARAMETER
 from PIL import Image
 
@@ -227,7 +227,7 @@ for galaxy in connection.execute(query):
                     green = FIRE_G[value]
                     blue = FIRE_B[value]
                     image.putpixel((x, height-y-1), (red, green, blue))
-        out_name = fits_image.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
+        out_name = directory_mod.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
         image.save(out_name)
 
 LOG.info('Built images for %d galaxies', galaxy_count)
