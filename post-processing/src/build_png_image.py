@@ -162,7 +162,11 @@ for galaxy in connection.execute(query):
         for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).
                 where(and_(PIXEL_PARAMETER.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id], PIXEL_PARAMETER.c.parameter_name_id.in_([3,6,7,16]))).
                 order_by(PIXEL_PARAMETER.c.parameter_name_id)):
-            array[row__y, row__x, i] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
+            if i == 3:
+                # the SFR is a log
+                array[row__y, row__x, i] = math.pow(10, pixel_parameter[PIXEL_PARAMETER.c.percentile50])
+            else:
+                array[row__y, row__x, i] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
             i += 1
 
     name_count = 0
