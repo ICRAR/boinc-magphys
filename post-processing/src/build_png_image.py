@@ -49,7 +49,7 @@ from sqlalchemy.sql.expression import and_
 from config import DB_LOGIN
 from config import DJANGO_IMAGE_DIR
 from image import fitsimage
-from database.database_support_core import AREA, GALAXY, PIXEL_RESULT
+from database.database_support_core import AREA, GALAXY, PIXEL_RESULT, PIXEL_PARAMETER
 from PIL import Image
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
@@ -93,9 +93,9 @@ IMAGE_NAMES = [ 'fmu_sfh',
               ]
 
 PNG_IMAGE_NAMES = [ 'mu',
-                'm',
-                'ldust',
-                'sfr',
+                    'm',
+                    'ldust',
+                    'sfr',
               ]
 
 # 'Fire' (Copied from Aladin cds.aladin.ColorMap.java)
@@ -144,7 +144,7 @@ fits_image = fitsimage.FitsImage(connection)
 galaxy_count = 0
 for galaxy in connection.execute(query):
     LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
-    array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(IMAGE_NAMES)), dtype=numpy.float)
+    array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(PNG_IMAGE_NAMES)), dtype=numpy.float)
     array.fill(numpy.NaN)
 
     # Return the rows
@@ -156,22 +156,14 @@ for galaxy in connection.execute(query):
         pixel_count += 1
         if row[PIXEL_RESULT.c.workunit_id] is not None:
             pixels_processed += 1
-        array[row__y, row__x, 0] =  row[PIXEL_RESULT.c.fmu_sfh]
-        array[row__y, row__x, 1] =  row[PIXEL_RESULT.c.fmu_ir]
-        array[row__y, row__x, 2] =  row[PIXEL_RESULT.c.mu]
-        array[row__y, row__x, 3] =  row[PIXEL_RESULT.c.tauv]
-        array[row__y, row__x, 4] =  row[PIXEL_RESULT.c.s_sfr]
-        array[row__y, row__x, 5] =  row[PIXEL_RESULT.c.m]
-        array[row__y, row__x, 6] =  row[PIXEL_RESULT.c.ldust]
-        array[row__y, row__x, 7] =  row[PIXEL_RESULT.c.t_w_bc]
-        array[row__y, row__x, 8] =  row[PIXEL_RESULT.c.t_c_ism]
-        array[row__y, row__x, 9] =  row[PIXEL_RESULT.c.xi_c_tot]
-        array[row__y, row__x, 10] = row[PIXEL_RESULT.c.xi_pah_tot]
-        array[row__y, row__x, 11] = row[PIXEL_RESULT.c.xi_mir_tot]
-        array[row__y, row__x, 12] = row[PIXEL_RESULT.c.x_w_tot]
-        array[row__y, row__x, 13] = row[PIXEL_RESULT.c.tvism]
-        array[row__y, row__x, 14] = row[PIXEL_RESULT.c.mdust]
-        array[row__y, row__x, 15] = row[PIXEL_RESULT.c.sfr]
+
+        # Now get the median values
+        i = 0
+        for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).
+                where(and_(PIXEL_PARAMETER.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id], PIXEL_PARAMETER.c.parameter_name_id.in_([3,6,7,16]))).
+                order_by(PIXEL_PARAMETER.c.parameter_name_id)):
+            array[row__y, row__x, i] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
+            i += 1
 
     name_count = 0
 
@@ -190,13 +182,13 @@ for galaxy in connection.execute(query):
         width  = galaxy[GALAXY.c.dimension_x]
         idx = 0
         if name == 'mu':
-            idx = 2
+            idx = 0
         elif name == 'm':
-            idx = 5
+            idx = 1
         elif name == 'ldust':
-            idx = 6
+            idx = 2
         elif name == 'sfr':
-            idx = 15
+            idx = 3
 
         values = []
         for x in range(0, width-1):
@@ -207,36 +199,36 @@ for galaxy in connection.execute(query):
 
         values.sort()
         if len(values) > 1000:
-            topCount = int(len(values)*0.005)
-            topValue = values[len(values)-topCount]
+            top_count = int(len(values)*0.005)
+            top_value = values[len(values)-top_count]
         elif len(values) > 0:
-            topValue = values[len(values)-1]
+            top_value = values[len(values)-1]
         else:
-            topValue = 1
+            top_value = 1
         if len(values) > 1:
-            medianvalue = values[int(len(values)/2)]
+            median_value = values[int(len(values)/2)]
         elif len(values) > 0:
-            medianvalue = values[0]
+            median_value = values[0]
         else:
-            medianvalue = 1
+            median_value = 1
 
-        sigma = 1 / medianvalue
-        mult = 255.0 / math.asinh(topValue * sigma)
+        sigma = 1 / median_value
+        multiplier = 255.0 / math.asinh(top_value * sigma)
 
         image = Image.new("RGB", (width, height), blackRGB)
         for x in range(0, width-1):
             for y in range(0, height-1):
                 value = array[y, x, idx]
                 if not math.isnan(value) and value > 0:
-                    value = int(math.asinh(value * sigma) * mult)
+                    value = int(math.asinh(value * sigma) * multiplier)
                     if value > 255:
                         value = 255
                     red = FIRE_R[value]
                     green = FIRE_G[value]
                     blue = FIRE_B[value]
                     image.putpixel((x, height-y-1), (red, green, blue))
-        outname = fits_image.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
-        image.save(outname)
+        out_name = fits_image.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
+        image.save(out_name)
 
 LOG.info('Built images for %d galaxies', galaxy_count)
 

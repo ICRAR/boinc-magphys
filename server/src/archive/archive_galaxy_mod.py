@@ -59,7 +59,7 @@ def insert_latest(table, from_db, to_db):
 
     select_statement = select([table])
     if max_pk is not None:
-        select_statement = select_statement.where(getattr(table.c, primary_key) > max_pk)
+        select_statement = select_statement.where(getattr(table.c, primary_key) > max_pk[0])
 
     for from_data in from_db.execute(select_statement):
         map = get_map(from_data, columns)

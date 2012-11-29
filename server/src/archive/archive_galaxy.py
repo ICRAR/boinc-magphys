@@ -29,7 +29,6 @@ Archive a galaxy and all it's related data. Then delete some elements
 from __future__ import print_function
 import argparse
 import logging
-import sys
 import time
 from archive.archive_galaxy_mod import insert_latest, insert_only
 from config import DB_LOGIN, PLEIADES_DB_LOGIN
@@ -70,6 +69,9 @@ try:
         galaxy_ids = args['galaxy_id']
 
     for galaxy_id_str in galaxy_ids:
+        start_time = time.time()
+        area_count = 0
+        pixel_count = 0
         transaction_aws = connection_aws.begin()
         transaction_pleiades = connection_pleiades.begin()
         galaxy_id1 = int(galaxy_id_str)
@@ -82,13 +84,13 @@ try:
             # Copy the galaxy details
             insert_only(GALAXY, galaxy_aws, connection_pleiades)
             galaxy_id_aws = galaxy_aws[GALAXY.c.galaxy_id]
-            for area in connection_aws.execute(select([AREA]).where(AREA.c.galaxy_id == galaxy_id_aws).order_by(AREA.c.area_id)):
+            for area in connection_aws.execute(select([AREA]).where(AREA.c.galaxy_id == galaxy_id_aws)):
+                area_count += 1
                 insert_only(AREA, area, connection_pleiades)
                 area_id_aws = area[AREA.c.area_id]
-                for pixel_result in connection_aws.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.area_id == area_id_aws).order_by(PIXEL_RESULT.c.pxresult_id)):
+                for pixel_result in connection_aws.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.area_id == area_id_aws)):
+                    pixel_count += 1
                     pxresult_id_aws = pixel_result[PIXEL_RESULT.c.pxresult_id]
-                    print("Copying galaxy {0} area {1} pixel {2}".format(galaxy_id_str, area_id_aws, pxresult_id_aws), end="\r")
-                    sys.stdout.flush()
                     insert_only(PIXEL_RESULT, pixel_result, connection_pleiades)
 
                     for pixel_filter in connection_aws.execute(select([PIXEL_FILTER]).where(PIXEL_FILTER.c.pxresult_id == pxresult_id_aws)):
@@ -110,14 +112,16 @@ try:
                 insert_only(IMAGE_FILTERS_USED, image_filters_used, connection_pleiades)
 
             transaction_pleiades.commit()
+            copy_end_time = time.time()
 
             # Now we can delete the bits we don't need
+            deleted_area_count = 0
+            deleted_pixel_count = 0
             if False:
                 for area_id1 in connection_aws.execute(select([AREA.c.area_id]).where(AREA.c.galaxy_id == galaxy_id_aws).order_by(AREA.c.area_id)):
+                    deleted_area_count += 1
                     for pxresult_id1 in connection_aws.execute(select([PIXEL_RESULT.c.pxresult_id]).where(PIXEL_RESULT.c.area_id == area_id1[0]).order_by(PIXEL_RESULT.c.pxresult_id)):
-                        print("Deleting galaxy {0} area {1} pixel {2}".format(galaxy_id_str, area_id1[0], pxresult_id1[0]), end="\r")
-                        sys.stdout.flush()
-
+                        deleted_pixel_count += 1
                         connection_aws.execute(PIXEL_FILTER.delete().where(PIXEL_FILTER.c.pxresult_id == pxresult_id1[0]))
                         connection_aws.execute(PIXEL_PARAMETER.delete().where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id1[0]))
                         connection_aws.execute(PIXEL_HISTOGRAM.delete().where(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id1[0]))
@@ -130,8 +134,17 @@ try:
                     # Give the rest of the world a chance to access the database
                     time.sleep(1)
 
-                LOG.info('Galaxy with galaxy_id of %d was archived', galaxy_id1)
-                transaction_aws.commit()
+            transaction_aws.commit()
+            end_time = time.time()
+            LOG.info('Galaxy with galaxy_id of %d was archived.', galaxy_id1)
+            LOG.info('Copied %d areas %d pixels.', area_count, pixel_count)
+            LOG.info('Deleted %d areas %d pixels.', deleted_area_count, deleted_pixel_count)
+            total_time = end_time - start_time
+            LOG.info('Total time %d mins %.1f secs', int(total_time / 60), total_time % 60)
+            copy_time = copy_end_time - start_time
+            LOG.info('Time to copy %d mins %.1f secs', int(copy_time / 60), copy_time % 60)
+            delete_time = end_time - copy_end_time
+            LOG.info('Time to delete %d mins %.1f secs', int(delete_time / 60), delete_time % 60)
 
 except Exception:
     LOG.exception('Major error')
