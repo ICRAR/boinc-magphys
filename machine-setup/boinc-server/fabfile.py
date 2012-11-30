@@ -125,6 +125,8 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('pip-2.7 install MySQL-python')
     sudo('pip-2.7 install matplotlib')
     sudo('pip-2.7 install astropy')
+    sudo('pip-2.7 install numexpr')
+    sudo('pip-2.7 install cython')
 
     for user in env.list_of_users:
         sudo('useradd {0}'.format(user))
