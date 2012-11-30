@@ -4,42 +4,63 @@ import datetime
 import os
 import tempfile
 import warnings
-import MySQLdb as mdb
 
-# Temporary until web deployed
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pogssite.settings")
-#from django.http import HttpResponse, HttpResponseRedirect
-#from django.template import Context, loader
 
-from sqlalchemy.sql.expression import select, and_, not_
+# Temporary measure
+os.environ.setdefault("BOINC_PROJECT_DIR", "/home/ec2-user/projects/pogs1")
+
+from sqlalchemy import *
 from config import DJANGO_IMAGE_DIR
 from image import fitsimage, directory_mod
-#from pogs.models import Galaxy
 from pogs import pogs_engine
 from database.database_support_core import AREA, AREA_USER, GALAXY
 from astropy.io.vo.table import parse
 
+from Boinc import database
 
-def generateReport(userid):
+def emailGalaxyReport(userid,galaxy_ids):
     # Docmosis specific variables
     rendURL='https://dws.docmosis.com/services/rs/render'
-    accessKey='MWJjODk3YWYtYjBjMi00NTAzLTgxNzAtMmYwNWQ0NDBhNjRjOjMwMTcyNjA'
-    template='Report.doc'
 
-    output = 'Report.pdf'
-
-    hasParam=1
     user = userDetails(userid)
+    galaxies = userGalaxies(userid,galaxy_ids)
 
-    galaxies = []
-    galaxies = userGalaxies(userid)
+    data = dataString(user,galaxies)
 
+    request = urllib2.Request(rendURL,data)
+    request.add_header('Content-Type','application/json; charset=UTF-8')
+    response = urllib2.urlopen(request)
+
+class UserInfo:
+    def __init__(self):
+        self.id = ""
+        self.name = ""
+        self.email = ""
+
+class GalaxyInfo:
+    """
+    Galaxy information
+    """
+    def __init__(self):
+        self.galaxy_id = 0
+        self.galaxy_type = ""
+        self.name = ""
+        self.design = ""
+        self.ra = 0
+        self.dec = 0
+        self.pos1 = ""
+        self.pos2 = ""
+
+def dataString(user,galaxies):
+    
+    hasParam=1
     # Prep. data for send to Osmosis
     dl = []
     dl.append('{\n')
-    dl.append('"accessKey":"' + accessKey + '",\n')
-    dl.append('"templateName":"' + template + '",\n')
-    dl.append('"outputName":"' + os.path.basename(output) + '",\n')
+    dl.append('"accessKey":"MWJjODk3YWYtYjBjMi00NTAzLTgxNzAtMmYwNWQ0NDBhNjRjOjMwMTcyNjA",\n')
+    dl.append('"templateName":"Report.doc",\n')
+    dl.append('"outputName":"UsertDetailedReport.pdf",\n')
     dl.append('"storeTo":"mailto:' + user.email + '",\n')
     dl.append('"mailSubject":"theSkyNet POGS - Detailed User Report",\n')
     dl.append('"data":{\n');
@@ -50,10 +71,10 @@ def generateReport(userid):
     for galaxy in galaxies:
         dl.append('{\n')
         dl.append('"galid":"' + galaxy.name + '",\n') 
-        dl.append('"pic1":"image:base64:' + userGalaxyImage(userid,galaxy.galaxy_id,'1') + '",\n')
-        dl.append('"pic2":"image:base64:' + userGalaxyImage(userid,galaxy.galaxy_id,'2') + '",\n')
-        dl.append('"pic3":"image:base64:' + userGalaxyImage(userid,galaxy.galaxy_id,'3') + '",\n')
-        dl.append('"pic4":"image:base64:' + userGalaxyImage(userid,galaxy.galaxy_id,'4') + '",\n')
+        dl.append('"pic1":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'1') + '",\n')
+        dl.append('"pic2":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'2') + '",\n')
+        dl.append('"pic3":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'3') + '",\n')
+        dl.append('"pic4":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'4') + '",\n')
         # Only if there is paramater images
         if(hasParam):
             dl.append('"add":"true",\n')
@@ -75,51 +96,34 @@ def generateReport(userid):
 
     data = ''.join(dl)
 
-    request = urllib2.Request(rendURL,data)
-    request.add_header('Content-Type','application/json; charset=UTF-8')
-    response = urllib2.urlopen(request)
-    
-class UserInfo:
-    def __init__(self):
-        self.name = ""
-        self.email = ""
+    return data
 
-class GalaxyInfo:
-    """
-    Galaxy information
-    """
-    def __init__(self):
-        self.galaxy_id = 0
-        self.galaxy_type = ""
-        self.name = ""
-        self.design = ""
-        self.ra = 0
-        self.dec = 0
-        self.pos1 = ""
-        self.pos2 = ""
-
-def userGalaxies(userid):
+def userGalaxies(userid,galaxy_ids):
     """
     Return list of galaxies that have been processed by user
     """
 
-    pogs_connection = pogs_engine.connect()
-    user_galaxy_list = []
-    galaxy_line = GalaxyInfo()
-    for galaxy in user_galaxies(pogs_connection, userid):
-        name = galaxy.name
-        if galaxy.version_number > 1:
-            name = galaxy.name + "[" + str(galaxy.version_number) + "]"
-        # Map some external data first
-        galaxy_line = galaxyExternalData(name)
-        galaxy_line.name = name
-        galaxy_line.galaxy_type = galaxy.galaxy_type
-        galaxy_line.galaxy_id = galaxy.galaxy_id
-        galaxy_line.redshift = galaxy.redshift
-        user_galaxy_list.append(galaxy_line)
-    pogs_connection.close()
+    connection = pogs_engine.connect()
+    query = select([GALAXY])
+    query = query.where(GALAXY.c.galaxy_id.in_([str(id) for id in galaxy_ids]))
+    galaxies = connection.execute(query)
 
-    return user_galaxy_list
+    galaxy_list = []
+    galaxy_line = GalaxyInfo()
+    for galaxy in galaxies:
+	name = galaxy.name
+	if galaxy.version_number > 1:
+	    name = galaxy.name + "[" + str(galaxy.version_number) + "]"
+	# Map some external data first
+	galaxy_line = galaxyExternalData(name)
+	galaxy_line.name = name
+	galaxy_line.galaxy_type = galaxy.galaxy_type
+	galaxy_line.galaxy_id = galaxy.galaxy_id
+	galaxy_line.redshift = galaxy.redshift
+	galaxy_list.append(galaxy_line)
+    connection.close()
+
+    return galaxy_list
     
 
 def galaxyParameterImage(galaxy_id, name):
@@ -225,27 +229,16 @@ def parseVOTable(url):
 
     return table
     
-def user_galaxies(connection, userid):
-    """
-    Determines the galaxies that the selected user has generated results.  Returns an array of
-    galaxy_ids.
-    """
-    return connection.execute(select([GALAXY], from_obj= GALAXY.join(AREA).join(AREA_USER)).distinct().where(AREA_USER.c.userid == userid).order_by(GALAXY.c.image_time.desc(), GALAXY.c.name, GALAXY.c.version_number))
-
 def userDetails(userid):
     """
-    Return user name based on user id. 
-
-    This method is temporary until Python BOINC database framework works.
+    Fill user details from BOINC database
     """
-
     user_line = UserInfo()
-    connection = mdb.connect('localhost', 'root', '', 'pogs1'); 
-    cursor = connection.cursor()
-    cursor.execute("SELECT name,email_addr FROM user WHERE id=" + str(userid))
-    connection.close()
-    row = cursor.fetchone()
-    user_line.name = row[0]
-    user_line.email = row[1]
+    user_line.id = userid
+    database.connect()
+    user = database.Users.find(id=userid)[0]
+    user_line.name = user.name
+    user_line.email = user.email_addr
+    database.close()
 
     return user_line
