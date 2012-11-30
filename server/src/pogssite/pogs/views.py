@@ -27,12 +27,13 @@ import datetime
 import tempfile
 
 from django.http import HttpResponse, HttpResponseRedirect
-from django.template import Context, loader
+from django.template import RequestContext, Context, loader
 from sqlalchemy.sql.expression import select, and_, not_
 from config import DJANGO_IMAGE_DIR
 from image import fitsimage, directory_mod
 from pogs.models import Galaxy
 from pogs import pogs_engine
+from pogs import docmosis
 from database.database_support_core import AREA, AREA_USER, GALAXY
 
 class GalaxyLine:
@@ -131,16 +132,22 @@ def userGalaxy(request, userid, galaxy_id):
     galaxy_height = galaxy[GALAXY.c.dimension_x]
     galaxy_width = galaxy[GALAXY.c.dimension_y]
     connection.close()
+    
+    report=0
+    if request.method == 'POST':
+        docmosis.emailGalaxyReport(userid,[galaxy_id])     
+	report=1
 
     referer = getRefererFromCookie(request)
 
     t = loader.get_template('pogs/user_images.html')
-    c = Context({
+    c = RequestContext(request, {
         'userid': userid,
         'galaxy_id': galaxy_id,
         'galaxy_name': galaxy_name,
         'galaxy_width': galaxy_width,
         'galaxy_height': galaxy_height,
+        'report':        report,
         'referer':          referer,
     })
     return HttpResponse(t.render(c))

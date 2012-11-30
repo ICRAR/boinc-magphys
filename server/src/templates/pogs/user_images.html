@@ -5,6 +5,12 @@
     <link rel="stylesheet" type="text/css" href="/{{ referer }}/main.css" media="all" />
     <link rel="stylesheet" type="text/css" href="/{{ referer }}/black.css">
   </head>
+<script>
+  function sendReport() {
+    var form = document.getElementById('sendReportForm');
+    form.submit()
+  }
+</script>
   
   <body>
     <div class=page_title>theSkyNet POGS - the PS1 Optical Galaxy Survey - {{ galaxy_name }}</div>
@@ -40,6 +46,15 @@
        <td style="border-color:white; border-width:1px;"><img src="../../GalaxyParameterImage/{{ galaxy_id }}/sfr" width="{{ galaxy_width }}" height="{{ galaxy_height }}"></td>
       </tr>
     </table>
+{% if report %}
+    <p><font color="red">An email with a report has been sent to you.</font></p>
+{% else %}
+    <p>Click the following button if you would like a detailed report sent to your email. </p>
+    <form id="sendReportForm" method="POST">
+        {% csrf_token %}
+        <input type="button" onclick="sendReport()" value="Send Report"></td>
+    </form>
+{% endif %}
     
 {% include "pogs/footer.html" %}
   </body>
