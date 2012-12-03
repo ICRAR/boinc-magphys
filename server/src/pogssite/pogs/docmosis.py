@@ -5,19 +5,14 @@ import os
 import tempfile
 import warnings
 
-# TODO - use the server config module
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pogssite.settings")
-
-# Temporary measure
-os.environ.setdefault("BOINC_PROJECT_DIR", "/home/ec2-user/projects/pogs1")
-
 from sqlalchemy import *
-from config import DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, DJANGO_DOCMOSIS_TEMPLATE, DB_LOGIN
+from config import WG_BOINC_PROJECT_ROOT,DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, DJANGO_DOCMOSIS_TEMPLATE, DB_LOGIN
 from image import fitsimage, directory_mod
 from database.database_support_core import GALAXY
 from astropy.io.vo.table import parse
 
+# TODO - Look at using direct MySQL connection
+os.environ.setdefault("BOINC_PROJECT_DIR", WG_BOINC_PROJECT_ROOT)
 from Boinc import database
 
 ENGINE = create_engine(DB_LOGIN)
@@ -27,7 +22,7 @@ def emailGalaxyReport(userid,galaxy_ids):
     rendURL='https://dws.docmosis.com/services/rs/render'
 
     user = userDetails(userid)
-    galaxies = userGalaxies(userid,galaxy_ids)
+    galaxies = galaxyDetails(galaxy_ids)
 
     data = dataString(user,galaxies)
 
@@ -100,10 +95,9 @@ def dataString(user,galaxies):
 
     return data
 
-# TODO userid is not used
-def userGalaxies(userid, galaxy_ids):
+def galaxyDetails(galaxy_ids):
     """
-    Return list of galaxies that have been processed by user
+    Return list of galaxies with detailed data
     """
 
     connection = ENGINE.connect()
