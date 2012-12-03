@@ -28,13 +28,15 @@ import tempfile
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, Context, loader
+from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import select, and_, not_
-from config import DJANGO_IMAGE_DIR
+from config import DJANGO_IMAGE_DIR, DB_LOGIN
 from image import fitsimage, directory_mod
 from pogs.models import Galaxy
-from pogs import pogs_engine
 from pogs import docmosis
 from database.database_support_core import AREA, AREA_USER, GALAXY
+
+ENGINE = create_engine(DB_LOGIN)
 
 class GalaxyLine:
     def __init__(self):
@@ -86,7 +88,7 @@ def setReferrer(response, referer):
     response.set_cookie('pogs_referer', referer)
 
 def userGalaxies(request, userid):
-    pogs_connection = pogs_engine.connect()
+    pogs_connection = ENGINE.connect()
 
     user_galaxy_list = []
     idx = 0
@@ -122,7 +124,7 @@ def userGalaxies(request, userid):
     return response
 
 def userGalaxy(request, userid, galaxy_id):
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     userid = int(userid)
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
@@ -190,7 +192,7 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     return response
 
 def galaxy(request, galaxy_id):
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
     galaxy_name = galaxy[GALAXY.c.name]
@@ -264,7 +266,7 @@ def galaxyList(request):
         prev_page = None
     else:
         prev_page = page - 1
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     query = select([GALAXY]).where(GALAXY.c.current == True)
     if type == "S":
         query = query.where(and_(GALAXY.c.galaxy_type.like('S%'), not_(GALAXY.c.galaxy_type.like('SB%')), not_(GALAXY.c.galaxy_type.like('S0%'))))
@@ -356,7 +358,7 @@ def galaxyList(request):
 def galaxyImage(request, galaxy_id, colour):
     imageDirName = DJANGO_IMAGE_DIR
 
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
@@ -384,7 +386,7 @@ def galaxyImage(request, galaxy_id, colour):
 def galaxyThumbnailImage(request, galaxy_id, colour):
     imageDirName = DJANGO_IMAGE_DIR
 
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
@@ -411,7 +413,7 @@ def galaxyThumbnailImage(request, galaxy_id, colour):
 def galaxyParameterImage(request, galaxy_id, name):
     imageDirName = DJANGO_IMAGE_DIR
 
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
