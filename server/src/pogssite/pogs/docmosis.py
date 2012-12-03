@@ -13,7 +13,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pogssite.settings")
 os.environ.setdefault("BOINC_PROJECT_DIR", "/home/ec2-user/projects/pogs1")
 
 from sqlalchemy import *
-from config import DJANGO_IMAGE_DIR, DB_LOGIN
+from config import DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, DJANGO_DOCMOSIS_TEMPLATE, DB_LOGIN
 from image import fitsimage, directory_mod
 from database.database_support_core import GALAXY
 from astropy.io.vo.table import parse
@@ -60,9 +60,9 @@ def dataString(user,galaxies):
     # Prep. data for send to Osmosis
     dl = []
     dl.append('{\n')
-    dl.append('"accessKey":"MWJjODk3YWYtYjBjMi00NTAzLTgxNzAtMmYwNWQ0NDBhNjRjOjMwMTcyNjA",\n')
-    dl.append('"templateName":"Report.doc",\n')
-    dl.append('"outputName":"UsertDetailedReport.pdf",\n')
+    dl.append('"accessKey":"' + DJANGO_DOCMOSIS_KEY + '",\n')
+    dl.append('"templateName":"' + DJANGO_DOCMOSIS_TEMPLATE + '",\n')
+    dl.append('"outputName":"DetailedUserReport.pdf",\n')
     dl.append('"storeTo":"mailto:' + user.email + '",\n')
     dl.append('"mailSubject":"theSkyNet POGS - Detailed User Report",\n')
     dl.append('"data":{\n')
