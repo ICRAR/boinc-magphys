@@ -24,5 +24,3 @@
 #
 from sqlalchemy import create_engine
 from config import DB_LOGIN
-
-pogs_engine = create_engine(DB_LOGIN)

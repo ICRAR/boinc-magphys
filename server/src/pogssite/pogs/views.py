@@ -132,11 +132,11 @@ def userGalaxy(request, userid, galaxy_id):
     galaxy_height = galaxy[GALAXY.c.dimension_x]
     galaxy_width = galaxy[GALAXY.c.dimension_y]
     connection.close()
-    
+
     report=0
     if request.method == 'POST':
-        docmosis.emailGalaxyReport(userid,[galaxy_id])     
-	report=1
+        docmosis.emailGalaxyReport(userid,[galaxy_id])
+    report=1
 
     referer = getRefererFromCookie(request)
 

@@ -5,19 +5,22 @@ import os
 import tempfile
 import warnings
 
+# TODO - use the server config module
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pogssite.settings")
 
 # Temporary measure
 os.environ.setdefault("BOINC_PROJECT_DIR", "/home/ec2-user/projects/pogs1")
 
 from sqlalchemy import *
-from config import DJANGO_IMAGE_DIR
+from config import DJANGO_IMAGE_DIR, DB_LOGIN
 from image import fitsimage, directory_mod
-from pogs import pogs_engine
-from database.database_support_core import AREA, AREA_USER, GALAXY
+from database.database_support_core import GALAXY
 from astropy.io.vo.table import parse
 
 from Boinc import database
+
+ENGINE = create_engine(DB_LOGIN)
 
 def emailGalaxyReport(userid,galaxy_ids):
     # Docmosis specific variables
@@ -53,8 +56,7 @@ class GalaxyInfo:
         self.pos2 = ""
 
 def dataString(user,galaxies):
-    
-    hasParam=1
+    hasParam = 1
     # Prep. data for send to Osmosis
     dl = []
     dl.append('{\n')
@@ -63,20 +65,20 @@ def dataString(user,galaxies):
     dl.append('"outputName":"UsertDetailedReport.pdf",\n')
     dl.append('"storeTo":"mailto:' + user.email + '",\n')
     dl.append('"mailSubject":"theSkyNet POGS - Detailed User Report",\n')
-    dl.append('"data":{\n');
+    dl.append('"data":{\n')
     dl.append('"user":"' + user.name + '",\n')
     dl.append('"date":"' + str(datetime.date.today()) +'",\n')
     dl.append('"galaxy":[\n')
     # Loop through galaxies user has worked on.
     for galaxy in galaxies:
         dl.append('{\n')
-        dl.append('"galid":"' + galaxy.name + '",\n') 
+        dl.append('"galid":"' + galaxy.name + '",\n')
         dl.append('"pic1":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'1') + '",\n')
         dl.append('"pic2":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'2') + '",\n')
         dl.append('"pic3":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'3') + '",\n')
         dl.append('"pic4":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'4') + '",\n')
         # Only if there is paramater images
-        if(hasParam):
+        if hasParam:
             dl.append('"add":"true",\n')
             dl.append('"pic5":"image:base64:' + galaxyParameterImage(galaxy.galaxy_id,'mu') + '",\n')
             dl.append('"pic6":"image:base64:' + galaxyParameterImage(galaxy.galaxy_id,'m') + '",\n')
@@ -98,33 +100,34 @@ def dataString(user,galaxies):
 
     return data
 
-def userGalaxies(userid,galaxy_ids):
+# TODO userid is not used
+def userGalaxies(userid, galaxy_ids):
     """
     Return list of galaxies that have been processed by user
     """
 
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     query = select([GALAXY])
     query = query.where(GALAXY.c.galaxy_id.in_([str(id) for id in galaxy_ids]))
     galaxies = connection.execute(query)
 
     galaxy_list = []
-    galaxy_line = GalaxyInfo()
     for galaxy in galaxies:
-	name = galaxy.name
-	if galaxy.version_number > 1:
-	    name = galaxy.name + "[" + str(galaxy.version_number) + "]"
-	# Map some external data first
-	galaxy_line = galaxyExternalData(name)
-	galaxy_line.name = name
-	galaxy_line.galaxy_type = galaxy.galaxy_type
-	galaxy_line.galaxy_id = galaxy.galaxy_id
-	galaxy_line.redshift = galaxy.redshift
-	galaxy_list.append(galaxy_line)
+        name = galaxy.name
+        if galaxy.version_number > 1:
+            name = galaxy.name + "[" + str(galaxy.version_number) + "]"
+
+        # Map some external data first
+        galaxy_line = galaxyExternalData(name)
+        galaxy_line.name = name
+        galaxy_line.galaxy_type = galaxy.galaxy_type
+        galaxy_line.galaxy_id = galaxy.galaxy_id
+        galaxy_line.redshift = galaxy.redshift
+        galaxy_list.append(galaxy_line)
     connection.close()
 
     return galaxy_list
-    
+
 
 def galaxyParameterImage(galaxy_id, name):
     """
@@ -133,7 +136,7 @@ def galaxyParameterImage(galaxy_id, name):
 
     imageDirName = DJANGO_IMAGE_DIR
 
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
@@ -160,7 +163,7 @@ def userGalaxyImage(userid, galaxy_id, colour):
 
     outImageFileName = tmp[1]
 
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     userid = int(userid)
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
@@ -179,10 +182,10 @@ def userGalaxyImage(userid, galaxy_id, colour):
     return image64
 
 def galaxyExternalData(name):
-    """    
+    """
     Retrieve specific galaxy data from third party.
     """
-    
+
     galaxy_line = GalaxyInfo()
 
     url='http://leda.univ-lyon1.fr/G.cgi?n=101&c=o&o=' + name[:-1] + '&a=x&z=d'
@@ -201,7 +204,7 @@ def galaxyExternalData(name):
     galaxy_line.dec = table.array['delta'][0]
     galaxy_line.pos1 = table.array['radec1950'][0]
     galaxy_line.pos2 = table.array['radec2000'][0]
-    
+
 
     return galaxy_line
 
@@ -228,7 +231,7 @@ def parseVOTable(url):
     os.remove(outXMLFileName)
 
     return table
-    
+
 def userDetails(userid):
     """
     Fill user details from BOINC database
