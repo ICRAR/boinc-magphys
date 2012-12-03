@@ -68,9 +68,21 @@ if exists(DJANGO_FILE_NAME):
     config = ConfigObj(DJANGO_FILE_NAME)
     DJANGO_TEMPLATE_DIR = config['template_dir']
     DJANGO_IMAGE_DIR = config['image_dir']
+
+    # TODO - Remove try block once supported in production
+    try:
+        DJANGO_DOCMOSIS_KEY = ''
+        DJANGO_DOCMOSIS_KEY = ''
+        DJANGO_DOCMOSIS_KEY = config['docmosis_key']
+        DJANGO_DOCMOSIS_TEMPLATE = config['docmosis_template'] 
+    except Exception, e:
+        print "Could not load key: %s" % e
+
 else:
     DJANGO_TEMPLATE_DIR = '/Users/rob/development/boinc-magphys/server/src/templates'
     DJANGO_IMAGE_DIR = '/Users/rob/magphys/POGS_NGC1209'
+    DJANGO_DOCMOSIS_KEY = 'default'
+    DJANGO_DOCMOSIS_TEMPLATE = 'default'
 
 ############### Work Generation Settings ###############
 
