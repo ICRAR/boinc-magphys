@@ -37,7 +37,7 @@ import subprocess
 
 from datetime import datetime
 from sqlalchemy.sql.expression import select, func, and_
-from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT
+from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, RUN_FILE, FITS_HEADER
 from image import directory_mod
 from image.fitsimage import FitsImage
@@ -52,7 +52,7 @@ TEMPLATES_PATH1 = 'templates'                                          # In true
 TEMPLATES_PATH2 = '/home/ec2-user/boinc-magphys/server/runs'           # Where the Server code is
 MIN_QUORUM = 2                                                         # Validator run when there are at least this many results for a work unit
 TARGET_NRESULTS = MIN_QUORUM                                           # Initially create this many instances of a work unit
-DELAY_BOUND = 86400 * 5                                                # Clients must report results within 5 days
+DELAY_BOUND = 86400 * WG_REPORT_DEADLINE                               # Clients must report results within WG_REPORT_DEADLINE days
 FPOPS_EST_PER_PIXEL = 6                                                # Estimated number of gigaflops per pixel
 FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*50                         # Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
