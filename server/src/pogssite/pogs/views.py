@@ -138,7 +138,7 @@ def userGalaxy(request, userid, galaxy_id):
     report=0
     if request.method == 'POST':
         docmosis.emailGalaxyReport(userid,[galaxy_id])
-    report=1
+        report=1
 
     referer = getRefererFromCookie(request)
 
@@ -163,7 +163,7 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
 
     outImageFileName = tmp[1]
 
-    connection = pogs_engine.connect()
+    connection = ENGINE.connect()
     userid = int(userid)
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
