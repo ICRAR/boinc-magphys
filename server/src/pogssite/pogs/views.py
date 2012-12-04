@@ -33,8 +33,7 @@ from sqlalchemy.sql.expression import select, and_, not_
 from config import DJANGO_IMAGE_DIR, DB_LOGIN
 from image import fitsimage, directory_mod
 from pogs.models import Galaxy
-from pogs import docmosis
-from database.database_support_core import AREA, AREA_USER, GALAXY
+from database.database_support_core import AREA, AREA_USER, GALAXY, DOCMOSIS_TASK
 
 ENGINE = create_engine(DB_LOGIN)
 
@@ -133,12 +132,15 @@ def userGalaxy(request, userid, galaxy_id):
         galaxy_name = galaxy[GALAXY.c.name] + "[" + str(galaxy[GALAXY.c.version_number]) + "]"
     galaxy_height = galaxy[GALAXY.c.dimension_x]
     galaxy_width = galaxy[GALAXY.c.dimension_y]
-    connection.close()
 
     report=0
     if request.method == 'POST':
-        docmosis.emailGalaxyReport(userid,[galaxy_id])
+        query = DOCMOSIS_TASK.insert()
+        query = query.values(userid = userid, galaxies = galaxy_id)
+        connection.execute(query)
         report=1
+
+    connection.close()
 
     referer = getRefererFromCookie(request)
 
