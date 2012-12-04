@@ -4,14 +4,32 @@
     <title>theSkyNet POGS - the PS1 Optical Galaxy Survey</title>
     <link rel="stylesheet" type="text/css" href="/{{ referer }}/main.css" media="all" />
     <link rel="stylesheet" type="text/css" href="/{{ referer }}/black.css">
-  </head>
-<script>
-  function sendReport() {
-    var form = document.getElementById('sendReportForm');
-    form.submit()
-  }
-</script>
-  
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        // Hide all reporting messages initially
+        $(".reporting").hide();
+        $("#send").click(function(e){
+            e.preventDefault();
+            $("#send").hide();
+            $("#processing").show();
+            $.ajax({
+                url: location.href, 
+                dataType: 'json',
+                success : function(data) {
+                    if (data.success == "True"){
+                        $("#success").show();
+                    } else {
+                        $("#fail").html("Failure! Reason: " + data.message);
+                        $("#fail").show();
+                    }
+                }
+            });
+        });
+    });
+
+    </script>
+ </head>
   <body>
     <div class=page_title>theSkyNet POGS - the PS1 Optical Galaxy Survey - {{ galaxy_name }}</div>
     
@@ -46,16 +64,17 @@
        <td style="border-color:white; border-width:1px;"><img src="../../GalaxyParameterImage/{{ galaxy_id }}/sfr" width="{{ galaxy_width }}" height="{{ galaxy_height }}"></td>
       </tr>
     </table>
-{% if report %}
-    <p><font color="red">An email with a report has been sent to you.</font></p>
-{% else %}
     <p>Click the following button if you would like a detailed report sent to your email. </p>
-    <form id="sendReportForm" method="POST">
-        {% csrf_token %}
-        <input type="button" onclick="sendReport()" value="Send Report"></td>
-    </form>
-{% endif %}
-    
+    <button type="button" id=send> Send Report</button>
+    <div style="color: blue;" class="reporting" id="processing">
+        Processing...
+    </div>
+    <div style="color: green;" class="reporting" id="success">
+        Success! Please wait up to 10 minutes for the email report
+    </div>
+    <div style="color: red;" class="reporting" id="fail">
+
+    </div>
 {% include "pogs/footer.html" %}
   </body>
 </html>

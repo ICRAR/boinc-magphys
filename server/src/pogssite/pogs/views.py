@@ -27,7 +27,8 @@ import datetime
 import tempfile
 
 from django.http import HttpResponse, HttpResponseRedirect
-from django.template import RequestContext, Context, loader
+from django.template import Context, loader
+from django.utils import simplejson
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import select, and_, not_
 from config import DJANGO_IMAGE_DIR, DB_LOGIN
@@ -123,38 +124,50 @@ def userGalaxies(request, userid):
     return response
 
 def userGalaxy(request, userid, galaxy_id):
-    connection = ENGINE.connect()
+
     userid = int(userid)
     galaxy_id = int(galaxy_id)
-    galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
-    galaxy_name = galaxy[GALAXY.c.name]
-    if galaxy[GALAXY.c.version_number] > 1:
-        galaxy_name = galaxy[GALAXY.c.name] + "[" + str(galaxy[GALAXY.c.version_number]) + "]"
-    galaxy_height = galaxy[GALAXY.c.dimension_x]
-    galaxy_width = galaxy[GALAXY.c.dimension_y]
 
-    report=0
-    if request.method == 'POST':
-        query = DOCMOSIS_TASK.insert()
-        query = query.values(userid = userid, galaxies = galaxy_id)
-        connection.execute(query)
-        report=1
+    connection = ENGINE.connect()
+
+    if request.is_ajax():
+        query = select([DOCMOSIS_TASK])
+        query = query.where(DOCMOSIS_TASK.c.userid == userid)
+        query = query.order_by(DOCMOSIS_TASK.c.create_time.desc())
+        user = connection.execute(query).first()
+        data = 0
+        if user:
+            datetime_diff = datetime.datetime.utcnow() - user.create_time
+            if datetime_diff.seconds < 60:
+                data = simplejson.dumps({'success':'False', 'message':'Too recent attempt'})
+        if not data:
+            query = DOCMOSIS_TASK.insert()
+            query = query.values(userid = userid, galaxies = galaxy_id)
+            connection.execute(query)
+            data = simplejson.dumps({'success':'True'})
+        response = HttpResponse(data,content_type="application/javascript")
+    else:
+        galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
+        galaxy_name = galaxy[GALAXY.c.name]
+        if galaxy[GALAXY.c.version_number] > 1:
+            galaxy_name = galaxy[GALAXY.c.name] + "[" + str(galaxy[GALAXY.c.version_number]) + "]"
+        galaxy_height = galaxy[GALAXY.c.dimension_x]
+        galaxy_width = galaxy[GALAXY.c.dimension_y]
+        referer = getRefererFromCookie(request)
+
+        t = loader.get_template('pogs/user_images.html')
+        c = Context({
+            'userid': userid,
+            'galaxy_id': galaxy_id,
+            'galaxy_name': galaxy_name,
+            'galaxy_width': galaxy_width,
+            'galaxy_height': galaxy_height,
+            'referer':          referer,
+        })
+        response = HttpResponse(t.render(c))
 
     connection.close()
-
-    referer = getRefererFromCookie(request)
-
-    t = loader.get_template('pogs/user_images.html')
-    c = RequestContext(request, {
-        'userid': userid,
-        'galaxy_id': galaxy_id,
-        'galaxy_name': galaxy_name,
-        'galaxy_width': galaxy_width,
-        'galaxy_height': galaxy_height,
-        'report':        report,
-        'referer':          referer,
-    })
-    return HttpResponse(t.render(c))
+    return response
 
 def userGalaxyImage(request, userid, galaxy_id, colour):
     tmp = tempfile.mkstemp(".png", "pogs", None, False)
