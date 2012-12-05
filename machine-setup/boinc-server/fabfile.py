@@ -93,6 +93,26 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('chmod 400 /etc/postfix/sasl_passwd')
     sudo('postmap /etc/postfix/sasl_passwd')
 
+    # Setup the HDF5
+    with cd('/usr/local/src'):
+        sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
+        sudo('tar -xvzf szip-2.1.tar.gz')
+        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.10.tar.gz')
+        sudo('tar -xvzf hdf5-1.8.10.tar.gz')
+        sudo('rm *.gz')
+    with cd('/usr/local/src/szip-2.1'):
+        sudo('./configure --prefix=/usr/local/szip')
+        sudo('make')
+        sudo('make install')
+    with cd('/usr/local/src/hdf5-1.8.10'):
+        sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
+        sudo('make')
+        sudo('make install')
+    sudo('''echo "/usr/local/hdf5/lib
+/usr/local/szip/lib >> /etc/ld.so.conf.d/hdf5.conf''')
+    sudo('ldconfig')
+
+    # Setup BOINC
     if host0:
         # Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-07-10
         run('svn co http://boinc.berkeley.edu/svn/trunk/boinc /home/ec2-user/boinc')
@@ -125,8 +145,13 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('pip-2.7 install MySQL-python')
     sudo('pip-2.7 install matplotlib')
     sudo('pip-2.7 install astropy')
-    sudo('pip-2.7 install numexpr')
-    sudo('pip-2.7 install cython')
+
+    with cd('/tmp'):
+        run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
+        run('tar -xvzf h5py-2.1.0.tar.gz')
+    with cd('/tmp/h5py-2.1.0'):
+        sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
+        sudo('python2.7 setup.py install')
 
     for user in env.list_of_users:
         sudo('useradd {0}'.format(user))

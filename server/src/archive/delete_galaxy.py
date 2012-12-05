@@ -85,6 +85,8 @@ for galaxy_id_str in galaxy_ids:
         connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
         connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
         connection.execute(GALAXY.delete().where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
+
+        #TODO Remove the images
         LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id1)
     transaction.commit()
 

@@ -140,7 +140,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
                 if line.startswith(" ####### "):
                     if self._pxresult_id is not None:
-                        self._save_results(connection, map_pixel_results,list_filters, list_pixel_parameters, map_pixel_histograms)
+                        self._save_results(connection, map_pixel_results, list_filters, list_pixel_parameters, map_pixel_histograms)
                         #self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
                     map_pixel_results = {}
                     map_pixel_parameter = {}
@@ -274,7 +274,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         finally:
             f.close()
         if self._pxresult_id is not None:
-            self._save_results(connection, map_pixel_results,list_filters, list_pixel_parameters, map_pixel_histograms)
+            self._save_results(connection, map_pixel_results, list_filters, list_pixel_parameters, map_pixel_histograms)
             #self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
         return result_count
 
