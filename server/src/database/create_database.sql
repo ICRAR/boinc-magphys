@@ -295,14 +295,27 @@ CREATE TABLE image_filters_used (
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE docmosis_task (
-  taskid        int(11) NOT NULL AUTO_INCREMENT,
-  userid        int(11) NOT NULL,
-  galaxies      varchar(128) NOT NULL,
-  worker_token  varchar(32) DEFAULT NULL,
-  create_time   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  finish_time   timestamp NULL DEFAULT NULL,
-  result        int(1) DEFAULT NULL,
-  PRIMARY KEY   (taskid),
-  KEY           docmosis_task_ibfk_1_idx (userid),
-  CONSTRAINT docmosis_task_ibfk_1 FOREIGN KEY (userid) REFERENCES auth_user (id) ON DELETE NO ACTION ON UPDATE NO ACTION
-) CHARACTER SET utf8 ENGINE=InnoDB;
+  task_id       BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  userid        INTEGER NOT NULL,
+  worker_token  VARCHAR(32) NULL DEFAULT NULL,
+  create_time   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  finish_time   TIMESTAMP NULL DEFAULT NULL,
+  status        SMALLINT UNSIGNED NOT NULL DEFAULT '0',
+
+  PRIMARY KEY (task_id),
+  KEY task_id (task_id)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE docmosis_task_galaxy (
+  task_id       BIGINT UNSIGNED NOT NULL,
+  galaxy_id     BIGINT UNSIGNED NOT NULL,
+
+  PRIMARY KEY (task_id,galaxy_id),
+  KEY task_id (task_id),
+  KEY galaxy_id (galaxy_id),
+
+  FOREIGN KEY (task_id) REFERENCES docmosis_task(task_id)
+  
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
