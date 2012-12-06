@@ -132,8 +132,8 @@ def store_area(connection, galaxy_id, group):
             area[AREA.c.top_y],
             area[AREA.c.bottom_x],
             area[AREA.c.bottom_y],
-            area[AREA.c.workunit_id],
-            str(area[AREA.c.update_time]) if area[AREA.c.update_time] is not None else '',
+            area[AREA.c.workunit_id] if area[AREA.c.workunit_id] is not None else -1,
+            str(area[AREA.c.update_time]),
             )
         count += 1
     group.create_dataset('area', data=data, compression='gzip')
