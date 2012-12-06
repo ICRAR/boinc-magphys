@@ -30,6 +30,7 @@ from __future__ import print_function
 import logging
 import os
 import sys
+from sqlalchemy.sql.expression import func
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -47,7 +48,7 @@ from archive.archive_hdf5_mod import store_fits_header, store_area, store_image_
 from config import DB_LOGIN
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
-from database.database_support_core import GALAXY
+from database.database_support_core import GALAXY, PIXEL_RESULT, PIXEL_HISTOGRAM, PIXEL_FILTER
 from utils.writeable_dir import WriteableDir
 
 parser = argparse.ArgumentParser('Archive Galaxy by galaxy_id')
@@ -129,13 +130,16 @@ try:
             h5_file.flush()
 
             # Store the values associated with a pixel
+            pixel_result = connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id1)).first()
+            filter_layers = connection.execute(select([func.count(PIXEL_FILTER.c.pxfilter_id)]).where(PIXEL_FILTER.c.pxresult_id == pixel_result[PIXEL_RESULT.c.pxresult_id])).first()[0]
+
             if STORE_TYPE1:
                 pixel_count = store_pixels1(connection,
                     galaxy_id_aws,
                     pixel_group,
                     galaxy[GALAXY.c.dimension_x],
                     galaxy[GALAXY.c.dimension_y],
-                    galaxy[GALAXY.c.dimension_z],
+                    filter_layers,
                     galaxy[GALAXY.c.pixel_count])
             else:
                 pixel_count = store_pixels2(connection,
@@ -143,7 +147,7 @@ try:
                     pixel_group,
                     galaxy[GALAXY.c.dimension_x],
                     galaxy[GALAXY.c.dimension_y],
-                    galaxy[GALAXY.c.dimension_z],
+                    filter_layers,
                     galaxy[GALAXY.c.pixel_count])
 
             # Flush the HDF5 data to disk
