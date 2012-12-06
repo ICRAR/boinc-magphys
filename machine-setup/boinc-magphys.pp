@@ -142,3 +142,10 @@ file { "/home/ec2-user/output_fits":
     group  => ec2-user,
     mode   => 775,
 }
+
+file { "/home/ec2-user/archive":
+    ensure => "directory",
+    owner  => ec2-user,
+    group  => ec2-user,
+    mode   => 775,
+}
