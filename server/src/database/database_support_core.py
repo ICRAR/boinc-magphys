@@ -230,8 +230,6 @@ RUN_FILTER = Table('run_filter',
     Column('filter_id'    , BigInteger, ForeignKey('filter.filter_id'))
 )
 
-MAGPHYS_METADATA = MetaData()
-
 DOCMOSIS_TASK = Table('docmosis_task',
     MAGPHYS_METADATA,
     Column('task_id'      , BigInteger, primary_key=True, autoincrement=True),
