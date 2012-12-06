@@ -194,7 +194,7 @@ def store_pixels1(connection, galaxy_id, group, dimension_x, dimension_y, dimens
     """
     Store the pixel data
     """
-    LOG.info('Storing the pixel data')
+    LOG.info('Storing the pixel data (format 1)- {0} pixels to process'.format(pixel_count))
     count = connection.execute(select([func.count(PIXEL_HISTOGRAM.c.pxhistogram_id)], from_obj=PIXEL_HISTOGRAM.join(PIXEL_RESULT)).where(PIXEL_RESULT.c.galaxy_id == galaxy_id)).first()[0]
 
     data = numpy.empty((dimension_x, dimension_y, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
@@ -316,7 +316,7 @@ def store_pixels2(connection, galaxy_id, group, dimension_x, dimension_y, dimens
     """
     Store the pixel data
     """
-    LOG.info('Storing the pixel data')
+    LOG.info('Storing the pixel data (format 2)- {0} pixels to process'.format(pixel_count))
     data_elements = []
     for type in ['Best Fit', 'Median', 'Highest Probability Bin']:
         type_group = group.create_group(type)

@@ -47,7 +47,7 @@ from archive.archive_hdf5_mod import store_fits_header, store_area, store_image_
 from config import DB_LOGIN
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
-from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, PIXEL_FILTER, PIXEL_PARAMETER, PIXEL_HISTOGRAM
+from database.database_support_core import GALAXY
 from utils.writeable_dir import WriteableDir
 
 parser = argparse.ArgumentParser('Archive Galaxy by galaxy_id')
@@ -77,7 +77,6 @@ try:
         start_time = time.time()
         area_count = 0
         pixel_count = 0
-        transaction_aws = connection.begin()
 
         galaxy_id1 = int(galaxy_id_str)
         galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id1)).first()
@@ -147,43 +146,14 @@ try:
                     galaxy[GALAXY.c.dimension_z],
                     galaxy[GALAXY.c.pixel_count])
 
-            copy_end_time = time.time()
-
-            # Now we can delete the bits we don't need
-            deleted_area_count = 0
-            deleted_pixel_count = 0
-            if False:
-                for area_id1 in connection.execute(select([AREA.c.area_id]).where(AREA.c.galaxy_id == galaxy_id_aws).order_by(AREA.c.area_id)):
-                    deleted_area_count += 1
-                    for pxresult_id1 in connection.execute(select([PIXEL_RESULT.c.pxresult_id]).where(PIXEL_RESULT.c.area_id == area_id1[0]).order_by(PIXEL_RESULT.c.pxresult_id)):
-                        deleted_pixel_count += 1
-                        connection.execute(PIXEL_FILTER.delete().where(PIXEL_FILTER.c.pxresult_id == pxresult_id1[0]))
-                        connection.execute(PIXEL_PARAMETER.delete().where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id1[0]))
-                        connection.execute(PIXEL_HISTOGRAM.delete().where(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id1[0]))
-
-                    connection.execute(PIXEL_RESULT.delete().where(PIXEL_RESULT.c.area_id == area_id1[0]))
-
-                    transaction_aws.commit()
-                    transaction_aws = connection.begin()
-
-                    # Give the rest of the world a chance to access the database
-                    time.sleep(1)
-
-            transaction_aws.commit()
-
             # Flush the HDF5 data to disk
             h5_file.flush()
             h5_file.close()
             end_time = time.time()
             LOG.info('Galaxy with galaxy_id of %d was archived.', galaxy_id1)
             LOG.info('Copied %d areas %d pixels.', area_count, pixel_count)
-            LOG.info('Deleted %d areas %d pixels.', deleted_area_count, deleted_pixel_count)
             total_time = end_time - start_time
             LOG.info('Total time %d mins %.1f secs', int(total_time / 60), total_time % 60)
-            copy_time = copy_end_time - start_time
-            LOG.info('Time to copy %d mins %.1f secs', int(copy_time / 60), copy_time % 60)
-            delete_time = end_time - copy_end_time
-            LOG.info('Time to delete %d mins %.1f secs', int(delete_time / 60), delete_time % 60)
 
 except Exception:
     LOG.exception('Major error')
