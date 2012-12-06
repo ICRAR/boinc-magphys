@@ -141,15 +141,13 @@ def userGalaxy(request, userid, galaxy_id):
             if datetime_diff.seconds < 60:
                 data = simplejson.dumps({'success':'False', 'message':'Too recent attempt'})
         if not data:
-            # Get task id assigned
-            query = DOCMOSIS_TASK.insert()
-            query = query.values(userid = userid)
-            result = connection.execute(query)
-            task_id = result.lastrowid
+
+            # Get task assigned
+            task_id = connection.execute(DOCMOSIS_TASK.insert().values(userid = userid)).lastrowid
             # Add galaxy to task
-            query = DOCMOSIS_TASK_GALAXY.insert()
-            query = query.values(task_id = task_id, galaxy_id = galaxy_id)
-            connection.execute(query)
+            connection.execute(DOCMOSIS_TASK_GALAXY.insert().values(task_id = task_id, galaxy_id = galaxy_id))
+            # Set task to ready status
+            connection.execute(DOCMOSIS_TASK.update().where(DOCMOSIS_TASK.c.task_id == task_id).values(status = 1))
 
             data = simplejson.dumps({'success':'True'})
         response = HttpResponse(data,content_type="application/javascript")
