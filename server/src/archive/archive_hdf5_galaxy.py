@@ -27,9 +27,20 @@
 Archive a galaxy and all it's related data to an HDF5 file. Then delete some elements
 """
 from __future__ import print_function
-import argparse
 import logging
 import os
+import sys
+
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
+
+import argparse
 import h5py
 import time
 from archive.archive_hdf5_mod import store_fits_header, store_area, store_image_filters, store_area_user, store_pixels1, store_pixels2
@@ -38,9 +49,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.sql import select
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, PIXEL_FILTER, PIXEL_PARAMETER, PIXEL_HISTOGRAM
 from utils.writeable_dir import WriteableDir
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 parser = argparse.ArgumentParser('Archive Galaxy by galaxy_id')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the HDF5 files will be written')

@@ -109,7 +109,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         sudo('make')
         sudo('make install')
     sudo('''echo "/usr/local/hdf5/lib
-/usr/local/szip/lib >> /etc/ld.so.conf.d/hdf5.conf''')
+/usr/local/szip/lib" >> /etc/ld.so.conf.d/hdf5.conf''')
     sudo('ldconfig')
 
     # Setup BOINC
