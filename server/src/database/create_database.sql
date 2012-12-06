@@ -294,15 +294,15 @@ CREATE TABLE image_filters_used (
   INDEX (galaxy_id, image_number)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE TABLE `docmosis_task` (
-  `taskid` int(11) NOT NULL AUTO_INCREMENT,
-  `userid` int(11) NOT NULL,
-  `galaxies` varchar(128) NOT NULL,
-  `worker_token` varchar(32) DEFAULT NULL,
-  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `finish_time` timestamp NULL DEFAULT NULL,
-  `result` int(1) DEFAULT NULL,
-  PRIMARY KEY (`taskid`),
-  KEY `docmosis_task_ibfk_1_idx` (`userid`),
-  CONSTRAINT `docmosis_task_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `auth_user` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=latin1$$
+CREATE TABLE docmosis_task (
+  taskid        int(11) NOT NULL AUTO_INCREMENT,
+  userid        int(11) NOT NULL,
+  galaxies      varchar(128) NOT NULL,
+  worker_token  varchar(32) DEFAULT NULL,
+  create_time   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  finish_time   timestamp NULL DEFAULT NULL,
+  result        int(1) DEFAULT NULL,
+  PRIMARY KEY   (taskid),
+  KEY           docmosis_task_ibfk_1_idx (userid),
+  CONSTRAINT docmosis_task_ibfk_1 FOREIGN KEY (userid) REFERENCES auth_user (id) ON DELETE NO ACTION ON UPDATE NO ACTION
+) CHARACTER SET utf8 ENGINE=InnoDB;
