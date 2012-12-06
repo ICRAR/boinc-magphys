@@ -34,7 +34,7 @@ from sqlalchemy.sql.expression import select, and_, not_
 from config import DJANGO_IMAGE_DIR, DB_LOGIN
 from image import fitsimage, directory_mod
 from pogs.models import Galaxy
-from database.database_support_core import AREA, AREA_USER, GALAXY, DOCMOSIS_TASK
+from database.database_support_core import AREA, AREA_USER, GALAXY, DOCMOSIS_TASK, DOCMOSIS_TASK_GALAXY
 
 ENGINE = create_engine(DB_LOGIN)
 
@@ -141,9 +141,16 @@ def userGalaxy(request, userid, galaxy_id):
             if datetime_diff.seconds < 60:
                 data = simplejson.dumps({'success':'False', 'message':'Too recent attempt'})
         if not data:
+            # Get task id assigned
             query = DOCMOSIS_TASK.insert()
-            query = query.values(userid = userid, galaxies = galaxy_id)
+            query = query.values(userid = userid)
+            result = connection.execute(query)
+            task_id = result.lastrowid
+            # Add galaxy to task
+            query = DOCMOSIS_TASK_GALAXY.insert()
+            query = query.values(task_id = task_id, galaxy_id = galaxy_id)
             connection.execute(query)
+
             data = simplejson.dumps({'success':'True'})
         response = HttpResponse(data,content_type="application/javascript")
     else:
