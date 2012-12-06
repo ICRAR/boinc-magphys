@@ -43,17 +43,17 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../boinc/py')))
 import docmosis
 from datetime import datetime
 from sqlalchemy.engine import create_engine
-from sqlalchemy.sql import select, update
+from sqlalchemy.sql import select, update, and_
 from config import DB_LOGIN
-from database.database_support_core import DOCMOSIS_TASK
+from database.database_support_core import DOCMOSIS_TASK, DOCMOSIS_TASK_GALAXY
 
 ENGINE = create_engine(DB_LOGIN)
 
 class TaskInfo():
     def __init__(self):
-        self.taskid = ""
+        self.task_id = ""
         self.userid = ""
-        self.galaxies = []
+        self.galaxy_ids = []
 
 def main():
     """
@@ -62,41 +62,49 @@ def main():
 
     # Generate unique token for this worker instance
     token = uuid.uuid4().hex
-    assignTasks(token)
+
+    connection = ENGINE.connect()
+
+    assignTasks(token,connection)
     LOG.info("Worker started with token id %s" % token)
-    tasks = getTasks(token)
+    tasks = getTasks(token,connection)
     LOG.info("Got %d tasks to process" % len(tasks))
-    runTasks(tasks)
+    runTasks(tasks,connection)
     LOG.info("Worker finished")
 
-def runTasks(tasks):
+    connection.close()
 
-    connection = ENGINE.connect()
+def runTasks(tasks,connection):
+
     for task in tasks:
-        docmosis.emailGalaxyReport(task.userid,task.galaxies)
+        docmosis.emailGalaxyReport(task.userid,task.galaxy_ids)
         query = DOCMOSIS_TASK.update()
-        query = query.where(DOCMOSIS_TASK.c.taskid == task.taskid)
-        query = query.values(finish_time = datetime.now(), result = 1)
+        query = query.where(DOCMOSIS_TASK.c.task_id == task.task_id)
+        query = query.values(finish_time = datetime.now(), status = 2)
         connection.execute(query)
-    connection.close()
 
+def assignTasks(token,connection):
 
-def assignTasks(token):
+    query = DOCMOSIS_TASK.update()
+    query = query.where(and_(DOCMOSIS_TASK.c.worker_token == None, DOCMOSIS_TASK.c.status == 1))
+    query = query.values(worker_token = token)
+    connection.execute(query)
 
-    connection = ENGINE.connect()
-    connection.execute(DOCMOSIS_TASK.update().where(DOCMOSIS_TASK.c.worker_token == None).values(worker_token = token))
-    connection.close()
+def getTasks(token,connection):
 
-def getTasks(token):
-
-    connection = ENGINE.connect()
-    tasks = connection.execute(select([DOCMOSIS_TASK]).where(DOCMOSIS_TASK.c.worker_token == token))
+    query = select([DOCMOSIS_TASK])
+    query = query.where(and_(DOCMOSIS_TASK.c.worker_token == token,DOCMOSIS_TASK.c.status == 1))
+    tasks = connection.execute(query)
     task_list = []
     for task in tasks:
         task_line = TaskInfo()
-        task_line.taskid = task.taskid
+        task_line.task_id = task.task_id
         task_line.userid = task.userid
-        task_line.galaxies = (task.galaxies).split(',')
+        query = select([DOCMOSIS_TASK_GALAXY])
+        query = query.where(DOCMOSIS_TASK_GALAXY.c.task_id == task.task_id)
+        galaxies = connection.execute(query)
+        for galaxy in galaxies:
+            task_line.galaxy_ids.append(galaxy.galaxy_id)
         task_list.append(task_line)
 
     return task_list
