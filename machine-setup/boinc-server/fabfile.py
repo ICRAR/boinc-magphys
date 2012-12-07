@@ -376,7 +376,7 @@ boincDatabaseName = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
     # Setup Django files
     run('''echo 'template_dir = "/home/ec2-user/boinc-magphys/server/src/templates"
 image_dir = "/home/ec2-user/galaxyImages"
-docmosis_key = "MWJjODk3YWYtYjBjMi00NTAzLTgxNzAtMmYwNWQ0NDBhNjRjOjMwMTcyNjA"
+docmosis_key = "Mzg4Mzk4MGItYzcwNi00ZTA1LWJlMjQtMWYyODEwYWZmZGJkOjMwMTc0MzA"
 docmosis_template = "Report.doc"' >> /home/ec2-user/boinc-magphys/server/src/config/django.settings''')
 
     # Setup Work Generation files
