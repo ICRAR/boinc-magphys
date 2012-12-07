@@ -34,7 +34,7 @@ from sqlalchemy.sql.expression import select, and_, not_
 from config import DJANGO_IMAGE_DIR, DB_LOGIN
 from image import fitsimage, directory_mod
 from pogs.models import Galaxy
-from database.database_support_core import AREA, AREA_USER, GALAXY, DOCMOSIS_TASK, DOCMOSIS_TASK_GALAXY
+from database.database_support_core import AREA, AREA_USER, GALAXY, DOCMOSIS_TASK, DOCMOSIS_TASK_GALAXY, IMAGE_FILTERS_USED, FILTER
 
 ENGINE = create_engine(DB_LOGIN)
 
@@ -210,6 +210,24 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     response['Expires'] = expires
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
+
+def galaxyImageFilter(request, galaxy_id, image_number):
+
+    connection = ENGINE.connect()
+    map_fl = {}
+    for filter in connection.execute(select([FILTER])):
+        map_fl[filter.filter_id] = filter.label
+
+    query = select([IMAGE_FILTERS_USED])
+    query = query.where(and_(IMAGE_FILTERS_USED.c.galaxy_id == 1, IMAGE_FILTERS_USED.c.image_number == 1))
+    image = connection.execute(query).first()
+    connection.close()
+
+    fstr = map_fl[image.filter_id_red]
+    fstr = fstr + ", " + map_fl[image.filter_id_green]
+    fstr = fstr + ", " + map_fl[image.filter_id_blue]
+
+    return HttpResponse(fstr, content_type='text/plain')
 
 def galaxy(request, galaxy_id):
     connection = ENGINE.connect()
