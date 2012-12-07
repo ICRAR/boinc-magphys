@@ -30,7 +30,7 @@ from __future__ import print_function
 import logging
 import os
 import sys
-from sqlalchemy.sql.expression import func
+from sqlalchemy.sql.expression import func, and_
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -129,10 +129,11 @@ try:
             store_area_user(connection, galaxy_id_aws, area_group)
             h5_file.flush()
 
-            # Store the values associated with a pixel
-            pixel_result = connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id1)).first()
+            # How many filter layers are there (check a row with some)
+            pixel_result = connection.execute(select([PIXEL_RESULT]).where(and_(PIXEL_RESULT.c.galaxy_id == galaxy_id1, PIXEL_RESULT.c.i_sfh != None))).first()
             filter_layers = connection.execute(select([func.count(PIXEL_FILTER.c.pxfilter_id)]).where(PIXEL_FILTER.c.pxresult_id == pixel_result[PIXEL_RESULT.c.pxresult_id])).first()[0]
 
+            # Store the values associated with a pixel
             if STORE_TYPE1:
                 pixel_count = store_pixels1(connection,
                     galaxy_id_aws,
