@@ -347,22 +347,38 @@ def store_pixels2(connection, galaxy_id, group, dimension_x, dimension_y, dimens
 
         y_group = x_group.create_group(str(y))
 
-        data_elements[INDEX_BEST_FIT][INDEX_F_MU_SFH    ][x, y] = pixel_result[PIXEL_RESULT.c.fmu_sfh]
-        data_elements[INDEX_BEST_FIT][INDEX_F_MU_IR     ][x, y] = pixel_result[PIXEL_RESULT.c.fmu_ir]
-        data_elements[INDEX_BEST_FIT][INDEX_MU_PARAMETER][x, y] = pixel_result[PIXEL_RESULT.c.mu]
-        data_elements[INDEX_BEST_FIT][INDEX_TAU_V       ][x, y] = pixel_result[PIXEL_RESULT.c.tauv]
-        data_elements[INDEX_BEST_FIT][INDEX_SSFR_0_1GYR ][x, y] = pixel_result[PIXEL_RESULT.c.s_sfr]
-        data_elements[INDEX_BEST_FIT][INDEX_M_STARS     ][x, y] = pixel_result[PIXEL_RESULT.c.m]
-        data_elements[INDEX_BEST_FIT][INDEX_L_DUST      ][x, y] = pixel_result[PIXEL_RESULT.c.ldust]
-        data_elements[INDEX_BEST_FIT][INDEX_T_C_ISM     ][x, y] = pixel_result[PIXEL_RESULT.c.t_c_ism]
-        data_elements[INDEX_BEST_FIT][INDEX_T_W_BC      ][x, y] = pixel_result[PIXEL_RESULT.c.t_w_bc]
-        data_elements[INDEX_BEST_FIT][INDEX_XI_C_TOT    ][x, y] = pixel_result[PIXEL_RESULT.c.xi_c_tot]
-        data_elements[INDEX_BEST_FIT][INDEX_XI_PAH_TOT  ][x, y] = pixel_result[PIXEL_RESULT.c.xi_pah_tot]
-        data_elements[INDEX_BEST_FIT][INDEX_XI_MIR_TOT  ][x, y] = pixel_result[PIXEL_RESULT.c.xi_mir_tot]
-        data_elements[INDEX_BEST_FIT][INDEX_XI_W_TOT    ][x, y] = pixel_result[PIXEL_RESULT.c.x_w_tot]
-        data_elements[INDEX_BEST_FIT][INDEX_TAU_V_ISM   ][x, y] = pixel_result[PIXEL_RESULT.c.tvism]
-        data_elements[INDEX_BEST_FIT][INDEX_M_DUST      ][x, y] = pixel_result[PIXEL_RESULT.c.mdust]
-        data_elements[INDEX_BEST_FIT][INDEX_SFR_0_1GYR  ][x, y] = pixel_result[PIXEL_RESULT.c.sfr]
+        f_mu_sfh = data_elements[INDEX_BEST_FIT][INDEX_F_MU_SFH]
+        f_mu_sfh[x, y] = pixel_result[PIXEL_RESULT.c.fmu_sfh]
+        f_mu_ir = data_elements[INDEX_BEST_FIT][INDEX_F_MU_IR]
+        f_mu_ir[x, y] = pixel_result[PIXEL_RESULT.c.fmu_ir]
+        mu_parameter = data_elements[INDEX_BEST_FIT][INDEX_MU_PARAMETER]
+        mu_parameter[x, y] = pixel_result[PIXEL_RESULT.c.mu]
+        tau_v = data_elements[INDEX_BEST_FIT][INDEX_TAU_V]
+        tau_v[x, y] = pixel_result[PIXEL_RESULT.c.tauv]
+        ssfr_gyr = data_elements[INDEX_BEST_FIT][INDEX_SSFR_0_1GYR]
+        ssfr_gyr[x, y] = pixel_result[PIXEL_RESULT.c.s_sfr]
+        m_stars = data_elements[INDEX_BEST_FIT][INDEX_M_STARS]
+        m_stars[x, y] = pixel_result[PIXEL_RESULT.c.m]
+        l_dust = data_elements[INDEX_BEST_FIT][INDEX_L_DUST]
+        l_dust[x, y] = pixel_result[PIXEL_RESULT.c.ldust]
+        t_c_ism = data_elements[INDEX_BEST_FIT][INDEX_T_C_ISM]
+        t_c_ism[x, y] = pixel_result[PIXEL_RESULT.c.t_c_ism]
+        t_w_bc = data_elements[INDEX_BEST_FIT][INDEX_T_W_BC]
+        t_w_bc[x, y] = pixel_result[PIXEL_RESULT.c.t_w_bc]
+        xi_c_tot = data_elements[INDEX_BEST_FIT][INDEX_XI_C_TOT]
+        xi_c_tot[x, y] = pixel_result[PIXEL_RESULT.c.xi_c_tot]
+        xi_pah_tot = data_elements[INDEX_BEST_FIT][INDEX_XI_PAH_TOT]
+        xi_pah_tot[x, y] = pixel_result[PIXEL_RESULT.c.xi_pah_tot]
+        xi_mir_tot = data_elements[INDEX_BEST_FIT][INDEX_XI_MIR_TOT]
+        xi_mir_tot[x, y] = pixel_result[PIXEL_RESULT.c.xi_mir_tot]
+        xi_w_tot = data_elements[INDEX_BEST_FIT][INDEX_XI_W_TOT]
+        xi_w_tot[x, y] = pixel_result[PIXEL_RESULT.c.x_w_tot]
+        tau_v_ism = data_elements[INDEX_BEST_FIT][INDEX_TAU_V_ISM]
+        tau_v_ism[x, y] = pixel_result[PIXEL_RESULT.c.tvism]
+        index_m_dust = data_elements[INDEX_BEST_FIT][INDEX_M_DUST]
+        index_m_dust[x, y] = pixel_result[PIXEL_RESULT.c.mdust]
+        sfr_gyr = data_elements[INDEX_BEST_FIT][INDEX_SFR_0_1GYR]
+        sfr_gyr[x, y] = pixel_result[PIXEL_RESULT.c.sfr]
 
         y_group.attrs['pxresult_id'] = pxresult_id
         y_group.attrs['area_id']     = pixel_result[PIXEL_RESULT.c.area_id]
@@ -377,8 +393,10 @@ def store_pixels2(connection, galaxy_id, group, dimension_x, dimension_y, dimens
 
         for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id)):
             z = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
-            data_elements[INDEX_MEDIAN          ][z][x, y] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
-            data_elements[INDEX_HIGHEST_PROB_BIN][z][x, y] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin]
+            median_z = data_elements[INDEX_MEDIAN][z]
+            median_z[x, y] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
+            highest_prob_bin_z = data_elements[INDEX_HIGHEST_PROB_BIN][z]
+            highest_prob_bin_z[x, y] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin]
 
             pixel_parameter_group = y_group.create_group(PARAMETER_TYPES[z])
             pixel_parameter_group.attrs['percentile2_5']  = str(pixel_parameter[PIXEL_PARAMETER.c.percentile2_5])
