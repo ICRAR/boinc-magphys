@@ -158,17 +158,21 @@ def userGalaxy(request, userid, galaxy_id):
             galaxy_name = galaxy[GALAXY.c.name] + "[" + str(galaxy[GALAXY.c.version_number]) + "]"
         galaxy_height = galaxy[GALAXY.c.dimension_x]
         galaxy_width = galaxy[GALAXY.c.dimension_y]
-
-        map_fl = {}
-        for filter in connection.execute(select([FILTER])):
-            map_fl[filter.filter_id] = filter.label
+        
         map_imf = {}
-        query = select([IMAGE_FILTERS_USED]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id)
-        for image in connection.execute(query):
-            fstr = map_fl[image.filter_id_red]
-            fstr = fstr + ", " + map_fl[image.filter_id_green]
-            fstr = fstr + ", " + map_fl[image.filter_id_blue]
-            map_imf[image.image_number] = fstr 
+        try: 
+            map_fl = {}
+            for filter in connection.execute(select([FILTER])):
+                map_fl[filter.filter_id] = filter.label
+            query = select([IMAGE_FILTERS_USED]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id)
+            for image in connection.execute(query):
+                fstr = map_fl[image.filter_id_red]
+                fstr = fstr + ", " + map_fl[image.filter_id_green]
+                fstr = fstr + ", " + map_fl[image.filter_id_blue]
+                map_imf[image.image_number] = fstr 
+        except: 
+            for i in range(1, 4):
+                map_imf[i] = 'Unknown Filter'
 
         referer = getRefererFromCookie(request)
 
