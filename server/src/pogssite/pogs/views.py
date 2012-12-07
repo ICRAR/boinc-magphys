@@ -171,7 +171,7 @@ def userGalaxy(request, userid, galaxy_id):
                 fstr = fstr + ", " + map_fl[image.filter_id_blue]
                 map_imf[image.image_number] = fstr 
         except: 
-            for i in range(1, 4):
+            for i in range(1, 5):
                 map_imf[i] = 'Unknown Filter'
 
         referer = getRefererFromCookie(request)
