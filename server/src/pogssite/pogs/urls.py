@@ -38,6 +38,5 @@ urlpatterns = patterns('',
     url(r'^GalaxyList/$', 'pogs.views.galaxyList'),
     url(r'^GalaxyList$', 'pogs.views.galaxyList'),
     url(r'^GalaxyImage/(?P<galaxy_id>\d+)/(?P<colour>\d+)$', 'pogs.views.galaxyImage'),
-    url(r'^GalaxyImageFilter/(?P<galaxy_id>\d+)/(?P<image_number>\d+)$', 'pogs.views.galaxyImageFilter'),
     url(r'^GalaxyThumbnailImage/(?P<galaxy_id>\d+)/(?P<colour>\d+)$', 'pogs.views.galaxyThumbnailImage'),
 )
