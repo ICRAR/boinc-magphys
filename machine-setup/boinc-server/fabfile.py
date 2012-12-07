@@ -376,8 +376,8 @@ boincDatabaseName = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
     # Setup Django files
     run('''echo 'template_dir = "/home/ec2-user/boinc-magphys/server/src/templates"
 image_dir = "/home/ec2-user/galaxyImages"
-docmosis_key = "Mzg4Mzk4MGItYzcwNi00ZTA1LWJlMjQtMWYyODEwYWZmZGJkOjMwMTc0MzA"
-docmosis_template = "Report.doc"' >> /home/ec2-user/boinc-magphys/server/src/config/django.settings''')
+docmosis_key = "{0}"
+docmosis_template = "Report.doc"' >> /home/ec2-user/boinc-magphys/server/src/config/django.settings'''.format(env.docmosis_key))
 
     # Setup Work Generation files
     run('''echo 'image_directory = "/home/ec2-user/galaxyImages"
@@ -502,6 +502,8 @@ def setup_env():
         prompt('GMail Account:', 'gmail_account')
     if 'gmail_password' not in env:
         prompt('GMail Password:', 'gmail_password')
+    if 'docmosis_key' not in env:
+        prompt('Docmosis Key:', 'docmosis_key')
 
     # Create the instance in AWS
     host_names = create_instance(env.instance_stub_name, env.instances, env.ebs_size)
