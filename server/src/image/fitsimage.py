@@ -87,14 +87,12 @@ class ImageBuilder:
         image_filters_used = connection.execute(select([IMAGE_FILTERS_USED]).where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id, IMAGE_FILTERS_USED.c.image_number == image_number))).first()
         if image_filters_used is None:
             connection.execute(IMAGE_FILTERS_USED.insert().values(image_number = image_number,
-                file_name = imageFileName,
                 galaxy_id = galaxy_id,
                 filter_id_red = filter_id_red,
                 filter_id_blue = filter_id_blue,
                 filter_id_green = filter_id_green))
         else:
             connection.execute(IMAGE_FILTERS_USED.update().where(IMAGE_FILTERS_USED.c.image_filters_used_id == image_filters_used[IMAGE_FILTERS_USED.c.image_filters_used_id]).values(image_number = image_number,
-                file_name = imageFileName,
                 galaxy_id = galaxy_id,
                 filter_id_red = filter_id_red,
                 filter_id_blue = filter_id_blue,
