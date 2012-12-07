@@ -304,7 +304,6 @@ CREATE TABLE docmosis_task (
 
   PRIMARY KEY (task_id),
   KEY task_id (task_id)
-
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -317,5 +316,4 @@ CREATE TABLE docmosis_task_galaxy (
   KEY galaxy_id (galaxy_id),
 
   FOREIGN KEY (task_id) REFERENCES docmosis_task(task_id)
-  
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
