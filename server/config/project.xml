@@ -1,5 +1,9 @@
 <boinc>
     <platform>
+        <name>anonymous</name>
+        <user_friendly_name>anonymous</user_friendly_name>
+    </platform>
+    <platform>
         <name>windows_x86_64</name>
         <user_friendly_name>Microsoft Windows running on an AMD x86_64 or Intel EM64T CPU</user_friendly_name>
     </platform>
