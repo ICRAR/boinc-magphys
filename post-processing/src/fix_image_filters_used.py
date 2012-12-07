@@ -75,6 +75,7 @@ def insert_or_update(image_number, galaxy_id, red_filter, green_filter, blue_fil
             filter_id_green = filter_id_green))
 
 for galaxy in connection.execute(select([GALAXY])):
+    LOG.info('Processing {0} - {1}', galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.name])
     if galaxy[GALAXY.c.run_id] == 0:
         image1_filters = [232, 231, 230]
         image2_filters = [231, 230, 124]
