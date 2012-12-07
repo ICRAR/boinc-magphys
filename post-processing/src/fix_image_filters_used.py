@@ -93,6 +93,7 @@ for galaxy in connection.execute(select([GALAXY])):
         image3_filters = [232, 230, 229]
         image4_filters = [233, 231, 229]
 
+    # Insert the correct filters
     insert_or_update(1, galaxy[GALAXY.c.galaxy_id], image1_filters[0], image1_filters[1], image1_filters[2])
     insert_or_update(2, galaxy[GALAXY.c.galaxy_id], image2_filters[0], image2_filters[1], image2_filters[2])
     insert_or_update(3, galaxy[GALAXY.c.galaxy_id], image3_filters[0], image3_filters[1], image3_filters[2])
