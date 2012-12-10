@@ -145,6 +145,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('pip-2.7 install MySQL-python')
     sudo('pip-2.7 install matplotlib')
     sudo('pip-2.7 install astropy')
+    sudo('pip-2.7 install virtualenv')
 
     with cd('/tmp'):
         run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
@@ -384,7 +385,7 @@ docmosis_template = "Report.doc"' >> /home/ec2-user/boinc-magphys/server/src/con
 min_pixels_per_file = "15"
 row_height = "6"
 threshold = "1000"
-high_water_mark = "200"
+high_water_mark = "400"
 report_deadline = "7"
 boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
 
@@ -651,6 +652,10 @@ BOINC
 1) Modify the config.xml to run tasks on the other nodes
 2) If the database is on one of the servers setup the DB host in
    config.xml
+
+NGAS
+1) If you need to move files from the server install NGAS
+
 
 ##########################################################################
 

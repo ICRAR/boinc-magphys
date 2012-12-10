@@ -325,7 +325,7 @@ class Fit2Wu:
 '''.format(i))
 
         file.write('''   <task>
-      <application>concat</application>            ded
+      <application>concat</application>
       <command_line>{0} output.fit</command_line>
       <stdout_filename>stdout_file</stdout_filename>
       <stderr_filename>stderr_file</stderr_filename>
