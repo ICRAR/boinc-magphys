@@ -143,9 +143,14 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('pip-2.7 install fabric')
     sudo('pip-2.7 install configobj')
     sudo('pip-2.7 install MySQL-python')
+
+    # Plotting and reporting
     sudo('pip-2.7 install matplotlib')
     sudo('pip-2.7 install astropy')
+
+    # NGAS
     sudo('pip-2.7 install virtualenv')
+    sudo('pip-2.7 install bsddb3')
 
     with cd('/tmp'):
         run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
@@ -204,9 +209,6 @@ def copy_public_keys(host0):
 def create_instance(stub_name, number_instances, ebs_size):
     """
     Create the AWS instance
-
-    :type ebs_size: int
-    :param ebs_size: The size of the new volume, in GiB
     """
     puts('Creating {0} instances with "{1}" as the stub'.format(number_instances, stub_name))
 

@@ -1,3 +1,4 @@
+# BOINC & MAGPHYS
 package { 'httpd':
     ensure => installed,
 }
@@ -88,6 +89,8 @@ package { 'postfix':
 package { 'ca-certificates':
     ensure => installed,
 }
+
+# Reporting and plotting
 package { 'expect-devel':
     ensure => installed,
 }
@@ -104,6 +107,19 @@ package { 'libpng':
     ensure => installed,
 }
 
+# NGAS
+package { 'readline-devel':
+    ensure => installed,
+}
+package { 'sqlite-devel':
+    ensure => installed,
+}
+package { 'gdbm-devel':
+    ensure => installed,
+}
+
+
+# Create the apache user for the web site
 user { 'apache':
   ensure  => present,
   groups => ['ec2-user'],
@@ -115,6 +131,8 @@ service { 'httpd':
     require => Package['httpd'],
 }
 
+
+# Where the raw galaxies will reside
 file { "/home/ec2-user/galaxies":
     ensure => "directory",
     owner  => ec2-user,
@@ -122,6 +140,7 @@ file { "/home/ec2-user/galaxies":
     mode   => 775,
 }
 
+# Where the BOINC code will reside
 file { "/home/ec2-user/boinc":
     ensure => "directory",
     owner  => ec2-user,
@@ -129,6 +148,7 @@ file { "/home/ec2-user/boinc":
     mode   => 775,
 }
 
+# When we generate an image this is where it goes
 file { "/home/ec2-user/galaxyImages":
     ensure => "directory",
     owner  => ec2-user,
@@ -136,6 +156,7 @@ file { "/home/ec2-user/galaxyImages":
     mode   => 775,
 }
 
+# Where the output fits files go if generated
 file { "/home/ec2-user/output_fits":
     ensure => "directory",
     owner  => ec2-user,
@@ -143,6 +164,7 @@ file { "/home/ec2-user/output_fits":
     mode   => 775,
 }
 
+# Where the HDF5 archive files go
 file { "/home/ec2-user/archive":
     ensure => "directory",
     owner  => ec2-user,
