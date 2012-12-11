@@ -125,7 +125,7 @@ def store_area(connection, galaxy_id, group):
     count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id)).first()[0]
     data = numpy.zeros(count, dtype=data_type_area)
     count = 0
-    for area in connection.execute(select([AREA]).where(AREA.c.galaxy_id == galaxy_id)):
+    for area in connection.execute(select([AREA]).where(AREA.c.galaxy_id == galaxy_id).order_by(AREA.c.area_id)):
         data[count] = (
             area[AREA.c.area_id],
             area[AREA.c.top_x],
@@ -147,7 +147,7 @@ def store_area_user(connection, galaxy_id, group):
     count = connection.execute(select([func.count(AREA_USER.c.areauser_id)], from_obj=AREA_USER.join(AREA)).where(AREA.c.galaxy_id == galaxy_id)).first()[0]
     data = numpy.zeros(count, dtype=data_type_area_user)
     count = 0
-    for area_user in connection.execute(select([AREA_USER], from_obj=AREA_USER.join(AREA)).where(AREA.c.galaxy_id == galaxy_id)):
+    for area_user in connection.execute(select([AREA_USER], from_obj=AREA_USER.join(AREA)).where(AREA.c.galaxy_id == galaxy_id).order_by(AREA_USER.c.areauser_id)):
         data[count] = (
             area_user[AREA_USER.c.area_id],
             area_user[AREA_USER.c.userid],
@@ -164,7 +164,7 @@ def store_fits_header(connection, galaxy_id, group):
     count = connection.execute(select([func.count(FITS_HEADER.c.fitsheader_id)]).where(FITS_HEADER.c.galaxy_id == galaxy_id)).first()[0]
     data = numpy.zeros(count, dtype=data_type_fits_header)
     count = 0
-    for fits_header in connection.execute(select([FITS_HEADER]).where(FITS_HEADER.c.galaxy_id == galaxy_id)):
+    for fits_header in connection.execute(select([FITS_HEADER]).where(FITS_HEADER.c.galaxy_id == galaxy_id).order_by(FITS_HEADER.c.fitsheader_id)):
         data[count] = (
             fits_header[FITS_HEADER.c.keyword],
             fits_header[FITS_HEADER.c.value],
@@ -180,7 +180,7 @@ def store_image_filters(connection, galaxy_id, group):
     count = connection.execute(select([func.count(IMAGE_FILTERS_USED.c.image_filters_used_id)]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id)).first()[0]
     data = numpy.zeros(count, dtype=data_type_image_filter)
     count = 0
-    for image_filters_used in connection.execute(select([IMAGE_FILTERS_USED]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id)):
+    for image_filters_used in connection.execute(select([IMAGE_FILTERS_USED]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id).order_by(IMAGE_FILTERS_USED.c.image_filters_used_id)):
         data[count] = (
             image_filters_used[IMAGE_FILTERS_USED.c.image_number],
             image_filters_used[IMAGE_FILTERS_USED.c.filter_id_red],
@@ -246,7 +246,7 @@ def store_pixels(connection, galaxy_id, group, dimension_x, dimension_y, dimensi
             pixel_result[PIXEL_RESULT.c.dz],
         )
 
-        for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id)):
+        for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id).order_by(PIXEL_PARAMETER.c.pxparameter_id)):
             z = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
             data[x, y, z, INDEX_PERCENTILE_50]    = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
             data[x, y, z, INDEX_HIGHEST_PROB_BIN] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] is not None else numpy.NaN

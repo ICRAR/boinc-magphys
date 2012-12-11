@@ -30,7 +30,6 @@ from __future__ import print_function
 import logging
 import os
 import sys
-from sqlalchemy.sql.expression import func, and_
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -50,6 +49,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.sql import select
 from database.database_support_core import GALAXY, PIXEL_RESULT, PIXEL_FILTER
 from utils.writeable_dir import WriteableDir
+from sqlalchemy.sql.expression import func, and_
 
 parser = argparse.ArgumentParser('Archive Galaxy by galaxy_id')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the HDF5 files will be written')
