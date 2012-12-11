@@ -38,11 +38,15 @@ PARAMETER_TYPES = ['f_mu (SFH)', 'f_mu (IR)', 'mu parameter', 'tau_V', 'sSFR_0.1
                       'M(dust)', 'SFR_0.1Gyr']
 
 NUMBER_PARAMETERS = 16
-NUMBER_IMAGES = 3
+NUMBER_IMAGES = 7
 
 INDEX_BEST_FIT         = 0
-INDEX_MEDIAN           = 1
+INDEX_PERCENTILE_50    = 1
 INDEX_HIGHEST_PROB_BIN = 2
+INDEX_PERCENTILE_2_5    = 3
+INDEX_PERCENTILE_16     = 4
+INDEX_PERCENTILE_84     = 5
+INDEX_PERCENTILE_97_5   = 6
 
 INDEX_F_MU_SFH     = 0
 INDEX_F_MU_IR      = 1
@@ -102,10 +106,6 @@ data_type_pixel_histogram = numpy.dtype([
     ('hist_value', float),
 ])
 data_type_pixel_parameter =  numpy.dtype([
-    ('percentile2_5',  float),
-    ('percentile16',   float),
-    ('percentile84',   float),
-    ('percentile97_5', float),
     ('first_prob_bin', float),
     ('last_prob_bin',  float),
     ('bin_step',       float),
@@ -190,7 +190,7 @@ def store_image_filters(connection, galaxy_id, group):
         count += 1
     group.create_dataset('image_filters', data=data, compression='gzip')
 
-def store_pixels1(connection, galaxy_id, group, dimension_x, dimension_y, dimension_z, pixel_count):
+def store_pixels(connection, galaxy_id, group, dimension_x, dimension_y, dimension_z, pixel_count):
     """
     Store the pixel data
     """
@@ -248,17 +248,17 @@ def store_pixels1(connection, galaxy_id, group, dimension_x, dimension_y, dimens
 
         for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id)):
             z = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
-            data[x, y, z, INDEX_MEDIAN] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
+            data[x, y, z, INDEX_PERCENTILE_50]    = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
             data[x, y, z, INDEX_HIGHEST_PROB_BIN] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin]
+            data[x, y, z, INDEX_PERCENTILE_2_5]   = pixel_parameter[PIXEL_PARAMETER.c.percentile2_5]
+            data[x, y, z, INDEX_PERCENTILE_16]    = pixel_parameter[PIXEL_PARAMETER.c.percentile16]
+            data[x, y, z, INDEX_PERCENTILE_84]    = pixel_parameter[PIXEL_PARAMETER.c.percentile84]
+            data[x, y, z, INDEX_PERCENTILE_97_5]  = pixel_parameter[PIXEL_PARAMETER.c.percentile97_5]
 
             first_prob_bin = pixel_parameter[PIXEL_PARAMETER.c.first_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.first_prob_bin] is not None else numpy.NaN
             last_prob_bin = pixel_parameter[PIXEL_PARAMETER.c.last_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.last_prob_bin] is not None else numpy.NaN
             bin_step = pixel_parameter[PIXEL_PARAMETER.c.bin_step] if pixel_parameter[PIXEL_PARAMETER.c.bin_step] is not None else numpy.NaN
             data_pixel_parameters[x, y, z] = (
-                pixel_parameter[PIXEL_PARAMETER.c.percentile2_5],
-                pixel_parameter[PIXEL_PARAMETER.c.percentile16],
-                pixel_parameter[PIXEL_PARAMETER.c.percentile84],
-                pixel_parameter[PIXEL_PARAMETER.c.percentile97_5],
                 first_prob_bin,
                 last_prob_bin,
                 bin_step,
@@ -301,130 +301,12 @@ def store_pixels1(connection, galaxy_id, group, dimension_x, dimension_y, dimens
     pixel_dataset.attrs['DIM3_SFR_0_1GYR']   = INDEX_SFR_0_1GYR
 
     pixel_dataset.attrs['DIM4_BEST_FIT']         = INDEX_BEST_FIT
-    pixel_dataset.attrs['DIM4_MEDIAN']           = INDEX_MEDIAN
+    pixel_dataset.attrs['DIM4_PERCENTILE_50']    = INDEX_PERCENTILE_50
     pixel_dataset.attrs['DIM4_HIGHEST_PROB_BIN'] = INDEX_HIGHEST_PROB_BIN
-
-    pxresult_id = connection.execute(select([PIXEL_RESULT.c.pxresult_id]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id)).first()[0]
-    filter_layer = 0
-    for pixel_filter in connection.execute(select([PIXEL_FILTER]).where(PIXEL_FILTER.c.pxresult_id == pxresult_id).order_by(PIXEL_FILTER.c.pxfilter_id)):
-        data_pixel_filter.attrs[pixel_filter[PIXEL_FILTER.c.filter_name]] = filter_layer
-        filter_layer += 1
-
-    return count
-
-def store_pixels2(connection, galaxy_id, group, dimension_x, dimension_y, dimension_z, pixel_count):
-    """
-    Store the pixel data
-    """
-    LOG.info('Storing the pixel data (format 2)- {0} pixels to process'.format(pixel_count))
-    data_elements = []
-    for type in ['Best Fit', 'Median', 'Highest Probability Bin']:
-        type_group = group.create_group(type)
-        list = []
-        for parameter in PARAMETER_TYPES:
-            parameter_group = type_group.create_group(parameter)
-            list.append(parameter_group.create_dataset('data', (dimension_x, dimension_y), dtype=numpy.float, compression='gzip'))
-        data_elements.append(list)
-
-    data_pixel_filter = group.create_dataset('pixel_filters', (dimension_x, dimension_y, dimension_z), dtype=data_type_pixel_filter, compression='gzip')
-
-    count = 0
-    previous_x = -1
-    x_group = None
-    for pixel_result in connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id).order_by(PIXEL_RESULT.c.x)):
-        count += 1
-
-        if count % 500 == 0:
-            LOG.info('Processed {0} of {1}'.format(count, pixel_count))
-
-        pxresult_id = pixel_result[PIXEL_RESULT.c.pxresult_id]
-        x = pixel_result[PIXEL_RESULT.c.x]
-        y = pixel_result[PIXEL_RESULT.c.y]
-
-        if previous_x != x:
-            x_group = group.create_group(str(x))
-            previous_x = x
-
-        y_group = x_group.create_group(str(y))
-
-        f_mu_sfh = data_elements[INDEX_BEST_FIT][INDEX_F_MU_SFH]
-        f_mu_sfh[x, y] = pixel_result[PIXEL_RESULT.c.fmu_sfh]
-        f_mu_ir = data_elements[INDEX_BEST_FIT][INDEX_F_MU_IR]
-        f_mu_ir[x, y] = pixel_result[PIXEL_RESULT.c.fmu_ir]
-        mu_parameter = data_elements[INDEX_BEST_FIT][INDEX_MU_PARAMETER]
-        mu_parameter[x, y] = pixel_result[PIXEL_RESULT.c.mu]
-        tau_v = data_elements[INDEX_BEST_FIT][INDEX_TAU_V]
-        tau_v[x, y] = pixel_result[PIXEL_RESULT.c.tauv]
-        ssfr_gyr = data_elements[INDEX_BEST_FIT][INDEX_SSFR_0_1GYR]
-        ssfr_gyr[x, y] = pixel_result[PIXEL_RESULT.c.s_sfr]
-        m_stars = data_elements[INDEX_BEST_FIT][INDEX_M_STARS]
-        m_stars[x, y] = pixel_result[PIXEL_RESULT.c.m]
-        l_dust = data_elements[INDEX_BEST_FIT][INDEX_L_DUST]
-        l_dust[x, y] = pixel_result[PIXEL_RESULT.c.ldust]
-        t_c_ism = data_elements[INDEX_BEST_FIT][INDEX_T_C_ISM]
-        t_c_ism[x, y] = pixel_result[PIXEL_RESULT.c.t_c_ism]
-        t_w_bc = data_elements[INDEX_BEST_FIT][INDEX_T_W_BC]
-        t_w_bc[x, y] = pixel_result[PIXEL_RESULT.c.t_w_bc]
-        xi_c_tot = data_elements[INDEX_BEST_FIT][INDEX_XI_C_TOT]
-        xi_c_tot[x, y] = pixel_result[PIXEL_RESULT.c.xi_c_tot]
-        xi_pah_tot = data_elements[INDEX_BEST_FIT][INDEX_XI_PAH_TOT]
-        xi_pah_tot[x, y] = pixel_result[PIXEL_RESULT.c.xi_pah_tot]
-        xi_mir_tot = data_elements[INDEX_BEST_FIT][INDEX_XI_MIR_TOT]
-        xi_mir_tot[x, y] = pixel_result[PIXEL_RESULT.c.xi_mir_tot]
-        xi_w_tot = data_elements[INDEX_BEST_FIT][INDEX_XI_W_TOT]
-        xi_w_tot[x, y] = pixel_result[PIXEL_RESULT.c.x_w_tot]
-        tau_v_ism = data_elements[INDEX_BEST_FIT][INDEX_TAU_V_ISM]
-        tau_v_ism[x, y] = pixel_result[PIXEL_RESULT.c.tvism]
-        index_m_dust = data_elements[INDEX_BEST_FIT][INDEX_M_DUST]
-        index_m_dust[x, y] = pixel_result[PIXEL_RESULT.c.mdust]
-        sfr_gyr = data_elements[INDEX_BEST_FIT][INDEX_SFR_0_1GYR]
-        sfr_gyr[x, y] = pixel_result[PIXEL_RESULT.c.sfr]
-
-        y_group.attrs['pxresult_id'] = pxresult_id
-        y_group.attrs['area_id']     = pixel_result[PIXEL_RESULT.c.area_id]
-        y_group.attrs['i_sfh']       = str(pixel_result[PIXEL_RESULT.c.i_sfh])
-        y_group.attrs['i_ir']        = str(pixel_result[PIXEL_RESULT.c.i_ir])
-        y_group.attrs['chi2']        = str(pixel_result[PIXEL_RESULT.c.chi2])
-        y_group.attrs['redshift']    = str(pixel_result[PIXEL_RESULT.c.redshift])
-        y_group.attrs['i_opt']       = str(pixel_result[PIXEL_RESULT.c.i_opt])
-        y_group.attrs['dmstar']      = str(pixel_result[PIXEL_RESULT.c.dmstar])
-        y_group.attrs['dfmu_aux']    = str(pixel_result[PIXEL_RESULT.c.dfmu_aux])
-        y_group.attrs['dz']          = str(pixel_result[PIXEL_RESULT.c.dz])
-
-        for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id)):
-            z = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
-            median_z = data_elements[INDEX_MEDIAN][z]
-            median_z[x, y] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
-            highest_prob_bin_z = data_elements[INDEX_HIGHEST_PROB_BIN][z]
-            highest_prob_bin_z[x, y] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin]
-
-            pixel_parameter_group = y_group.create_group(PARAMETER_TYPES[z])
-            pixel_parameter_group.attrs['percentile2_5']  = str(pixel_parameter[PIXEL_PARAMETER.c.percentile2_5])
-            pixel_parameter_group.attrs['percentile16']   = str(pixel_parameter[PIXEL_PARAMETER.c.percentile16])
-            pixel_parameter_group.attrs['percentile84']   = str(pixel_parameter[PIXEL_PARAMETER.c.percentile84])
-            pixel_parameter_group.attrs['percentile97_5'] = str(pixel_parameter[PIXEL_PARAMETER.c.percentile97_5])
-            pixel_parameter_group.attrs['first_prob_bin'] = str(pixel_parameter[PIXEL_PARAMETER.c.first_prob_bin])
-            pixel_parameter_group.attrs['last_prob_bin']  = str(pixel_parameter[PIXEL_PARAMETER.c.last_prob_bin])
-            pixel_parameter_group.attrs['bin_step']       = str(pixel_parameter[PIXEL_PARAMETER.c.bin_step])
-
-            pixel_histogram_count = connection.execute(select([func.count(PIXEL_HISTOGRAM.c.pxhistogram_id)]).where(PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id])).first()[0]
-            data_pixel_histograms_list = pixel_parameter_group.create_dataset('pixel_histogram', (pixel_histogram_count,), dtype=data_type_pixel_histogram, compression='gzip')
-            pixel_histogram_count = 0
-            for pixel_histogram in connection.execute(select([PIXEL_HISTOGRAM]).where(PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id]).order_by(PIXEL_HISTOGRAM.c.pxhistogram_id)):
-                data_pixel_histograms_list[pixel_histogram_count] = (
-                    pixel_histogram[PIXEL_HISTOGRAM.c.x_axis],
-                    pixel_histogram[PIXEL_HISTOGRAM.c.hist_value],
-                    )
-                pixel_histogram_count += 1
-
-        filter_layer = 0
-        for pixel_filter in connection.execute(select([PIXEL_FILTER]).where(PIXEL_FILTER.c.pxresult_id == pxresult_id).order_by(PIXEL_FILTER.c.pxfilter_id)):
-            data_pixel_filter[x, y, filter_layer] = (
-                pixel_filter[PIXEL_FILTER.c.observed_flux],
-                pixel_filter[PIXEL_FILTER.c.observational_uncertainty],
-                pixel_filter[PIXEL_FILTER.c.flux_bfm],
-                )
-            filter_layer += 1
+    pixel_dataset.attrs['DIM4_PERCENTILE_2_5']   = INDEX_PERCENTILE_2_5
+    pixel_dataset.attrs['DIM4_PERCENTILE_16']    = INDEX_PERCENTILE_16
+    pixel_dataset.attrs['DIM4_PERCENTILE_84']    = INDEX_PERCENTILE_84
+    pixel_dataset.attrs['DIM4_PERCENTILE_97_5']  = INDEX_PERCENTILE_97_5
 
     pxresult_id = connection.execute(select([PIXEL_RESULT.c.pxresult_id]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id)).first()[0]
     filter_layer = 0
