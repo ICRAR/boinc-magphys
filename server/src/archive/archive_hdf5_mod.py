@@ -43,10 +43,10 @@ NUMBER_IMAGES = 7
 INDEX_BEST_FIT         = 0
 INDEX_PERCENTILE_50    = 1
 INDEX_HIGHEST_PROB_BIN = 2
-INDEX_PERCENTILE_2_5    = 3
-INDEX_PERCENTILE_16     = 4
-INDEX_PERCENTILE_84     = 5
-INDEX_PERCENTILE_97_5   = 6
+INDEX_PERCENTILE_2_5   = 3
+INDEX_PERCENTILE_16    = 4
+INDEX_PERCENTILE_84    = 5
+INDEX_PERCENTILE_97_5  = 6
 
 INDEX_F_MU_SFH     = 0
 INDEX_F_MU_IR      = 1
@@ -249,7 +249,7 @@ def store_pixels(connection, galaxy_id, group, dimension_x, dimension_y, dimensi
         for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id)):
             z = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
             data[x, y, z, INDEX_PERCENTILE_50]    = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
-            data[x, y, z, INDEX_HIGHEST_PROB_BIN] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin]
+            data[x, y, z, INDEX_HIGHEST_PROB_BIN] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] is not None else numpy.NaN
             data[x, y, z, INDEX_PERCENTILE_2_5]   = pixel_parameter[PIXEL_PARAMETER.c.percentile2_5]
             data[x, y, z, INDEX_PERCENTILE_16]    = pixel_parameter[PIXEL_PARAMETER.c.percentile16]
             data[x, y, z, INDEX_PERCENTILE_84]    = pixel_parameter[PIXEL_PARAMETER.c.percentile84]
