@@ -107,18 +107,6 @@ package { 'libpng':
     ensure => installed,
 }
 
-# NGAS
-package { 'readline-devel':
-    ensure => installed,
-}
-package { 'sqlite-devel':
-    ensure => installed,
-}
-package { 'gdbm-devel':
-    ensure => installed,
-}
-
-
 # Create the apache user for the web site
 user { 'apache':
   ensure  => present,

@@ -148,10 +148,6 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('pip-2.7 install matplotlib')
     sudo('pip-2.7 install astropy')
 
-    # NGAS
-    sudo('pip-2.7 install virtualenv')
-    sudo('pip-2.7 install bsddb3')
-
     with cd('/tmp'):
         run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
         run('tar -xvzf h5py-2.1.0.tar.gz')
