@@ -53,12 +53,11 @@ from utils.writeable_dir import WriteableDir
 
 parser = argparse.ArgumentParser('Archive Galaxy by galaxy_id')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the HDF5 files will be written')
-parser.add_argument('-1', action='store_true', help='the type 1 storage format')
 parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id or 4-30 if you need a range')
 args = vars(parser.parse_args())
 
 OUTPUT_DIRECTORY = args['output_dir']
-STORE_TYPE1 = args['1']
+OUTPUT_FORMAT = 'Version 1.00'
 
 # Connect to the two databases
 engine_aws = create_engine(DB_LOGIN)
@@ -88,9 +87,9 @@ try:
 
             # Copy the galaxy details
             if galaxy[GALAXY.c.version_number] == 1:
-                filename = os.path.join(OUTPUT_DIRECTORY, '{0}_{1}.hdf5'.format(galaxy[GALAXY.c.name], 1 if STORE_TYPE1 else 2))
+                filename = os.path.join(OUTPUT_DIRECTORY, '{0}.hdf5'.format(galaxy[GALAXY.c.name]))
             else:
-                filename = os.path.join(OUTPUT_DIRECTORY, '{0}_V{1}_{2}.hdf5'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], 1 if STORE_TYPE1 else 2))
+                filename = os.path.join(OUTPUT_DIRECTORY, '{0}_V{1}.hdf5'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number]))
 
             h5_file = h5py.File(filename, 'w')
 
@@ -117,6 +116,7 @@ try:
             galaxy_group.attrs['sigma']            = float(galaxy[GALAXY.c.sigma])
             galaxy_group.attrs['pixel_count']      = galaxy[GALAXY.c.pixel_count]
             galaxy_group.attrs['pixels_processed'] = galaxy[GALAXY.c.pixels_processed]
+            galaxy_group.attrs['output_format']    = OUTPUT_FORMAT
 
             galaxy_id_aws = galaxy[GALAXY.c.galaxy_id]
 
