@@ -161,19 +161,15 @@ def userGalaxy(request, userid, galaxy_id):
         
         map_imf = {}
         try: 
-            # TODO - Look at alternative means to supporting unicode
-            ENGINE_UTF8 = create_engine(DB_LOGIN + '?charset=utf8')
-            conn_utf8 = ENGINE_UTF8.connect()
             map_fl = {}
-            for filter in conn_utf8.execute(select([FILTER])):
+            for filter in connection.execute(select([FILTER])):
                 map_fl[filter.filter_id] = filter.label
             query = select([IMAGE_FILTERS_USED]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id)
-            for image in conn_utf8.execute(query):
+            for image in connection.execute(query):
                 fstr = map_fl[image.filter_id_red]
                 fstr = fstr + ", " + map_fl[image.filter_id_green]
                 fstr = fstr + ", " + map_fl[image.filter_id_blue]
                 map_imf[image.image_number] = fstr 
-            conn_utf8.close()
         except: 
             for i in range(1, 5):
                 map_imf[i] = 'Unknown Filter'
