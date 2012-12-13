@@ -382,9 +382,8 @@ def galaxyImage(request, galaxy_id, colour):
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
-    image = fitsimage.FitsImage(connection)
     imagePrefixName = '{0}_{1}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number])
-    imageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
+    imageFileName = directory_mod.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
     connection.close()
 
     sizeBytes = os.path.getsize(imageFileName)

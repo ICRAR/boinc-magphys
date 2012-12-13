@@ -43,7 +43,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 parser = argparse.ArgumentParser('Delete Galaxy by galaxy_id')
 parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id or 4-30 if you need a range')
+parser.add_argument('-a', '--all', action='store_true', help='delete everything including the galaxy, the images and the user areas')
 args = vars(parser.parse_args())
+
+delete_all = args['all']
 
 # First check the galaxy exists in the database
 ENGINE = create_engine(DB_LOGIN)
@@ -81,7 +84,7 @@ for galaxy_id_str in galaxy_ids:
                 print("Deleting galaxy {0} area {1} pixel {2}".format(galaxy_id_str, area_id1[0], pxresult_id1[0]), end="\r")
                 sys.stdout.flush()
 
-                connection.execute(PIXEL_FILTER.delete().where(PIXEL_FILTER.cpxresult_id == pxresult_id1[0]))
+                connection.execute(PIXEL_FILTER.delete().where(PIXEL_FILTER.c.pxresult_id == pxresult_id1[0]))
                 connection.execute(PIXEL_PARAMETER.delete().where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id1[0]))
                 connection.execute(PIXEL_HISTOGRAM.delete().where(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id1[0]))
 
@@ -94,20 +97,21 @@ for galaxy_id_str in galaxy_ids:
             # Give the rest of the world a chance to access the database
             time.sleep(10)
 
-        connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
-        connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
-        connection.execute(GALAXY.delete().where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
+        if delete_all:
+            connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
+            connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
+            connection.execute(GALAXY.delete().where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
 
-        file_prefix_name = galaxy[GALAXY.c.name] + "_" + str(galaxy[GALAXY.c.version_number])
-        for i in [1, 2, 3, 4]:
-            file_name = directory_mod.get_colour_image_path(WG_IMAGE_DIRECTORY, file_prefix_name, i, False)
-            remove_file(file_name)
+            file_prefix_name = galaxy[GALAXY.c.name] + "_" + str(galaxy[GALAXY.c.version_number])
+            for i in [1, 2, 3, 4]:
+                file_name = directory_mod.get_colour_image_path(WG_IMAGE_DIRECTORY, file_prefix_name, i, False)
+                remove_file(file_name)
 
-            file_name = directory_mod.get_thumbnail_colour_image_path(WG_IMAGE_DIRECTORY, file_prefix_name, i, False)
-            remove_file(file_name)
+                file_name = directory_mod.get_thumbnail_colour_image_path(WG_IMAGE_DIRECTORY, file_prefix_name, i, False)
+                remove_file(file_name)
 
-        fits_file_name = directory_mod.get_file_path(WG_IMAGE_DIRECTORY, file_prefix_name + '.fits', False)
-        remove_file(fits_file_name)
+            fits_file_name = directory_mod.get_file_path(WG_IMAGE_DIRECTORY, file_prefix_name + '.fits', False)
+            remove_file(fits_file_name)
 
     LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id1)
     transaction.commit()
