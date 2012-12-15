@@ -66,28 +66,42 @@ def main():
     connection = ENGINE.connect()
 
     assignTasks(token,connection)
-    LOG.info("Worker started with token id %s" % token)
+    LOG.info("Worker started with token %s" % token)
     tasks = getTasks(token,connection)
     LOG.info("Got %d tasks to process" % len(tasks))
-    runTasks(tasks,connection)
+    for task in tasks:
+        LOG.info("Task id #%s - Processing start" % task.task_id)
+        try:
+            runTask(task,connection)
+            LOG.info("Task id #%s - Completed succesfully" % task.task_id)
+        except Exception, e: 
+            LOG.info("Task id #%s - Failed with error \"%s\"" % (task.task_id,e))
+            deassignTask(task,connection)
     LOG.info("Worker finished")
-
     connection.close()
 
-def runTasks(tasks,connection):
-
-    for task in tasks:
+def runTask(task,connection):
+    try:
         docmosis.emailGalaxyReport(task.userid,task.galaxy_ids)
         query = DOCMOSIS_TASK.update()
         query = query.where(DOCMOSIS_TASK.c.task_id == task.task_id)
         query = query.values(finish_time = datetime.now(), status = 2)
         connection.execute(query)
+    except:
+        raise
 
 def assignTasks(token,connection):
 
     query = DOCMOSIS_TASK.update()
     query = query.where(and_(DOCMOSIS_TASK.c.worker_token == None, DOCMOSIS_TASK.c.status == 1))
     query = query.values(worker_token = token)
+    connection.execute(query)
+
+def deassignTask(task,connection):
+
+    query = DOCMOSIS_TASK.update()
+    query = query.where(DOCMOSIS_TASK.c.task_id == task.task_id)
+    query = query.values(worker_token = None, status = 1)
     connection.execute(query)
 
 def getTasks(token,connection):
