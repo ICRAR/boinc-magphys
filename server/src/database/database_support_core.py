@@ -72,7 +72,8 @@ FILTER = Table('filter',
     Column('filter_number', Integer),
     Column('ultraviolet'  , Integer),
     Column('optical'      , Integer),
-    Column('infrared'     , Integer)
+    Column('infrared'     , Integer),
+    Column('label'        , String(20))
 )
 
 FITS_HEADER = Table('fits_header',
