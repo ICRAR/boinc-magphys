@@ -191,9 +191,9 @@ def galaxyExternalData(name):
         galaxy_line.design += design
         i += 1
 
-
     url='http://leda.univ-lyon1.fr/G.cgi?n=113&c=o&o=' + name[:-1] + '&a=x&z=d'
     table = parseVOTable(url)
+
     galaxy_line.ra = table.array['alpha'][0]
     galaxy_line.dec = table.array['delta'][0]
     galaxy_line.pos1 = table.array['radec1950'][0]
@@ -214,13 +214,17 @@ def parseVOTable(url):
 
     outXMLFileName = tmp[1]
 
-    response = urllib2.urlopen(url)
-    with open(outXMLFileName, 'w') as file:
-        file.write(response.read())
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        votable = parse(outXMLFileName)
-    table = votable.get_first_table()
+    try:
+        response = urllib2.urlopen(url)
+        with open(outXMLFileName, 'w') as file:
+            file.write(response.read())
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            votable = parse(outXMLFileName)
+        table = votable.get_first_table()
+    except:
+        os.remove(outXMLFileName)
+        raise Exception("VOTable provider error")
 
     os.remove(outXMLFileName)
 

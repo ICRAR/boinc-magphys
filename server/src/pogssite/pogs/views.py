@@ -34,7 +34,7 @@ from sqlalchemy.sql.expression import select, and_, not_
 from config import DJANGO_IMAGE_DIR, DB_LOGIN
 from image import fitsimage, directory_mod
 from pogs.models import Galaxy
-from database.database_support_core import AREA, AREA_USER, GALAXY, DOCMOSIS_TASK, DOCMOSIS_TASK_GALAXY
+from database.database_support_core import AREA, AREA_USER, GALAXY, DOCMOSIS_TASK, DOCMOSIS_TASK_GALAXY, IMAGE_FILTERS_USED, FILTER
 
 ENGINE = create_engine(DB_LOGIN)
 
@@ -158,6 +158,22 @@ def userGalaxy(request, userid, galaxy_id):
             galaxy_name = galaxy[GALAXY.c.name] + "[" + str(galaxy[GALAXY.c.version_number]) + "]"
         galaxy_height = galaxy[GALAXY.c.dimension_x]
         galaxy_width = galaxy[GALAXY.c.dimension_y]
+        
+        map_imf = {}
+        try: 
+            map_fl = {}
+            for filter in connection.execute(select([FILTER])):
+                map_fl[filter.filter_id] = filter.label
+            query = select([IMAGE_FILTERS_USED]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id)
+            for image in connection.execute(query):
+                fstr = map_fl[image.filter_id_red]
+                fstr = fstr + ", " + map_fl[image.filter_id_green]
+                fstr = fstr + ", " + map_fl[image.filter_id_blue]
+                map_imf[image.image_number] = fstr 
+        except: 
+            for i in range(1, 5):
+                map_imf[i] = 'Unknown Filter'
+
         referer = getRefererFromCookie(request)
 
         t = loader.get_template('pogs/user_images.html')
@@ -167,6 +183,10 @@ def userGalaxy(request, userid, galaxy_id):
             'galaxy_name': galaxy_name,
             'galaxy_width': galaxy_width,
             'galaxy_height': galaxy_height,
+            'image1_filters': map_imf[1], 
+            'image2_filters': map_imf[2], 
+            'image3_filters': map_imf[3], 
+            'image4_filters': map_imf[4], 
             'referer':          referer,
         })
         response = HttpResponse(t.render(c))
@@ -382,9 +402,8 @@ def galaxyImage(request, galaxy_id, colour):
     galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
-    image = fitsimage.FitsImage(connection)
     imagePrefixName = '{0}_{1}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number])
-    imageFileName = image.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
+    imageFileName = directory_mod.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
     connection.close()
 
     sizeBytes = os.path.getsize(imageFileName)
