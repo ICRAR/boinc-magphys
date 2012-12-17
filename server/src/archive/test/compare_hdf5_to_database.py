@@ -72,8 +72,20 @@ def compare(param1, param2, tag1, tag2 = None, tag3 = None, tag4 = None, tag5 = 
     Compare two results to make sure they are the same
     """
     global error_count
-    math_isnan_param1 = math.isnan(param1)
-    math_isnan_param2 = math.isnan(param2) or param2 is None
+    if param1 is None:
+        math_isnan_param1 = True
+    elif isinstance(param1, float):
+        math_isnan_param1 = math.isnan(param1)
+    else:
+        math_isnan_param1 = False
+
+    if param2 is None:
+        math_isnan_param2 = True
+    elif isinstance(param1, float):
+        math_isnan_param2 = math.isnan(param2) or param2 is None
+    else:
+        math_isnan_param2 = False
+
     if math_isnan_param1 and math_isnan_param2:
         # The same
         pass

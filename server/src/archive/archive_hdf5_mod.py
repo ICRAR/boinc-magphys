@@ -247,31 +247,32 @@ def store_pixels(connection, galaxy_id, group, dimension_x, dimension_y, dimensi
         )
 
         for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id).order_by(PIXEL_PARAMETER.c.pxparameter_id)):
-            z = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
-            data[x, y, z, INDEX_PERCENTILE_50]    = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
-            data[x, y, z, INDEX_HIGHEST_PROB_BIN] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] is not None else numpy.NaN
-            data[x, y, z, INDEX_PERCENTILE_2_5]   = pixel_parameter[PIXEL_PARAMETER.c.percentile2_5]
-            data[x, y, z, INDEX_PERCENTILE_16]    = pixel_parameter[PIXEL_PARAMETER.c.percentile16]
-            data[x, y, z, INDEX_PERCENTILE_84]    = pixel_parameter[PIXEL_PARAMETER.c.percentile84]
-            data[x, y, z, INDEX_PERCENTILE_97_5]  = pixel_parameter[PIXEL_PARAMETER.c.percentile97_5]
+            if pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] is not None:
+                z = pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] - 1
+                data[x, y, z, INDEX_PERCENTILE_50]    = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
+                data[x, y, z, INDEX_HIGHEST_PROB_BIN] = pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.high_prob_bin] is not None else numpy.NaN
+                data[x, y, z, INDEX_PERCENTILE_2_5]   = pixel_parameter[PIXEL_PARAMETER.c.percentile2_5]
+                data[x, y, z, INDEX_PERCENTILE_16]    = pixel_parameter[PIXEL_PARAMETER.c.percentile16]
+                data[x, y, z, INDEX_PERCENTILE_84]    = pixel_parameter[PIXEL_PARAMETER.c.percentile84]
+                data[x, y, z, INDEX_PERCENTILE_97_5]  = pixel_parameter[PIXEL_PARAMETER.c.percentile97_5]
 
-            first_prob_bin = pixel_parameter[PIXEL_PARAMETER.c.first_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.first_prob_bin] is not None else numpy.NaN
-            last_prob_bin = pixel_parameter[PIXEL_PARAMETER.c.last_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.last_prob_bin] is not None else numpy.NaN
-            bin_step = pixel_parameter[PIXEL_PARAMETER.c.bin_step] if pixel_parameter[PIXEL_PARAMETER.c.bin_step] is not None else numpy.NaN
-            data_pixel_parameters[x, y, z] = (
-                first_prob_bin,
-                last_prob_bin,
-                bin_step,
-            )
-
-            pixel_histogram_start = pixel_histogram_count
-            for pixel_histogram in connection.execute(select([PIXEL_HISTOGRAM]).where(PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id]).order_by(PIXEL_HISTOGRAM.c.pxhistogram_id)):
-                data_pixel_histograms_list[pixel_histogram_count] = (
-                    pixel_histogram[PIXEL_HISTOGRAM.c.x_axis],
-                    pixel_histogram[PIXEL_HISTOGRAM.c.hist_value],
+                first_prob_bin = pixel_parameter[PIXEL_PARAMETER.c.first_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.first_prob_bin] is not None else numpy.NaN
+                last_prob_bin = pixel_parameter[PIXEL_PARAMETER.c.last_prob_bin] if pixel_parameter[PIXEL_PARAMETER.c.last_prob_bin] is not None else numpy.NaN
+                bin_step = pixel_parameter[PIXEL_PARAMETER.c.bin_step] if pixel_parameter[PIXEL_PARAMETER.c.bin_step] is not None else numpy.NaN
+                data_pixel_parameters[x, y, z] = (
+                    first_prob_bin,
+                    last_prob_bin,
+                    bin_step,
                 )
-                pixel_histogram_count += 1
-            data_pixel_histograms_grid[x, y, z] = data_pixel_histograms_list.regionref[pixel_histogram_start:pixel_histogram_count]
+
+                pixel_histogram_start = pixel_histogram_count
+                for pixel_histogram in connection.execute(select([PIXEL_HISTOGRAM]).where(PIXEL_HISTOGRAM.c.pxparameter_id == pixel_parameter[PIXEL_PARAMETER.c.pxparameter_id]).order_by(PIXEL_HISTOGRAM.c.pxhistogram_id)):
+                    data_pixel_histograms_list[pixel_histogram_count] = (
+                        pixel_histogram[PIXEL_HISTOGRAM.c.x_axis],
+                        pixel_histogram[PIXEL_HISTOGRAM.c.hist_value],
+                    )
+                    pixel_histogram_count += 1
+                data_pixel_histograms_grid[x, y, z] = data_pixel_histograms_list.regionref[pixel_histogram_start:pixel_histogram_count]
 
         filter_layer = 0
         for pixel_filter in connection.execute(select([PIXEL_FILTER]).where(PIXEL_FILTER.c.pxresult_id == pxresult_id).order_by(PIXEL_FILTER.c.pxfilter_id)):
