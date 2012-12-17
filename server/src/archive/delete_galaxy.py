@@ -94,9 +94,6 @@ for galaxy_id_str in galaxy_ids:
             transaction.commit()
             transaction = connection.begin()
 
-            # Give the rest of the world a chance to access the database
-            time.sleep(10)
-
         if delete_all:
             connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
             connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
