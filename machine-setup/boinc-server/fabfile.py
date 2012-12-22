@@ -278,6 +278,12 @@ def format_drive():
     """
     Format the drive
     """
+    # Create the swap
+    sudo('dd if=/dev/zero of=/swapfile bs=1M count=2048')
+    sudo('mkswap /swapfile')
+    sudo('swapon /swapfile')
+
+    # Create the shared drives
     sudo('parted -a optimal /dev/sdg --script mklabel gpt')
     sudo('parted -a optimal /dev/sdg --script mkpart primary 0% 100%')
     time.sleep(2)
@@ -286,6 +292,8 @@ def format_drive():
     sudo('chattr +i /mnt/brick')
     sudo('mount /dev/sdg1 /mnt/brick')
     sudo('''echo '
+# Swap
+/swapfile swap swap defaults 0 0
 #
 # XFS mounts
 LABEL=data              /mnt/brick                   xfs     defaults        0 0
@@ -504,9 +512,9 @@ def setup_env():
     if 'docmosis_key' not in env:
         prompt('Docmosis Key:', 'docmosis_key')
     if 'aws_access_key_id' not in env:
-        prompt('AWS Access Key Id', 'aws_access_key_id')
+        prompt('AWS Access Key Id:', 'aws_access_key_id')
     if 'aws_secret_access_key' not in env:
-        prompt('AWS Secret Access Key', 'aws_secret_access_key')
+        prompt('AWS Secret Access Key:', 'aws_secret_access_key')
 
     # Create the instance in AWS
     host_names = create_instance(env.instance_stub_name, env.instances, env.ebs_size)
@@ -517,6 +525,23 @@ def setup_env():
         'main' : [host_names[0]],
         'additional' : host_names[1:]
     }
+
+@task
+@serial
+def single_server():
+    """
+    Copy the files and start building a single server
+    """
+    require('hosts', provided_by=[setup_env])
+
+    yum_install()
+
+    # Wait for things to settle down
+    time.sleep(15)
+    format_drive()
+
+    # Wait for things to settle down
+    time.sleep(15)
 
 @task
 @serial
