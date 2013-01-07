@@ -158,18 +158,12 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
 
     for user in env.list_of_users:
         sudo('useradd {0}'.format(user))
-        if host0:
-            sudo('mv /home/{0} /mnt/data && ln -s /mnt/data/{0}/ /home/{0}'.format(user))
-            sudo('chown {0}:{0} /home/{0}'.format(user))
-            sudo('mkdir /home/{0}/.ssh'.format(user))
-            sudo('chmod 700 /home/{0}/.ssh'.format(user))
-            sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
-            sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
-            sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
-            sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
-        else:
-            sudo('rm -rf /home/{0} && ln -s /mnt/data/{0}/ /home/{0}'.format(user))
-            sudo('chown {0}:{0} /home/{0}'.format(user))
+        sudo('mkdir /home/{0}/.ssh'.format(user))
+        sudo('chmod 700 /home/{0}/.ssh'.format(user))
+        sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
+        sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
+        sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
+        sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
 
         # Add them to the sudoers
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
@@ -284,6 +278,12 @@ def format_drive():
     """
     Format the drive
     """
+    # Create the swap
+    sudo('dd if=/dev/zero of=/swapfile bs=1M count=2048')
+    sudo('mkswap /swapfile')
+    sudo('swapon /swapfile')
+
+    # Create the shared drives
     sudo('parted -a optimal /dev/sdg --script mklabel gpt')
     sudo('parted -a optimal /dev/sdg --script mkpart primary 0% 100%')
     time.sleep(2)
@@ -292,6 +292,8 @@ def format_drive():
     sudo('chattr +i /mnt/brick')
     sudo('mount /dev/sdg1 /mnt/brick')
     sudo('''echo '
+# Swap
+/swapfile swap swap defaults 0 0
 #
 # XFS mounts
 LABEL=data              /mnt/brick                   xfs     defaults        0 0
@@ -510,9 +512,9 @@ def setup_env():
     if 'docmosis_key' not in env:
         prompt('Docmosis Key:', 'docmosis_key')
     if 'aws_access_key_id' not in env:
-        prompt('AWS Access Key Id', 'aws_access_key_id')
+        prompt('AWS Access Key Id:', 'aws_access_key_id')
     if 'aws_secret_access_key' not in env:
-        prompt('AWS Secret Access Key', 'aws_secret_access_key')
+        prompt('AWS Secret Access Key:', 'aws_secret_access_key')
 
     # Create the instance in AWS
     host_names = create_instance(env.instance_stub_name, env.instances, env.ebs_size)
@@ -523,6 +525,23 @@ def setup_env():
         'main' : [host_names[0]],
         'additional' : host_names[1:]
     }
+
+@task
+@serial
+def single_server():
+    """
+    Copy the files and start building a single server
+    """
+    require('hosts', provided_by=[setup_env])
+
+    yum_install()
+
+    # Wait for things to settle down
+    time.sleep(15)
+    format_drive()
+
+    # Wait for things to settle down
+    time.sleep(15)
 
 @task
 @serial
@@ -647,6 +666,10 @@ Django
 SSH
 1) Edit the /etc/hosts file on each server and put in the hostname used
    by BOINC for each server
+   Like this:
+   127.0.0.1   localhost localhost.localdomain
+    23.23.126.96 ip-10-80-75-121 ec2-23-23-126.96.compute-1.amazonaws.com
+    23.21.118.134 ip-10-83-98-164 ec2-23-21-188-134.compute-1.amazonaws.com
 2) Connect to each of the servers from the other to ensure they can connect
 
 MYSQL

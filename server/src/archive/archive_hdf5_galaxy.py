@@ -131,16 +131,17 @@ try:
 
             # How many filter layers are there (check a row with some)
             pixel_result = connection.execute(select([PIXEL_RESULT]).where(and_(PIXEL_RESULT.c.galaxy_id == galaxy_id1, PIXEL_RESULT.c.i_sfh != None))).first()
-            filter_layers = connection.execute(select([func.count(PIXEL_FILTER.c.pxfilter_id)]).where(PIXEL_FILTER.c.pxresult_id == pixel_result[PIXEL_RESULT.c.pxresult_id])).first()[0]
+            if pixel_result is not None:
+                filter_layers = connection.execute(select([func.count(PIXEL_FILTER.c.pxfilter_id)]).where(PIXEL_FILTER.c.pxresult_id == pixel_result[PIXEL_RESULT.c.pxresult_id])).first()[0]
 
-            # Store the values associated with a pixel
-            pixel_count = store_pixels(connection,
-                galaxy_id_aws,
-                pixel_group,
-                galaxy[GALAXY.c.dimension_x],
-                galaxy[GALAXY.c.dimension_y],
-                filter_layers,
-                galaxy[GALAXY.c.pixel_count])
+                # Store the values associated with a pixel
+                pixel_count = store_pixels(connection,
+                    galaxy_id_aws,
+                    pixel_group,
+                    galaxy[GALAXY.c.dimension_x],
+                    galaxy[GALAXY.c.dimension_y],
+                    filter_layers,
+                    galaxy[GALAXY.c.pixel_count])
 
             # Flush the HDF5 data to disk
             h5_file.flush()

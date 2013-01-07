@@ -18,8 +18,8 @@ To avoid having to store 100's of MBs of model files on the server we do this in
 
 ### Step 1  (Local machine)
 
-$ ./create_file_details input_dir output_dir
-$ ./create_file_details ~/boinc-magphys/runs/0001 ~/boinc-magphys/server/runs/0001
+$ ./create_file_details.py input_dir output_dir
+$ ./create_file_details.py ~/boinc-magphys/runs/0001 ~/boinc-magphys/server/runs/0001
 
 * **input_dir** where the *.lbr files are stored
 * **output_dir** where the output file is written

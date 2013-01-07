@@ -118,6 +118,8 @@ CREATE TABLE galaxy (
   dec_cent         FLOAT,
   pixel_count      INTEGER,
   pixels_processed INTEGER,
+  archived         BOOLEAN NOT NULL DEFAULT FALSE,
+  deleted          BOOLEAN NOT NULL DEFAULT FALSE,
 
   FOREIGN KEY (run_id) REFERENCES run(run_id),
 

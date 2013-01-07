@@ -26,16 +26,24 @@
 """
 Load the run details into the database
 """
-import argparse
-import glob
 import logging
 import os
-
-from work_generation import STAR_FORMATION_FILE, INFRARED_FILE
-from work_generation.create_file_details_mod import get_md5, get_redshift
+import sys
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
+
+import argparse
+import glob
+
+from work_generation import STAR_FORMATION_FILE, INFRARED_FILE
+from work_generation.create_file_details_mod import get_md5, get_redshift
 
 parser = argparse.ArgumentParser()
 parser.add_argument('input_dir', nargs=1, help='the directory containing the files')
