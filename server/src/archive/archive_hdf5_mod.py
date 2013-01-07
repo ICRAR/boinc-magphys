@@ -272,7 +272,9 @@ def store_pixels(connection, galaxy_id, group, dimension_x, dimension_y, dimensi
                         pixel_histogram[PIXEL_HISTOGRAM.c.hist_value],
                     )
                     pixel_histogram_count += 1
-                data_pixel_histograms_grid[x, y, z] = data_pixel_histograms_list.regionref[pixel_histogram_start:pixel_histogram_count]
+                # only store it if we have it
+                if pixel_histogram_count - pixel_histogram_start > 0:
+                    data_pixel_histograms_grid[x, y, z] = data_pixel_histograms_list.regionref[pixel_histogram_start:pixel_histogram_count]
 
         filter_layer = 0
         for pixel_filter in connection.execute(select([PIXEL_FILTER]).where(PIXEL_FILTER.c.pxresult_id == pxresult_id).order_by(PIXEL_FILTER.c.pxfilter_id)):
