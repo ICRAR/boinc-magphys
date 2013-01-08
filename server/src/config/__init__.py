@@ -74,7 +74,7 @@ if exists(DJANGO_FILE_NAME):
         DJANGO_DOCMOSIS_KEY = ''
         DJANGO_DOCMOSIS_KEY = ''
         DJANGO_DOCMOSIS_KEY = config['docmosis_key']
-        DJANGO_DOCMOSIS_TEMPLATE = config['docmosis_template'] 
+        DJANGO_DOCMOSIS_TEMPLATE = config['docmosis_template']
     except Exception, e:
         print "Could not load key: %s" % e
 
@@ -115,3 +115,10 @@ else:
 
 # Any probability in the pixel histogram less than this is considered to be 0 and ignored
 MIN_HIST_VALUE = 0.01
+
+############### DB Settings ###############
+COMPUTING = 0
+PROCESSED = 1
+ARCHIVED  = 2
+STORED    = 3
+DELETED   = 4

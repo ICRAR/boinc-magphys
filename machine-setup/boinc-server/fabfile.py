@@ -161,7 +161,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         sudo('mkdir /home/{0}/.ssh'.format(user))
         sudo('chmod 700 /home/{0}/.ssh'.format(user))
         sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
-        sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
+        sudo('mv /home/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
         sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
         sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
 
@@ -390,11 +390,6 @@ high_water_mark = "400"
 report_deadline = "7"
 boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
 
-    # AWS Setup
-    run('''echo '[Credentials]
-aws_access_key_id = {0}
-aws_secret_access_key = {1}' >> /home/ec2-user/.boto'''.format(env.aws_access_key_id, env.aws_secret_access_key))
-
     # Setup Apache for Django.
     sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/wsgi.conf /etc/httpd/conf.d/')
     sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/pogs.django.conf /etc/httpd/conf.d/')
@@ -511,10 +506,6 @@ def setup_env():
         prompt('GMail Password:', 'gmail_password')
     if 'docmosis_key' not in env:
         prompt('Docmosis Key:', 'docmosis_key')
-    if 'aws_access_key_id' not in env:
-        prompt('AWS Access Key Id:', 'aws_access_key_id')
-    if 'aws_secret_access_key' not in env:
-        prompt('AWS Secret Access Key:', 'aws_secret_access_key')
 
     # Create the instance in AWS
     host_names = create_instance(env.instance_stub_name, env.instances, env.ebs_size)
