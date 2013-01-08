@@ -161,7 +161,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         sudo('mkdir /home/{0}/.ssh'.format(user))
         sudo('chmod 700 /home/{0}/.ssh'.format(user))
         sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
-        sudo('mv /home/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
+        sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
         sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
         sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
 

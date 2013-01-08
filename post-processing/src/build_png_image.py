@@ -162,7 +162,7 @@ for galaxy in connection.execute(query):
         for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).
                 where(and_(PIXEL_PARAMETER.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id], PIXEL_PARAMETER.c.parameter_name_id.in_([3,6,7,16]))).
                 order_by(PIXEL_PARAMETER.c.parameter_name_id)):
-            if i < 4:
+            if i == 4:
                 LOG.warning('Galaxy = %d, pixel = %d has pixel parameter problems', galaxy[GALAXY.c.galaxy_id], row[PIXEL_RESULT.c.pxresult_id])
                 break
             elif i == 3:
