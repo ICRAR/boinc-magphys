@@ -216,6 +216,12 @@ def edit_files():
       <period>1 day</period>
       <output> census.out </output>
     </task>
+    <task>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/docmosis/docmosis_worker.py </cmd>
+      <period> 4 min </period>
+      <disabled> 0 </disabled>
+      <output> docmosis_worker.out </output>
+    </task>
   </tasks>
   <daemons>
     <daemon>
