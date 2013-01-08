@@ -129,7 +129,7 @@ CREATE TABLE galaxy (
   dec_cent         FLOAT,
   pixel_count      INTEGER,
   pixels_processed INTEGER,
-  status_id        SMALLINT NOT NULL DEFAULT 0,
+  status_id        SMALLINT UNSIGNED NOT NULL DEFAULT 0,
 
   FOREIGN KEY (run_id) REFERENCES run(run_id),
   FOREIGN KEY (status_id) REFERENCES galaxy_status(galaxy_status_id),
@@ -309,15 +309,13 @@ CREATE TABLE image_filters_used (
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE docmosis_task (
-  task_id       BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  task_id       BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   userid        INTEGER NOT NULL,
   worker_token  VARCHAR(32) NULL DEFAULT NULL,
   create_time   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   finish_time   TIMESTAMP NULL DEFAULT NULL,
-  status        SMALLINT UNSIGNED NOT NULL DEFAULT '0',
+  status        SMALLINT UNSIGNED NOT NULL DEFAULT '0'
 
-  PRIMARY KEY (task_id),
-  KEY task_id (task_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
