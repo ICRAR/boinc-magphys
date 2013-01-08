@@ -27,33 +27,23 @@
 Delete a galaxy and all it's related data.
 """
 from __future__ import print_function
-import argparse
 import logging
 from archive.delete_galaxy_mod import delete_galaxy
-from config import DB_LOGIN
+from config import DB_LOGIN, STORED
 from sqlalchemy import create_engine
+from sqlalchemy.sql import select
+from database.database_support_core import GALAXY
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
-
-parser = argparse.ArgumentParser('Delete Galaxy by galaxy_id')
-parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id or 4-30 if you need a range')
-parser.add_argument('-a', '--all', action='store_true', help='delete everything including the galaxy, the images and the user areas')
-args = vars(parser.parse_args())
-
-delete_all = args['all']
-
-galaxy_ids = None
-if len(args['galaxy_id']) == 1 and args['galaxy_id'][0].find('-') > 1:
-    list = args['galaxy_id'][0].split('-')
-    LOG.info('Range from %s to %s', list[0], list[1])
-    galaxy_ids = range(int(list[0]), int(list[1]) + 1)
-else:
-    galaxy_ids = args['galaxy_id']
 
 # First check the galaxy exists in the database
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
-delete_galaxy(connection, galaxy_ids, delete_all)
+galaxy_ids = []
+for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == STORED)):
+    galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
+
+delete_galaxy(connection, galaxy_ids, False)
 connection.close()

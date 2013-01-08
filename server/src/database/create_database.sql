@@ -46,6 +46,17 @@ INSERT INTO filter VALUES (26, 'SPIRE250', 250.0,  172, 0, 0, 1, '250&#181;m');
 INSERT INTO filter VALUES (27, 'SPIRE350', 350.0,  173, 0, 0, 1, '350&#181;m');
 INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 0, 0, 1, '500&#181;m');
 
+CREATE TABLE galaxy_status (
+  galaxy_status_id SMALLINT UNSIGNED NOT NULL PRIMARY KEY,
+  description      VARCHAR(250) NOT NULL
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+INSERT INTO galaxy_status VALUES (0, 'COMPUTING');
+INSERT INTO galaxy_status VALUES (1, 'PROCESSED');
+INSERT INTO galaxy_status VALUES (2, 'ARCHIVED');
+INSERT INTO galaxy_status VALUES (3, 'STORED');
+INSERT INTO galaxy_status VALUES (4, 'DELETED');
+
 CREATE TABLE run (
   run_id            BIGINT UNSIGNED NOT NULL PRIMARY KEY,
   short_description VARCHAR(250) NOT NULL,
@@ -118,13 +129,14 @@ CREATE TABLE galaxy (
   dec_cent         FLOAT,
   pixel_count      INTEGER,
   pixels_processed INTEGER,
-  archived         BOOLEAN NOT NULL DEFAULT FALSE,
-  deleted          BOOLEAN NOT NULL DEFAULT FALSE,
+  status_id        SMALLINT NOT NULL DEFAULT 0,
 
   FOREIGN KEY (run_id) REFERENCES run(run_id),
+  FOREIGN KEY (status_id) REFERENCES galaxy_status(galaxy_status_id),
 
   INDEX (run_id),
-  INDEX (name, version_number)
+  INDEX (name, version_number),
+  INDEX (status_id)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE fits_header (

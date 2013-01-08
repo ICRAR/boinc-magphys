@@ -102,7 +102,14 @@ GALAXY = Table('galaxy',
     Column('dec_cent'        , Float),
     Column('sigma'           , Numeric(3,2)),
     Column('pixel_count'     , Integer),
-    Column('pixels_processed', Integer)
+    Column('pixels_processed', Integer),
+    Column('status_id'       , Integer, ForeignKey('galaxy_status.galaxy_status_id')),
+)
+
+GALAXY_STATUS = Table('galaxy_status',
+    MAGPHYS_METADATA,
+    Column('galaxy_status_id', Integer, primary_key=True),
+    Column('description'     , String(250)),
 )
 
 IMAGE_FILTERS_USED = Table('image_filters_used',
