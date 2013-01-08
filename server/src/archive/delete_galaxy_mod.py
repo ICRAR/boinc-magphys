@@ -25,7 +25,6 @@
 """
 Functions used to delete a galaxy
 """
-from __future__ import print_function
 import logging
 import os
 import sys
@@ -60,8 +59,8 @@ def delete_galaxy(connection, galaxy_ids, delete_all):
                 LOG.info('Deleting Galaxy with galaxy_id of %d - %s', galaxy_id1, galaxy[GALAXY.c.name])
 
                 for area_id1 in connection.execute(select([AREA.c.area_id]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).order_by(AREA.c.area_id)):
+                    LOG.info("Deleting galaxy {0} area {1}".format(galaxy_id_str, area_id1[0]))
                     for pxresult_id1 in connection.execute(select([PIXEL_RESULT.c.pxresult_id]).where(PIXEL_RESULT.c.area_id == area_id1[0]).order_by(PIXEL_RESULT.c.pxresult_id)):
-                        print("Deleting galaxy {0} area {1} pixel {2}".format(galaxy_id_str, area_id1[0], pxresult_id1[0]), end="\r")
                         sys.stdout.flush()
 
                         connection.execute(PIXEL_FILTER.delete().where(PIXEL_FILTER.c.pxresult_id == pxresult_id1[0]))

@@ -222,6 +222,13 @@ def edit_files():
       <disabled> 0 </disabled>
       <output> docmosis_worker.out </output>
     </task>
+    <task>
+      <host>ip-10-83-98-164</host>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/delete_galaxy_task.py </cmd>
+      <period> 1 hour </period>
+      <disabled> 0 </disabled>
+      <output> delete_galaxy_task.out </output>
+    </task>
   </tasks>
   <daemons>
     <daemon>
