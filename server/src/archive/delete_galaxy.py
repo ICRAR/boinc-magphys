@@ -26,7 +26,6 @@
 """
 Delete a galaxy and all it's related data.
 """
-from __future__ import print_function
 import argparse
 import logging
 from archive.delete_galaxy_mod import delete_galaxy
