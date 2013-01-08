@@ -151,6 +151,7 @@ try:
             LOG.info('Copied %d areas %d pixels.', area_count, pixel_count)
             total_time = end_time - start_time
             LOG.info('Total time %d mins %.1f secs', int(total_time / 60), total_time % 60)
+            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id = 2))
 
 except Exception:
     LOG.exception('Major error')

@@ -7,8 +7,8 @@
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
     <script type="text/javascript">
     $(document).ready(function() {
-        // Hide all reporting messages initially
-        $(".reporting").hide();
+        // Hide all state messages initially
+        $(".state").hide();
         $("#send").click(function(e){
             e.preventDefault();
             $("#send").hide();
@@ -64,17 +64,15 @@
        <td style="border-color:white; border-width:1px;"><img src="../../GalaxyParameterImage/{{ galaxy_id }}/sfr" width="{{ galaxy_width }}" height="{{ galaxy_height }}"></td>
       </tr>
     </table>
-    <div class="reporting">
-        <p>Click the following button if you would like a detailed report sent to your email. </p>
-        <button type="button" id=send> Send Report</button>
-    </div>
-    <div style="color: blue;" class="reporting" id="processing">
+    <p>Click the following button if you would like a detailed report sent to your email. </p>
+    <button type="button" id=send> Send Report</button>
+    <div style="color: blue;" class="state" id="processing">
         Processing...
     </div>
-    <div style="color: green;" class="reporting" id="success">
+    <div style="color: green;" class="state" id="success">
         Success! Email delivery time will vary depending on availability of data providers.
     </div>
-    <div style="color: red;" class="reporting" id="fail">
+    <div style="color: red;" class="state" id="fail">
 
     </div>
 {% include "pogs/footer.html" %}
