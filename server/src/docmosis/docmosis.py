@@ -43,6 +43,7 @@ class GalaxyInfo:
     def __init__(self):
         self.galaxy_id = 0
         self.galaxy_type = ""
+        self.redshift = 0.0
         self.name = ""
         self.version = 0
         self.design = ""
@@ -229,7 +230,8 @@ def parseVOTable(url):
     outXMLFileName = tmp[1]
 
     try:
-        response = urllib2.urlopen(url)
+        request = urllib2.Request(url)
+        response = urllib2.urlopen(request,timeout=10)
         with open(outXMLFileName, 'w') as file:
             file.write(response.read())
         with warnings.catch_warnings():
