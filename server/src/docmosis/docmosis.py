@@ -8,7 +8,7 @@ import warnings
 from sqlalchemy import *
 from config import WG_BOINC_PROJECT_ROOT,DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, DJANGO_DOCMOSIS_TEMPLATE, DB_LOGIN
 from image import fitsimage, directory_mod
-from database.database_support_core import GALAXY
+from database.database_support_core import GALAXY,IMAGE_FILTERS_USED,FILTER
 from astropy.io.vo.table import parse
 
 # TODO - Look at using direct MySQL connection
@@ -198,6 +198,23 @@ def galaxyExternalData(name):
 
 
     return galaxy_line
+
+def galaxyFilterLabel(galaxy_id,colour):
+   """
+   Return filters string for given galaxy and colour
+   """
+   map_fl = {}
+   for filter in connection.execute(select([FILTER])):
+      map_fl[filter.filter_id] = filter.label
+   query = select([IMAGE_FILTERS_USED])
+   query = query.where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id,IMAGE_FILTERS_USED.c.image_number == colour))
+   image = connection.execute(query).first():
+   fstr = map_fl[image.filter_id_red]
+   fstr = fstr + ", " + map_fl[image.filter_id_green]
+   fstr = fstr + ", " + map_fl[image.filter_id_blue]
+
+   return fstr
+
 
 def parseVOTable(url):
     """
