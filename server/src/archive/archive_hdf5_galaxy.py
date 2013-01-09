@@ -53,7 +53,7 @@ from sqlalchemy.sql.expression import func, and_
 
 parser = argparse.ArgumentParser('Archive Galaxy by galaxy_id')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the HDF5 files will be written')
-parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id or 4-30 if you need a range')
+parser.add_argument('galaxy_id', nargs='*', help='the galaxy_id or 4-30 if you need a range')
 args = vars(parser.parse_args())
 
 OUTPUT_DIRECTORY = args['output_dir']

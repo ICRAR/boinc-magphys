@@ -108,8 +108,8 @@ def galaxyDetails(galaxy_ids):
 
     galaxy_list = []
     for galaxy in galaxies:
+        galaxy_line = galaxyExternalData(getCorrectedName(galaxy.name))
         galaxy_line.name = galaxy.name
-        galaxy_line = galaxyExternalData(galaxy.name)
         galaxy_line.version = galaxy.version_number
         galaxy_line.galaxy_type = galaxy.galaxy_type
         galaxy_line.galaxy_id = galaxy.galaxy_id
@@ -179,7 +179,7 @@ def galaxyExternalData(name):
 
     galaxy_line = GalaxyInfo()
 
-    url='http://leda.univ-lyon1.fr/G.cgi?n=101&c=o&o=' + name[:-1] + '&a=x&z=d'
+    url='http://leda.univ-lyon1.fr/G.cgi?n=101&c=o&o=' + name + '&a=x&z=d'
     table = parseVOTable(url)
     i = 0
     for design in table.array['design']:
@@ -188,7 +188,7 @@ def galaxyExternalData(name):
         galaxy_line.design += design
         i += 1
 
-    url='http://leda.univ-lyon1.fr/G.cgi?n=113&c=o&o=' + name[:-1] + '&a=x&z=d'
+    url='http://leda.univ-lyon1.fr/G.cgi?n=113&c=o&o=' + name + '&a=x&z=d'
     table = parseVOTable(url)
 
     galaxy_line.ra = table.array['alpha'][0]
@@ -240,3 +240,12 @@ def userDetails(userid):
     database.close()
 
     return user_line
+
+def getCorrectedName(name):
+    """
+    Get the corrected name
+    """
+    if name[-1:].islower():
+        return name[:-1]
+    
+    return name
