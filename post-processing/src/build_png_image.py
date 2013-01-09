@@ -158,19 +158,17 @@ for galaxy in connection.execute(query):
             pixels_processed += 1
 
         # Now get the median values
-        i = 0
         for pixel_parameter in connection.execute(select([PIXEL_PARAMETER]).
-                where(and_(PIXEL_PARAMETER.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id], PIXEL_PARAMETER.c.parameter_name_id.in_([3,6,7,16]))).
-                order_by(PIXEL_PARAMETER.c.parameter_name_id)):
-            if i == 4:
-                LOG.warning('Galaxy = %d, pixel = %d has pixel parameter problems', galaxy[GALAXY.c.galaxy_id], row[PIXEL_RESULT.c.pxresult_id])
-                break
-            elif i == 3:
+                where(and_(PIXEL_PARAMETER.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id], PIXEL_PARAMETER.c.parameter_name_id.in_([3,6,7,16])))):
+            if pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] == 3:
+                array[row__y, row__x, 0] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
+            elif pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] == 6:
+                array[row__y, row__x, 1] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
+            elif pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] == 7:
+                array[row__y, row__x, 2] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
+            elif pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] == 16:
                 # the SFR is a log
-                array[row__y, row__x, i] = math.pow(10, pixel_parameter[PIXEL_PARAMETER.c.percentile50])
-            else:
-                array[row__y, row__x, i] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
-            i += 1
+                array[row__y, row__x, 3] = math.pow(10, pixel_parameter[PIXEL_PARAMETER.c.percentile50])
 
     name_count = 0
 
