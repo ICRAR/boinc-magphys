@@ -185,17 +185,16 @@ def build_mod_wsgi():
     # Clean up
     sudo('rm -rf /tmp/build')
 
-def copy_public_keys(host0):
+def copy_public_keys():
     """
     Copy the public keys to the remote servers
     """
-    if host0:
-        env.list_of_users = []
-        for file in glob.glob(PUBLIC_KEYS + '/*.pub'):
-            filename = os.path.basename(file)
-            user, ext = os.path.splitext(filename)
-            env.list_of_users.append(user)
-            put(file, filename)
+    env.list_of_users = []
+    for file in glob.glob(PUBLIC_KEYS + '/*.pub'):
+        filename = os.path.basename(file)
+        user, ext = os.path.splitext(filename)
+        env.list_of_users.append(user)
+        put(file, filename)
 
 def create_instance(stub_name, number_instances, ebs_size):
     """
@@ -592,7 +591,7 @@ def deploy_with_db():
     """
     require('hosts', provided_by=[setup_env])
 
-    copy_public_keys(env.host_string == env.hosts[0])
+    copy_public_keys()
     base_install(env.host_string == env.hosts[0])
 
     # Wait for things to settle down
@@ -617,7 +616,7 @@ def deploy_without_db():
     """
     require('hosts', provided_by=[setup_env])
 
-    copy_public_keys(env.host_string == env.hosts[0])
+    copy_public_keys()
     base_install(env.host_string == env.hosts[0])
 
     # Wait for things to settle down
