@@ -209,7 +209,7 @@ def galaxyFilterLabel(galaxy_id,colour):
       map_fl[filter.filter_id] = filter.label
    query = select([IMAGE_FILTERS_USED])
    query = query.where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id,IMAGE_FILTERS_USED.c.image_number == colour))
-   image = connection.execute(query).first():
+   image = connection.execute(query).first()
    fstr = map_fl[image.filter_id_red]
    fstr = fstr + ", " + map_fl[image.filter_id_green]
    fstr = fstr + ", " + map_fl[image.filter_id_blue]
