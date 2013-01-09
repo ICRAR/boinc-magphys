@@ -44,6 +44,7 @@ class GalaxyInfo:
         self.galaxy_id = 0
         self.galaxy_type = ""
         self.name = ""
+        self.version = 0
         self.design = ""
         self.ra = 0
         self.dec = 0
@@ -107,13 +108,9 @@ def galaxyDetails(galaxy_ids):
 
     galaxy_list = []
     for galaxy in galaxies:
-        name = galaxy.name
-        if galaxy.version_number > 1:
-            name = galaxy.name + "[" + str(galaxy.version_number) + "]"
-
-        # Map some external data first
-        galaxy_line = galaxyExternalData(name)
-        galaxy_line.name = name
+        galaxy_line.name = galaxy.name
+        galaxy_line = galaxyExternalData(galaxy.name)
+        galaxy_line.version = galaxy.version_number
         galaxy_line.galaxy_type = galaxy.galaxy_type
         galaxy_line.galaxy_id = galaxy.galaxy_id
         galaxy_line.redshift = galaxy.redshift
