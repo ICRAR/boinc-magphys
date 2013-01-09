@@ -76,6 +76,7 @@ def main():
             LOG.info("Task id #%s - Completed succesfully" % task.task_id)
         except Exception, e:
             LOG.info("Task id #%s - Failed with error \"%s\"" % (task.task_id,e))
+            LOG.exception('Major Error')
             deassignTask(task,connection)
     LOG.info("Worker finished")
     connection.close()
