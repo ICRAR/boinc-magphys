@@ -71,7 +71,7 @@ class GalaxyInfo:
         self.galaxy_type = ""
         self.redshift = 0.0
         self.name = ""
-        self.version = 0
+        self.version_number = 0
         self.design = ""
         self.ra_eqj2000 = 0
         self.dec_eqj2000 = 0
@@ -97,7 +97,7 @@ def dataString(user,galaxies):
     # Loop through galaxies user has worked on.
     for galaxy in galaxies:
         dl.append('{\n')
-        dl.append('"galid":"' + galaxy.name + '",\n')
+        dl.append('"galid":"' + galaxy.name + ' (version ' + str(galaxy.version_number) + ')",\n')
         dl.append('"pic1":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,1) + '",\n')
         dl.append('"pic2":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,2) + '",\n')
         dl.append('"pic3":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,3) + '",\n')
@@ -149,7 +149,7 @@ def galaxyDetails(galaxy_ids):
         galaxy_line.dec_eqj2000 = vomap['dec_eqj2000']
         galaxy_line.ra_eqb1950 = vomap['ra_eqb1950']
         galaxy_line.dec_eqb1950 = vomap['dec_eqb1950']
-        galaxy_line.version = galaxy.version_number
+        galaxy_line.version_number = galaxy.version_number
         galaxy_line.galaxy_type = galaxy.galaxy_type
         galaxy_line.galaxy_id = galaxy.galaxy_id
         galaxy_line.redshift = galaxy.redshift
