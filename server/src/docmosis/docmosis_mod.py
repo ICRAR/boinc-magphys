@@ -29,6 +29,7 @@ import datetime
 import os
 import tempfile
 import warnings
+import logging
 
 from sqlalchemy import *
 from config import WG_BOINC_PROJECT_ROOT,DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, DJANGO_DOCMOSIS_TEMPLATE, DB_LOGIN
@@ -41,17 +42,22 @@ from docmosis import votable_mod
 os.environ.setdefault("BOINC_PROJECT_DIR", WG_BOINC_PROJECT_ROOT)
 from Boinc import database
 
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
 ENGINE = create_engine(DB_LOGIN)
 
 def emailGalaxyReport(userid,galaxy_ids):
     # Docmosis specific variables
     rendURL='https://dws.docmosis.com/services/rs/render'
 
+    LOG.info("Retrieve user details")
     user = userDetails(userid)
+    LOG.info("Retrieve galaxy details")
     galaxies = galaxyDetails(galaxy_ids)
-
+    LOG.info("Build JSON data payload")
     data = dataString(user,galaxies)
-
+    LOG.info("Send payload to Docmosis")
     request = urllib2.Request(rendURL,data)
     request.add_header('Content-Type','application/json; charset=UTF-8')
     response = urllib2.urlopen(request)
@@ -208,31 +214,6 @@ def userGalaxyImage(userid, galaxy_id, colour):
 
     return image64
 
-def galaxyExternalData(name):
-    """
-    Retrieve specific galaxy data from third party.
-    """
-
-    galaxy_line = GalaxyInfo()
-
-    url='http://leda.univ-lyon1.fr/G.cgi?n=101&c=o&o=' + name + '&a=x&z=d'
-    table = parseVOTable(url)
-    i = 0
-    for design in table.array['design']:
-        if i:
-            galaxy_line.design += ', '
-        galaxy_line.design += design
-        i += 1
-
-    url='http://leda.univ-lyon1.fr/G.cgi?n=113&c=o&o=' + name + '&a=x&z=d'
-    table = parseVOTable(url)
-
-    galaxy_line.ra_eqj2000 = table.array['alpha'][0]
-    galaxy_line.dec_eqj2000 = table.array['delta'][0]
-
-
-    return galaxy_line
-
 def galaxyFilterLabel(galaxy_id,colour):
    """
    Return filters string for given galaxy and colour
@@ -250,36 +231,6 @@ def galaxyFilterLabel(galaxy_id,colour):
    connection.close()
 
    return fstr
-
-
-def parseVOTable(url):
-    """
-    Takes parsed URL and gets first table in VOTable
-    formatted response
-    """
-
-    tmp = tempfile.mkstemp(".xml", "pogs", None, False)
-    file = tmp[0]
-    os.close(file)
-
-    outXMLFileName = tmp[1]
-
-    try:
-        request = urllib2.Request(url)
-        response = urllib2.urlopen(request,timeout=10)
-        with open(outXMLFileName, 'w') as file:
-            file.write(response.read())
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            votable = parse(outXMLFileName)
-        table = votable.get_first_table()
-    except:
-        os.remove(outXMLFileName)
-        raise Exception("VOTable provider error")
-
-    os.remove(outXMLFileName)
-
-    return table
 
 def userDetails(userid):
     """
