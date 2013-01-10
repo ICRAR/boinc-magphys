@@ -37,15 +37,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-import docmosis
 import uuid
 from datetime import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select, update, and_
 from config import DB_LOGIN
 from database.database_support_core import DOCMOSIS_TASK, DOCMOSIS_TASK_GALAXY
+from docmosis import docmosis_mod
 
 ENGINE = create_engine(DB_LOGIN)
 
@@ -83,7 +82,7 @@ def main():
 
 def runTask(task,connection):
     try:
-        docmosis.emailGalaxyReport(task.userid,task.galaxy_ids)
+        docmosis_mod.emailGalaxyReport(task.userid,task.galaxy_ids)
         query = DOCMOSIS_TASK.update()
         query = query.where(DOCMOSIS_TASK.c.task_id == task.task_id)
         query = query.values(finish_time = datetime.now(), status = 2)
