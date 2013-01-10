@@ -391,14 +391,15 @@ class Fit2Wu:
             "--wu_name",         filename,
             "--wu_template",     self._template_file,
             "--result_template", TEMPLATES_PATH1 + "/fitsed_result.xml",
-            "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':self._fpops_est_per_pixel*pixels_in_area, 'exp':FPOPS_EXP},
-            "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':self._fpops_est_per_pixel*FPOPS_BOUND_PER_PIXEL*pixels_in_area, 'exp':FPOPS_EXP},
+            "--rsc_fpops_est",   "%(est).4f%(exp)s" % {'est':self._fpops_est_per_pixel*pixels_in_area, 'exp':FPOPS_EXP},
+            "--rsc_fpops_bound", "%(bound).4f%(exp)s"  % {'bound':self._fpops_est_per_pixel*FPOPS_BOUND_PER_PIXEL*pixels_in_area, 'exp':FPOPS_EXP},
             "--rsc_memory_bound", "1e8",
             "--rsc_disk_bound", "1e8",
             "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_area * self._cobblestone_scaling_factor},
             "--opaque",   str(area.area_id),
             "--priority", '{0}'.format(self._priority)
         ]
+        LOG.info('{0}'.format(args_params))
         file_name_job = filename + '.job.xml'
         file_name_zlib = filename + '.zlib.dat'
         file_name_filters = filename + '.filters.dat'
