@@ -43,6 +43,8 @@ parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')
 parser.add_argument('dir', nargs=1, help='the directory containing the files')
 parser.add_argument('url_stem', nargs=1, help='the stem of the URL')
 parser.add_argument('description', nargs=1, help='a short description of the run')
+parser.add_argument('fpops_est', type=float, nargs=1, help='the GFlops estimate')
+parser.add_argument('cobblestone_factor', type=float, nargs=1, help='the cobblestone scaling factor')
 
 args = vars(parser.parse_args())
 
@@ -50,6 +52,8 @@ RUN_ID = args['run_id'][0]
 INPUT_DIR = args['dir'][0]
 URL_STEM = args['url_stem'][0]
 DESCRIPTION = args['description'][0]
+FPOPS_EST = args['fpops_est'][0]
+COBBLESTONE_FACTOR = args['cobblestone_factor'][0]
 
 # Connect to the database - the login string is set in the database package
 ENGINE = create_engine(DB_LOGIN)
@@ -83,7 +87,12 @@ else:
     transaction = connection.begin()
     commit = True
     # Build the run
-    connection.execute(RUN.insert().values(run_id = RUN_ID, directory = INPUT_DIR, short_description = DESCRIPTION, long_description = DESCRIPTION))
+    connection.execute(RUN.insert().values(run_id = RUN_ID,
+        directory          = INPUT_DIR,
+        short_description  = DESCRIPTION,
+        long_description   = DESCRIPTION,
+        fpops_est          = FPOPS_EST,
+        cobblestone_factor = COBBLESTONE_FACTOR))
 
     # Read the filters file
     with open('{0}/filters.dat'.format(INPUT_DIR), 'rb') as file:

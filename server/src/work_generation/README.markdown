@@ -27,12 +27,14 @@ $ ./create_file_details.py ~/boinc-magphys/runs/0001 ~/boinc-magphys/server/runs
 ### Step 2 (Boinc Server)
 
 $ ./load_run_details.py run_id dir_with_files url_prefix comment
-$ ./load_run_details.py 1 /home/ec2-user/boinc-magphys/server/runs/0001 http://boinc-download.icrar.org/runs/0001/ 'PS Filters + SDSSu'
+$ ./load_run_details.py 1 /home/ec2-user/boinc-magphys/server/runs/0001 http://boinc-download.icrar.org/runs/0001/ 'PS Filters + SDSSu' 6 8.85
 
 * **run_id** is the run id to be used
 * **dir_with_files** where the filters.dat and file_details.dat files can be found as we need to record the md5sum and size
 * **url_prefix** the URL prefix to the files
 * **comment** a description of the run
+* **fpops_est** the GFlops est
+* **cobblestone_factor** the cobblestone factor for this run
 
 ## Register Galaxy
 
