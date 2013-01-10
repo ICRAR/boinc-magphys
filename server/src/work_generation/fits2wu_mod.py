@@ -38,7 +38,7 @@ import subprocess
 from datetime import datetime
 from sqlalchemy.sql.expression import select, func, and_
 from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
-from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, RUN_FILE, FITS_HEADER
+from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, RUN_FILE, FITS_HEADER, RUN
 from image import directory_mod
 from image.fitsimage import FitsImage
 from work_generation import HEADER_PATTERNS, STAR_FORMATION_FILE, INFRARED_FILE
@@ -53,10 +53,8 @@ TEMPLATES_PATH2 = '/home/ec2-user/boinc-magphys/server/runs'           # Where t
 MIN_QUORUM = 2                                                         # Validator run when there are at least this many results for a work unit
 TARGET_NRESULTS = MIN_QUORUM                                           # Initially create this many instances of a work unit
 DELAY_BOUND = 86400 * WG_REPORT_DEADLINE                               # Clients must report results within WG_REPORT_DEADLINE days
-FPOPS_EST_PER_PIXEL = 6                                                # Estimated number of gigaflops per pixel
-FPOPS_BOUND_PER_PIXEL = FPOPS_EST_PER_PIXEL*50                         # Maximum number of gigaflops per pixel client will allow before terminating job
+FPOPS_BOUND_PER_PIXEL = 50                                             # Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
-COBBLESTONE_SCALING_FACTOR = 8.85
 
 class Area:
     """
@@ -141,6 +139,11 @@ class Fit2Wu:
 
         filePrefixName = self._galaxy_name + "_" + str(version_number)
         fitsFileName = filePrefixName + ".fits"
+
+        # Get the flops estimate amd cobblestone factor
+        run = self._connection.execute(select([RUN]).where(RUN.c.run_id == self._run_id)).first()
+        self._fpops_est_per_pixel = run[RUN.c.fpops_est]
+        self._cobblestone_scaling_factor = run[RUN.c.cobblestone_factor]
 
         # Create and save the object
         datetime_now = datetime.now()
@@ -388,11 +391,11 @@ class Fit2Wu:
             "--wu_name",         filename,
             "--wu_template",     self._template_file,
             "--result_template", TEMPLATES_PATH1 + "/fitsed_result.xml",
-            "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':FPOPS_EST_PER_PIXEL*pixels_in_area, 'exp':FPOPS_EXP},
-            "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':FPOPS_BOUND_PER_PIXEL*pixels_in_area, 'exp':FPOPS_EXP},
+            "--rsc_fpops_est",   "%(est)d%(exp)s" % {'est':self._fpops_est_per_pixel*pixels_in_area, 'exp':FPOPS_EXP},
+            "--rsc_fpops_bound", "%(bound)d%(exp)s"  % {'bound':self._fpops_est_per_pixel*FPOPS_BOUND_PER_PIXEL*pixels_in_area, 'exp':FPOPS_EXP},
             "--rsc_memory_bound", "1e8",
             "--rsc_disk_bound", "1e8",
-            "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_area*COBBLESTONE_SCALING_FACTOR},
+            "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_area * self._cobblestone_scaling_factor},
             "--opaque",   str(area.area_id),
             "--priority", '{0}'.format(self._priority)
         ]
