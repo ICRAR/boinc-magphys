@@ -399,7 +399,6 @@ class Fit2Wu:
             "--opaque",   str(area.area_id),
             "--priority", '{0}'.format(self._priority)
         ]
-        LOG.info('{0}'.format(args_params))
         file_name_job = filename + '.job.xml'
         file_name_zlib = filename + '.zlib.dat'
         file_name_filters = filename + '.filters.dat'
