@@ -35,6 +35,7 @@ from config import WG_BOINC_PROJECT_ROOT,DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, 
 from image import fitsimage, directory_mod
 from database.database_support_core import GALAXY,IMAGE_FILTERS_USED,FILTER
 from astropy.io.vo.table import parse
+from docmosis_import import votable_mod
 
 # TODO - Look at using direct MySQL connection
 os.environ.setdefault("BOINC_PROJECT_DIR", WG_BOINC_PROJECT_ROOT)
@@ -73,8 +74,8 @@ class GalaxyInfo:
         self.version = 0
         self.design = ""
         self.ra_eqj2000 = 0
-        self.ra_eqb1950 = 0
         self.dec_eqj2000 = 0
+        self.ra_eqb1950 = 0
         self.dec_eqb1950 = 0
         self.pos1 = ""
         self.pos2 = ""
@@ -113,11 +114,11 @@ def dataString(user,galaxies):
             dl.append('"pic7":"image:base64:' + galaxyParameterImage(galaxy.galaxy_id,'ldust') + '",\n')
             dl.append('"pic8":"image:base64:' + galaxyParameterImage(galaxy.galaxy_id,'sfr') + '",\n')
         dl.append('"gatype":"' + galaxy.galaxy_type + '",\n')
-        dl.append('"gades":"' + galaxy.design + '",\n')
         dl.append('"gars":"' + str(galaxy.redshift) + '",\n')
+        dl.append('"gades":"' + galaxy.design + '",\n')
         dl.append('"gara_eqj2000":"' + str(galaxy.ra_eqj2000) + '",\n')
-        dl.append('"gara_eqb1950":"' + str(galaxy.ra_eqb1950) + '",\n')
         dl.append('"gadec_eqj2000":"' + str(galaxy.dec_eqj2000) + '",\n')
+        dl.append('"gara_eqb1950":"' + str(galaxy.ra_eqb1950) + '",\n')
         dl.append('"gadec_eqb1950":"' + str(galaxy.dec_eqb1950) + '",\n')
         dl.append('},\n')
     dl.append(']\n')
@@ -140,8 +141,14 @@ def galaxyDetails(galaxy_ids):
 
     galaxy_list = []
     for galaxy in galaxies:
-        galaxy_line = galaxyExternalData(getCorrectedName(galaxy.name))
+        vomap = votable_mod.getVOData(getCorrectedName(galaxy.name))
+        galaxy_line = GalaxyInfo()
         galaxy_line.name = galaxy.name
+        galaxy_line.design = vomap['design']
+        galaxy_line.ra_eqj2000 = vomap['ra_eqj2000']
+        galaxy_line.dec_eqj2000 = vomap['dec_eqj2000']
+        galaxy_line.ra_eqb1950 = vomap['ra_eqb1950']
+        galaxy_line.dec_eqb1950 = vomap['dec_eqb1950']
         galaxy_line.version = galaxy.version_number
         galaxy_line.galaxy_type = galaxy.galaxy_type
         galaxy_line.galaxy_id = galaxy.galaxy_id

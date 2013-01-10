@@ -41,8 +41,12 @@ def getVOData(name):
       url='http://ned.ipac.caltech.edu/cgi-bin/objsearch?expand=no&objname=' + name + '&of=xml_main'
       table = getVOTable(url,0)
       map_vo['design'] = table.array['Object Name'][0]
-      map_vo['ra'] = table.array['RA(deg)'][0]
-      map_vo['dec'] = table.array['DEC(deg)'][0]
+      url='http://ned.ipac.caltech.edu/cgi-bin/objsearch?expand=no&objname=' + name + '&of=xml_posn'
+      table = getVOTable(url,0)
+      map_vo['ra_eqj2000'] = table.array['pos_ra_equ_J2000_d'][0]
+      map_vo['dec_eqj2000'] = table.array['pos_dec_equ_J2000_d'][0]
+      map_vo['ra_eqb1950'] = table.array['pos_ra_equ_B1950_d'][0]
+      map_vo['dec_eqb1950'] = table.array['pos_dec_equ_B1950_d'][0]
       return map_vo
    except:
       pass
@@ -54,8 +58,10 @@ def getVOData(name):
       map_vo['design'] = table.array['design'][0]
       url='http://leda.univ-lyon1.fr/G.cgi?n=113&c=o&o=' + name + '&a=x&z=d'
       table = getVOTable(url,0)
-      map_vo['ra']=table.array['alpha'][0]
-      map_vo['dec']=table.array['delta'][0]
+      map_vo['ra_eqj2000']=table.array['alpha'][0]
+      map_vo['dec_eqj2000']=table.array['delta'][0]
+      map_vo['ra_eqb1950'] = 0
+      map_vo['dec_eqb1950'] = 0
       return map_vo
    except:
       raise Exception("The VOTable data is not quite right")
