@@ -72,8 +72,10 @@ class GalaxyInfo:
         self.name = ""
         self.version = 0
         self.design = ""
-        self.ra = 0
-        self.dec = 0
+        self.ra_eqj2000 = 0
+        self.ra_eqb1950 = 0
+        self.dec_eqj2000 = 0
+        self.dec_eqb1950 = 0
         self.pos1 = ""
         self.pos2 = ""
 
@@ -113,10 +115,10 @@ def dataString(user,galaxies):
         dl.append('"gatype":"' + galaxy.galaxy_type + '",\n')
         dl.append('"gades":"' + galaxy.design + '",\n')
         dl.append('"gars":"' + str(galaxy.redshift) + '",\n')
-        dl.append('"gara":"' + str(galaxy.ra) + '",\n')
-        dl.append('"gadec":"' + str(galaxy.dec) + '",\n')
-        dl.append('"gapos1":"' + str(galaxy.pos1) + '",\n')
-        dl.append('"gapos2":"' + str(galaxy.pos2) + '",\n')
+        dl.append('"gara_eqj2000":"' + str(galaxy.ra_eqj2000) + '",\n')
+        dl.append('"gara_eqb1950":"' + str(galaxy.ra_eqb1950) + '",\n')
+        dl.append('"gadec_eqj2000":"' + str(galaxy.dec_eqj2000) + '",\n')
+        dl.append('"gadec_eqb1950":"' + str(galaxy.dec_eqb1950) + '",\n')
         dl.append('},\n')
     dl.append(']\n')
     dl.append('}\n')
@@ -218,10 +220,8 @@ def galaxyExternalData(name):
     url='http://leda.univ-lyon1.fr/G.cgi?n=113&c=o&o=' + name + '&a=x&z=d'
     table = parseVOTable(url)
 
-    galaxy_line.ra = table.array['alpha'][0]
-    galaxy_line.dec = table.array['delta'][0]
-    galaxy_line.pos1 = table.array['radec1950'][0]
-    galaxy_line.pos2 = table.array['radec2000'][0]
+    galaxy_line.ra_eqj2000 = table.array['alpha'][0]
+    galaxy_line.dec_eqj2000 = table.array['delta'][0]
 
 
     return galaxy_line
