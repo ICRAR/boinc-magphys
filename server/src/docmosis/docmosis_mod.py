@@ -95,10 +95,14 @@ def dataString(user,galaxies):
     for galaxy in galaxies:
         dl.append('{\n')
         dl.append('"galid":"' + galaxy.name + '",\n')
-        dl.append('"pic1":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'1') + '",\n')
-        dl.append('"pic2":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'2') + '",\n')
-        dl.append('"pic3":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'3') + '",\n')
-        dl.append('"pic4":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,'4') + '",\n')
+        dl.append('"pic1":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,1) + '",\n')
+        dl.append('"pic2":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,2) + '",\n')
+        dl.append('"pic3":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,3) + '",\n')
+        dl.append('"pic4":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,4) + '",\n')
+        dl.append('"pic1_label":"' + galaxyFilterLabel(galaxy.galaxy_id,1) + '",\n') 
+        dl.append('"pic2_label":"' + galaxyFilterLabel(galaxy.galaxy_id,2) + '",\n') 
+        dl.append('"pic3_label":"' + galaxyFilterLabel(galaxy.galaxy_id,3) + '",\n') 
+        dl.append('"pic4_label":"' + galaxyFilterLabel(galaxy.galaxy_id,4) + '",\n') 
         # Only if there is paramater images
         if hasParam:
             dl.append('"add":"true",\n')
@@ -154,7 +158,6 @@ def galaxyParameterImage(galaxy_id, name):
     imageDirName = DJANGO_IMAGE_DIR
 
     connection = ENGINE.connect()
-    galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
     imageFileName = '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name)
@@ -181,8 +184,6 @@ def userGalaxyImage(userid, galaxy_id, colour):
     outImageFileName = tmp[1]
 
     connection = ENGINE.connect()
-    userid = int(userid)
-    galaxy_id = int(galaxy_id)
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
     imagePrefixName = galaxy[GALAXY.c.name] + "_" + str(galaxy[GALAXY.c.version_number])
 
@@ -229,6 +230,7 @@ def galaxyFilterLabel(galaxy_id,colour):
    """
    Return filters string for given galaxy and colour
    """
+   connection = ENGINE.connect()
    map_fl = {}
    for filter in connection.execute(select([FILTER])):
       map_fl[filter.filter_id] = filter.label
@@ -238,6 +240,7 @@ def galaxyFilterLabel(galaxy_id,colour):
    fstr = map_fl[image.filter_id_red]
    fstr = fstr + ", " + map_fl[image.filter_id_green]
    fstr = fstr + ", " + map_fl[image.filter_id_blue]
+   connection.close()
 
    return fstr
 
