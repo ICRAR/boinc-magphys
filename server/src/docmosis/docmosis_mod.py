@@ -35,7 +35,7 @@ from config import WG_BOINC_PROJECT_ROOT,DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, 
 from image import fitsimage, directory_mod
 from database.database_support_core import GALAXY,IMAGE_FILTERS_USED,FILTER
 from astropy.io.vo.table import parse
-from docmosis_import import votable_mod
+from docmosis import votable_mod
 
 # TODO - Look at using direct MySQL connection
 os.environ.setdefault("BOINC_PROJECT_DIR", WG_BOINC_PROJECT_ROOT)
