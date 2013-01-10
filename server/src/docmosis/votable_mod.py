@@ -27,8 +27,12 @@ import urllib2
 import os
 import tempfile
 import warnings
+import logging
 
 from astropy.io.vo.table import parse, parse_single_table
+
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 def getVOData(name):
    """
@@ -47,6 +51,7 @@ def getVOData(name):
       map_vo['dec_eqj2000'] = table.array['pos_dec_equ_J2000_d'][0]
       map_vo['ra_eqb1950'] = table.array['pos_ra_equ_B1950_d'][0]
       map_vo['dec_eqb1950'] = table.array['pos_dec_equ_B1950_d'][0]
+      LOG.info("VOTable data collected from NED")
       return map_vo
    except:
       pass
@@ -62,6 +67,7 @@ def getVOData(name):
       map_vo['dec_eqj2000']=table.array['delta'][0]
       map_vo['ra_eqb1950'] = 0
       map_vo['dec_eqb1950'] = 0
+      LOG.info("VOTable data collected from HyperLeda")
       return map_vo
    except:
       raise Exception("The VOTable data is not quite right")
