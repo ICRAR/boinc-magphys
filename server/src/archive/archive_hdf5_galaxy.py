@@ -42,9 +42,10 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import argparse
 import h5py
+import shutil
 import time
 from archive.archive_hdf5_mod import store_fits_header, store_area, store_image_filters, store_area_user, store_pixels
-from config import DB_LOGIN
+from config import DB_LOGIN, ARCHIVED, PROCESSED
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
 from database.database_support_core import GALAXY, PIXEL_RESULT, PIXEL_FILTER
@@ -69,6 +70,8 @@ try:
     if len(args['galaxy_id']) == 0:
         # Look in the database for the galaxies
         galaxy_ids = []
+        for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == PROCESSED).order_by(GALAXY.c.galaxy_id)):
+            galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
 
     elif len(args['galaxy_id']) == 1 and args['galaxy_id'][0].find('-') > 1:
         list = args['galaxy_id'][0].split('-')
@@ -155,7 +158,13 @@ try:
             LOG.info('Copied %d areas %d pixels.', area_count, pixel_count)
             total_time = end_time - start_time
             LOG.info('Total time %d mins %.1f secs', int(total_time / 60), total_time % 60)
-            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id = 2))
+
+            to_store = os.path.join(OUTPUT_DIRECTORY, 'to_store')
+            if not os.path.exists(to_store):
+                os.makedirs(to_store)
+            shutil.move(filename, to_store)
+
+            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id = ARCHIVED))
 
 except Exception:
     LOG.exception('Major error')
