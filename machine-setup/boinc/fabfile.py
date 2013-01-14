@@ -229,29 +229,31 @@ def edit_files():
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/magphys_validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job </cmd>
+      <pid_file> magphys_validator.pid </pid_file>
+      <output> magphys_validator.log </output>
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 4 0 </cmd>
       <output> assimilator.0.log </output>
-      <pid> assimilator.0.pid </pid>
+      <pid_file> assimilator.0.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 4 1 </cmd>
       <output> assimilator.1.log </output>
-      <pid> assimilator.1.pid </pid>
+      <pid_file> assimilator.1.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 4 2 </cmd>
       <output> assimilator.2.log </output>
-      <pid> assimilator.2.pid </pid>
+      <pid_file> assimilator.2.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 4 3 </cmd>
       <output> assimilator.3.log </output>
-      <pid> assimilator.3.pid </pid>
+      <pid_file> assimilator.3.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
   </daemons>'''.format(env.project_name))

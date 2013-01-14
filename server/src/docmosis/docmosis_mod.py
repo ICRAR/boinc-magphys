@@ -28,15 +28,13 @@ import base64
 import datetime
 import os
 import tempfile
-import warnings
 import logging
+import votable_mod
 
 from sqlalchemy import *
 from config import WG_BOINC_PROJECT_ROOT,DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, DJANGO_DOCMOSIS_TEMPLATE, DB_LOGIN
 from image import fitsimage, directory_mod
 from database.database_support_core import GALAXY,IMAGE_FILTERS_USED,FILTER
-from astropy.io.vo.table import parse
-from docmosis import votable_mod
 
 # TODO - Look at using direct MySQL connection
 os.environ.setdefault("BOINC_PROJECT_DIR", WG_BOINC_PROJECT_ROOT)
@@ -108,10 +106,10 @@ def dataString(user,galaxies):
         dl.append('"pic2":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,2) + '",\n')
         dl.append('"pic3":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,3) + '",\n')
         dl.append('"pic4":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,4) + '",\n')
-        dl.append('"pic1_label":"' + galaxyFilterLabel(galaxy.galaxy_id,1) + '",\n') 
-        dl.append('"pic2_label":"' + galaxyFilterLabel(galaxy.galaxy_id,2) + '",\n') 
-        dl.append('"pic3_label":"' + galaxyFilterLabel(galaxy.galaxy_id,3) + '",\n') 
-        dl.append('"pic4_label":"' + galaxyFilterLabel(galaxy.galaxy_id,4) + '",\n') 
+        dl.append('"pic1_label":"' + galaxyFilterLabel(galaxy.galaxy_id,1) + '",\n')
+        dl.append('"pic2_label":"' + galaxyFilterLabel(galaxy.galaxy_id,2) + '",\n')
+        dl.append('"pic3_label":"' + galaxyFilterLabel(galaxy.galaxy_id,3) + '",\n')
+        dl.append('"pic4_label":"' + galaxyFilterLabel(galaxy.galaxy_id,4) + '",\n')
         # Only if there is paramater images
         if hasParam:
             dl.append('"add":"true",\n')
@@ -252,5 +250,5 @@ def getCorrectedName(name):
     """
     if name[-1:].islower():
         return name[:-1]
-    
+
     return name
