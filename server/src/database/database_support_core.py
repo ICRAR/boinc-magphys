@@ -214,10 +214,12 @@ REGISTER = Table('register',
 
 RUN = Table('run',
     MAGPHYS_METADATA,
-    Column('run_id'           , BigInteger, primary_key=True),
-    Column('short_description', String(250)),
-    Column('long_description' , String(1000)),
-    Column('directory'        , String(1000))
+    Column('run_id'            , BigInteger, primary_key=True),
+    Column('short_description' , String(250)),
+    Column('long_description'  , String(1000)),
+    Column('directory'         , String(1000)),
+    Column('fpops_est'         , Float),
+    Column('cobblestone_factor', Float),
 )
 
 RUN_FILE = Table('run_file',
