@@ -194,20 +194,8 @@ def edit_files():
       <output> build_png_image.out </output>
     </task>
     <task>
-      <cmd>
-        /home/ec2-user/boinc-magphys/post-processing/src/build_fits_image.py -o /home/ec2-user/output_fits
-      </cmd>
-      <period>
-        6 hours
-      </period>
-      <disabled>0</disabled>
-      <output>
-        build_fits_image.out
-      </output>
-    </task>
-    <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/work_generation/fits2wu.py </cmd>
-      <period> 10 minutes </period>
+      <period> 9 minutes </period>
       <disabled> 0 </disabled>
       <output> fits2wu.out </output>
     </task>
@@ -223,7 +211,6 @@ def edit_files():
       <output> docmosis_worker.out </output>
     </task>
     <task>
-      <host>ip-10-83-98-164</host>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/delete_galaxy_task.py </cmd>
       <period> 1 hour </period>
       <disabled> 0 </disabled>
@@ -242,29 +229,31 @@ def edit_files():
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/magphys_validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job </cmd>
+      <pid_file> magphys_validator.pid </pid_file>
+      <output> magphys_validator.log </output>
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 4 0 </cmd>
       <output> assimilator.0.log </output>
-      <pid> assimilator.0.pid </pid>
+      <pid_file> assimilator.0.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 4 1 </cmd>
       <output> assimilator.1.log </output>
-      <pid> assimilator.1.pid </pid>
+      <pid_file> assimilator.1.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 4 2 </cmd>
       <output> assimilator.2.log </output>
-      <pid> assimilator.2.pid </pid>
+      <pid_file> assimilator.2.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
     <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 4 3 </cmd>
       <output> assimilator.3.log </output>
-      <pid> assimilator.3.pid </pid>
+      <pid_file> assimilator.3.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
   </daemons>'''.format(env.project_name))

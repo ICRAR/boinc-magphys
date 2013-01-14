@@ -58,10 +58,12 @@ INSERT INTO galaxy_status VALUES (3, 'STORED');
 INSERT INTO galaxy_status VALUES (4, 'DELETED');
 
 CREATE TABLE run (
-  run_id            BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-  short_description VARCHAR(250) NOT NULL,
-  long_description  VARCHAR(1000) NOT NULL,
-  directory         VARCHAR(1000) NOT NULL,
+  run_id             BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+  short_description  VARCHAR(250) NOT NULL,
+  long_description   VARCHAR(1000) NOT NULL,
+  directory          VARCHAR(1000) NOT NULL,
+  fpops_est          FLOAT NOT NULL,
+  cobblestone_factor FLOAT NOT NULL,
 
   INDEX (short_description)
 ) CHARACTER SET utf8 ENGINE=InnoDB;

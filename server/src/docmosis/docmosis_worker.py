@@ -37,10 +37,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-import docmosis
 import uuid
+import docmosis_mod
 from datetime import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select, update, and_
@@ -76,13 +75,14 @@ def main():
             LOG.info("Task id #%s - Completed succesfully" % task.task_id)
         except Exception, e:
             LOG.info("Task id #%s - Failed with error \"%s\"" % (task.task_id,e))
+            LOG.exception('Major Error')
             deassignTask(task,connection)
     LOG.info("Worker finished")
     connection.close()
 
 def runTask(task,connection):
     try:
-        docmosis.emailGalaxyReport(task.userid,task.galaxy_ids)
+        docmosis_mod.emailGalaxyReport(task.userid,task.galaxy_ids)
         query = DOCMOSIS_TASK.update()
         query = query.where(DOCMOSIS_TASK.c.task_id == task.task_id)
         query = query.values(finish_time = datetime.now(), status = 2)

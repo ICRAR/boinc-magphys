@@ -53,7 +53,7 @@ from sqlalchemy.sql.expression import func, and_
 
 parser = argparse.ArgumentParser('Archive Galaxy by galaxy_id')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the HDF5 files will be written')
-parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id or 4-30 if you need a range')
+parser.add_argument('galaxy_id', nargs='*', help='the galaxy_id or 4-30 if you need a range')
 args = vars(parser.parse_args())
 
 OUTPUT_DIRECTORY = args['output_dir']
@@ -66,7 +66,11 @@ connection = engine_aws.connect()
 try:
     # Get the galaxies to work on
     galaxy_ids = None
-    if len(args['galaxy_id']) == 1 and args['galaxy_id'][0].find('-') > 1:
+    if len(args['galaxy_id']) == 0:
+        # Look in the database for the galaxies
+        galaxy_ids = []
+
+    elif len(args['galaxy_id']) == 1 and args['galaxy_id'][0].find('-') > 1:
         list = args['galaxy_id'][0].split('-')
         LOG.info('Range from %s to %s', list[0], list[1])
         galaxy_ids = range(int(list[0]), int(list[1]) + 1)
