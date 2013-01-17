@@ -64,10 +64,6 @@ if args['register'] is None:
 
     LOG.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
 
-    if count >= WG_THRESHOLD:
-        LOG.info('Nothing to do')
-        exit(0)
-
 LIMIT = None
 if args['limit'] is not None:
     LIMIT = args['limit']
@@ -79,18 +75,48 @@ os.chdir(WG_BOINC_PROJECT_ROOT)
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
-# Normal operation
-files_processed = 0
-if args['register'] is None:
-    FILES_TO_PROCESS = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
+if count is not None and count >= WG_THRESHOLD:
+    LOG.info('Nothing to do')
 
-    # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
-    while files_processed < FILES_TO_PROCESS:
-        LOG.info("Added %d of %d", files_processed, FILES_TO_PROCESS)
-        registration = connection.execute(select([REGISTER]).where(REGISTER.c.create_time == None).order_by(REGISTER.c.priority.desc(), REGISTER.c.register_time)).first()
+else:
+    # Normal operation
+    files_processed = 0
+    if args['register'] is None:
+        FILES_TO_PROCESS = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
+
+        # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
+        while files_processed < FILES_TO_PROCESS:
+            LOG.info("Added %d of %d", files_processed, FILES_TO_PROCESS)
+            registration = connection.execute(select([REGISTER]).where(REGISTER.c.create_time == None).order_by(REGISTER.c.priority.desc(), REGISTER.c.register_time)).first()
+            if registration is None:
+                LOG.info('No registrations waiting')
+                break
+            else:
+                transaction = connection.begin()
+                if not os.path.isfile(registration[REGISTER.c.filename]):
+                    LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
+                    connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+                elif registration[REGISTER.c.sigma_filename] is not None and not os.path.isfile(registration[REGISTER.c.sigma_filename]):
+                    LOG.error('The file %s does not exist', registration[REGISTER.c.sigma_filename])
+                    connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+                else:
+                    LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
+                    fit2wu = Fit2Wu(connection, LIMIT)
+                    (work_units_added, pixel_count) = fit2wu.process_file(registration)
+                    # One WU = MIN_QUORUM Results
+                    files_processed += (work_units_added * MIN_QUORUM)
+                    os.remove(registration[REGISTER.c.filename])
+                    if registration.sigma_filename is not None:
+                        os.remove(registration[REGISTER.c.sigma_filename])
+                    connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+
+                transaction.commit()
+
+    # We want an explict galaxy to load
+    else:
+        registration = connection.execute(select([REGISTER]).where(and_(REGISTER.c.register_id == args['register'], REGISTER.c.create_time == None))).first()
         if registration is None:
-            LOG.info('No registrations waiting')
-            break
+            LOG.info('No registration waiting with the id %d', args['register'])
         else:
             transaction = connection.begin()
             if not os.path.isfile(registration[REGISTER.c.filename]):
@@ -103,38 +129,18 @@ if args['register'] is None:
                 LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
                 fit2wu = Fit2Wu(connection, LIMIT)
                 (work_units_added, pixel_count) = fit2wu.process_file(registration)
-                # One WU = MIN_QUORUM Results
-                files_processed += (work_units_added * MIN_QUORUM)
+                files_processed = work_units_added * MIN_QUORUM
                 os.remove(registration[REGISTER.c.filename])
-                if registration.sigma_filename is not None:
+                if registration[REGISTER.c.sigma_filename] is not None:
                     os.remove(registration[REGISTER.c.sigma_filename])
                 connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
 
             transaction.commit()
 
-# We want an explict galaxy to load
-else:
-    registration = connection.execute(select([REGISTER]).where(and_(REGISTER.c.register_id == args['register'], REGISTER.c.create_time == None))).first()
-    if registration is None:
-        LOG.info('No registration waiting with the id %d', args['register'])
-    else:
-        transaction = connection.begin()
-        if not os.path.isfile(registration[REGISTER.c.filename]):
-            LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
-            connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
-        elif registration[REGISTER.c.sigma_filename] is not None and not os.path.isfile(registration[REGISTER.c.sigma_filename]):
-            LOG.error('The file %s does not exist', registration[REGISTER.c.sigma_filename])
-            connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
-        else:
-            LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
-            fit2wu = Fit2Wu(connection, LIMIT)
-            (work_units_added, pixel_count) = fit2wu.process_file(registration)
-            files_processed = work_units_added * MIN_QUORUM
-            os.remove(registration[REGISTER.c.filename])
-            if registration[REGISTER.c.sigma_filename] is not None:
-                os.remove(registration[REGISTER.c.sigma_filename])
-            connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+    LOG.info('Done - added %d Results', files_processed)
 
-        transaction.commit()
+# Log how many are left in the queue
+count = connection.execute(select([func.count(REGISTER.c.register_id)]).where(REGISTER.c.create_time == None)).first()[0]
+LOG.info('Galaxies in queue = %d', count)
 
-LOG.info('Done - added %d Results', files_processed)
+connection.close()
