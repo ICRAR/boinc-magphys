@@ -54,7 +54,7 @@ for result in connection.execute(select([RESULT]).where(RESULT.c.server_state !=
     current_jobs.append(result[RESULT.c.name])
 connection.close()
 
-sorted_data = sort_data(current_jobs)
+sorted_data = sorted(sort_data(current_jobs))
 for key, value in sorted_data.items():
     LOG.info('{0}: {1} areas'.format(key, len(value)))
 
@@ -68,13 +68,14 @@ try:
     for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == COMPUTING)):
         if finish_processing(galaxy[GALAXY.c.name], sorted_data):
             processed.append(galaxy[GALAXY.c.galaxy_id])
-
-    LOG.info('{0}'.format(processed))
+            LOG.info('%d %s has completed', galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.name])
 
     transaction = connection.begin()
     for galaxy_id in processed:
         connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id = PROCESSED))
     transaction.commit()
+
+    LOG.info('Marked %d galaxies ready for archiving', len(processed))
 
 except Exception:
     LOG.exception('Major error')
