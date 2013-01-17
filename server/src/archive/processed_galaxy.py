@@ -26,7 +26,6 @@
 """
 Look at the running galaxies and see if they are done
 """
-from __future__ import print_function
 import logging
 import os
 import sys
@@ -42,7 +41,7 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 from archive.processed_galaxy_mod import sort_data, finish_processing
 from sqlalchemy.engine import create_engine
-from sqlalchemy.sql.expression import and_, func, select
+from sqlalchemy.sql.expression import select
 from config import BOINC_DB_LOGIN, DB_LOGIN, PROCESSED, COMPUTING
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import GALAXY
@@ -51,7 +50,7 @@ from database.database_support_core import GALAXY
 ENGINE = create_engine(BOINC_DB_LOGIN)
 connection = ENGINE.connect()
 current_jobs = []
-for result in connection.execute(select([RESULT]).where(RESULT.c.server_state.in_(2,4))):      # TODO:
+for result in connection.execute(select([RESULT]).where(RESULT.c.server_state != 5)):
     current_jobs.append(result[RESULT.c.name])
 connection.close()
 
@@ -72,8 +71,10 @@ try:
 
     LOG.info('{0}'.format(processed))
 
-    #for galaxy_id in processed:
-    #    connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id = PROCESSED))
+    transaction = connection.begin()
+    for galaxy_id in processed:
+        connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id = PROCESSED))
+    transaction.commit()
 
 except Exception:
     LOG.exception('Major error')
