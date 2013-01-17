@@ -10,6 +10,12 @@ FROM information_schema.TABLES group by table_schema;
 select table_name, round(((data_length + index_length) / (1024*1024*1024)),2) as 'size in gigs' from information_schema.tables where table_schema = 'magphys';
 
 
+select status_id, count(*)
+from galaxy
+group by status_id;
+
+
 update galaxy set status_id = 3
 where galaxy_id >= 443
-      and galaxy_id <= 499;
+      and galaxy_id <= 499
+      and status_id = 2;

@@ -72,6 +72,7 @@ try:
         galaxy_ids = []
         for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == PROCESSED).order_by(GALAXY.c.galaxy_id)):
             galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
+        galaxy_ids = galaxy_ids[0:20]
 
     elif len(args['galaxy_id']) == 1 and args['galaxy_id'][0].find('-') > 1:
         list = args['galaxy_id'][0].split('-')
@@ -153,18 +154,21 @@ try:
             # Flush the HDF5 data to disk
             h5_file.flush()
             h5_file.close()
-            end_time = time.time()
-            LOG.info('Galaxy with galaxy_id of %d was archived.', galaxy_id1)
-            LOG.info('Copied %d areas %d pixels.', area_count, pixel_count)
-            total_time = end_time - start_time
-            LOG.info('Total time %d mins %.1f secs', int(total_time / 60), total_time % 60)
 
+            # Move the file
             to_store = os.path.join(OUTPUT_DIRECTORY, 'to_store')
+            LOG.info('Moving the file %s to %s', filename, to_store)
             if not os.path.exists(to_store):
                 os.makedirs(to_store)
             shutil.move(filename, to_store)
 
             connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id = ARCHIVED))
+
+            end_time = time.time()
+            LOG.info('Galaxy with galaxy_id of %d was archived.', galaxy_id1)
+            LOG.info('Copied %d areas %d pixels.', area_count, pixel_count)
+            total_time = end_time - start_time
+            LOG.info('Total time %d mins %.1f secs', int(total_time / 60), total_time % 60)
 
 except Exception:
     LOG.exception('Major error')
