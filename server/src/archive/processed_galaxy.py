@@ -54,9 +54,9 @@ for result in connection.execute(select([RESULT]).where(RESULT.c.server_state !=
     current_jobs.append(result[RESULT.c.name])
 connection.close()
 
-sorted_data = sorted(sort_data(current_jobs))
-for key, value in sorted_data.items():
-    LOG.info('{0}: {1} areas'.format(key, len(value)))
+sorted_data = sort_data(current_jobs)
+for key in sorted(sorted_data.iterkeys()):
+    LOG.info('{0}: {1} areas'.format(key, len(sorted_data[key])))
 
 # Connect to the database - the login string is set in the database package
 ENGINE = create_engine(DB_LOGIN)
