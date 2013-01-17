@@ -76,6 +76,7 @@ try:
     transaction.commit()
 
     LOG.info('Marked %d galaxies ready for archiving', len(processed))
+    LOG.info('%d galaxies are still being processed', len(sorted_data))
 
 except Exception:
     LOG.exception('Major error')
