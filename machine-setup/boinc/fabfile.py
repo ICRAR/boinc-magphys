@@ -224,7 +224,7 @@ def edit_files():
     </task>
     <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/processed_galaxy.py </cmd>
-      <period> 6 hours </period>
+      <period> 4 hours </period>
       <disabled> 0 </disabled>
       <output> processed_galaxy.out </output>
     </task>
