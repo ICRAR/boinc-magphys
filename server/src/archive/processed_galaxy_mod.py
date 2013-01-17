@@ -23,24 +23,37 @@
 #    MA 02111-1307  USA
 #
 """
-Connect to the BOINC database
+The function used to process a galaxy
 """
-from sqlalchemy import Column, MetaData, BigInteger, String, Table
 
-BOINC_METADATA = MetaData()
+def sort_data(current_jobs):
+    """
+    Sort the list of jobs
+    :param current_jobs:
+    :return:
+    """
+    return_data = {}
+    for job_name in current_jobs:
+        index = job_name.index('_area')
+        galaxy_name = job_name[0:index]
 
-RESULT = Table('result',
-    BOINC_METADATA,
-    Column('id'          , BigInteger, primary_key=True, autoincrement=True),
-    Column('server_state', BigInteger),
-    Column('workunitid'  , BigInteger),
-    Column('appid'       , BigInteger),
-    Column('name'        , String),
-)
+        areas = return_data.get(galaxy_name)
+        if areas is None:
+            areas = []
+            return_data[galaxy_name] = areas
 
-WORK_UNIT = Table('workunit',
-    BOINC_METADATA,
-    Column('id'              , BigInteger, primary_key=True, autoincrement=True),
-    Column('name'            , String),
-    Column('assimilate_state', BigInteger)
-)
+        index1 = job_name.index('_', index + 5)
+        area_number = job_name[index + 5 : index1]
+        areas.append(area_number)
+
+    return return_data
+
+def finish_processing(galaxy_name, sorted_data):
+    """
+    Have we finished processing yet
+    :param galaxy_name:
+    :param sorted_data:
+    :return:
+    """
+    return sorted_data.get(galaxy_name) is None
+

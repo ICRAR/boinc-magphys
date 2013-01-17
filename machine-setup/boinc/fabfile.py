@@ -212,13 +212,13 @@ def edit_files():
     </task>
     <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/delete_galaxy_task.py </cmd>
-      <period> 1 hour </period>
+      <period> 30 minutes </period>
       <disabled> 0 </disabled>
       <output> delete_galaxy_task.out </output>
     </task>
     <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/archive_hdf5_galaxy.py -o /home/ec2-user/archive </cmd>
-      <period> 1 hour </period>
+      <period> 30 minutes </period>
       <disabled> 0 </disabled>
       <output> archive_hdf5_galaxy.out </output>
     </task>
