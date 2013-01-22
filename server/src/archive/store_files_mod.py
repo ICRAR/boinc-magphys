@@ -193,9 +193,9 @@ def store_files(dir, host):
 
                 if run_command(command, file):
                     LOG.info('File successfully loaded')
-                    #TODO:
-                    #os.remove(file)
-                    #connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id = STORED))
+
+                    os.remove(file)
+                    connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id = STORED))
 
             else:
                 LOG.error('File name: %s', file)
