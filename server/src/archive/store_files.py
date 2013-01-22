@@ -45,7 +45,7 @@ from utils.readable_dir import ReadableDir
 
 parser = argparse.ArgumentParser('Copy files into NGAS on Cortex')
 parser.add_argument('-d','--dir', action=ReadableDir, nargs=1, help='where the HDF5 files are')
-parser.add_argument('-h','--host', help='where the HDF5 files are written too')
+parser.add_argument('--host', help='where the HDF5 files are written too')
 args = vars(parser.parse_args())
 
 DIR = args['dir']
