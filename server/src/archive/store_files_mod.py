@@ -144,7 +144,7 @@ NG/AMS Version: v1.0-MMA/2012-07-27T08:00:00
 
     return lines_processed == 12
 
-def run_command(command):
+def run_command(command, file):
     """
     Execute a command
 
@@ -155,7 +155,7 @@ def run_command(command):
     try:
         output = subprocess.check_output(args)
         LOG.info(output)
-        return check_ngas_output(output)
+        return check_ngas_output(output, file)
 
     except subprocess.CalledProcessError, e:
         LOG.error(command)
@@ -191,7 +191,7 @@ def store_files(dir, host):
                 command = '/home/ec2-user/ngas_rt/bin/ngamsCClient -host {0} -port 7780 -cmd ARCHIVE -fileUri {1} -mimeType application/octet-stream'.format(host, file)
                 LOG.info(command)
 
-                if run_command(command):
+                if run_command(command, file):
                     LOG.info('File successfully loaded')
                     #TODO:
                     #os.remove(file)
