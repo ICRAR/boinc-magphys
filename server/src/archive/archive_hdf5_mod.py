@@ -34,8 +34,22 @@ from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-PARAMETER_TYPES = ['f_mu (SFH)', 'f_mu (IR)', 'mu parameter', 'tau_V', 'sSFR_0.1Gyr', 'M(stars)', 'Ldust', 'T_C^ISM', 'T_W^BC', 'xi_C^tot', 'xi_PAH^tot', 'xi_MIR^tot', 'xi_W^tot', 'tau_V^ISM',
-                      'M(dust)', 'SFR_0.1Gyr']
+PARAMETER_TYPES = ['f_mu (SFH)',
+                   'f_mu (IR)',
+                   'mu parameter',
+                   'tau_V',
+                   'sSFR_0.1Gyr',
+                   'M(stars)',
+                   'Ldust',
+                   'T_C^ISM',
+                   'T_W^BC',
+                   'xi_C^tot',
+                   'xi_PAH^tot',
+                   'xi_MIR^tot',
+                   'xi_W^tot',
+                   'tau_V^ISM',
+                   'M(dust)',
+                   'SFR_0.1Gyr']
 
 NUMBER_PARAMETERS = 16
 NUMBER_IMAGES = 7
