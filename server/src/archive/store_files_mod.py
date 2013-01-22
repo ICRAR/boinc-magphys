@@ -180,8 +180,8 @@ def store_files(dir, host):
 
     files = os.path.join(dir, '*.hdf5')
 
-    for file in glob.glob(files):
-        try:
+    try:
+        for file in glob.glob(files):
             size = os.path.getsize(file)
             galaxy_id = get_galaxy_id(file, connection)
             if galaxy_id >= 0:
@@ -202,8 +202,8 @@ def store_files(dir, host):
                 LOG.error('File size: %d', size)
                 LOG.error('Could not get the galaxy id')
 
-        except Exception:
-            LOG.exception('Major error')
+    except Exception:
+        LOG.exception('Major error')
 
-        finally:
-            connection.close()
+    finally:
+        connection.close()
