@@ -24,13 +24,36 @@
 #    MA 02111-1307  USA
 #
 """
-Extract data from the HDF5 file
+Store the files to NGAS
 """
-import argparse
 import logging
+import os
+import sys
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-parser = argparse.ArgumentParser('Extract elements from an HDF5 file')
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
+import argparse
+from archive.store_files_mod import store_files
+from utils.readable_dir import ReadableDir
+
+parser = argparse.ArgumentParser('Copy files into NGAS on Cortex')
+parser.add_argument('-d','--dir', action=ReadableDir, nargs=1, help='where the HDF5 files are')
+parser.add_argument('-h','--host', help='where the HDF5 files are written too')
+args = vars(parser.parse_args())
+
+DIR = args['dir']
+if args['host'] is None:
+    HOST = 'cortex.ivec.org'
+else:
+    HOST = args['host']
+
+store_files(DIR, HOST)
+
+LOG.info('All Done')
