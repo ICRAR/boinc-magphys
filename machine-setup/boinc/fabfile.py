@@ -228,6 +228,12 @@ def edit_files():
       <disabled> 0 </disabled>
       <output> processed_galaxy.out </output>
     </task>
+    <task>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/store_files.py -d ~/archive/to_store/ </cmd>
+      <period> 4 hours </period>
+      <disabled> 0 </disabled>
+      <output> store_files.out </output>
+    </task>
   </tasks>
   <daemons>
     <daemon>
