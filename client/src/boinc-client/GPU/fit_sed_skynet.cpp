@@ -76,6 +76,9 @@ void get_percentiles(int n,double par[],double probability[],double percentile[]
 void degrade_hist(double delta,double min,double max,int nbin1,int * nbin2,double hist1[], double hist2[],double prob1[],double prob2[]);
 double get_hpbv(double hist1[],double hist2[],int nbin);
 
+void get_fexp3(char dstr[]);
+void get_fsci(char dstr[]);
+
 // TODO : Bad! Get rid of this eventually.
 static double omega0;
 
@@ -579,7 +582,13 @@ int main(int argc, char *argv[]){
         if(!fitfp){
             cerr << "Could not open fit file: " << outfile1 << endl;
         }
-        fprintf(fitfp," ####### %s\n",gal_name[i_gal]);
+        fprintf(fitfp," ####### %s",gal_name[i_gal]);
+        //We need to iterate the length of the char array like fortran seems to be doing.
+        for(i=strlen(gal_name[i_gal]); i<30; i++){
+            fprintf(fitfp," ");
+        }
+        fprintf(fitfp,"\n");
+        
     }
 // {F77} 
 // {F77} c     Choose libraries according to the redshift of the source
@@ -1662,14 +1671,20 @@ int main(int argc, char *argv[]){
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Store fit results in .fit output file
 // {F77} c     ---------------------------------------------------------------------------
+    // Buffer we will use for massaging numbers in FORTRAN format.
+    char dbuf[20];
 // {F77}          write(31,702)
 // {F77}  702     format('# OBSERVED FLUXES (and errors):')   
     fprintf(fitfp,"# OBSERVED FLUXES (and errors):\n");
 // {F77}          write(filter_header,*) (filt_name(k),k=1,nfilt)
 // {F77}          write(31,*) '#  '//filter_header(1:largo(filter_header))    
-    fprintf(fitfp," #  ");
+    fprintf(fitfp," #   ");
     for(k=0;k<nfilt;k++){
-        fprintf(fitfp," %s ",filt_name[k]);
+        if(k==0){
+            fprintf(fitfp,"%s",filt_name[k]);
+        }else{
+            fprintf(fitfp,"%12s",filt_name[k]);
+        }
     }
     fprintf(fitfp,"\n");
 // {F77} 
@@ -1687,7 +1702,7 @@ int main(int argc, char *argv[]){
    fprintf(fitfp,"\n");
    fprintf(fitfp,"#\n");
 
-
+  
 // {F77} 
 // {F77}          write(31,800)
 // {F77}  800     format('# ... Results of fitting the fluxes to the model.....')
@@ -1709,7 +1724,7 @@ int main(int argc, char *argv[]){
 // {F77}  311     format(2i10,0pf10.3,0pf12.6)
     // Adding 1 to ir_sav to get total number
    
-   fprintf(fitfp," %10i %10i %10.3f %12.6f\n",indx[sfh_sav],ir_sav+1,chi2_sav/n_flux,redshift[i_gal]);
+   fprintf(fitfp,"%10i%10i%10.3f%12.6f\n",indx[sfh_sav],ir_sav+1,chi2_sav/n_flux,redshift[i_gal]);
 // {F77}          write(31,802)
    fprintf(fitfp,"#.fmu(SFH)...fmu(IR)........mu......tauv");;
    fprintf(fitfp,"........sSFR..........M*.......Ldust");
@@ -1725,7 +1740,7 @@ int main(int argc, char *argv[]){
 // {F77}      +        tvism(sfh_sav),mdust(ir_sav)*a_sav*ldust(sfh_sav),
 // {F77}      +        ssfr(sfh_sav)*a_sav
 // {F77} 
-   fprintf(fitfp," %10.3f %10.3f %10.3f %10.3f %12.3E %12.3E %12.3E %10.1f %10.1f %10.3f %10.3f %10.3f %10.3f %10.3f %12.3E %12.3E",
+   fprintf(fitfp,"%10.3f%10.3f%10.3f%10.3f%12.3E%12.3E%12.3E%10.1f%10.1f%10.3f%10.3f%10.3f%10.3f%10.3f%12.3E%12.3E",
            fmu_sfh[sfh_sav],fmu_ir[ir_sav],mu[sfh_sav],
            tauv[sfh_sav],ssfr[sfh_sav],a_sav,ldust[sfh_sav]*a_sav,
            tbg1[ir_sav],tbg2[ir_sav],fmu_ism[ir_sav],xi1[ir_sav],
@@ -1733,9 +1748,13 @@ int main(int argc, char *argv[]){
            mdust[ir_sav]*a_sav*ldust[sfh_sav],ssfr[sfh_sav]*a_sav);
    fprintf(fitfp,"\n");
 // {F77}          write(31,*) '#  '//filter_header(1:largo(filter_header))
-    fprintf(fitfp," #  ");
+    fprintf(fitfp," #   ");
     for(k=0;k<nfilt;k++){
-        fprintf(fitfp," %s ",filt_name[k]);
+        if(k==0){
+            fprintf(fitfp,"%s",filt_name[k]);
+        }else{
+            fprintf(fitfp,"%12s",filt_name[k]);
+        }
     }
     fprintf(fitfp,"\n");
 // {F77}          write(31,701) (a_sav*flux_sfh(sfh_sav,k),k=1,nfilt_sfh-nfilt_mix),
@@ -1745,13 +1764,13 @@ int main(int argc, char *argv[]){
 // {F77}      +        (a_sav*flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav),
 // {F77}      +        k=nfilt_sfh+1,nfilt)
     for(k=0;k<nfilt_sfh-nfilt_mix;k++){
-       fprintf(fitfp," %12.3E ",a_sav*flux_sfh[k][sfh_sav]);
+       fprintf(fitfp,"%12.3E",a_sav*flux_sfh[k][sfh_sav]);
     }
     for(k=nfilt_sfh-nfilt_mix; k<nfilt_sfh; k++){
-       fprintf(fitfp," %12.3E ",a_sav*flux_sfh[k][sfh_sav]+flux_ir[k-nfilt_sfh+nfilt_mix][ir_sav]*ldust[sfh_sav]);
+       fprintf(fitfp,"%12.3E",a_sav*flux_sfh[k][sfh_sav]+flux_ir[k-nfilt_sfh+nfilt_mix][ir_sav]*ldust[sfh_sav]);
     }
     for(k=nfilt_sfh;k<nfilt;k++){
-       fprintf(fitfp," %12.3E ",a_sav*flux_ir[k-nfilt_sfh+nfilt_mix][ir_sav]*ldust[sfh_sav]);
+       fprintf(fitfp,"%12.3E",a_sav*flux_ir[k-nfilt_sfh+nfilt_mix][ir_sav]*ldust[sfh_sav]);
     }
     fprintf(fitfp,"\n");
 // {F77}  701     format(1p50e12.3)
@@ -1781,7 +1800,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... f_mu (SFH) ...\n");
     for(ibin=0; ibin<nbin2_fmu; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",fmu2_hist[ibin],psfh2[ibin]);
+        sprintf(dbuf,"%.3E",psfh2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%10.4f%12s\n",fmu2_hist[ibin],dbuf);
     }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_fmu_sfh(k),k=1,5)
@@ -1797,7 +1818,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, fmu2_hist(1), fmu2_hist(nbin2_fmu), fmu2_hist(2) - fmu2_hist(1)
     hpbv = get_hpbv(psfh2,fmu2_hist,nbin2_fmu);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,fmu2_hist[0],fmu2_hist[nbin2_fmu-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,fmu2_hist[0],fmu2_hist[nbin2_fmu-1]);
     fprintf(fitfp,"%10.4f\n",fmu2_hist[1] - fmu2_hist[0]);
     
 // {F77} c theSkyNet
@@ -1810,7 +1831,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... f_mu (IR) ...\n");
     for(ibin=0; ibin<nbin2_fmu; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",fmu2_hist[ibin],pir2[ibin]);
+        sprintf(dbuf,"%.3E",pir2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%10.4f%12s\n",fmu2_hist[ibin],dbuf);
     }    
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_fmu_ir(k),k=1,5)
@@ -1825,7 +1848,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, fmu2_hist(1), fmu2_hist(nbin2_fmu), fmu2_hist(2) - fmu2_hist(1)
     hpbv = get_hpbv(pir2,fmu2_hist,nbin2_fmu);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,fmu2_hist[0],fmu2_hist[nbin2_fmu-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,fmu2_hist[0],fmu2_hist[nbin2_fmu-1]);
     fprintf(fitfp,"%10.4f\n",fmu2_hist[1] - fmu2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -1837,7 +1860,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... mu parameter ...\n");
     for(ibin=0; ibin<nbin2_mu; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",mu2_hist[ibin],pmu2[ibin]);
+        sprintf(dbuf,"%.3E",pmu2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%10.4f%12s\n",mu2_hist[ibin],dbuf);
     }    
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_mu(k),k=1,5)
@@ -1852,7 +1877,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, mu2_hist(1), mu2_hist(nbin2_mu), mu2_hist(2) - mu2_hist(1)
     hpbv = get_hpbv(pmu2,mu2_hist,nbin2_mu);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,mu2_hist[0],mu2_hist[nbin2_mu-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,mu2_hist[0],mu2_hist[nbin2_mu-1]);
     fprintf(fitfp,"%10.4f\n",mu2_hist[1] - mu2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -1864,7 +1889,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... tau_V ...\n");
     for(ibin=0; ibin<nbin2_tv; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",tv2_hist[ibin],ptv2[ibin]);
+        sprintf(dbuf,"%.3E",ptv2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%10.4f%12s\n",tv2_hist[ibin],dbuf);
     }    
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_tv(k),k=1,5)
@@ -1879,7 +1906,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, tv2_hist(1), tv2_hist(nbin2_tv), tv2_hist(2) - tv2_hist(1)
     hpbv = get_hpbv(ptv2, tv2_hist, nbin2_tv);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,tv2_hist[0],tv2_hist[nbin2_tv-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,tv2_hist[0],tv2_hist[nbin2_tv-1]);
     fprintf(fitfp,"%10.4f\n",tv2_hist[1] - tv2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -1891,7 +1918,12 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... sSFR_0.1Gyr ...\n");
     for(ibin=0; ibin<nbin2_ssfr; ibin++){
-        fprintf(fitfp,"%12.3E%12.3E\n",ssfr2_hist[ibin],pssfr2[ibin]);
+        sprintf(dbuf,"%.3E",ssfr2_hist[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s",dbuf);
+        sprintf(dbuf,"%.3E",pssfr2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s\n",dbuf);
     }
 // {F77}         
 // {F77}  812     format(1p2e12.3e3)
@@ -1899,7 +1931,9 @@ int main(int argc, char *argv[]){
 // {F77}          write(31,62) (pct_ssfr(k),k=1,5)
     fprintf(fitfp,"#....percentiles of the PDF......\n");
     for(k=0;k<5;k++){
-        fprintf(fitfp,"%12.3E",pct_ssfr[k]);
+        sprintf(dbuf,"%.3E",pct_ssfr[k]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s",dbuf);
     }
     fprintf(fitfp,"\n");
 // {F77} c theSkyNet
@@ -1908,7 +1942,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, ssfr2_hist(1), ssfr2_hist(nbin2_ssfr), ssfr2_hist(2) - ssfr2_hist(1)
     hpbv = get_hpbv(pssfr2, ssfr2_hist, nbin2_ssfr);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,ssfr2_hist[0],ssfr2_hist[nbin2_ssfr-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,ssfr2_hist[0],ssfr2_hist[nbin2_ssfr-1]);
     fprintf(fitfp,"%10.4f\n",ssfr2_hist[1] - ssfr2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -1920,13 +1954,20 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... M(stars) ...\n");
     for(ibin=0; ibin<nbin2_a; ibin++){
-        fprintf(fitfp,"%12.3E%12.3E\n",a2_hist[ibin],pa2[ibin]);
+        sprintf(dbuf,"%.3E",a2_hist[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s",dbuf);
+        sprintf(dbuf,"%.3E",pa2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s\n",dbuf);
     }
 // {F77}          write(31,60)
 // {F77}          write(31,62) (pct_mstr(k),k=1,5)
     fprintf(fitfp,"#....percentiles of the PDF......\n");
     for(k=0;k<5;k++){
-        fprintf(fitfp,"%12.3E",pct_mstr[k]);
+        sprintf(dbuf,"%.3E",pct_mstr[k]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s",dbuf);
     }
     fprintf(fitfp,"\n");
 // {F77} c theSkyNet
@@ -1935,7 +1976,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, a2_hist(1), a2_hist(nbin2_a), a2_hist(2) - a2_hist(1)
     hpbv = get_hpbv(pa2, a2_hist, nbin2_a);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,a2_hist[0],a2_hist[nbin2_a-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,a2_hist[0],a2_hist[nbin2_a-1]);
     fprintf(fitfp,"%10.4f\n",a2_hist[1] - a2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -1947,13 +1988,20 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... Ldust ...\n");
     for(ibin=0; ibin<nbin2_ld; ibin++){
-        fprintf(fitfp,"%12.3E%12.3E\n",ld2_hist[ibin],pldust2[ibin]);
+        sprintf(dbuf,"%.3E",ld2_hist[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s",dbuf);
+        sprintf(dbuf,"%.3E",pldust2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s\n",dbuf);
     }
 // {F77}          write(31,60)
 // {F77}          write(31,62) (pct_ld(k),k=1,5)
     fprintf(fitfp,"#....percentiles of the PDF......\n");
     for(k=0;k<5;k++){
-        fprintf(fitfp,"%12.3E",pct_ld[k]);
+        sprintf(dbuf,"%.3E",pct_ld[k]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s",dbuf);
     }
     fprintf(fitfp,"\n");
 // {F77} c theSkyNet
@@ -1962,7 +2010,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, ld2_hist(1), ld2_hist(nbin2_ld), ld2_hist(2) - ld2_hist(1)
     hpbv = get_hpbv(pldust2, ld2_hist, nbin2_ld);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,ld2_hist[0],ld2_hist[nbin2_ld-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,ld2_hist[0],ld2_hist[nbin2_ld-1]);
     fprintf(fitfp,"%10.4f\n",ld2_hist[1] - ld2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -1974,7 +2022,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... T_C^ISM ...\n");
     for(ibin=0; ibin<nbin2_tbg2; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",tbg2_2_hist[ibin],ptbg2_2[ibin]);
+        sprintf(dbuf,"%.3E",ptbg2_2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%10.4f%12s\n",tbg2_2_hist[ibin],dbuf);
     }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_tbg2(k),k=1,5)
@@ -1989,7 +2039,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, tbg2_2_hist(1), tbg2_2_hist(nbin2_tbg2), tbg2_2_hist(2) - tbg2_2_hist(1)
     hpbv = get_hpbv(ptbg2_2, tbg2_2_hist, nbin2_tbg2);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,tbg2_2_hist[0],tbg2_2_hist[nbin2_tbg2-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,tbg2_2_hist[0],tbg2_2_hist[nbin2_tbg2-1]);
     fprintf(fitfp,"%10.4f\n",tbg2_2_hist[1] - tbg2_2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -2001,7 +2051,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... T_W^BC ...\n");
     for(ibin=0; ibin<nbin2_tbg1; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",tbg1_2_hist[ibin],ptbg1_2[ibin]);
+        sprintf(dbuf,"%.3E",ptbg1_2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%10.4f%12s\n",tbg1_2_hist[ibin],dbuf);
     }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_tbg1(k),k=1,5)
@@ -2016,7 +2068,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, tbg1_2_hist(1), tbg1_2_hist(nbin2_tbg1), tbg1_2_hist(2) - tbg1_2_hist(1)
     hpbv = get_hpbv(ptbg1_2, tbg1_2_hist, nbin2_tbg1);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,tbg1_2_hist[0],tbg1_2_hist[nbin2_tbg1-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,tbg1_2_hist[0],tbg1_2_hist[nbin2_tbg1-1]);
     fprintf(fitfp,"%10.4f\n",tbg1_2_hist[1] - tbg1_2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -2028,13 +2080,15 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... xi_C^tot ...\n");
     for(ibin=0; ibin<nbin2_fmu_ism; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",fmuism2_hist[ibin],pism2[ibin]);
+        sprintf(dbuf,"%.3E",pism2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%10.4f%12s\n",fmuism2_hist[ibin],dbuf);
     }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_ism(k),k=1,5)
     fprintf(fitfp,"#....percentiles of the PDF......\n");
     for(k=0;k<5;k++){
-        fprintf(fitfp,"%10.3f",pct_ism[k]);
+        fprintf(fitfp,"%8.3f",pct_ism[k]);
     }
     fprintf(fitfp,"\n");
 // {F77} c theSkyNet
@@ -2043,7 +2097,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, fmuism2_hist(1), fmuism2_hist(nbin2_fmu_ism), fmuism2_hist(2) - fmuism2_hist(1)
     hpbv = get_hpbv(pism2, fmuism2_hist, nbin2_fmu_ism);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,fmuism2_hist[0],fmuism2_hist[nbin2_fmu_ism-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,fmuism2_hist[0],fmuism2_hist[nbin2_fmu_ism-1]);
     fprintf(fitfp,"%10.4f\n",fmuism2_hist[1] - fmuism2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -2055,7 +2109,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... xi_PAH^tot ...\n");
     for(ibin=0; ibin<nbin2_xi; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",xi2_hist[ibin],pxi1_2[ibin]);
+        sprintf(dbuf,"%.3E",pxi1_2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%10.4f%12s\n",xi2_hist[ibin],dbuf);
     }    
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_xi1(k),k=1,5)
@@ -2070,7 +2126,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, xi2_hist(1), xi2_hist(nbin2_xi), xi2_hist(2) - xi2_hist(1)
     hpbv = get_hpbv(pxi1_2, xi2_hist, nbin2_xi);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,xi2_hist[0],xi2_hist[nbin2_xi-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,xi2_hist[0],xi2_hist[nbin2_xi-1]);
     fprintf(fitfp,"%10.4f\n",xi2_hist[1] - xi2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -2082,7 +2138,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... xi_MIR^tot ...\n");
     for(ibin=0; ibin<nbin2_xi; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",xi2_hist[ibin],pxi2_2[ibin]);
+        sprintf(dbuf,"%.3E",pxi2_2[ibin]);
+        get_fexp3(dbuf);        
+        fprintf(fitfp,"%10.4f%12s\n",xi2_hist[ibin],dbuf);
     }    
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_xi2(k),k=1,5)
@@ -2097,7 +2155,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, xi2_hist(1), xi2_hist(nbin2_xi), xi2_hist(2) - xi2_hist(1)
     hpbv = get_hpbv(pxi2_2, xi2_hist, nbin2_xi);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,xi2_hist[0],xi2_hist[nbin2_xi-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,xi2_hist[0],xi2_hist[nbin2_xi-1]);
     fprintf(fitfp,"%10.4f\n",xi2_hist[1] - xi2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -2109,7 +2167,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... xi_W^tot ...\n");
     for(ibin=0; ibin<nbin2_xi; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",xi2_hist[ibin],pxi3_2[ibin]);
+        sprintf(dbuf,"%.3E",pxi3_2[ibin]);
+        get_fexp3(dbuf);        
+        fprintf(fitfp,"%10.4f%12s\n",xi2_hist[ibin],dbuf);
     }    
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_xi3(k),k=1,5)
@@ -2124,7 +2184,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, xi2_hist(1), xi2_hist(nbin2_xi), xi2_hist(2) - xi2_hist(1)
     hpbv = get_hpbv(pxi3_2, xi2_hist, nbin2_xi);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,xi2_hist[0],xi2_hist[nbin2_xi-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,xi2_hist[0],xi2_hist[nbin2_xi-1]);
     fprintf(fitfp,"%10.4f\n",xi2_hist[1] - xi2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -2136,7 +2196,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... tau_V^ISM...\n");
     for(ibin=0; ibin<nbin2_tvism; ibin++){
-        fprintf(fitfp,"%10.4f%12.3E\n",tvism2_hist[ibin],ptvism2[ibin]);
+        sprintf(dbuf,"%.3E",ptvism2[ibin]);
+        get_fexp3(dbuf);  
+        fprintf(fitfp,"%10.4f%12s\n",tvism2_hist[ibin],dbuf);
     }    
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_tvism(k),k=1,5)
@@ -2151,7 +2213,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, tvism2_hist(1), tvism2_hist(nbin2_tvism), tvism2_hist(2) - tvism2_hist(1)
     hpbv = get_hpbv(ptvism2, tvism2_hist, nbin2_tvism);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,tvism2_hist[0],tvism2_hist[nbin2_tvism-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,tvism2_hist[0],tvism2_hist[nbin2_tvism-1]);
     fprintf(fitfp,"%10.4f\n",tvism2_hist[1] - tvism2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -2163,7 +2225,9 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... M(dust)...\n");
     for(ibin=0; ibin<nbin2_md; ibin++){
-       fprintf(fitfp,"%10.4f%12.3E\n",md2_hist[ibin],pmd_2[ibin]);
+       sprintf(dbuf,"%.3E",pmd_2[ibin]);
+       get_fexp3(dbuf);  
+       fprintf(fitfp,"%10.4f%12s\n",md2_hist[ibin],dbuf);
     }    
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_md(k),k=1,5)
@@ -2178,7 +2242,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, md2_hist(1), md2_hist(nbin2_md), md2_hist(2) - md2_hist(1)
     hpbv = get_hpbv(pmd_2, md2_hist, nbin2_md);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,md2_hist[0],md2_hist[nbin2_md-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,md2_hist[0],md2_hist[nbin2_md-1]);
     fprintf(fitfp,"%10.4f\n",md2_hist[1] - md2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -2190,7 +2254,12 @@ int main(int argc, char *argv[]){
 // {F77}          enddo
     fprintf(fitfp,"# ... SFR_0.1Gyr ...\n");
     for(ibin=0; ibin<nbin2_sfr; ibin++){
-        fprintf(fitfp,"%12.3E%12.3E\n",sfr2_hist[ibin],psfr2[ibin]);
+        sprintf(dbuf,"%.3E",sfr2_hist[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s",dbuf);
+        sprintf(dbuf,"%.3E",psfr2[ibin]);
+        get_fexp3(dbuf);
+        fprintf(fitfp,"%12s\n",dbuf);
     }    
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_sfr(k),k=1,5)
@@ -2205,7 +2274,7 @@ int main(int argc, char *argv[]){
 // {F77}          write(31, 901) hpbv, sfr2_hist(1), sfr2_hist(nbin2_sfr), sfr2_hist(2) - sfr2_hist(1)
     hpbv = get_hpbv(psfr2, sfr2_hist, nbin2_sfr);
     fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f %10.4f %10.4f",hpbv,sfr2_hist[0],sfr2_hist[nbin2_sfr-1]);
+    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,sfr2_hist[0],sfr2_hist[nbin2_sfr-1]);
     fprintf(fitfp,"%10.4f\n",sfr2_hist[1] - sfr2_hist[0]);
 // {F77} c theSkyNet
 // {F77} 
@@ -2224,7 +2293,19 @@ int main(int argc, char *argv[]){
 // {F77}      +           fmu_sfh(sfh_sav),redshift(i_gal),outfile2)
     if(skynet){
         fprintf(fitfp," #...theSkyNet parameters of this model\n");
-        fprintf(fitfp,"%15i%15i%20.5E%20.3E%10.1E\n",indx[sfh_sav],ir_sav+1,a_sav,fmu_sfh[sfh_sav],redshift[i_gal]);
+        fprintf(fitfp,"%15i%15i",indx[sfh_sav],ir_sav+1);
+        
+        // Yuck! Do the FORTRAN formatting requirement.
+        sprintf(dbuf,"%.5E",a_sav);
+        get_fsci(dbuf);
+        fprintf(fitfp,"%20s",dbuf);
+        sprintf(dbuf,"%.3E",fmu_sfh[sfh_sav]);
+        get_fsci(dbuf);
+        fprintf(fitfp,"%20s",dbuf);
+        sprintf(dbuf,"%.1E",redshift[i_gal]);
+        get_fsci(dbuf);
+        fprintf(fitfp,"%10s\n",dbuf);
+    
     } else {
         // TODO : Imlement best fit.
     }
@@ -3073,3 +3154,106 @@ double get_cosmol_c(double h,double omega,double omega_lambda,double* q){
 // {F77}                      end
 // {F77} 
 // {F77} 
+
+// Some C helper functions
+
+// Modifies string with scientific notation double to have 3 0s in exponent.
+void get_fexp3(char dstr[]){
+    int orig_len=(int)strlen(dstr);
+    int i=orig_len;
+    while(i >= 0 && !(dstr[i] == '+' || dstr[i] == '-')){
+        i--;
+    }   
+    i++;
+    int base_end_pos=i;
+
+    char * exp_str = new char[orig_len-base_end_pos+1];
+
+    char c=dstr[i];
+    int j=0;
+    while(c != '\0'){
+        c = dstr[i++];
+        exp_str[j]=c;
+        j++;
+    }   
+    exp_str[j]='\0';
+
+    int exp = atoi(exp_str);
+    sprintf(exp_str,"%03d", exp);
+
+    for(int k=0; k<(int)strlen(exp_str); k++){
+        dstr[base_end_pos++]=exp_str[k];
+    }   
+
+    dstr[i]='\0';
+    delete[] exp_str;
+}
+
+// Very ugly function that modifies scientific notation string into FORTRAN style preceding 0.
+void get_fsci(char dstr[]){
+    int orig_len=(int)strlen(dstr);
+    double orig_val;
+    sscanf(dstr, "%lf", &orig_val);
+    if(orig_val==0){
+        return;
+    }
+    int i=orig_len;
+    while(i >= 0 && !(dstr[i] == '+' || dstr[i] == '-')){
+        i--;
+    }
+    // Set the position where our base ends and sign starts.
+    int base_end_pos=i;
+
+    char * exp_str = new char[orig_len-base_end_pos+1];
+
+    char c=dstr[i];
+    int j=0;
+
+    // Copy exponent into new char array.
+    while(c != '\0'){
+        c = dstr[i++];
+        exp_str[j]=c;
+        j++;
+    }
+    exp_str[j]='\0';
+
+    // This is our new exponent.
+    int exp;
+    if(orig_val != 0){
+        exp = atoi(exp_str) + 1;
+    } else {
+        exp = atoi(exp_str);
+    }
+
+    // Always + if the exponent is 0.
+    if(exp == 0){
+        exp_str[0]='+';
+    }
+
+    if(exp_str[0]=='+'){
+        sprintf(exp_str,"+%02d",abs(exp));
+    } else if(exp_str[0]=='-'){
+        sprintf(exp_str,"-%02d",abs(exp));
+    }
+
+    char * old_dstr = new char[orig_len];
+    strcpy(old_dstr,dstr);
+    dstr[0]='0';
+    dstr[1]='.';
+    j=2;
+
+    for(int k=0; k<base_end_pos;k++){
+        if(old_dstr[k] != '.'){
+            dstr[j++]=old_dstr[k];
+        }
+    } 
+
+    for(int k=0; k<(int)strlen(exp_str); k++){
+        dstr[j++]=exp_str[k];
+    }
+    dstr[j]='\0';
+
+    delete[] exp_str;
+    delete[] old_dstr;
+}
+
