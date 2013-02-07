@@ -292,12 +292,14 @@ def store_pixels(connection, galaxy_id, group, dimension_x, dimension_y, dimensi
 
         filter_layer = 0
         for pixel_filter in connection.execute(select([PIXEL_FILTER]).where(PIXEL_FILTER.c.pxresult_id == pxresult_id).order_by(PIXEL_FILTER.c.pxfilter_id)):
-            data_pixel_filter[x, y, filter_layer] = (
-                pixel_filter[PIXEL_FILTER.c.observed_flux],
-                pixel_filter[PIXEL_FILTER.c.observational_uncertainty],
-                pixel_filter[PIXEL_FILTER.c.flux_bfm],
-            )
-            filter_layer += 1
+            # Sometimes we seem to get two versions of the data - just use the first set
+            if filter_layer < dimension_z:
+                data_pixel_filter[x, y, filter_layer] = (
+                    pixel_filter[PIXEL_FILTER.c.observed_flux],
+                    pixel_filter[PIXEL_FILTER.c.observational_uncertainty],
+                    pixel_filter[PIXEL_FILTER.c.flux_bfm],
+                )
+                filter_layer += 1
 
     pixel_dataset = group.create_dataset('pixels', data=data, compression='gzip')
     pixel_dataset.attrs['DIM3_F_MU_SFH']     = INDEX_F_MU_SFH
