@@ -26,6 +26,7 @@
 Functions used to extract data from an HDF5
 """
 import datetime
+import numpy
 import pyfits
 
 FEATURES = {
@@ -69,9 +70,17 @@ def build_fits_image(feature, layer, galaxy_group, pixel_data):
     """
     feature_index = FEATURES[feature]
     layer_index = LAYERS[layer]
-    data = pixel_data[:, :, layer_index, feature_index]
 
-    # TODO: I need to reshape the array as pyfits uses y, x whilst the hdf5 uses x, y
+    # I need to reshape the array as pyfits uses y, x whilst the hdf5 uses x, y
+    dimension_x = galaxy_group.attrs['dimension_x']
+    dimension_y = galaxy_group.attrs['dimension_y']
+    data = numpy.empty((dimension_y, dimension_x), dtype=numpy.float)
+    data.fill(numpy.NaN)
+
+    for x in range(dimension_x):
+        for y in range(dimension_y):
+            data[y, x] = pixel_data[x, y, layer_index, feature_index]
+
 
     utc_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S')
     hdu = pyfits.PrimaryHDU(data)
@@ -87,7 +96,11 @@ def build_fits_image(feature, layer, galaxy_group, pixel_data):
     for fits_header in galaxy_group['fits_header']:
         hdu_list[0].header.update(fits_header[0], fits_header[1])
 
-    # TODO: Write the file
+    # Write the file
+    if galaxy_group.attrs['version_number'] == 1:
+        hdu_list.writeto('{0}.{1}.{2}.fits'.format(galaxy_group.attrs['name'], feature, layer), clobber=True)
+    else:
+        hdu_list.writeto('{0}_V{1}.{2}.{3}.fits'.format(galaxy_group.attrs['name'], galaxy_group.attrs['version_number'], feature, layer), clobber=True)
 
 def get_features_and_layers(args):
     """
