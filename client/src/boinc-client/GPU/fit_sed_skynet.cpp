@@ -114,7 +114,7 @@ int main(int argc, char *argv[]){
 // {F77}       character*30 gal_name(galmax),aux_name
    static char gal_name[GALMAX][30],aux_name[30];
 // {F77}       character*6 numz
-   static char numz[7];
+//  static char numz[7];
 // {F77}       character optlib*34,irlib*26
    static char optlib[35],irlib[27];
 // {F77}       character filters*80,obs*80
@@ -621,7 +621,7 @@ int main(int argc, char *argv[]){
 // {F77}       write(*,*) 'optlib=',optlib
 // {F77}       write(*,*) 'irlib=',irlib
 
-    //snprintf(numz, 6, "%f.4",zlib[0]);
+//  snprintf(numz, 6, "%f.4",zlib[0]);
     snprintf(optlib, 35, "starformhist_cb07_z%6.4f.lbr",zlib[0]);
     snprintf(irlib, 27, "infrared_dce08_z%6.4f.lbr",zlib[0]);
 
