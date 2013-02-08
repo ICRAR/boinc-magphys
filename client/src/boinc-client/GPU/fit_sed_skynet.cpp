@@ -621,9 +621,9 @@ int main(int argc, char *argv[]){
 // {F77}       write(*,*) 'optlib=',optlib
 // {F77}       write(*,*) 'irlib=',irlib
 
-    snprintf(numz, 7, "%f6.4",zlib[0]);
-    snprintf(optlib, 35, "starformhist_cb07_z%s.lbr",numz);
-    snprintf(irlib, 27, "infrared_dce08_z%s.lbr",numz);
+    //snprintf(numz, 6, "%f.4",zlib[0]);
+    snprintf(optlib, 35, "starformhist_cb07_z%6.4f.lbr",zlib[0]);
+    snprintf(irlib, 27, "infrared_dce08_z%6.4f.lbr",zlib[0]);
 
     cout << "z = " << redshift[i_gal] << endl;
     cout << "optlib = " << optlib << endl;
