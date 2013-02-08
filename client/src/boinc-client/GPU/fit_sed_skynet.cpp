@@ -86,6 +86,13 @@ using namespace std;
 
 
 int main(int argc, char *argv[]){
+
+// Windows specific instruction
+#if defined(WIN32)
+    //Required as windows default is 3 digit exponent.
+    _set_output_format(_TWO_DIGIT_EXPONENT);
+#endif
+
 // Mimic output to that of fortran write.
     cout.precision(15);
    // cout.setf(ios::scientific);
