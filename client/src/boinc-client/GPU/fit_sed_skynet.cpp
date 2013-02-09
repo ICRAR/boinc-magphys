@@ -1305,42 +1305,42 @@ int main(int argc, char *argv[]){
 // {F77}                   ibin = max(1,min(ibin,nbin_fmu))
 // {F77}                   psfh(ibin)=psfh(ibin)+prob
                         ibin=i_fmu_sfh[i_sfh];
-                        ibin=max(0,min(ibin,nbin_fmu));
+                        ibin=max(0,min(ibin,nbin_fmu-1));
                         psfh[ibin]=psfh[ibin]+prob;
 // {F77} c     f_mu (IR)
 // {F77}                   ibin = i_fmu_ir(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_fmu))
 // {F77}                   pir(ibin)=pir(ibin)+prob
                         ibin=i_fmu_ir[i_ir];
-                        ibin = max(0,min(ibin,nbin_fmu));
+                        ibin = max(0,min(ibin,nbin_fmu-1));
                         pir[ibin]=pir[ibin]+prob;
 // {F77} c     mu
 // {F77}                   ibin= i_mu(i_sfh)
 // {F77}                   ibin = max(1,min(ibin,nbin_mu))
 // {F77}                   pmu(ibin)=pmu(ibin)+prob
                         ibin=i_mu[i_sfh];
-                        ibin=max(0,min(ibin,nbin_mu));
+                        ibin=max(0,min(ibin,nbin_mu-1));
                         pmu[ibin]=pmu[ibin]+prob;
 // {F77} c     tauV
 // {F77}                   ibin= i_tauv(i_sfh)
 // {F77}                   ibin = max(1,min(ibin,nbin_tv))
 // {F77}                   ptv(ibin)=ptv(ibin)+prob
                         ibin=i_tauv[i_sfh];
-                        ibin=max(0,min(ibin,nbin_tv));
+                        ibin=max(0,min(ibin,nbin_tv-1));
                         ptv[ibin]=ptv[ibin]+prob;
 // {F77} c     tvism
 // {F77}                   ibin= i_tvism(i_sfh)
 // {F77}                   ibin = max(1,min(ibin,nbin_tv))
 // {F77}                   ptvism(ibin)=ptvism(ibin)+prob
                         ibin=i_tvism[i_sfh];
-                        ibin=max(0,min(ibin,nbin_tv));
+                        ibin=max(0,min(ibin,nbin_tv-1));
                         ptvism[ibin]=ptvism[ibin]+prob;
 // {F77} c     sSFR_0.1Gyr
 // {F77}                   ibin= i_lssfr(i_sfh)
 // {F77}                   ibin = max(1,min(ibin,nbin_sfr))
 // {F77}                   pssfr(ibin)=pssfr(ibin)+prob
                         ibin=i_lssfr[i_sfh];
-                        ibin=max(0,min(ibin,nbin_sfr));
+                        ibin=max(0,min(ibin,nbin_sfr-1));
                         pssfr[ibin]=pssfr[ibin]+prob;
 // {F77} c     Mstar
 // {F77}                   a=dlog10(a)
@@ -1351,7 +1351,7 @@ int main(int argc, char *argv[]){
                         a=log10(a);
                         aux=((a-a_min)/(a_max-a_min)) * nbin_a;
                         ibin=(int)(aux);
-                        ibin=max(0,min(ibin,nbin_a));
+                        ibin=max(0,min(ibin,nbin_a-1));
                         pa[ibin]=pa[ibin]+prob;
 // {F77} c     SFR_0.1Gyr
 // {F77}                   aux=((lssfr(i_sfh)+a-sfr_min)/(sfr_max-sfr_min))
@@ -1361,7 +1361,7 @@ int main(int argc, char *argv[]){
 // {F77}                   psfr(ibin)=psfr(ibin)+prob
                         aux=((lssfr[i_sfh]+a-sfr_min)/(sfr_max-sfr_min))* nbin_sfr;
                         ibin=(int)(aux);
-                        ibin=max(0,min(ibin,nbin_sfr));
+                        ibin=max(0,min(ibin,nbin_sfr-1));
                         psfr[ibin]=psfr[ibin]+prob;
 // {F77} c     Ldust
 // {F77}                   aux=((logldust(i_sfh)+a-ld_min)/(ld_max-ld_min))
@@ -1371,7 +1371,7 @@ int main(int argc, char *argv[]){
 // {F77}                   pldust(ibin)=pldust(ibin)+prob
                         aux=((logldust[i_sfh]+a-ld_min)/(ld_max-ld_min))* nbin_ld;
                         ibin=(int)(aux);
-                        ibin=max(0,min(ibin,nbin_ld));
+                        ibin=max(0,min(ibin,nbin_ld-1));
                         pldust[ibin]=pldust[ibin]+prob;
                         
 // {F77} c     xi_C^tot
@@ -1379,42 +1379,42 @@ int main(int argc, char *argv[]){
 // {F77}                   ibin = max(1,min(ibin,nbin_fmu_ism))
 // {F77}                   pism(ibin)=pism(ibin)+prob
                        ibin=i_fmu_ism[i_ir];
-                       ibin=max(0,min(ibin,nbin_fmu_ism));
+                       ibin=max(0,min(ibin,nbin_fmu_ism-1));
                        pism[ibin]=pism[ibin]+prob;
 // {F77} c     T_C^ISM
 // {F77}                   ibin= i_tbg1(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_tbg1))
 // {F77}                   ptbg1(ibin)=ptbg1(ibin)+prob
                        ibin=i_tbg1[i_ir];
-                       ibin=max(0,min(ibin,nbin_tbg1));
+                       ibin=max(0,min(ibin,nbin_tbg1-1));
                        ptbg1[ibin]=ptbg1[ibin]+prob;
 // {F77} c     T_W^BC
 // {F77}                   ibin= i_tbg2(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_tbg2))
 // {F77}                   ptbg2(ibin)=ptbg2(ibin)+prob
                        ibin=i_tbg2[i_ir];
-                       ibin=max(0,min(ibin,nbin_tbg2));
+                       ibin=max(0,min(ibin,nbin_tbg2-1));
                        ptbg2[ibin]=ptbg2[ibin]+prob;
 // {F77} c     xi_PAH^tot
 // {F77}                   ibin= i_xi1(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_xi))
 // {F77}                   pxi1(ibin)=pxi1(ibin)+prob
                        ibin=i_xi1[i_ir];
-                       ibin=max(0,min(ibin,nbin_xi));
+                       ibin=max(0,min(ibin,nbin_xi-1));
                        pxi1[ibin]=pxi1[ibin]+prob;
 // {F77} c     xi_MIR^tot
 // {F77}                   ibin= i_xi2(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_xi))
 // {F77}                   pxi2(ibin)=pxi2(ibin)+prob
                        ibin=i_xi2[i_ir];
-                       ibin=max(0,min(ibin,nbin_xi));
+                       ibin=max(0,min(ibin,nbin_xi-1));
                        pxi2[ibin]=pxi2[ibin]+prob;
 // {F77} c     xi_W^tot
 // {F77}                   ibin= i_xi3(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_xi))
 // {F77}                   pxi3(ibin)=pxi3(ibin)+prob
                        ibin=i_xi3[i_ir];
-                       ibin=max(0,min(ibin,nbin_xi));
+                       ibin=max(0,min(ibin,nbin_xi-1));
                        pxi3[ibin]=pxi3[ibin]+prob;
 // {F77} c     Mdust
 // {F77}                   lmdust(i_ir)=dlog10(mdust(i_ir)*ldust(i_sfh)*10.0**a)
@@ -1425,7 +1425,7 @@ int main(int argc, char *argv[]){
                        lmdust[i_ir]=log10(mdust[i_ir]*ldust[i_sfh]*pow(10.0,a));
                        aux=((lmdust[i_ir]-md_min)/(md_max-md_min))*nbin_md;
                        ibin=(int)(aux);
-                       ibin=max(0,min(ibin,nbin_md));
+                       ibin=max(0,min(ibin,nbin_md-1));
                        pmd[ibin]=pmd[ibin]+prob;
 // {F77} 
 // {F77}                endif            !df condition
