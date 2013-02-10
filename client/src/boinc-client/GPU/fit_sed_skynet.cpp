@@ -1752,7 +1752,8 @@ int main(int argc, char *argv[]){
 // {F77}      +        ssfr(sfh_sav)*a_sav
 // {F77} 
    fprintf(fitfp,"%10.3f%10.3f%10.3f%10.3f%12.3E%12.3E%12.3E%10.1f%10.1f%10.3f%10.3f%10.3f%10.3f%10.3f%12.3E%12.3E",
-           fmu_sfh[sfh_sav],fmu_ir[ir_sav],mu[sfh_sav],
+           // TODO - Rethink manual round to 3 decimal places to overcome round to nearest even IEEE standard.
+           fmu_sfh[sfh_sav],fmu_ir[ir_sav],round(mu[sfh_sav]*1000)/1000,
            tauv[sfh_sav],ssfr[sfh_sav],a_sav,ldust[sfh_sav]*a_sav,
            tbg1[ir_sav],tbg2[ir_sav],fmu_ism[ir_sav],xi1[ir_sav],
            xi2[ir_sav],xi3[ir_sav],tvism[sfh_sav],
