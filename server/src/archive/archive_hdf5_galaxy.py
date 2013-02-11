@@ -54,6 +54,7 @@ from sqlalchemy.sql.expression import func, and_
 
 parser = argparse.ArgumentParser('Archive Galaxy by galaxy_id')
 parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the HDF5 files will be written')
+parser.add_argument('-mod', '--mod', nargs=2, help=' M N - the modulus M to used and which value to check N ')
 parser.add_argument('galaxy_id', nargs='*', help='the galaxy_id or 4-30 if you need a range')
 args = vars(parser.parse_args())
 
@@ -68,9 +69,15 @@ try:
     # Get the galaxies to work on
     galaxy_ids = None
     if len(args['galaxy_id']) == 0:
+        if args['mod'] is None:
+            select_statement = select([GALAXY]).where(GALAXY.c.status_id == PROCESSED).order_by(GALAXY.c.galaxy_id)
+        else:
+            select_statement = select([GALAXY]).where(and_(GALAXY.c.status_id == PROCESSED, GALAXY.c.galaxy_id % args['mod'][0] == args['mod'][1])).order_by(GALAXY.c.galaxy_id)
+            LOG.info('Using modulus {0} - remainder {1}'.format(args['mod'][0], args['mod'][1]))
+
         # Look in the database for the galaxies
         galaxy_ids = []
-        for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == PROCESSED).order_by(GALAXY.c.galaxy_id)):
+        for galaxy in connection.execute(select_statement):
             galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
         galaxy_ids = galaxy_ids[0:20]
 
