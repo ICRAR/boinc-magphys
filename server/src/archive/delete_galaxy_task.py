@@ -39,18 +39,30 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
+import argparse
 from archive.delete_galaxy_mod import delete_galaxy
 from config import DB_LOGIN, STORED
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, and_
 from sqlalchemy.sql import select
 from database.database_support_core import GALAXY
+
+# Get the arguments
+parser = argparse.ArgumentParser('Delete Galaxies that have been stored')
+parser.add_argument('-mod', '--mod', nargs=2, help=' M N - the modulus M to used and which value to check N ')
+args = vars(parser.parse_args())
 
 # First check the galaxy exists in the database
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
+if args['mod'] is None:
+    select_statement = select([GALAXY]).where(GALAXY.c.status_id == STORED).order_by(GALAXY.c.galaxy_id)
+else:
+    select_statement = select([GALAXY]).where(and_(GALAXY.c.status_id == STORED, GALAXY.c.galaxy_id % args['mod'][0] == args['mod'][1])).order_by(GALAXY.c.galaxy_id)
+    LOG.info('Using modulus {0} - remainder {1}'.format(args['mod'][0], args['mod'][1]))
+
 galaxy_ids = []
-for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == STORED).order_by(GALAXY.c.galaxy_id)):
+for galaxy in connection.execute(select_statement):
     galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
 
 delete_galaxy(connection, galaxy_ids[0:20], False)
