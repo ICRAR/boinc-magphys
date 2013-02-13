@@ -33,4 +33,5 @@ setup(name='extract_from_hdf5',
     author='Kevin Vinsen',
     author_email='kevin.vinsen@icrar.org',
     requires=['pyfits(>=3.0.8)', 'h5py(>=2.1.0)', 'numpy(>=1.6.2)'],
-    py_modules=['extract_from_hdf5', 'extract_from_hdf5_mod', 'utils/writeable_dir'])
+    py_modules=['extract_from_hdf5', 'extract_from_hdf5_mod'],
+    packages=['utils'])
