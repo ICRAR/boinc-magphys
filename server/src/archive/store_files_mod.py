@@ -179,6 +179,7 @@ def store_files(dir, host):
     connection = ENGINE.connect()
 
     files = os.path.join(dir, '*.hdf5')
+    file_count = 0
 
     try:
         for file in glob.glob(files):
@@ -196,6 +197,7 @@ def store_files(dir, host):
 
                     os.remove(file)
                     connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id = STORED))
+                    file_count += 1
 
             else:
                 LOG.error('File name: %s', file)
@@ -207,3 +209,5 @@ def store_files(dir, host):
 
     finally:
         connection.close()
+
+    return file_count
