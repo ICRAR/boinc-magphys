@@ -31,6 +31,7 @@ import logging
 import h5py
 import os
 from extract_from_hdf5_mod import build_fits_image, get_features_and_layers
+from utils.writeable_dir import WriteableDir
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -64,8 +65,11 @@ parser.add_argument('-l13', '--tau_v_ism'   , action='store_true', help='extract
 parser.add_argument('-l14', '--m_dust'      , action='store_true', help='extract M(dust)')
 parser.add_argument('-l15', '--sfr_0_1gyr'  , action='store_true', help='extract SFR_0.1Gyr')
 
+parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the images will be written')
+
 args = vars(parser.parse_args())
 
+output_directory = args['output_dir']
 features, layers = get_features_and_layers(args)
 
 if len(features) == 0 or len(layers) == 0:
@@ -81,7 +85,7 @@ for file in args['files']:
 
         for feature in features:
             for layer in layers:
-                build_fits_image(feature, layer, galaxy_group, pixel_data)
+                build_fits_image(feature, layer, output_directory, galaxy_group, pixel_data)
 
         h5_file.close()
 

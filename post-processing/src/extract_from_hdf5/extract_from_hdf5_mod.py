@@ -25,9 +25,10 @@
 """
 Functions used to extract data from an HDF5
 """
-import datetime
 import numpy
+import os
 import pyfits
+from datetime import datetime
 
 FEATURES = {
   'best_fit'         : 0,
@@ -58,7 +59,7 @@ LAYERS = {
   'sfr_0_1gyr'   : 15,
 }
 
-def build_fits_image(feature, layer, galaxy_group, pixel_data):
+def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_data):
     """
     Extract a feature from the HDF5 file into a FITS file
 
@@ -78,8 +79,9 @@ def build_fits_image(feature, layer, galaxy_group, pixel_data):
     data.fill(numpy.NaN)
 
     for x in range(dimension_x):
-        for y in range(dimension_y):
-            data[y, x] = pixel_data[x, y, layer_index, feature_index]
+        data[:, x] = pixel_data[x, :, layer_index, feature_index]
+#        for y in range(dimension_y):
+#            data[y, x] = pixel_data[x, y, layer_index, feature_index]
 
 
     utc_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S')
@@ -98,9 +100,10 @@ def build_fits_image(feature, layer, galaxy_group, pixel_data):
 
     # Write the file
     if galaxy_group.attrs['version_number'] == 1:
-        hdu_list.writeto('{0}.{1}.{2}.fits'.format(galaxy_group.attrs['name'], feature, layer), clobber=True)
+        file_name = os.path.join(output_directory, '{0}.{1}.{2}.fits'.format(galaxy_group.attrs['name'], feature, layer))
     else:
-        hdu_list.writeto('{0}_V{1}.{2}.{3}.fits'.format(galaxy_group.attrs['name'], galaxy_group.attrs['version_number'], feature, layer), clobber=True)
+        file_name = os.path.join(output_directory, '{0}_V{1}.{2}.{3}.fits'.format(galaxy_group.attrs['name'], galaxy_group.attrs['version_number'], feature, layer))
+    hdu_list.writeto(file_name, clobber=True)
 
 def get_features_and_layers(args):
     """

@@ -27,10 +27,9 @@ Functions used to delete a galaxy
 """
 import logging
 import os
-import sys
 import time
 from config import WG_IMAGE_DIRECTORY
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, func
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, PIXEL_FILTER, PIXEL_PARAMETER, PIXEL_HISTOGRAM, AREA_USER, FITS_HEADER
 from image import directory_mod
 
@@ -57,12 +56,12 @@ def delete_galaxy(connection, galaxy_ids, delete_all):
                 LOG.info('Error: Galaxy with galaxy_id of %d was not found', galaxy_id1)
             else:
                 LOG.info('Deleting Galaxy with galaxy_id of %d - %s', galaxy_id1, galaxy[GALAXY.c.name])
+                area_count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])).first()[0]
+                counter = 1
 
                 for area_id1 in connection.execute(select([AREA.c.area_id]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).order_by(AREA.c.area_id)):
-                    LOG.info("Deleting galaxy {0} area {1}".format(galaxy_id_str, area_id1[0]))
+                    LOG.info("Deleting galaxy {0} area {1}. {2} of {3}".format(galaxy_id_str, area_id1[0], counter, area_count))
                     for pxresult_id1 in connection.execute(select([PIXEL_RESULT.c.pxresult_id]).where(PIXEL_RESULT.c.area_id == area_id1[0]).order_by(PIXEL_RESULT.c.pxresult_id)):
-                        sys.stdout.flush()
-
                         connection.execute(PIXEL_FILTER.delete().where(PIXEL_FILTER.c.pxresult_id == pxresult_id1[0]))
                         connection.execute(PIXEL_PARAMETER.delete().where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id1[0]))
                         connection.execute(PIXEL_HISTOGRAM.delete().where(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id1[0]))
@@ -74,7 +73,8 @@ def delete_galaxy(connection, galaxy_ids, delete_all):
                     transaction = connection.begin()
 
                     # Give the rest of the world a chance to access the database
-                    time.sleep(10)
+                    time.sleep(2)
+                    counter += 1
 
                 if delete_all:
                     connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
