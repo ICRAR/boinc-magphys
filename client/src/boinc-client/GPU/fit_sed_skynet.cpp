@@ -53,7 +53,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
-#include <string.h>
+#include <cstring>
 
 #define NMAX 50
 #define GALMAX 5000
@@ -95,19 +95,15 @@ int main(int argc, char *argv[]){
     _set_output_format(_TWO_DIGIT_EXPONENT);
 #endif
 
-// Mimic output to that of fortran write.
-    cout.precision(15);
-   // cout.setf(ios::scientific);
-
 // {F77}       implicit none
 // {F77}       integer isave,i,j,k,i_gal,io,largo
-   int isave,i,j,k,i_gal,io,largo;
+   int isave,i,j,k,i_gal;
 // {F77}       integer nmax,galmax,nmod
 // {F77}       parameter(nmax=50,galmax=5000) !nmax: maxium number of photometric points/filters
 // {F77}       integer n_obs,n_models,ibin  !galmax: maximum number of galaxies in one input file
    static int n_obs,n_models,ibin;
 // {F77}       integer kfilt_sfh(nmax),kfilt_ir(nmax),nfilt_sfh,nfilt_ir,nfilt_mix
-   static int kfilt_sfh[NMAX],kfilt_ir[NMAX],nfilt_sfh,nfilt_ir,nfilt_mix;
+   static int nfilt_sfh,nfilt_ir,nfilt_mix;
 // {F77}       integer nprop_sfh,nprop_ir
 // {F77}       integer n_sfh,n_ir,i_ir,i_sfh,ir_sav,sfh_sav
    static int n_sfh,n_ir,i_ir,i_sfh,ir_sav,sfh_sav;
@@ -117,9 +113,8 @@ int main(int argc, char *argv[]){
 // {F77}       character*12 filt_name(nmax)
    static char filt_name[NMAX][12];
 // {F77}       character*100 outfile1,outfile2
-   static char outfile1[100],outfile2[100];
+   static char outfile1[100];
 // {F77}       character*500 filter_header
-   static char filter_header[500];
 // {F77}       character*30 gal_name(galmax),aux_name
    static char gal_name[GALMAX][30],aux_name[30];
 // {F77}       character*6 numz
@@ -279,9 +274,8 @@ int main(int argc, char *argv[]){
    static double i_tbg2[NMOD];
 // {F77} c     cosmological parameters
 // {F77}       real*8 h,omega,omega_lambda,clambda,q
-   static double h,omega,omega_lambda,clambda,q;
+   static double h,omega,omega_lambda,q;
 // {F77}       real*8 cosmol_c,dl
-   static double cosmol_c,dl;
 // {F77} c     histogram parameters: min,max,bin width
 // {F77}       data fmu_min/0./,fmu_max/1.0005/,dfmu/0.001/
     fmu_min=0,fmu_max=1.0005,dfmu=0.001;
@@ -340,6 +334,8 @@ int main(int argc, char *argv[]){
 // {F77} 
 // {F77}       numargs = iargc ( )
 // {F77}       if (numargs .eq. 0) then
+// TODO - Remove. Temporary just so doesn't get used uninitialized.
+   i_gal = 0;
    if(argc == 1){
 // {F77} c     Do nothing as this is the normal model
 // {F77}           skynet = .FALSE.
@@ -350,7 +346,7 @@ int main(int argc, char *argv[]){
         skynet = true;
 // {F77}           call getarg ( 1, arg )
 // {F77}           read( arg, *) i_gal
-        // We subtract 1 from i_gal to suit C standard array indexing.
+// We subtract 1 from i_gal to suit C standard array indexing.
         i_gal = atoi(argv[1])-1;
 // {F77}           call getarg( 2, filters)
         strcpy(filters,argv[2]);
@@ -555,7 +551,8 @@ int main(int argc, char *argv[]){
 // {F77} c     COMPUTE LUMINOSITY DISTANCE from z given cosmology
 // {F77} c     Obtain cosmological constant and q
 // {F77}       clambda=cosmol_c(h,omega,omega_lambda,q)
-   clambda=get_cosmol_c(h,omega,omega_lambda,&q);
+    // Not using return value of this.
+    get_cosmol_c(h,omega,omega_lambda,&q);
 // {F77} 
 // {F77} c     Compute distance in Mpc from the redshifts z
 // {F77}       dist(i_gal)=dl(h,q,redshift(i_gal))
@@ -582,7 +579,7 @@ int main(int argc, char *argv[]){
 // {F77}       endif
     strcpy(aux_name,gal_name[i_gal]);
     FILE * fitfp;
-
+    fitfp = NULL;
     if (!skynet){
         // TODO : Handle manual
     } else {
@@ -669,11 +666,9 @@ int main(int argc, char *argv[]){
     for(i=0; i<nfilt; i++){
         lambda_rest[i] = lambda_eff[i]/(1+redshift[i_gal]);
         if(lambda_rest[i] < 10){
-            kfilt_sfh[nfilt_sfh]=i;
             nfilt_sfh++;
         }
         if(lambda_rest[i] > 2.5){
-            kfilt_ir[nfilt_ir]=i;
             nfilt_ir++;
         }
         if (lambda_rest[i] > 2.5 && lambda_rest[i] <= 10){
@@ -2350,10 +2345,9 @@ int main(int argc, char *argv[]){
 // {F77}       RETURN
 // {F77}       END
 double get_hpbv(double hist1[],double hist2[],int nbin){
-    int ibin;
-    double max_pr;
-    double hpbv;
-    for(ibin=0;ibin<nbin;ibin++){
+    double max_pr = 0;
+    double hpbv = 0;
+    for(int ibin=0;ibin<nbin;ibin++){
         if(ibin == 0){
             max_pr = hist1[ibin];
             hpbv = hist2[ibin];
@@ -2407,7 +2401,6 @@ double get_hpbv(double hist1[],double hist2[],int nbin){
 void degrade_hist(double delta,double min,double max,int nbin1,int * nbin2,double hist1[], double hist2[],double prob1[],double prob2[]){
     int i=0;
     int ibin=0;
-    int maxnbin2=200;
     double max2=0;
     double aux;
     
@@ -2702,11 +2695,14 @@ void sort2(double arr1[], double arr2[], int left, int right) {
 // {F77}       return
 // {F77}       end
 double get_dl(double h,double q,double z){
-    double dl, d1, d2;
+    double dl,d1,d2;
     double aa,bb,epsr,s,s0;
     double dd1,dd2;
     bool success;
     int npts;
+
+    dl=0;
+    s=0;
     
     if(z <= 0){
         return (1.0e-5);
