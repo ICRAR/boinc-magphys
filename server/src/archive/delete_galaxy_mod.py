@@ -73,7 +73,7 @@ def delete_galaxy(connection, galaxy_ids, delete_all):
                     transaction = connection.begin()
 
                     # Give the rest of the world a chance to access the database
-                    time.sleep(2)
+                    time.sleep(1)
                     counter += 1
 
                 if delete_all:

@@ -54,6 +54,6 @@ if args['host'] is None:
 else:
     HOST = args['host']
 
-store_files(DIR, HOST)
+file_count = store_files(DIR, HOST)
 
-LOG.info('All Done')
+LOG.info('All Done. Stored %d files.', file_count)
