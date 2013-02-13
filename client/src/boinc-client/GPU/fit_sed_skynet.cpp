@@ -3268,10 +3268,10 @@ void get_fsci(char dstr[]){
 }
 // Rounds up depending on double FP representability.
 double round_nup(double n, int p){
-   char buf1[18],buf2[18];
+   char buf1[20],buf2[20];
    // Simulate a print of full mantissa to check how to comes out.
-   snprintf(buf1,18,"%.18f",n);
-   snprintf(buf2,18,"%.*f%018d",p+2,n,0);
+   snprintf(buf1,20,"%.20f",n);
+   snprintf(buf2,20,"%.*f%020d",p+2,n,0);
    // IEEE dictates n will get rounded to nearest even if tie and FP is EXACTLY representable.
    // We must override this behavior.
    if(strcmp(buf1,buf2) == 0){
