@@ -49,27 +49,7 @@
 
 #if defined(USE_OPENCL)
 #define __CL_ENABLE_EXCEPTIONS
-#include <vector>
 #include <CL/cl.hpp>
-#endif
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
-#include <cstring>
-
-#define NMAX 50
-#define GALMAX 5000
-#define NMOD 50001
-#define NPROP_SFH 24
-#define NPROP_IR 8
-#define NZMAX 5000
-#define NBINMAX1 3000
-#define NBINMAX2 300
-#define MIN_HPBV 0.00001
 
 typedef struct model {
     // sfh and ir index combo this model identified.
@@ -84,6 +64,77 @@ typedef struct model {
     // Probability
     double prob;
 } model_t;
+
+typedef struct prob {
+   double psfh;
+   double pir;
+   double pmu;
+   double ptv;
+   double ptvism;
+   double pssfr;
+   double psfr;
+   double pa;
+   double pldust;
+   double ptbg1;
+   double ptbg2;
+   double pism;
+   double pxi1;
+   double pxi2;
+   double pxi3;
+   double pmd;
+} prob_t;
+
+typedef struct index {
+    // SFH
+    double i_fmu_sfh;
+    double i_mu;
+    double i_tauv;
+    double i_tvism;
+    double i_lssfr;
+    // IR
+    double i_fmu_ir;
+    double i_fmu_ism;
+    double i_tbg1;
+    double i_tbg2;
+    double i_xi1;
+    double i_xi2;
+    double i_xi3;
+} index_t;
+
+typedef struct nbin {
+    int nbin_fmu;
+    int nbin_mu;
+    int nbin_tv;
+    int nbin_sfr;
+    int nbin_a;
+    int nbin_ld;
+    int nbin_fmu_ism;
+    int nbin_tbg1;
+    int nbin_tbg2;
+    int nbin_xi;
+    int nbin_md;
+} nbin_t;
+
+#endif
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+#include <vector>
+
+#define NMAX 50
+#define GALMAX 5000
+#define NMOD 50001
+#define NPROP_SFH 24
+#define NPROP_IR 8
+#define NZMAX 5000
+#define NBINMAX1 3000
+#define NBINMAX2 300
+#define MIN_HPBV 0.00001
 
 
 //Function prototypes for old FORTRAN functions.
@@ -1006,7 +1057,33 @@ int main(int argc, char *argv[]){
         pxi2[i]=0;
         pxi3[i]=0;
         pmd[i]=0;
+
     }      
+
+#if defined(USE_OPENCL)
+    std::vector<prob_t> h_probs;
+    for(i=0; i<3000; i++){
+        prob_t prob;
+        prob.psfh=0;
+        prob.pir=0;
+        prob.pmu=0;
+        prob.ptv=0;
+        prob.ptvism=0;
+        prob.pssfr=0;
+        prob.psfr=0;
+        prob.pa=0;
+        prob.pldust=0;
+        prob.ptbg1=0;
+        prob.ptbg2=0;
+        prob.pism=0;
+        prob.pxi1=0;
+        prob.pxi2=0;
+        prob.pxi3=0;
+        prob.pmd=0;
+        h_probs.push_back(prob);
+    }
+#endif
+    
 // {F77} 
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Compute histogram grids of the parameter likelihood distributions before
@@ -1144,6 +1221,29 @@ int main(int argc, char *argv[]){
         i_xi3[i_ir] = (int)(aux);
     }
 
+#if defined(USE_OPENCL)
+    std::vector<index_t> h_indexes;
+    for(i=0; i<NMOD; i++){
+
+       index_t index;
+       index.i_fmu_sfh = i_fmu_sfh[i];
+       index.i_mu = i_mu[i];
+       index.i_tauv = i_tauv[i];
+       index.i_tvism = i_tvism[i];
+       index.i_lssfr = i_lssfr[i];
+
+       index.i_fmu_ir = i_fmu_ir[i];
+       index.i_fmu_ism = i_fmu_ism[i];
+       index.i_tbg1 = i_tbg1[i];
+       index.i_tbg2 = i_tbg2[i];
+       index.i_xi1 = i_xi1[i];
+       index.i_xi2 = i_xi2[i];
+       index.i_xi3 = i_xi3[i];
+        
+       h_indexes.push_back(index);
+    }
+#endif
+
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     HERE STARTS THE ACTUAL FIT
 // {F77} c
@@ -1168,9 +1268,26 @@ int main(int argc, char *argv[]){
 // {F77}          write(*,*) 'Starting fit.......'
 // {F77}          DO i_sfh=1,n_sfh
     cout << "Starting fit......." << endl;
+    df=0.15;
 
 #if defined(USE_OPENCL)
+
+    nbin_t h_nbin;
+    h_nbin.nbin_fmu = nbin_fmu;
+    h_nbin.nbin_mu = nbin_mu;
+    h_nbin.nbin_tv = nbin_tv;
+    h_nbin.nbin_sfr = nbin_sfr;
+    h_nbin.nbin_a = nbin_a;
+    h_nbin.nbin_ld = nbin_ld;
+    h_nbin.nbin_fmu_ism = nbin_fmu_ism;
+    h_nbin.nbin_tbg1 = nbin_tbg1;
+    h_nbin.nbin_tbg2 = nbin_tbg2;
+    h_nbin.nbin_xi = nbin_xi;
+    h_nbin.nbin_md = nbin_md;
+
     cl_int err;
+
+    // Read platforms and select first OpenCL device
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
     if(platforms.size() == 0){ 
@@ -1185,8 +1302,11 @@ int main(int argc, char *argv[]){
         return EXIT_FAILURE;
     }   
     cl::Device device = devices[0];
+
+    // Create a command queue for selected device.
     cl::CommandQueue queue(cl::CommandQueue(context,device));
 
+    // Read in kernel program from file.
     std::ifstream sourceFile("fit_sed_skynet.cl");
     std::string sourceCode(
         std::istreambuf_iterator<char>(sourceFile),
@@ -1194,18 +1314,19 @@ int main(int argc, char *argv[]){
     cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(), sourceCode.length()+1));
     cl::Program program_ = cl::Program(context, source);
 
-
+    // Attempt to build kernel program. Echo error if unsuccesful.
     try{
         program_.build(devices);
     } catch(cl::Error error) {
         cerr << program_.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << endl;
     }
 
-    df=0.15;
+    // Use vectors to store model instances.
     std::vector<model_t> h_models;
     i_sfh=0;
     while(i_sfh < n_sfh){
         int t_sfh=0;
+        // Batch up 80 starform hist sets before crunching on GPU.
         while(i_sfh<n_sfh && t_sfh<80){
             for(i_ir=0; i_ir < n_ir; i_ir++){
                if(fabs(fmu_sfh[i_sfh]-fmu_ir[i_ir]) <= df){
@@ -1220,22 +1341,32 @@ int main(int argc, char *argv[]){
             t_sfh++;
         }
 
+        // Buffer needed values.
         cl::Buffer d_models=cl::Buffer(context, CL_MEM_READ_WRITE, h_models.size()*sizeof(model_t));
+        cl::Buffer d_probs=cl::Buffer(context, CL_MEM_READ_WRITE, h_probs.size()*sizeof(prob_t));
+        cl::Buffer d_indexes=cl::Buffer(context, CL_MEM_READ_ONLY, h_indexes.size()*sizeof(index_t));
+        cl::Buffer d_nbin=cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(nbin_t));
         cl::Buffer d_ldust=cl::Buffer(context, CL_MEM_READ_ONLY, NMOD*sizeof(double));
         cl::Buffer d_flux_obs=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
         cl::Buffer d_flux_sfh=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
         cl::Buffer d_flux_ir=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
         cl::Buffer d_w=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
 
+        // Queue values.
         queue.enqueueWriteBuffer(d_models, CL_TRUE, 0, h_models.size()*sizeof(model_t), &h_models[0]);
+        queue.enqueueWriteBuffer(d_probs, CL_TRUE, 0, h_probs.size()*sizeof(prob_t), &h_probs[0]);
+        queue.enqueueWriteBuffer(d_indexes, CL_TRUE, 0, h_indexes.size()*sizeof(index_t), &h_indexes[0]);
+        queue.enqueueWriteBuffer(d_nbin, CL_TRUE, 0, sizeof(nbin_t), &h_nbin);
         queue.enqueueWriteBuffer(d_ldust, CL_TRUE, 0, NMOD*sizeof(double), ldust);
         queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
         queue.enqueueWriteBuffer(d_flux_sfh, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_sfh);
         queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
         queue.enqueueWriteBuffer(d_w, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), w);
         
+        // Prepare kernel program.
         cl::Kernel kernel(program_, "compute", &err);
 
+        // Parse arguments to kernel program.
         kernel.setArg(0, d_models);
         kernel.setArg(1, (unsigned int)h_models.size()); 
         kernel.setArg(2, i_gal);
@@ -1247,12 +1378,15 @@ int main(int argc, char *argv[]){
         kernel.setArg(8, d_flux_sfh);
         kernel.setArg(9, d_flux_ir);
         kernel.setArg(10, d_w);
+        kernel.setArg(11, d_probs);
+        kernel.setArg(12, d_indexes);
+        kernel.setArg(13, d_nbin);
 
-        int local_size=64;
-        int global_size=(int)(ceil(h_models.size()/(double)64)*64);
-        cl::NDRange localSize(local_size);
-        cl::NDRange globalSize(global_size);
+        // Set workload sizes.
+        cl::NDRange localSize(64);
+        cl::NDRange globalSize((int)(ceil(h_models.size()/(double)64)*64));
 
+        // Start the work and wait for response.
         cl::Event event;
         queue.enqueueNDRangeKernel(
             kernel,
@@ -1261,14 +1395,31 @@ int main(int argc, char *argv[]){
             localSize,
             NULL,
             &event);
-
         event.wait();
+
+        // Read values back from buffer.
         queue.enqueueReadBuffer(d_models, CL_TRUE, 0, h_models.size()*sizeof(model_t), &h_models[0]);
+        queue.enqueueReadBuffer(d_probs, CL_TRUE, 0, h_probs.size()*sizeof(prob_t), &h_probs[0]);
 
         for(vector<model_t>::iterator m = h_models.begin(); m != h_models.end(); m++){
             ptot += m->prob;
+            chi2_new=m->chi2;
+            chi2_new_opt=m->chi2_opt;
+            chi2_new_ir=m->chi2_ir;
+            if(chi2_new < chi2_sav){
+                chi2_sav=chi2_new;
+                sfh_sav=m->sfh;
+                ir_sav=m->ir;
+                a_sav=m->a;
+                chi2_sav_opt=chi2_new_opt;
+                chi2_sav_ir=chi2_new_ir;
+            }    
+
+
         }
 
+        cout << h_probs.at(20).pa << " vs " << nbin_sfr << endl;
+        // Clear model instances.
         h_models.clear();
     }
 #else
@@ -1295,7 +1446,8 @@ int main(int argc, char *argv[]){
     
 // {F77} 
 // {F77}             df=0.15             !fmu_opt=fmu_ir +/- dfmu
-        df=0.15;
+       // Moved out of loop
+       //  df=0.15;
 // {F77} 
 // {F77} c     Search for the IR models with f_mu within the range set by df
 // {F77}             DO i_ir=1,n_ir
