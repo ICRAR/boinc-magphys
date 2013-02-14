@@ -47,6 +47,12 @@
 // {F77} c     ===========================================================================
 // {F77} 
 
+#if defined(USE_OPENCL)
+#define __CL_ENABLE_EXCEPTIONS
+#include <vector>
+#include <CL/cl.hpp>
+#endif
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -64,6 +70,21 @@
 #define NBINMAX1 3000
 #define NBINMAX2 300
 #define MIN_HPBV 0.00001
+
+typedef struct model {
+    // sfh and ir index combo this model identified.
+    int sfh; 
+    int ir;
+    // Scaling factor.
+    double a;
+    // chi^2 values.
+    double chi2;
+    double chi2_opt;
+    double chi2_ir;
+    // Probability
+    double prob;
+} model_t;
+
 
 //Function prototypes for old FORTRAN functions.
 double get_cosmol_c(double h,double omega,double omega_lambda,double* q);
@@ -1147,6 +1168,110 @@ int main(int argc, char *argv[]){
 // {F77}          write(*,*) 'Starting fit.......'
 // {F77}          DO i_sfh=1,n_sfh
     cout << "Starting fit......." << endl;
+
+#if defined(USE_OPENCL)
+    cl_int err;
+    std::vector<cl::Platform> platforms;
+    cl::Platform::get(&platforms);
+    if(platforms.size() == 0){ 
+        return EXIT_FAILURE;
+    }   
+    cl::Platform platform = platforms[0];
+    cl_context_properties cps[3] = {CL_CONTEXT_PLATFORM,(cl_context_properties)(platform)(),0};
+    cl::Context context(CL_DEVICE_TYPE_GPU,cps);
+    std::vector<cl::Device> devices;
+    platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+    if(devices.size() == 0){ 
+        return EXIT_FAILURE;
+    }   
+    cl::Device device = devices[0];
+    cl::CommandQueue queue(cl::CommandQueue(context,device));
+
+    std::ifstream sourceFile("fit_sed_skynet.cl");
+    std::string sourceCode(
+        std::istreambuf_iterator<char>(sourceFile),
+        (std::istreambuf_iterator<char>()));
+    cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(), sourceCode.length()+1));
+    cl::Program program_ = cl::Program(context, source);
+
+
+    try{
+        program_.build(devices);
+    } catch(cl::Error error) {
+        cerr << program_.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << endl;
+    }
+
+    df=0.15;
+    std::vector<model_t> h_models;
+    i_sfh=0;
+    while(i_sfh < n_sfh){
+        int t_sfh=0;
+        while(i_sfh<n_sfh && t_sfh<80){
+            for(i_ir=0; i_ir < n_ir; i_ir++){
+               if(fabs(fmu_sfh[i_sfh]-fmu_ir[i_ir]) <= df){
+                    model_t model;
+                    model.sfh=i_sfh;
+                    model.ir=i_ir;
+                    h_models.push_back(model); 
+                    n_models++;
+               }
+            }
+            i_sfh++;
+            t_sfh++;
+        }
+
+        cl::Buffer d_models=cl::Buffer(context, CL_MEM_READ_WRITE, h_models.size()*sizeof(model_t));
+        cl::Buffer d_ldust=cl::Buffer(context, CL_MEM_READ_ONLY, NMOD*sizeof(double));
+        cl::Buffer d_flux_obs=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
+        cl::Buffer d_flux_sfh=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
+        cl::Buffer d_flux_ir=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
+        cl::Buffer d_w=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
+
+        queue.enqueueWriteBuffer(d_models, CL_TRUE, 0, h_models.size()*sizeof(model_t), &h_models[0]);
+        queue.enqueueWriteBuffer(d_ldust, CL_TRUE, 0, NMOD*sizeof(double), ldust);
+        queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
+        queue.enqueueWriteBuffer(d_flux_sfh, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_sfh);
+        queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
+        queue.enqueueWriteBuffer(d_w, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), w);
+        
+        cl::Kernel kernel(program_, "compute", &err);
+
+        kernel.setArg(0, d_models);
+        kernel.setArg(1, (unsigned int)h_models.size()); 
+        kernel.setArg(2, i_gal);
+        kernel.setArg(3, nfilt);
+        kernel.setArg(4, nfilt_sfh);
+        kernel.setArg(5, nfilt_mix);
+        kernel.setArg(6, d_ldust);
+        kernel.setArg(7, d_flux_obs);
+        kernel.setArg(8, d_flux_sfh);
+        kernel.setArg(9, d_flux_ir);
+        kernel.setArg(10, d_w);
+
+        int local_size=64;
+        int global_size=(int)(ceil(h_models.size()/(double)64)*64);
+        cl::NDRange localSize(local_size);
+        cl::NDRange globalSize(global_size);
+
+        cl::Event event;
+        queue.enqueueNDRangeKernel(
+            kernel,
+            cl::NullRange,
+            globalSize,
+            localSize,
+            NULL,
+            &event);
+
+        event.wait();
+        queue.enqueueReadBuffer(d_models, CL_TRUE, 0, h_models.size()*sizeof(model_t), &h_models[0]);
+
+        for(vector<model_t>::iterator m = h_models.begin(); m != h_models.end(); m++){
+            ptot += m->prob;
+        }
+
+        h_models.clear();
+    }
+#else
     for(i_sfh=0; i_sfh < n_sfh; i_sfh++){
 // {F77} c     Check progress of the fit...
 // {F77}             if (i_sfh.eq.(n_sfh/4)) then
@@ -1431,6 +1556,7 @@ int main(int argc, char *argv[]){
                     }
             }
     }
+#endif
 // {F77} 
 // {F77} c     Chi2-weighted models: normalize to total probability ptot
 // {F77}          write(*,*) 'Number of random SFH models:       ', n_sfh
