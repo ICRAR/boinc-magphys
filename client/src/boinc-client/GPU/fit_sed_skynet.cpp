@@ -50,6 +50,7 @@
 #if defined(USE_OPENCL)
 #define __CL_ENABLE_EXCEPTIONS
 #include <CL/cl.hpp>
+#include <vector>
 
 typedef struct model {
     // sfh and ir index combo this model identified.
@@ -124,7 +125,6 @@ typedef struct nbin {
 #include <cstdlib>
 #include <cmath>
 #include <cstring>
-#include <vector>
 
 #define NMAX 50
 #define GALMAX 5000
