@@ -52,7 +52,7 @@
 #include <CL/cl.hpp>
 #include <vector>
 
-typedef struct model {
+typedef struct clmodel {
     // sfh and ir index combo this model identified.
     int sfh; 
     int ir;
@@ -64,9 +64,9 @@ typedef struct model {
     double chi2_ir;
     // Probability
     double prob;
-} model_t;
+} clmodel_t;
 
-typedef struct prob {
+typedef struct clprob {
    double psfh;
    double pir;
    double pmu;
@@ -83,9 +83,9 @@ typedef struct prob {
    double pxi2;
    double pxi3;
    double pmd;
-} prob_t;
+} clprob_t;
 
-typedef struct index {
+typedef struct clmod {
     // SFH
     double i_fmu_sfh;
     double i_mu;
@@ -100,9 +100,16 @@ typedef struct index {
     double i_xi1;
     double i_xi2;
     double i_xi3;
-} index_t;
 
-typedef struct nbin {
+    double lssfr;
+    double logldust;
+    double mdust;
+    double ldust;
+    double lmdust;
+
+} clmod_t;
+
+typedef struct clvar {
     int nbin_fmu;
     int nbin_mu;
     int nbin_tv;
@@ -114,7 +121,17 @@ typedef struct nbin {
     int nbin_tbg2;
     int nbin_xi;
     int nbin_md;
-} nbin_t;
+
+    int a_max;
+    int a_min;
+    int sfr_max;
+    int sfr_min;
+    int ld_max;
+    int ld_min;
+    int md_max;
+    int md_min;
+
+} clvar_t;
 
 #endif
 
@@ -1061,26 +1078,26 @@ int main(int argc, char *argv[]){
     }      
 
 #if defined(USE_OPENCL)
-    std::vector<prob_t> h_probs;
+    std::vector<clprob_t> h_clprobs;
     for(i=0; i<3000; i++){
-        prob_t prob;
-        prob.psfh=0;
-        prob.pir=0;
-        prob.pmu=0;
-        prob.ptv=0;
-        prob.ptvism=0;
-        prob.pssfr=0;
-        prob.psfr=0;
-        prob.pa=0;
-        prob.pldust=0;
-        prob.ptbg1=0;
-        prob.ptbg2=0;
-        prob.pism=0;
-        prob.pxi1=0;
-        prob.pxi2=0;
-        prob.pxi3=0;
-        prob.pmd=0;
-        h_probs.push_back(prob);
+        clprob_t clprob;
+        clprob.psfh=0;
+        clprob.pir=0;
+        clprob.pmu=0;
+        clprob.ptv=0;
+        clprob.ptvism=0;
+        clprob.pssfr=0;
+        clprob.psfr=0;
+        clprob.pa=0;
+        clprob.pldust=0;
+        clprob.ptbg1=0;
+        clprob.ptbg2=0;
+        clprob.pism=0;
+        clprob.pxi1=0;
+        clprob.pxi2=0;
+        clprob.pxi3=0;
+        clprob.pmd=0;
+        h_clprobs.push_back(clprob);
     }
 #endif
     
@@ -1222,25 +1239,31 @@ int main(int argc, char *argv[]){
     }
 
 #if defined(USE_OPENCL)
-    std::vector<index_t> h_indexes;
+    std::vector<clmod_t> h_clmods;
     for(i=0; i<NMOD; i++){
 
-       index_t index;
-       index.i_fmu_sfh = i_fmu_sfh[i];
-       index.i_mu = i_mu[i];
-       index.i_tauv = i_tauv[i];
-       index.i_tvism = i_tvism[i];
-       index.i_lssfr = i_lssfr[i];
+       clmod_t clmod;
+       clmod.i_fmu_sfh = i_fmu_sfh[i];
+       clmod.i_mu = i_mu[i];
+       clmod.i_tauv = i_tauv[i];
+       clmod.i_tvism = i_tvism[i];
+       clmod.i_lssfr = i_lssfr[i];
 
-       index.i_fmu_ir = i_fmu_ir[i];
-       index.i_fmu_ism = i_fmu_ism[i];
-       index.i_tbg1 = i_tbg1[i];
-       index.i_tbg2 = i_tbg2[i];
-       index.i_xi1 = i_xi1[i];
-       index.i_xi2 = i_xi2[i];
-       index.i_xi3 = i_xi3[i];
+       clmod.i_fmu_ir = i_fmu_ir[i];
+       clmod.i_fmu_ism = i_fmu_ism[i];
+       clmod.i_tbg1 = i_tbg1[i];
+       clmod.i_tbg2 = i_tbg2[i];
+       clmod.i_xi1 = i_xi1[i];
+       clmod.i_xi2 = i_xi2[i];
+       clmod.i_xi3 = i_xi3[i];
+
+       clmod.lssfr = lssfr[i];
+       clmod.logldust = logldust[i];
+       clmod.mdust = mdust[i];
+       clmod.ldust = ldust[i];
+       clmod.lmdust = lmdust[i];
         
-       h_indexes.push_back(index);
+       h_clmods.push_back(clmod);
     }
 #endif
 
@@ -1272,18 +1295,27 @@ int main(int argc, char *argv[]){
 
 #if defined(USE_OPENCL)
 
-    nbin_t h_nbin;
-    h_nbin.nbin_fmu = nbin_fmu;
-    h_nbin.nbin_mu = nbin_mu;
-    h_nbin.nbin_tv = nbin_tv;
-    h_nbin.nbin_sfr = nbin_sfr;
-    h_nbin.nbin_a = nbin_a;
-    h_nbin.nbin_ld = nbin_ld;
-    h_nbin.nbin_fmu_ism = nbin_fmu_ism;
-    h_nbin.nbin_tbg1 = nbin_tbg1;
-    h_nbin.nbin_tbg2 = nbin_tbg2;
-    h_nbin.nbin_xi = nbin_xi;
-    h_nbin.nbin_md = nbin_md;
+    clvar_t h_clvar;
+    h_clvar.nbin_fmu = nbin_fmu;
+    h_clvar.nbin_mu = nbin_mu;
+    h_clvar.nbin_tv = nbin_tv;
+    h_clvar.nbin_sfr = nbin_sfr;
+    h_clvar.nbin_a = nbin_a;
+    h_clvar.nbin_ld = nbin_ld;
+    h_clvar.nbin_fmu_ism = nbin_fmu_ism;
+    h_clvar.nbin_tbg1 = nbin_tbg1;
+    h_clvar.nbin_tbg2 = nbin_tbg2;
+    h_clvar.nbin_xi = nbin_xi;
+    h_clvar.nbin_md = nbin_md;
+
+    h_clvar.a_max = a_max;
+    h_clvar.a_min = a_min;
+    h_clvar.sfr_max = sfr_max;
+    h_clvar.sfr_min = sfr_min;
+    h_clvar.ld_max = ld_max;
+    h_clvar.ld_min = ld_min;
+    h_clvar.md_max = md_max;
+    h_clvar.md_min = md_min;
 
     cl_int err;
 
@@ -1322,7 +1354,7 @@ int main(int argc, char *argv[]){
     }
 
     // Use vectors to store model instances.
-    std::vector<model_t> h_models;
+    std::vector<clmodel_t> h_clmodels;
     i_sfh=0;
     while(i_sfh < n_sfh){
         int t_sfh=0;
@@ -1330,34 +1362,36 @@ int main(int argc, char *argv[]){
         while(i_sfh<n_sfh && t_sfh<80){
             for(i_ir=0; i_ir < n_ir; i_ir++){
                if(fabs(fmu_sfh[i_sfh]-fmu_ir[i_ir]) <= df){
-                    model_t model;
-                    model.sfh=i_sfh;
-                    model.ir=i_ir;
-                    h_models.push_back(model); 
+                    clmodel_t clmodel;
+                    clmodel.sfh=i_sfh;
+                    clmodel.ir=i_ir;
+                    h_clmodels.push_back(clmodel); 
                     n_models++;
                }
             }
             i_sfh++;
             t_sfh++;
         }
-
+       try{
         // Buffer needed values.
-        cl::Buffer d_models=cl::Buffer(context, CL_MEM_READ_WRITE, h_models.size()*sizeof(model_t));
-        cl::Buffer d_probs=cl::Buffer(context, CL_MEM_READ_WRITE, h_probs.size()*sizeof(prob_t));
-        cl::Buffer d_indexes=cl::Buffer(context, CL_MEM_READ_ONLY, h_indexes.size()*sizeof(index_t));
-        cl::Buffer d_nbin=cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(nbin_t));
+        cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, h_clmodels.size()*sizeof(clmodel_t));
+        cl::Buffer d_clprobs=cl::Buffer(context, CL_MEM_READ_WRITE, h_clprobs.size()*sizeof(clprob_t));
+        cl::Buffer d_clmods=cl::Buffer(context, CL_MEM_READ_ONLY, h_clmods.size()*sizeof(clmod_t));
+        cl::Buffer d_clvar=cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(clvar_t));
         cl::Buffer d_ldust=cl::Buffer(context, CL_MEM_READ_ONLY, NMOD*sizeof(double));
+        cl::Buffer d_lmdust=cl::Buffer(context, CL_MEM_READ_WRITE, NMOD*sizeof(double));
         cl::Buffer d_flux_obs=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
         cl::Buffer d_flux_sfh=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
         cl::Buffer d_flux_ir=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
         cl::Buffer d_w=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
 
         // Queue values.
-        queue.enqueueWriteBuffer(d_models, CL_TRUE, 0, h_models.size()*sizeof(model_t), &h_models[0]);
-        queue.enqueueWriteBuffer(d_probs, CL_TRUE, 0, h_probs.size()*sizeof(prob_t), &h_probs[0]);
-        queue.enqueueWriteBuffer(d_indexes, CL_TRUE, 0, h_indexes.size()*sizeof(index_t), &h_indexes[0]);
-        queue.enqueueWriteBuffer(d_nbin, CL_TRUE, 0, sizeof(nbin_t), &h_nbin);
+        queue.enqueueWriteBuffer(d_clmodels, CL_TRUE, 0, h_clmodels.size()*sizeof(clmodel_t), &h_clmodels[0]);
+        queue.enqueueWriteBuffer(d_clprobs, CL_TRUE, 0, h_clprobs.size()*sizeof(clprob_t), &h_clprobs[0]);
+        queue.enqueueWriteBuffer(d_clmods, CL_TRUE, 0, h_clmods.size()*sizeof(clmod_t), &h_clmods[0]);
+        queue.enqueueWriteBuffer(d_clvar, CL_TRUE, 0, sizeof(clvar_t), &h_clvar);
         queue.enqueueWriteBuffer(d_ldust, CL_TRUE, 0, NMOD*sizeof(double), ldust);
+        queue.enqueueWriteBuffer(d_lmdust, CL_TRUE, 0, NMOD*sizeof(double), lmdust);
         queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
         queue.enqueueWriteBuffer(d_flux_sfh, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_sfh);
         queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
@@ -1367,8 +1401,8 @@ int main(int argc, char *argv[]){
         cl::Kernel kernel(program_, "compute", &err);
 
         // Parse arguments to kernel program.
-        kernel.setArg(0, d_models);
-        kernel.setArg(1, (unsigned int)h_models.size()); 
+        kernel.setArg(0, d_clmodels);
+        kernel.setArg(1, (unsigned int)h_clmodels.size()); 
         kernel.setArg(2, i_gal);
         kernel.setArg(3, nfilt);
         kernel.setArg(4, nfilt_sfh);
@@ -1378,13 +1412,14 @@ int main(int argc, char *argv[]){
         kernel.setArg(8, d_flux_sfh);
         kernel.setArg(9, d_flux_ir);
         kernel.setArg(10, d_w);
-        kernel.setArg(11, d_probs);
-        kernel.setArg(12, d_indexes);
-        kernel.setArg(13, d_nbin);
+        kernel.setArg(11, d_clprobs);
+        kernel.setArg(12, d_clmods);
+        kernel.setArg(13, d_clvar);
+        kernel.setArg(14, d_lmdust);
 
         // Set workload sizes.
         cl::NDRange localSize(64);
-        cl::NDRange globalSize((int)(ceil(h_models.size()/(double)64)*64));
+        cl::NDRange globalSize((int)(ceil(h_clmodels.size()/(double)64)*64));
 
         // Start the work and wait for response.
         cl::Event event;
@@ -1398,10 +1433,15 @@ int main(int argc, char *argv[]){
         event.wait();
 
         // Read values back from buffer.
-        queue.enqueueReadBuffer(d_models, CL_TRUE, 0, h_models.size()*sizeof(model_t), &h_models[0]);
-        queue.enqueueReadBuffer(d_probs, CL_TRUE, 0, h_probs.size()*sizeof(prob_t), &h_probs[0]);
+        queue.enqueueReadBuffer(d_clmodels, CL_TRUE, 0, h_clmodels.size()*sizeof(clmodel_t), &h_clmodels[0]);
+        queue.enqueueReadBuffer(d_clprobs, CL_TRUE, 0, h_clprobs.size()*sizeof(clprob_t), &h_clprobs[0]);
+        queue.enqueueReadBuffer(d_lmdust, CL_TRUE, 0, NMOD*sizeof(double), lmdust);
+        } catch(cl::Error error) {
+            cerr << "There was a problem" << endl;
+        }
 
-        for(vector<model_t>::iterator m = h_models.begin(); m != h_models.end(); m++){
+
+        for(vector<clmodel_t>::iterator m = h_clmodels.begin(); m != h_clmodels.end(); m++){
             ptot += m->prob;
             chi2_new=m->chi2;
             chi2_new_opt=m->chi2_opt;
@@ -1414,12 +1454,31 @@ int main(int argc, char *argv[]){
                 chi2_sav_opt=chi2_new_opt;
                 chi2_sav_ir=chi2_new_ir;
             }    
-
-
         }
         // Clear model instances.
-        h_models.clear();
+        h_clmodels.clear();
     }
+
+    // Map struct data to arrays
+    for(i=0; i<3000; i++){
+        psfh[i] = h_clprobs.at(i).psfh;
+        pir[i] = h_clprobs.at(i).pir;
+        pmu[i] = h_clprobs.at(i).pmu;
+        ptv[i] = h_clprobs.at(i).ptv;
+        ptvism[i] = h_clprobs.at(i).ptvism;
+        pssfr[i] = h_clprobs.at(i).pssfr;
+        psfr[i] = h_clprobs.at(i).psfr;
+        pa[i] = h_clprobs.at(i).pa;
+        pldust[i] = h_clprobs.at(i).pldust;
+        ptbg1[i] = h_clprobs.at(i).ptbg1;
+        ptbg2[i] = h_clprobs.at(i).ptbg2;
+        pism[i] = h_clprobs.at(i).pism;
+        pxi1[i] = h_clprobs.at(i).pxi1;
+        pxi2[i] = h_clprobs.at(i).pxi2;
+        pxi3[i] = h_clprobs.at(i).pxi3;
+        pmd[i] = h_clprobs.at(i).pmd;
+    }    
+
 #else
     for(i_sfh=0; i_sfh < n_sfh; i_sfh++){
 // {F77} c     Check progress of the fit...
