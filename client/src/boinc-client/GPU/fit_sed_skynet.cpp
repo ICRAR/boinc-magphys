@@ -1417,8 +1417,6 @@ int main(int argc, char *argv[]){
 
 
         }
-
-        cout << h_probs.at(20).pa << " vs " << nbin_sfr << endl;
         // Clear model instances.
         h_models.clear();
     }
