@@ -49,13 +49,17 @@
 
 #if defined(USE_OPENCL)
 #define __CL_ENABLE_EXCEPTIONS
+#define CLMAX 1000000
 #include <CL/cl.hpp>
 #include <vector>
 
-typedef struct clmodel {
+typedef struct clid {
     // sfh and ir index combo this model identified.
-    int sfh; 
-    int ir;
+    int i_sfh; 
+    int i_ir; 
+} clid_t;
+
+typedef struct clmodel {
     // Scaling factor.
     double a;
     // chi^2 values.
@@ -130,6 +134,9 @@ typedef struct clvar {
     double md_min;
 
 } clvar_t;
+
+static clmodel_t h_clmodels[CLMAX];
+static clid_t h_clids[CLMAX];
 
 #endif
 
@@ -1310,7 +1317,7 @@ int main(int argc, char *argv[]){
     cl::Device device = devices[0];
 
     // Create a command queue for selected device.
-    cl::CommandQueue queue(cl::CommandQueue(context,device));
+    //cl::CommandQueue queue(cl::CommandQueue(context,device));
 
     // Read in kernel program from file.
     std::ifstream sourceFile("fit_sed_skynet.cl");
@@ -1327,52 +1334,57 @@ int main(int argc, char *argv[]){
         cerr << program_.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << endl;
     }
 
-    // Use vectors to store model instances.
-    std::vector<clmodel_t> h_clmodels;
-    i_sfh=0;
-    while(i_sfh < n_sfh){
-        int t_sfh=0;
-        // Batch up 80 starform hist sets before crunching on GPU.
-        while(i_sfh<n_sfh && t_sfh<80){
-            for(i_ir=0; i_ir < n_ir; i_ir++){
-               if(fabs(fmu_sfh[i_sfh]-fmu_ir[i_ir]) <= df){
-                    clmodel_t clmodel;
-                    clmodel.sfh=i_sfh;
-                    clmodel.ir=i_ir;
-                    h_clmodels.push_back(clmodel); 
-                    n_models++;
-               }
-            }
-            i_sfh++;
-            t_sfh++;
-        }
-       try{
-        // Buffer needed values.
-        cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, h_clmodels.size()*sizeof(clmodel_t));
-        cl::Buffer d_clmods=cl::Buffer(context, CL_MEM_READ_ONLY, h_clmods.size()*sizeof(clmod_t));
-        cl::Buffer d_clvar=cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(clvar_t));
-        cl::Buffer d_ldust=cl::Buffer(context, CL_MEM_READ_ONLY, NMOD*sizeof(double));
-        cl::Buffer d_flux_obs=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
-        cl::Buffer d_flux_sfh=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
-        cl::Buffer d_flux_ir=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
-        cl::Buffer d_w=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
+    cl::Buffer d_clids=cl::Buffer(context, CL_MEM_READ_ONLY, CLMAX*sizeof(clid_t));
+    cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, CLMAX*sizeof(clmodel_t), h_clmodels);
+    cl::Buffer d_clmods(context, CL_MEM_READ_ONLY, h_clmods.size()*sizeof(clmod_t));
+    cl::Buffer d_clvar(context, CL_MEM_READ_ONLY, sizeof(clvar_t));
+    cl::Buffer d_ldust(context, CL_MEM_READ_ONLY, NMOD*sizeof(double));
+    cl::Buffer d_flux_obs(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
+    cl::Buffer d_flux_sfh(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
+    cl::Buffer d_flux_ir(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
+    cl::Buffer d_w(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
 
+    cl::CommandQueue queue(cl::CommandQueue(context,device));
+
+    queue.enqueueWriteBuffer(d_clmods, CL_TRUE, 0, h_clmods.size()*sizeof(clmod_t), &h_clmods[0]);
+    queue.enqueueWriteBuffer(d_clvar, CL_TRUE, 0, sizeof(clvar_t), &h_clvar);
+    queue.enqueueWriteBuffer(d_ldust, CL_TRUE, 0, NMOD*sizeof(double), ldust);
+    queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
+    queue.enqueueWriteBuffer(d_flux_sfh, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_sfh);
+    queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
+    queue.enqueueWriteBuffer(d_w, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), w);
+
+    i_sfh=0;
+    i_ir=0;
+    while(i_sfh<n_sfh){
+        int i_m = 0;
+        while(i_sfh<n_sfh && i_m<CLMAX){
+            while(i_ir<n_ir && i_m<CLMAX){
+               if(fabs(fmu_sfh[i_sfh]-fmu_ir[i_ir]) <= df){
+                    h_clids[i_m].i_sfh=i_sfh;
+                    h_clids[i_m].i_ir=i_ir;
+                    i_m++;
+               }
+               i_ir++;
+            }
+            if(i_ir==n_ir){
+                i_sfh++;
+            }
+            if(i_ir==n_ir){
+                i_ir=0;
+            }
+        }
+        n_models+=i_m;
+       try{
         // Queue values.
-        queue.enqueueWriteBuffer(d_clmodels, CL_TRUE, 0, h_clmodels.size()*sizeof(clmodel_t), &h_clmodels[0]);
-        queue.enqueueWriteBuffer(d_clmods, CL_TRUE, 0, h_clmods.size()*sizeof(clmod_t), &h_clmods[0]);
-        queue.enqueueWriteBuffer(d_clvar, CL_TRUE, 0, sizeof(clvar_t), &h_clvar);
-        queue.enqueueWriteBuffer(d_ldust, CL_TRUE, 0, NMOD*sizeof(double), ldust);
-        queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
-        queue.enqueueWriteBuffer(d_flux_sfh, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_sfh);
-        queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
-        queue.enqueueWriteBuffer(d_w, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), w);
+        queue.enqueueWriteBuffer(d_clids, CL_TRUE, 0, i_m*sizeof(clid_t), h_clids);
         
         // Prepare kernel program.
         cl::Kernel kernel(program_, "compute", &err);
 
         // Parse arguments to kernel program.
         kernel.setArg(0, d_clmodels);
-        kernel.setArg(1, (unsigned int)h_clmodels.size()); 
+        kernel.setArg(1, (unsigned int)i_m); 
         kernel.setArg(2, i_gal);
         kernel.setArg(3, nfilt);
         kernel.setArg(4, nfilt_sfh);
@@ -1384,10 +1396,11 @@ int main(int argc, char *argv[]){
         kernel.setArg(10, d_w);
         kernel.setArg(11, d_clmods);
         kernel.setArg(12, d_clvar);
+        kernel.setArg(13, d_clids);
 
         // Set workload sizes.
         cl::NDRange localSize(64);
-        cl::NDRange globalSize((int)(ceil(h_clmodels.size()/(double)64)*64));
+        cl::NDRange globalSize((int)(ceil(i_m/(double)64)*64));
 
         // Start the work and wait for response.
         cl::Event event;
@@ -1401,44 +1414,47 @@ int main(int argc, char *argv[]){
         event.wait();
 
         // Read values back from buffer.
-        queue.enqueueReadBuffer(d_clmodels, CL_TRUE, 0, h_clmodels.size()*sizeof(clmodel_t), &h_clmodels[0]);
+        queue.enqueueReadBuffer(d_clmodels, CL_TRUE, 0, i_m*sizeof(clmodel_t), h_clmodels);
         } catch(cl::Error error) {
             cerr << "There was a problem" << endl;
         }
 
-        
-        for(vector<clmodel_t>::iterator m = h_clmodels.begin(); m != h_clmodels.end(); m++){
-            ptot += m->prob;
-            chi2_new=m->chi2;
-            chi2_new_opt=m->chi2_opt;
-            chi2_new_ir=m->chi2_ir;
+        // Sequential loop for shared vals.
+        // 
+        // TODO - Parallelize!
+        for(i=0; i<i_m; i++){
+            clid_t id = h_clids[i];
+            clmodel_t m = h_clmodels[i];
+
+            ptot += m.prob;
+            chi2_new=m.chi2;
+            chi2_new_opt=m.chi2_opt;
+            chi2_new_ir=m.chi2_ir;
             if(chi2_new < chi2_sav){
                 chi2_sav=chi2_new;
-                sfh_sav=m->sfh;
-                ir_sav=m->ir;
-                a_sav=m->a;
+                sfh_sav=id.i_sfh;
+                ir_sav=id.i_ir;
+                a_sav=m.a;
                 chi2_sav_opt=chi2_new_opt;
                 chi2_sav_ir=chi2_new_ir;
             }    
-            psfh[m->ibin_psfh]=psfh[m->ibin_psfh]+m->prob;
-            pir[m->ibin_pir]=pir[m->ibin_pir]+m->prob;
-            pmu[m->ibin_pmu]=pmu[m->ibin_pmu]+m->prob;
-            ptv[m->ibin_ptv]=ptv[m->ibin_ptv]+m->prob;
-            ptvism[m->ibin_ptvism]=ptvism[m->ibin_ptvism]+m->prob;
-            pssfr[m->ibin_pssfr]=pssfr[m->ibin_pssfr]+m->prob;
-            pa[m->ibin_pa]=pa[m->ibin_pa]+m->prob;
-            psfr[m->ibin_psfr]=psfr[m->ibin_psfr]+m->prob;
-            pldust[m->ibin_pldust]=pldust[m->ibin_pldust]+m->prob;
-            pism[m->ibin_pism]=pism[m->ibin_pism]+m->prob;
-            ptbg1[m->ibin_ptbg1]=ptbg1[m->ibin_ptbg1]+m->prob;
-            ptbg2[m->ibin_ptbg2]=ptbg2[m->ibin_ptbg2]+m->prob;
-            pxi1[m->ibin_pxi1]=pxi1[m->ibin_pxi1]+m->prob;
-            pxi2[m->ibin_pxi2]=pxi2[m->ibin_pxi2]+m->prob;
-            pxi3[m->ibin_pxi3]=pxi3[m->ibin_pxi3]+m->prob;
-            pmd[m->ibin_pmd]=pmd[m->ibin_pmd]+m->prob;
+            psfh[m.ibin_psfh]=psfh[m.ibin_psfh]+m.prob;
+            pir[m.ibin_pir]=pir[m.ibin_pir]+m.prob;
+            pmu[m.ibin_pmu]=pmu[m.ibin_pmu]+m.prob;
+            ptv[m.ibin_ptv]=ptv[m.ibin_ptv]+m.prob;
+            ptvism[m.ibin_ptvism]=ptvism[m.ibin_ptvism]+m.prob;
+            pssfr[m.ibin_pssfr]=pssfr[m.ibin_pssfr]+m.prob;
+            pa[m.ibin_pa]=pa[m.ibin_pa]+m.prob;
+            psfr[m.ibin_psfr]=psfr[m.ibin_psfr]+m.prob;
+            pldust[m.ibin_pldust]=pldust[m.ibin_pldust]+m.prob;
+            pism[m.ibin_pism]=pism[m.ibin_pism]+m.prob;
+            ptbg1[m.ibin_ptbg1]=ptbg1[m.ibin_ptbg1]+m.prob;
+            ptbg2[m.ibin_ptbg2]=ptbg2[m.ibin_ptbg2]+m.prob;
+            pxi1[m.ibin_pxi1]=pxi1[m.ibin_pxi1]+m.prob;
+            pxi2[m.ibin_pxi2]=pxi2[m.ibin_pxi2]+m.prob;
+            pxi3[m.ibin_pxi3]=pxi3[m.ibin_pxi3]+m.prob;
+            pmd[m.ibin_pmd]=pmd[m.ibin_pmd]+m.prob;
         }
-        // Clear model instances.
-        h_clmodels.clear();
     }
 
 #else
@@ -1726,6 +1742,7 @@ int main(int argc, char *argv[]){
 // {F77}          ENDDO                  !loop in i_sfh
                     }
             }
+            cout << ptot << endl;
     }
 #endif
 // {F77} 

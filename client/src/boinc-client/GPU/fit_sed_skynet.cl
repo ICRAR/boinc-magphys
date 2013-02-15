@@ -15,10 +15,13 @@
 #define flux_ir(x,y) *(flux_ir+(x*NMOD)+y)
 #define w(x,y) *(w+(x*GALMAX)+y)
 
-typedef struct clmodel {
+typedef struct clid {
     // sfh and ir index combo this model identified.
-    int sfh; 
-    int ir;
+    int i_sfh; 
+    int i_ir;
+} clid_t;
+
+typedef struct clmodel {
     // Scaling factor.
     double a;
     // chi^2 values.
@@ -105,7 +108,8 @@ __kernel void compute( __global clmodel_t* models,
                        __global double* flux_ir,
                        __global double* w, 
                        __global clmod_t* mods,
-                       __global clvar_t* var
+                       __global clvar_t* var,
+                       __global clid_t* ids
                       )
 {                                                              
 
@@ -117,8 +121,8 @@ __kernel void compute( __global clmodel_t* models,
         double num;
         double den;
 
-        int i_sfh = models[id].sfh;
-        int i_ir = models[id].ir;
+        int i_sfh = ids[id].i_sfh;
+        int i_ir = ids[id].i_ir;
 
         double flux_mod[NMAX];
         // Build the model flux array.
@@ -140,9 +144,14 @@ __kernel void compute( __global clmodel_t* models,
             }    
         }    
     
-        // Compute chi^2 goodness of fit.
         double a = num/den;
         models[id].a= a;
+
+        // Compute chi^2 goodness of fit.
+        models[id].chi2=0;
+        models[id].chi2_opt=0;
+        models[id].chi2_ir=0;
+
         for(k=0;k<nfilt_sfh;k++){
             if(flux_obs(k,i_gal) > 0){
                 models[id].chi2=models[id].chi2+((pow(flux_obs(k,i_gal)-(a*flux_mod[k]),2))*w(k,i_gal));
