@@ -27,26 +27,24 @@ typedef struct clmodel {
     double chi2_ir;
     // Probability
     double prob;
+    // MPDF ibins
+    int ibin_psfh;
+    int ibin_pir; 
+    int ibin_pmu; 
+    int ibin_ptv; 
+    int ibin_ptvism;
+    int ibin_pssfr;
+    int ibin_psfr;
+    int ibin_pa;
+    int ibin_pldust;
+    int ibin_ptbg1;
+    int ibin_ptbg2;
+    int ibin_pism;
+    int ibin_pxi1;
+    int ibin_pxi2;
+    int ibin_pxi3;
+    int ibin_pmd; 
 }clmodel_t;
-
-typedef struct clprob {
-   double psfh;
-   double pir; 
-   double pmu; 
-   double ptv; 
-   double ptvism;
-   double pssfr;
-   double psfr;
-   double pa;
-   double pldust;
-   double ptbg1;
-   double ptbg2;
-   double pism;
-   double pxi1;
-   double pxi2;
-   double pxi3;
-   double pmd; 
-} clprob_t;
 
 typedef struct clmod {
     // SFH
@@ -84,14 +82,14 @@ typedef struct clvar {
     int nbin_xi;
     int nbin_md;
 
-    int a_max;
-    int a_min;
-    int sfr_max;
-    int sfr_min;
-    int ld_max;
-    int ld_min;
-    int md_max;
-    int md_min;
+    double a_max;
+    double a_min;
+    double sfr_max;
+    double sfr_min;
+    double ld_max;
+    double ld_min;
+    double md_max;
+    double md_min;
 
 } clvar_t;
 
@@ -106,25 +104,23 @@ __kernel void compute( __global clmodel_t* models,
                        __global double* flux_sfh,
                        __global double* flux_ir,
                        __global double* w, 
-                       __global clprob_t* probs,
                        __global clmod_t* mods,
-                       __global clvar_t* var,
-                       __global double* lmdust
+                       __global clvar_t* var
                       )
 {                                                              
 
+
     int id = get_global_id(0);                                 
 
-    int k = 0;
-    double num;
-    double den;
-
-    int i_sfh = models[id].sfh;
-    int i_ir = models[id].ir;
-
-    double flux_mod[NMAX];
-
     if (id < n){                                                
+        int k = 0;
+        double num;
+        double den;
+
+        int i_sfh = models[id].sfh;
+        int i_ir = models[id].ir;
+
+        double flux_mod[NMAX];
         // Build the model flux array.
         for(k=0; k < nfilt_sfh-nfilt_mix; k++){
             flux_mod[k]=flux_sfh(k,i_sfh);
@@ -174,87 +170,87 @@ __kernel void compute( __global clmodel_t* models,
         // f_mu (SFH)
         ibin=mods[i_sfh].i_fmu_sfh;
         ibin=max(0,min(ibin,var->nbin_fmu-1));
-        probs[ibin].psfh=probs[ibin].psfh+models[id].prob;
+        models[id].ibin_psfh = ibin;
 
         // f_mu (IR)
         ibin=mods[i_ir].i_fmu_ir;
         ibin = max(0,min(ibin,var->nbin_fmu-1));
-        probs[ibin].pir=probs[ibin].pir+prob;
+        models[id].ibin_pir = ibin;
 
         // mu
         ibin=mods[i_sfh].i_mu;
         ibin=max(0,min(ibin,var->nbin_mu-1));
-        probs[ibin].pmu=probs[ibin].pmu+prob;
+        models[id].ibin_pmu = ibin;
 
         // tauV
         ibin=mods[i_sfh].i_tauv;
         ibin=max(0,min(ibin,var->nbin_tv-1));
-        probs[ibin].ptv=probs[ibin].ptv+prob;
+        models[id].ibin_ptv=ibin;
 
         // tvism
         ibin=mods[i_sfh].i_tvism;
         ibin=max(0,min(ibin,var->nbin_tv-1));
-        probs[ibin].ptvism=probs[ibin].ptvism+prob;
+        models[id].ibin_ptvism=ibin;
 
         // sSFR_0.1Gyr
         ibin=mods[i_sfh].i_lssfr;
         ibin=max(0,min(ibin,var->nbin_sfr-1));
-        probs[ibin].pssfr=probs[ibin].pssfr+prob;
+        models[id].ibin_pssfr=ibin;
 
         // Mstar
         a=log10(a);
         aux=((a-var->a_min)/(var->a_max-var->a_min)) * var->nbin_a;
         ibin=(int)(aux);
         ibin=max(0,min(ibin,var->nbin_a-1));
-        probs[ibin].pa=probs[ibin].pa+prob;
+        models[id].ibin_pa=ibin;
 
         // SFR_0.1Gyr
         aux=((mods[i_sfh].lssfr+a-var->sfr_min)/(var->sfr_max-var->sfr_min))* var->nbin_sfr;
         ibin=(int)(aux);
         ibin=max(0,min(ibin,var->nbin_sfr-1));
-        probs[ibin].psfr=probs[ibin].psfr+prob;
+        models[id].ibin_psfr=ibin;
 
         // Ldust
         aux=((mods[i_sfh].logldust+a-var->ld_min)/(var->ld_max-var->ld_min))* var->nbin_ld;
         ibin=(int)(aux);
         ibin=max(0,min(ibin,var->nbin_ld-1));
-        probs[ibin].pldust=probs[ibin].pldust+prob;
+        models[id].ibin_pldust=ibin;
                         
         // xi_C^tot
         ibin=mods[i_ir].i_fmu_ism;
         ibin=max(0,min(ibin,var->nbin_fmu_ism-1));
-        probs[ibin].pism=probs[ibin].pism+prob;
+        models[id].ibin_pism=ibin;
 
         // T_C^ISM
         ibin=mods[i_ir].i_tbg1;
         ibin=max(0,min(ibin,var->nbin_tbg1-1));
-        probs[ibin].ptbg1=probs[ibin].ptbg1+prob;
+        models[id].ibin_ptbg1=ibin;
 
         // T_W^BC
         ibin=mods[i_ir].i_tbg2;
         ibin=max(0,min(ibin,var->nbin_tbg2-1));
-        probs[ibin].ptbg2=probs[ibin].ptbg2+prob;
+        models[id].ibin_ptbg2=ibin;
 
         // xi_PAH^tot
         ibin=mods[i_ir].i_xi1;
         ibin=max(0,min(ibin,var->nbin_xi-1));
-        probs[ibin].pxi1=probs[ibin].pxi1+prob;
+        models[id].ibin_pxi1=ibin;
 
         // xi_MIR^tot
         ibin=mods[i_ir].i_xi2;
         ibin=max(0,min(ibin,var->nbin_xi-1));
-        probs[ibin].pxi2=probs[ibin].pxi2+prob;
+        models[id].ibin_pxi2=ibin;
 
         // xi_W^tot
         ibin=mods[i_ir].i_xi3;
         ibin=max(0,min(ibin,var->nbin_xi-1));
-        probs[ibin].pxi3=probs[ibin].pxi3+prob;
+        models[id].ibin_pxi3=ibin;
 
         // Mdust
-        lmdust[i_ir]=log10(mods[i_ir].mdust*mods[i_sfh].ldust*pow(10.0,a));
-        aux=((lmdust[i_ir]-var->md_min)/(var->md_max-var->md_min))*var->nbin_md;
+        aux=log10(mods[i_ir].mdust*mods[i_sfh].ldust*pow(10.0,a));
+        aux=((aux-var->md_min)/(var->md_max-var->md_min))*var->nbin_md;
         ibin=(int)(aux);
         ibin=max(0,min(ibin,var->nbin_md-1));
-        probs[ibin].pmd=probs[ibin].pmd+prob;
+        models[id].ibin_pmd=ibin;
     }
 }                                                              

@@ -64,26 +64,24 @@ typedef struct clmodel {
     double chi2_ir;
     // Probability
     double prob;
+    // MPDF ibins
+    int ibin_psfh;
+    int ibin_pir; 
+    int ibin_pmu; 
+    int ibin_ptv; 
+    int ibin_ptvism;
+    int ibin_pssfr;
+    int ibin_psfr;
+    int ibin_pa;
+    int ibin_pldust;
+    int ibin_ptbg1;
+    int ibin_ptbg2;
+    int ibin_pism;
+    int ibin_pxi1;
+    int ibin_pxi2;
+    int ibin_pxi3;
+    int ibin_pmd; 
 } clmodel_t;
-
-typedef struct clprob {
-   double psfh;
-   double pir;
-   double pmu;
-   double ptv;
-   double ptvism;
-   double pssfr;
-   double psfr;
-   double pa;
-   double pldust;
-   double ptbg1;
-   double ptbg2;
-   double pism;
-   double pxi1;
-   double pxi2;
-   double pxi3;
-   double pmd;
-} clprob_t;
 
 typedef struct clmod {
     // SFH
@@ -122,14 +120,14 @@ typedef struct clvar {
     int nbin_xi;
     int nbin_md;
 
-    int a_max;
-    int a_min;
-    int sfr_max;
-    int sfr_min;
-    int ld_max;
-    int ld_min;
-    int md_max;
-    int md_min;
+    double a_max;
+    double a_min;
+    double sfr_max;
+    double sfr_min;
+    double ld_max;
+    double ld_min;
+    double md_max;
+    double md_min;
 
 } clvar_t;
 
@@ -1077,30 +1075,6 @@ int main(int argc, char *argv[]){
 
     }      
 
-#if defined(USE_OPENCL)
-    std::vector<clprob_t> h_clprobs;
-    for(i=0; i<3000; i++){
-        clprob_t clprob;
-        clprob.psfh=0;
-        clprob.pir=0;
-        clprob.pmu=0;
-        clprob.ptv=0;
-        clprob.ptvism=0;
-        clprob.pssfr=0;
-        clprob.psfr=0;
-        clprob.pa=0;
-        clprob.pldust=0;
-        clprob.ptbg1=0;
-        clprob.ptbg2=0;
-        clprob.pism=0;
-        clprob.pxi1=0;
-        clprob.pxi2=0;
-        clprob.pxi3=0;
-        clprob.pmd=0;
-        h_clprobs.push_back(clprob);
-    }
-#endif
-    
 // {F77} 
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Compute histogram grids of the parameter likelihood distributions before
@@ -1375,11 +1349,9 @@ int main(int argc, char *argv[]){
        try{
         // Buffer needed values.
         cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, h_clmodels.size()*sizeof(clmodel_t));
-        cl::Buffer d_clprobs=cl::Buffer(context, CL_MEM_READ_WRITE, h_clprobs.size()*sizeof(clprob_t));
         cl::Buffer d_clmods=cl::Buffer(context, CL_MEM_READ_ONLY, h_clmods.size()*sizeof(clmod_t));
         cl::Buffer d_clvar=cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(clvar_t));
         cl::Buffer d_ldust=cl::Buffer(context, CL_MEM_READ_ONLY, NMOD*sizeof(double));
-        cl::Buffer d_lmdust=cl::Buffer(context, CL_MEM_READ_WRITE, NMOD*sizeof(double));
         cl::Buffer d_flux_obs=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
         cl::Buffer d_flux_sfh=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
         cl::Buffer d_flux_ir=cl::Buffer(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
@@ -1387,11 +1359,9 @@ int main(int argc, char *argv[]){
 
         // Queue values.
         queue.enqueueWriteBuffer(d_clmodels, CL_TRUE, 0, h_clmodels.size()*sizeof(clmodel_t), &h_clmodels[0]);
-        queue.enqueueWriteBuffer(d_clprobs, CL_TRUE, 0, h_clprobs.size()*sizeof(clprob_t), &h_clprobs[0]);
         queue.enqueueWriteBuffer(d_clmods, CL_TRUE, 0, h_clmods.size()*sizeof(clmod_t), &h_clmods[0]);
         queue.enqueueWriteBuffer(d_clvar, CL_TRUE, 0, sizeof(clvar_t), &h_clvar);
         queue.enqueueWriteBuffer(d_ldust, CL_TRUE, 0, NMOD*sizeof(double), ldust);
-        queue.enqueueWriteBuffer(d_lmdust, CL_TRUE, 0, NMOD*sizeof(double), lmdust);
         queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
         queue.enqueueWriteBuffer(d_flux_sfh, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_sfh);
         queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
@@ -1412,10 +1382,8 @@ int main(int argc, char *argv[]){
         kernel.setArg(8, d_flux_sfh);
         kernel.setArg(9, d_flux_ir);
         kernel.setArg(10, d_w);
-        kernel.setArg(11, d_clprobs);
-        kernel.setArg(12, d_clmods);
-        kernel.setArg(13, d_clvar);
-        kernel.setArg(14, d_lmdust);
+        kernel.setArg(11, d_clmods);
+        kernel.setArg(12, d_clvar);
 
         // Set workload sizes.
         cl::NDRange localSize(64);
@@ -1434,13 +1402,11 @@ int main(int argc, char *argv[]){
 
         // Read values back from buffer.
         queue.enqueueReadBuffer(d_clmodels, CL_TRUE, 0, h_clmodels.size()*sizeof(clmodel_t), &h_clmodels[0]);
-        queue.enqueueReadBuffer(d_clprobs, CL_TRUE, 0, h_clprobs.size()*sizeof(clprob_t), &h_clprobs[0]);
-        queue.enqueueReadBuffer(d_lmdust, CL_TRUE, 0, NMOD*sizeof(double), lmdust);
         } catch(cl::Error error) {
             cerr << "There was a problem" << endl;
         }
 
-
+        
         for(vector<clmodel_t>::iterator m = h_clmodels.begin(); m != h_clmodels.end(); m++){
             ptot += m->prob;
             chi2_new=m->chi2;
@@ -1454,30 +1420,26 @@ int main(int argc, char *argv[]){
                 chi2_sav_opt=chi2_new_opt;
                 chi2_sav_ir=chi2_new_ir;
             }    
+            psfh[m->ibin_psfh]=psfh[m->ibin_psfh]+m->prob;
+            pir[m->ibin_pir]=pir[m->ibin_pir]+m->prob;
+            pmu[m->ibin_pmu]=pmu[m->ibin_pmu]+m->prob;
+            ptv[m->ibin_ptv]=ptv[m->ibin_ptv]+m->prob;
+            ptvism[m->ibin_ptvism]=ptvism[m->ibin_ptvism]+m->prob;
+            pssfr[m->ibin_pssfr]=pssfr[m->ibin_pssfr]+m->prob;
+            pa[m->ibin_pa]=pa[m->ibin_pa]+m->prob;
+            psfr[m->ibin_psfr]=psfr[m->ibin_psfr]+m->prob;
+            pldust[m->ibin_pldust]=pldust[m->ibin_pldust]+m->prob;
+            pism[m->ibin_pism]=pism[m->ibin_pism]+m->prob;
+            ptbg1[m->ibin_ptbg1]=ptbg1[m->ibin_ptbg1]+m->prob;
+            ptbg2[m->ibin_ptbg2]=ptbg2[m->ibin_ptbg2]+m->prob;
+            pxi1[m->ibin_pxi1]=pxi1[m->ibin_pxi1]+m->prob;
+            pxi2[m->ibin_pxi2]=pxi2[m->ibin_pxi2]+m->prob;
+            pxi3[m->ibin_pxi3]=pxi3[m->ibin_pxi3]+m->prob;
+            pmd[m->ibin_pmd]=pmd[m->ibin_pmd]+m->prob;
         }
         // Clear model instances.
         h_clmodels.clear();
     }
-
-    // Map struct data to arrays
-    for(i=0; i<3000; i++){
-        psfh[i] = h_clprobs.at(i).psfh;
-        pir[i] = h_clprobs.at(i).pir;
-        pmu[i] = h_clprobs.at(i).pmu;
-        ptv[i] = h_clprobs.at(i).ptv;
-        ptvism[i] = h_clprobs.at(i).ptvism;
-        pssfr[i] = h_clprobs.at(i).pssfr;
-        psfr[i] = h_clprobs.at(i).psfr;
-        pa[i] = h_clprobs.at(i).pa;
-        pldust[i] = h_clprobs.at(i).pldust;
-        ptbg1[i] = h_clprobs.at(i).ptbg1;
-        ptbg2[i] = h_clprobs.at(i).ptbg2;
-        pism[i] = h_clprobs.at(i).pism;
-        pxi1[i] = h_clprobs.at(i).pxi1;
-        pxi2[i] = h_clprobs.at(i).pxi2;
-        pxi3[i] = h_clprobs.at(i).pxi3;
-        pmd[i] = h_clprobs.at(i).pmd;
-    }    
 
 #else
     for(i_sfh=0; i_sfh < n_sfh; i_sfh++){
