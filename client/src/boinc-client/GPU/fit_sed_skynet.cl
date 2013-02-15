@@ -103,7 +103,7 @@ __kernel void compute( const int clm,
                        __global clid_t* ids,
                        __global clmodel_t* models,
                        __global clmod_t* mods,
-                       __global clvar_t* var,
+                       __constant clvar_t* var,
                        __global double* flux_obs,
                        __global double* flux_sfh,
                        __global double* flux_ir,
@@ -126,16 +126,20 @@ __kernel void compute( const int clm,
         int nfilt_mix = var->nfilt_mix;
         int i_gal = var->i_gal;
 
+        __global clmodel_t *m = &models[id];
+        __global clmod_t *msfh = &mods[i_sfh];
+        __global clmod_t *mir = &mods[i_ir];
+
         double flux_mod[NMAX];
         // Build the model flux array.
         for(k=0; k < nfilt_sfh-nfilt_mix; k++){
             flux_mod[k]=flux_sfh(k,i_sfh);
         }    
         for(k=nfilt_sfh-nfilt_mix; k<nfilt_sfh; k++){
-            flux_mod[k]=flux_sfh(k,i_sfh)+mods[i_sfh].ldust*flux_ir(k-nfilt_sfh+nfilt_mix,i_ir);
+            flux_mod[k]=flux_sfh(k,i_sfh)+msfh->ldust*flux_ir(k-nfilt_sfh+nfilt_mix,i_ir);
         }    
         for(k=nfilt_sfh; k<nfilt; k++){
-            flux_mod[k]=mods[i_sfh].ldust*flux_ir(k-nfilt_sfh+nfilt_mix,i_ir);
+            flux_mod[k]=msfh->ldust*flux_ir(k-nfilt_sfh+nfilt_mix,i_ir);
         }    
 
         // Compute the scaling factor "a".
@@ -147,31 +151,33 @@ __kernel void compute( const int clm,
         }    
     
         double a = num/den;
-        models[id].a= a;
+        m->a= a;
 
         // Compute chi^2 goodness of fit.
-        models[id].chi2=0;
-        models[id].chi2_opt=0;
-        models[id].chi2_ir=0;
-
+        double chi2 = 0;
+        double chi2_opt = 0;
+        double chi2_ir = 0;
         for(k=0;k<nfilt_sfh;k++){
             if(flux_obs(k,i_gal) > 0){
-                models[id].chi2=models[id].chi2+((pow(flux_obs(k,i_gal)-(a*flux_mod[k]),2))*w(k,i_gal));
-                models[id].chi2_opt=models[id].chi2;
+                chi2=chi2+((pow(flux_obs(k,i_gal)-(a*flux_mod[k]),2))*w(k,i_gal));
+                chi2_opt=chi2;
             }
         }
-        if(models[id].chi2 < 600){
+        if(chi2 < 600){
             for(k=nfilt_sfh;k<nfilt;k++){
                 if (flux_obs(k,i_gal) > 0){
-                    models[id].chi2=models[id].chi2+((pow(flux_obs(k,i_gal)-(a*flux_mod[k]),2))*w(k,i_gal));
-                    models[id].chi2_ir=models[id].chi2_ir+((pow(flux_obs(k,i_gal)-(a*flux_mod[k]),2))*w(k,i_gal));
+                    chi2=chi2+((pow(flux_obs(k,i_gal)-(a*flux_mod[k]),2))*w(k,i_gal));
+                    chi2_ir=chi2_ir+((pow(flux_obs(k,i_gal)-(a*flux_mod[k]),2))*w(k,i_gal));
                 }
             }
         }
+        m->chi2=chi2;
+        m->chi2_opt=chi2_opt;
+        m->chi2_ir=chi2_ir;
 
         // Calculate probability.
-        double prob = exp(-0.5*models[id].chi2);
-        models[id].prob = prob;
+        double prob = exp(-0.5*m->chi2);
+        m->prob = prob;
 
         // Marginal probability density functions
 
@@ -179,89 +185,89 @@ __kernel void compute( const int clm,
         double aux;
         
         // f_mu (SFH)
-        ibin=mods[i_sfh].i_fmu_sfh;
+        ibin=msfh->i_fmu_sfh;
         ibin=max(0,min(ibin,var->nbin_fmu-1));
-        models[id].ibin_psfh = ibin;
+        m->ibin_psfh = ibin;
 
         // f_mu (IR)
-        ibin=mods[i_ir].i_fmu_ir;
+        ibin=mir->i_fmu_ir;
         ibin = max(0,min(ibin,var->nbin_fmu-1));
-        models[id].ibin_pir = ibin;
+        m->ibin_pir = ibin;
 
         // mu
-        ibin=mods[i_sfh].i_mu;
+        ibin=msfh->i_mu;
         ibin=max(0,min(ibin,var->nbin_mu-1));
-        models[id].ibin_pmu = ibin;
+        m->ibin_pmu = ibin;
 
         // tauV
-        ibin=mods[i_sfh].i_tauv;
+        ibin=msfh->i_tauv;
         ibin=max(0,min(ibin,var->nbin_tv-1));
-        models[id].ibin_ptv=ibin;
+        m->ibin_ptv=ibin;
 
         // tvism
-        ibin=mods[i_sfh].i_tvism;
+        ibin=msfh->i_tvism;
         ibin=max(0,min(ibin,var->nbin_tv-1));
-        models[id].ibin_ptvism=ibin;
+        m->ibin_ptvism=ibin;
 
         // sSFR_0.1Gyr
-        ibin=mods[i_sfh].i_lssfr;
+        ibin=msfh->i_lssfr;
         ibin=max(0,min(ibin,var->nbin_sfr-1));
-        models[id].ibin_pssfr=ibin;
+        m->ibin_pssfr=ibin;
 
         // Mstar
         a=log10(a);
         aux=((a-var->a_min)/(var->a_max-var->a_min)) * var->nbin_a;
         ibin=(int)(aux);
         ibin=max(0,min(ibin,var->nbin_a-1));
-        models[id].ibin_pa=ibin;
+        m->ibin_pa=ibin;
 
         // SFR_0.1Gyr
-        aux=((mods[i_sfh].lssfr+a-var->sfr_min)/(var->sfr_max-var->sfr_min))* var->nbin_sfr;
+        aux=((msfh->lssfr+a-var->sfr_min)/(var->sfr_max-var->sfr_min))* var->nbin_sfr;
         ibin=(int)(aux);
         ibin=max(0,min(ibin,var->nbin_sfr-1));
-        models[id].ibin_psfr=ibin;
+        m->ibin_psfr=ibin;
 
         // Ldust
-        aux=((mods[i_sfh].logldust+a-var->ld_min)/(var->ld_max-var->ld_min))* var->nbin_ld;
+        aux=((msfh->logldust+a-var->ld_min)/(var->ld_max-var->ld_min))* var->nbin_ld;
         ibin=(int)(aux);
         ibin=max(0,min(ibin,var->nbin_ld-1));
-        models[id].ibin_pldust=ibin;
+        m->ibin_pldust=ibin;
                         
         // xi_C^tot
-        ibin=mods[i_ir].i_fmu_ism;
+        ibin=mir->i_fmu_ism;
         ibin=max(0,min(ibin,var->nbin_fmu_ism-1));
-        models[id].ibin_pism=ibin;
+        m->ibin_pism=ibin;
 
         // T_C^ISM
-        ibin=mods[i_ir].i_tbg1;
+        ibin=mir->i_tbg1;
         ibin=max(0,min(ibin,var->nbin_tbg1-1));
-        models[id].ibin_ptbg1=ibin;
+        m->ibin_ptbg1=ibin;
 
         // T_W^BC
-        ibin=mods[i_ir].i_tbg2;
+        ibin=mir->i_tbg2;
         ibin=max(0,min(ibin,var->nbin_tbg2-1));
-        models[id].ibin_ptbg2=ibin;
+        m->ibin_ptbg2=ibin;
 
         // xi_PAH^tot
-        ibin=mods[i_ir].i_xi1;
+        ibin=mir->i_xi1;
         ibin=max(0,min(ibin,var->nbin_xi-1));
-        models[id].ibin_pxi1=ibin;
+        m->ibin_pxi1=ibin;
 
         // xi_MIR^tot
-        ibin=mods[i_ir].i_xi2;
+        ibin=mir->i_xi2;
         ibin=max(0,min(ibin,var->nbin_xi-1));
-        models[id].ibin_pxi2=ibin;
+        m->ibin_pxi2=ibin;
 
         // xi_W^tot
-        ibin=mods[i_ir].i_xi3;
+        ibin=mir->i_xi3;
         ibin=max(0,min(ibin,var->nbin_xi-1));
-        models[id].ibin_pxi3=ibin;
+        m->ibin_pxi3=ibin;
 
         // Mdust
-        aux=log10(mods[i_ir].mdust*mods[i_sfh].ldust*pow(10.0,a));
+        aux=log10(mir->mdust*msfh->ldust*pow(10.0,a));
         aux=((aux-var->md_min)/(var->md_max-var->md_min))*var->nbin_md;
         ibin=(int)(aux);
         ibin=max(0,min(ibin,var->nbin_md-1));
-        models[id].ibin_pmd=ibin;
+        m->ibin_pmd=ibin;
     }
 }                                                              
