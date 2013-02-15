@@ -99,7 +99,7 @@ typedef struct clvar {
 
 } clvar_t;
 
-__kernel void compute( const int clm,
+__kernel void fit( const int clm,
                        __global clid_t* ids,
                        __global clmodel_t* models,
                        __global clmod_t* mods,
