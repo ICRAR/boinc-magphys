@@ -54,7 +54,6 @@
 #include <vector>
 
 typedef struct clid {
-    // sfh and ir index combo this model identified.
     int i_sfh; 
     int i_ir; 
 } clid_t;
@@ -123,7 +122,6 @@ typedef struct clvar {
     int nbin_tbg2;
     int nbin_xi;
     int nbin_md;
-
     double a_max;
     double a_min;
     double sfr_max;
@@ -132,6 +130,10 @@ typedef struct clvar {
     double ld_min;
     double md_max;
     double md_min;
+    int nfilt;
+    int nfilt_sfh;
+    int nfilt_mix;
+    int i_gal;
 
 } clvar_t;
 
@@ -1276,6 +1278,7 @@ int main(int argc, char *argv[]){
 
 #if defined(USE_OPENCL)
 
+    // Push shared values into struct for parsing to kernel
     clvar_t h_clvar;
     h_clvar.nbin_fmu = nbin_fmu;
     h_clvar.nbin_mu = nbin_mu;
@@ -1288,7 +1291,6 @@ int main(int argc, char *argv[]){
     h_clvar.nbin_tbg2 = nbin_tbg2;
     h_clvar.nbin_xi = nbin_xi;
     h_clvar.nbin_md = nbin_md;
-
     h_clvar.a_max = a_max;
     h_clvar.a_min = a_min;
     h_clvar.sfr_max = sfr_max;
@@ -1297,6 +1299,10 @@ int main(int argc, char *argv[]){
     h_clvar.ld_min = ld_min;
     h_clvar.md_max = md_max;
     h_clvar.md_min = md_min;
+    h_clvar.nfilt = nfilt;
+    h_clvar.nfilt_sfh = nfilt_sfh;
+    h_clvar.nfilt_mix = nfilt_mix;
+    h_clvar.i_gal = i_gal;
 
     cl_int err;
 
@@ -1338,7 +1344,6 @@ int main(int argc, char *argv[]){
     cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, CLMAX*sizeof(clmodel_t), h_clmodels);
     cl::Buffer d_clmods(context, CL_MEM_READ_ONLY, h_clmods.size()*sizeof(clmod_t));
     cl::Buffer d_clvar(context, CL_MEM_READ_ONLY, sizeof(clvar_t));
-    cl::Buffer d_ldust(context, CL_MEM_READ_ONLY, NMOD*sizeof(double));
     cl::Buffer d_flux_obs(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
     cl::Buffer d_flux_sfh(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
     cl::Buffer d_flux_ir(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
@@ -1348,7 +1353,6 @@ int main(int argc, char *argv[]){
 
     queue.enqueueWriteBuffer(d_clmods, CL_TRUE, 0, h_clmods.size()*sizeof(clmod_t), &h_clmods[0]);
     queue.enqueueWriteBuffer(d_clvar, CL_TRUE, 0, sizeof(clvar_t), &h_clvar);
-    queue.enqueueWriteBuffer(d_ldust, CL_TRUE, 0, NMOD*sizeof(double), ldust);
     queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
     queue.enqueueWriteBuffer(d_flux_sfh, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_sfh);
     queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
@@ -1383,20 +1387,15 @@ int main(int argc, char *argv[]){
         cl::Kernel kernel(program_, "compute", &err);
 
         // Parse arguments to kernel program.
-        kernel.setArg(0, d_clmodels);
-        kernel.setArg(1, (unsigned int)i_m); 
-        kernel.setArg(2, i_gal);
-        kernel.setArg(3, nfilt);
-        kernel.setArg(4, nfilt_sfh);
-        kernel.setArg(5, nfilt_mix);
-        kernel.setArg(6, d_ldust);
-        kernel.setArg(7, d_flux_obs);
-        kernel.setArg(8, d_flux_sfh);
-        kernel.setArg(9, d_flux_ir);
-        kernel.setArg(10, d_w);
-        kernel.setArg(11, d_clmods);
-        kernel.setArg(12, d_clvar);
-        kernel.setArg(13, d_clids);
+        kernel.setArg(0, i_m); 
+        kernel.setArg(1, d_clids);
+        kernel.setArg(2, d_clmodels);
+        kernel.setArg(3, d_clmods);
+        kernel.setArg(4, d_clvar);
+        kernel.setArg(5, d_flux_obs);
+        kernel.setArg(6, d_flux_sfh);
+        kernel.setArg(7, d_flux_ir);
+        kernel.setArg(8, d_w);
 
         // Set workload sizes.
         cl::NDRange localSize(64);

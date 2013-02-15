@@ -84,7 +84,6 @@ typedef struct clvar {
     int nbin_tbg2;
     int nbin_xi;
     int nbin_md;
-
     double a_max;
     double a_min;
     double sfr_max;
@@ -93,36 +92,39 @@ typedef struct clvar {
     double ld_min;
     double md_max;
     double md_min;
+    int nfilt;
+    int nfilt_sfh;
+    int nfilt_mix;
+    int i_gal;
 
 } clvar_t;
 
-__kernel void compute( __global clmodel_t* models,
-                       const unsigned int n,
-                       const int i_gal,
-                       const int nfilt,
-                       const int nfilt_sfh,
-                       const int nfilt_mix, 
-                       __global double* ldust,
+__kernel void compute( const int clm,
+                       __global clid_t* ids,
+                       __global clmodel_t* models,
+                       __global clmod_t* mods,
+                       __global clvar_t* var,
                        __global double* flux_obs,
                        __global double* flux_sfh,
                        __global double* flux_ir,
-                       __global double* w, 
-                       __global clmod_t* mods,
-                       __global clvar_t* var,
-                       __global clid_t* ids
+                       __global double* w
                       )
 {                                                              
 
 
     int id = get_global_id(0);                                 
 
-    if (id < n){                                                
-        int k = 0;
-        double num;
-        double den;
+    if (id < clm){                                                
 
+        int k = 0;
+        double num = 0;
+        double den = 0;
         int i_sfh = ids[id].i_sfh;
         int i_ir = ids[id].i_ir;
+        int nfilt = var->nfilt;
+        int nfilt_sfh = var->nfilt_sfh;
+        int nfilt_mix = var->nfilt_mix;
+        int i_gal = var->i_gal;
 
         double flux_mod[NMAX];
         // Build the model flux array.
@@ -130,10 +132,10 @@ __kernel void compute( __global clmodel_t* models,
             flux_mod[k]=flux_sfh(k,i_sfh);
         }    
         for(k=nfilt_sfh-nfilt_mix; k<nfilt_sfh; k++){
-            flux_mod[k]=flux_sfh(k,i_sfh)+ldust[i_sfh]*flux_ir(k-nfilt_sfh+nfilt_mix,i_ir);
+            flux_mod[k]=flux_sfh(k,i_sfh)+mods[i_sfh].ldust*flux_ir(k-nfilt_sfh+nfilt_mix,i_ir);
         }    
         for(k=nfilt_sfh; k<nfilt; k++){
-            flux_mod[k]=ldust[i_sfh]*flux_ir(k-nfilt_sfh+nfilt_mix,i_ir);
+            flux_mod[k]=mods[i_sfh].ldust*flux_ir(k-nfilt_sfh+nfilt_mix,i_ir);
         }    
 
         // Compute the scaling factor "a".
