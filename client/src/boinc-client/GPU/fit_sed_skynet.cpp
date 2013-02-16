@@ -1454,6 +1454,13 @@ int main(int argc, char *argv[]){
                 pxi3[m.ibin_pxi3]=pxi3[m.ibin_pxi3]+m.prob;
                 pmd[m.ibin_pmd]=pmd[m.ibin_pmd]+m.prob;
             }
+            // To show progress in stdout.
+            cout << "\r";
+            cout << "Progress.... " << (int)(((float)i_sfh/(float)n_sfh)*100) << "%";
+            if(i_sfh == n_sfh){
+                cout << endl;
+            }
+            cout.flush();
         }
     } catch(cl::Error error){
         cerr << "OpenCL error: " <<  error.what() << "(" << error.err() << ")" << endl;
