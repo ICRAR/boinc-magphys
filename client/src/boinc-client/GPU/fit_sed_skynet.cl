@@ -1,5 +1,7 @@
+// Enable double precision.
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
+// Some constants copied from main host program.
 #define NMAX 50
 #define GALMAX 5000
 #define NMOD 50001
@@ -10,27 +12,28 @@
 #define NBINMAX2 300
 #define MIN_HPBV 0.00001
 
+// Overload passed 2D arrays since OpenCL doesn't support
+// natively. C implementation allows 2D index access using
+// formula *(array+(x*array_width)+y).
 #define flux_obs(x,y) *(flux_obs+(x*GALMAX)+y)
 #define flux_sfh(x,y) *(flux_sfh+(x*NMOD)+y)
 #define flux_ir(x,y) *(flux_ir+(x*NMOD)+y)
 #define w(x,y) *(w+(x*GALMAX)+y)
 
+// Identifier struct. Used to identify kernel thread to
+// a sfh and ir model combination.
 typedef struct clid {
-    // sfh and ir index combo this model identified.
     int i_sfh; 
-    int i_ir;
+    int i_ir; 
 } clid_t;
 
+// Model struct in which kernel thread writes.
 typedef struct clmodel {
-    // Scaling factor.
     double a;
-    // chi^2 values.
     double chi2;
     double chi2_opt;
     double chi2_ir;
-    // Probability
     double prob;
-    // MPDF ibins
     int ibin_psfh;
     int ibin_pir; 
     int ibin_pmu; 
@@ -47,16 +50,16 @@ typedef struct clmodel {
     int ibin_pxi2;
     int ibin_pxi3;
     int ibin_pmd; 
-}clmodel_t;
+} clmodel_t;
 
+// Struct to define arrays of indexes and models
+// used by kernel threads.
 typedef struct clmod {
-    // SFH
     double i_fmu_sfh;
     double i_mu;
     double i_tauv;
     double i_tvism;
     double i_lssfr;
-    // IR
     double i_fmu_ir;
     double i_fmu_ism;
     double i_tbg1;
@@ -64,7 +67,6 @@ typedef struct clmod {
     double i_xi1;
     double i_xi2;
     double i_xi3;
-
     double lssfr;
     double logldust;
     double mdust;
@@ -72,6 +74,8 @@ typedef struct clmod {
     double lmdust;
 } clmod_t;
 
+// Struct containing var constants read by kernel
+// threads.
 typedef struct clvar {
     int nbin_fmu;
     int nbin_mu;
@@ -99,23 +103,23 @@ typedef struct clvar {
 
 } clvar_t;
 
-__kernel void fit( const int clm,
-                       __global clid_t* ids,
-                       __global clmodel_t* models,
-                       __global clmod_t* mods,
-                       __constant clvar_t* var,
-                       __global double* flux_obs,
-                       __global double* flux_sfh,
-                       __global double* flux_ir,
-                       __global double* w
-                      )
+__kernel void fit( __constant int clm,
+                   __global clid_t* ids,
+                   __global clmodel_t* models,
+                   __global clmod_t* mods,
+                   __constant clvar_t* var,
+                   __global double* flux_obs,
+                   __global double* flux_sfh,
+                   __global double* flux_ir,
+                   __global double* w
+                 )
 {                                                              
-
-
     int id = get_global_id(0);                                 
-
+    
+    // Only continue if our id is less than batch max.
     if (id < clm){                                                
 
+        // Set some variables in private memory space.
         int k = 0;
         double num = 0;
         double den = 0;
@@ -125,7 +129,6 @@ __kernel void fit( const int clm,
         int nfilt_sfh = var->nfilt_sfh;
         int nfilt_mix = var->nfilt_mix;
         int i_gal = var->i_gal;
-
         __global clmodel_t *m = &models[id];
         __global clmod_t *msfh = &mods[i_sfh];
         __global clmod_t *mir = &mods[i_ir];
@@ -179,7 +182,9 @@ __kernel void fit( const int clm,
         double prob = exp(-0.5*m->chi2);
         m->prob = prob;
 
-        // Marginal probability density functions
+        // Calculate marginal probability density functions. Instead
+        // of writing prob values, we instead write the index of bin
+        // for non-parallelized processing.
 
         int ibin;
         double aux;

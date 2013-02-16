@@ -47,27 +47,31 @@
 // {F77} c     ===========================================================================
 // {F77} 
 
+// OpenCL implementation specific.
 #if defined(USE_OPENCL)
 #define __CL_ENABLE_EXCEPTIONS
+// Number of models to batch for kernel thread work.
 #define CLMAX 1000000
+// C++ binding header.
 #include <CL/cl.hpp>
+// We only use the vector class for OpenCL implementation
+// at present.
 #include <vector>
 
+// Identifier struct. Used to identify kernel thread to
+// a sfh and ir model combination.
 typedef struct clid {
     int i_sfh; 
     int i_ir; 
 } clid_t;
 
+// Model struct in which kernel thread writes.
 typedef struct clmodel {
-    // Scaling factor.
     double a;
-    // chi^2 values.
     double chi2;
     double chi2_opt;
     double chi2_ir;
-    // Probability
     double prob;
-    // MPDF ibins
     int ibin_psfh;
     int ibin_pir; 
     int ibin_pmu; 
@@ -86,14 +90,14 @@ typedef struct clmodel {
     int ibin_pmd; 
 } clmodel_t;
 
+// Struct to define arrays of indexes and models
+// used by kernel threads.
 typedef struct clmod {
-    // SFH
     double i_fmu_sfh;
     double i_mu;
     double i_tauv;
     double i_tvism;
     double i_lssfr;
-    // IR
     double i_fmu_ir;
     double i_fmu_ism;
     double i_tbg1;
@@ -101,15 +105,15 @@ typedef struct clmod {
     double i_xi1;
     double i_xi2;
     double i_xi3;
-
     double lssfr;
     double logldust;
     double mdust;
     double ldust;
     double lmdust;
-
 } clmod_t;
 
+// Struct containing var constants read by kernel
+// threads.
 typedef struct clvar {
     int nbin_fmu;
     int nbin_mu;
@@ -137,8 +141,9 @@ typedef struct clvar {
 
 } clvar_t;
 
-static clmodel_t h_clmodels[CLMAX];
+// Array of identifier and model structs.
 static clid_t h_clids[CLMAX];
+static clmodel_t h_clmodels[CLMAX];
 
 #endif
 
@@ -1221,35 +1226,6 @@ int main(int argc, char *argv[]){
         i_xi3[i_ir] = (int)(aux);
     }
 
-#if defined(USE_OPENCL)
-    // Build struct of index and model arrays
-    std::vector<clmod_t> h_clmods;
-    for(i=0; i<NMOD; i++){
-
-       clmod_t clmod;
-       clmod.i_fmu_sfh = i_fmu_sfh[i];
-       clmod.i_mu = i_mu[i];
-       clmod.i_tauv = i_tauv[i];
-       clmod.i_tvism = i_tvism[i];
-       clmod.i_lssfr = i_lssfr[i];
-
-       clmod.i_fmu_ir = i_fmu_ir[i];
-       clmod.i_fmu_ism = i_fmu_ism[i];
-       clmod.i_tbg1 = i_tbg1[i];
-       clmod.i_tbg2 = i_tbg2[i];
-       clmod.i_xi1 = i_xi1[i];
-       clmod.i_xi2 = i_xi2[i];
-       clmod.i_xi3 = i_xi3[i];
-
-       clmod.lssfr = lssfr[i];
-       clmod.logldust = logldust[i];
-       clmod.mdust = mdust[i];
-       clmod.ldust = ldust[i];
-       clmod.lmdust = lmdust[i];
-        
-       h_clmods.push_back(clmod);
-    }
-#endif
 
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     HERE STARTS THE ACTUAL FIT
@@ -1277,9 +1253,35 @@ int main(int argc, char *argv[]){
     cout << "Starting fit......." << endl;
     df=0.15;
 
+// OpenCL implementation of fitting process.
 #if defined(USE_OPENCL)
 
-    // Push shared values into struct for parsing to kernel
+    // Build struct array of models and indexes of length NMOD that will be used
+    // in the kernel threads. Cleaner than passing individual arrays.
+    std::vector<clmod_t> h_clmods;
+    for(i=0; i<NMOD; i++){
+       clmod_t clmod;
+       clmod.i_fmu_sfh = i_fmu_sfh[i];
+       clmod.i_mu = i_mu[i];
+       clmod.i_tauv = i_tauv[i];
+       clmod.i_tvism = i_tvism[i];
+       clmod.i_lssfr = i_lssfr[i];
+       clmod.i_fmu_ir = i_fmu_ir[i];
+       clmod.i_fmu_ism = i_fmu_ism[i];
+       clmod.i_tbg1 = i_tbg1[i];
+       clmod.i_tbg2 = i_tbg2[i];
+       clmod.i_xi1 = i_xi1[i];
+       clmod.i_xi2 = i_xi2[i];
+       clmod.i_xi3 = i_xi3[i];
+       clmod.lssfr = lssfr[i];
+       clmod.logldust = logldust[i];
+       clmod.mdust = mdust[i];
+       clmod.ldust = ldust[i];
+       clmod.lmdust = lmdust[i];
+       h_clmods.push_back(clmod);
+    }
+
+    // Push constants into struct that kernel threads will use.
     clvar_t h_clvar;
     h_clvar.nbin_fmu = nbin_fmu;
     h_clvar.nbin_mu = nbin_mu;
@@ -1305,7 +1307,7 @@ int main(int argc, char *argv[]){
     h_clvar.nfilt_mix = nfilt_mix;
     h_clvar.i_gal = i_gal;
 
-
+    // Catch all OpenCL errors and exit if one is thrown.
     try{
         // Read platforms and select first OpenCL device
         std::vector<cl::Platform> platforms;
@@ -1323,7 +1325,7 @@ int main(int argc, char *argv[]){
         }   
         cl::Device device = devices[0];
 
-        // Create a command queue for selected device.
+        // Create a command queue for first device.
         cl::CommandQueue queue(cl::CommandQueue(context,device));
 
         // Read in kernel program from file.
@@ -1336,9 +1338,8 @@ int main(int argc, char *argv[]){
 
         // Attempt to build kernel program. Echo error if unsuccesful.
         fit_program.build(devices);
-        // cerr << "OpenCL error: Problem building kernel program." << endl;
-        // cerr << fit_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << endl;
 
+        // Buffer necessary 'objects' onto device memory.
         cl::Buffer d_clids=cl::Buffer(context, CL_MEM_READ_ONLY, CLMAX*sizeof(clid_t));
         cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, CLMAX*sizeof(clmodel_t), h_clmodels);
         cl::Buffer d_clmods(context, CL_MEM_READ_ONLY, h_clmods.size()*sizeof(clmod_t));
@@ -1348,6 +1349,7 @@ int main(int argc, char *argv[]){
         cl::Buffer d_flux_ir(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
         cl::Buffer d_w(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
 
+        // Write static 'objects' into reserved device memory.
         queue.enqueueWriteBuffer(d_clmods, CL_TRUE, 0, h_clmods.size()*sizeof(clmod_t), &h_clmods[0]);
         queue.enqueueWriteBuffer(d_clvar, CL_TRUE, 0, sizeof(clvar_t), &h_clvar);
         queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
@@ -1359,7 +1361,7 @@ int main(int argc, char *argv[]){
         i_ir=0;
         while(i_sfh<n_sfh){
             int i_m = 0;
-            // Batch up enough models up to CLMAX.
+            // Batch up models to process (up to CLMAX).
             while(i_sfh<n_sfh && i_m<CLMAX){
                 while(i_ir<n_ir && i_m<CLMAX){
                    if(fabs(fmu_sfh[i_sfh]-fmu_ir[i_ir]) <= df){
@@ -1377,8 +1379,7 @@ int main(int argc, char *argv[]){
                 }
             }
             n_models+=i_m;
-           // Attempt to run kernel batch. 
-            // Write identifier struct array to device.
+            // Write identifier struct array to device. This will change on a per batch basis.
             queue.enqueueWriteBuffer(d_clids, CL_TRUE, 0, i_m*sizeof(clid_t), h_clids);
             
             // Prepare kernel program.
@@ -1410,10 +1411,10 @@ int main(int argc, char *argv[]){
                 &event);
             event.wait();
 
-            // Read values back from buffer.
+            // Read processed model data back from device memory.
             queue.enqueueReadBuffer(d_clmodels, CL_TRUE, 0, i_m*sizeof(clmodel_t), h_clmodels);
 
-            // Sequential loop for shared vals.
+            // Sequential loop for cumulative shared values.
             // 
             // TODO - Parallelize!
             for(i=0; i<i_m; i++){
@@ -1455,6 +1456,7 @@ int main(int argc, char *argv[]){
         return EXIT_FAILURE;
     }
 
+// The non-OpenCL fitting process.
 #else
     for(i_sfh=0; i_sfh < n_sfh; i_sfh++){
 // {F77} c     Check progress of the fit...
