@@ -1746,7 +1746,6 @@ int main(int argc, char *argv[]){
 // {F77}          ENDDO                  !loop in i_sfh
                     }
             }
-            cout << ptot << endl;
     }
 #endif
 // {F77} 
