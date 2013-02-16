@@ -1336,8 +1336,12 @@ int main(int argc, char *argv[]){
         cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(), sourceCode.length()+1));
         cl::Program fit_program = cl::Program(context, source);
 
-        // Attempt to build kernel program. Echo error if unsuccesful.
-        fit_program.build(devices);
+        // Attempt to build kernel program. Echo build error if unsuccesful.
+        try{
+            fit_program.build(devices);
+        } catch(cl::Error error){
+            cerr << fit_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << endl;
+        }
 
         // Buffer necessary 'objects' onto device memory.
         cl::Buffer d_clids=cl::Buffer(context, CL_MEM_READ_ONLY, CLMAX*sizeof(clid_t));

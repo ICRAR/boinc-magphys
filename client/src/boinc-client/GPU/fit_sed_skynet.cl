@@ -103,20 +103,22 @@ typedef struct clvar {
 
 } clvar_t;
 
-__kernel void fit( __constant int clm,
-                   __global clid_t* ids,
+__kernel void fit( const int clm,
+                   __global const clid_t* ids,
                    __global clmodel_t* models,
-                   __global clmod_t* mods,
+                   __global const clmod_t* mods,
                    __constant clvar_t* var,
-                   __global double* flux_obs,
-                   __global double* flux_sfh,
-                   __global double* flux_ir,
-                   __global double* w
+                   __global const double* flux_obs,
+                   __global const double* flux_sfh,
+                   __global const double* flux_ir,
+                   __global const double* w
                  )
-{                                                              
+{   
+    // Get kernel thread id for matching with array indexes.
     int id = get_global_id(0);                                 
     
-    // Only continue if our id is less than batch max.
+    // Only continue if our id is less than batch max. The id can sometimes
+    // be greater if the global work size is greater than values we're working with.
     if (id < clm){                                                
 
         // Set some variables in private memory space.
