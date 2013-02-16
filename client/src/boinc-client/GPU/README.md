@@ -4,7 +4,9 @@
 
 - Makefiles have been included for compiling on different platforms. E.g. Makefile.mac for Mac OSX.
 
-- OpenCL code does not get compiled in unless -DUSE_OPENCL is specified as a compiler option. This happens automatically in the Makefiles.
+- OpenCL code does not get called in unless -DUSE_OPENCL is specified as a compiler option. This happens automatically in the Makefiles.
+
+- The actual OpenCL kernel code can be found at fit_sed_skynet.cl and is compiled JIT.
 
 - OpenCL conforms with version 1.1 standard and uses C++ bindings through the opencl.hpp header file.
 
