@@ -1735,7 +1735,7 @@ int main(int argc, char *argv[]){
 // {F77}                   ibin=1+dint(aux)
 // {F77}                   ibin = max(1,min(ibin,nbin_md))
 // {F77}                   pmd(ibin)=pmd(ibin)+prob
-                       lmdust[i_ir]=log10(mdust[i_ir]*ldust[i_sfh]*pow(10.0,a));
+                       lmdust[i_ir]=log10(mdust[i_ir]*ldust[i_sfh]*pow(10,a));
                        aux=((lmdust[i_ir]-md_min)/(md_max-md_min))*nbin_md;
                        ibin=(int)(aux);
                        ibin=max(0,min(ibin,nbin_md-1));
@@ -3592,7 +3592,7 @@ double round_nup(double n, int p){
    // IEEE dictates n will get rounded to nearest even if tie and FP is EXACTLY representable.
    // We must override this behavior.
    if(strcmp(buf1,buf2) == 0){
-       int m = pow(10,p);
+       int m = pow((float)10,p);
        return round(n*m)/m;
    }
    return n;
