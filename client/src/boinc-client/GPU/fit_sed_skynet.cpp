@@ -2072,13 +2072,31 @@ int main(int argc, char *argv[]){
 // {F77}      +        tvism(sfh_sav),mdust(ir_sav)*a_sav*ldust(sfh_sav),
 // {F77}      +        ssfr(sfh_sav)*a_sav
 // {F77} 
-   fprintf(fitfp,"%10.3f%10.3f%10.3f%10.3f%12.3E%12.3E%12.3E%10.1f%10.1f%10.3f%10.3f%10.3f%10.3f%10.3f%12.3E%12.3E",
-           // TODO - Rethink manual round to 3 decimal places to overcome round to nearest even IEEE standard.
-           fmu_sfh[sfh_sav],fmu_ir[ir_sav],round_nup(mu[sfh_sav],3),
-           tauv[sfh_sav],ssfr[sfh_sav],a_sav,ldust[sfh_sav]*a_sav,
-           tbg1[ir_sav],tbg2[ir_sav],fmu_ism[ir_sav],xi1[ir_sav],
-           xi2[ir_sav],xi3[ir_sav],tvism[sfh_sav],
-           mdust[ir_sav]*a_sav*ldust[sfh_sav],ssfr[sfh_sav]*a_sav);
+   // TODO - Reimplement this solution to get around IEEE round-to-nearest-even problem.
+   fprintf(fitfp,"%10.3f%10.3f%10.3f%10.3f",
+            round_nup(fmu_sfh[sfh_sav],3),
+            round_nup(fmu_ir[ir_sav],3),
+            round_nup(mu[sfh_sav],3),
+            round_nup(tauv[sfh_sav],3)
+          );
+   fprintf(fitfp,"%12.3E%12.3E%12.3E",
+            ssfr[sfh_sav],
+            a_sav,
+            ldust[sfh_sav]*a_sav
+          );
+   fprintf(fitfp,"%10.1f%10.1f%10.3f%10.3f%10.3f%10.3f%10.3f",
+            round_nup(tbg1[ir_sav],1),
+            round_nup(tbg2[ir_sav],1),
+            round_nup(fmu_ism[ir_sav],3),
+            round_nup(xi1[ir_sav],3),
+            round_nup(xi2[ir_sav],3),
+            round_nup(xi3[ir_sav],3),
+            round_nup(tvism[sfh_sav],3)
+          );
+   fprintf(fitfp,"%12.3E%12.3E",
+           mdust[ir_sav]*a_sav*ldust[sfh_sav],
+           ssfr[sfh_sav]*a_sav
+          );
    fprintf(fitfp,"\n");
 // {F77}          write(31,*) '#  '//filter_header(1:largo(filter_header))
     fprintf(fitfp," #   ");
