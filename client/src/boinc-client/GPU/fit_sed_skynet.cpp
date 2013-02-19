@@ -1361,6 +1361,25 @@ int main(int argc, char *argv[]){
         queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
         queue.enqueueWriteBuffer(d_w, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), w);
 
+        // Prepare kernel program.
+        cl::Kernel kernel(fit_program, "fit");
+
+        // Parse kernel program arguments that will not change.
+        kernel.setArg(1, d_clids);
+        kernel.setArg(2, d_clmodels);
+        kernel.setArg(3, d_clmods);
+        kernel.setArg(4, d_clvar);
+        kernel.setArg(5, d_flux_obs);
+        kernel.setArg(6, d_flux_sfh);
+        kernel.setArg(7, d_flux_ir);
+        kernel.setArg(8, d_w);
+
+        // Set local workload size.
+        cl::NDRange localSize(64);
+
+        // Event that will be used for getting response.
+        cl::Event event;
+
         i_sfh=0;
         i_ir=0;
         while(i_sfh<n_sfh){
@@ -1381,29 +1400,17 @@ int main(int argc, char *argv[]){
                 }
             }
             n_models+=i_m;
+
             // Write identifier struct array to device. This will change on a per batch basis.
             queue.enqueueWriteBuffer(d_clids, CL_TRUE, 0, i_m*sizeof(clid_t), h_clids);
             
-            // Prepare kernel program.
-            cl::Kernel kernel(fit_program, "fit");
-
-            // Parse arguments to kernel program.
+            // Parse kernel program arguments that will change.
             kernel.setArg(0, i_m); 
-            kernel.setArg(1, d_clids);
-            kernel.setArg(2, d_clmodels);
-            kernel.setArg(3, d_clmods);
-            kernel.setArg(4, d_clvar);
-            kernel.setArg(5, d_flux_obs);
-            kernel.setArg(6, d_flux_sfh);
-            kernel.setArg(7, d_flux_ir);
-            kernel.setArg(8, d_w);
 
-            // Set workload sizes.
-            cl::NDRange localSize(64);
+            // Set global workload size. This depends on number models.
             cl::NDRange globalSize((int)(ceil(i_m/(double)64)*64));
 
             // Start the work and wait for response.
-            cl::Event event;
             queue.enqueueNDRangeKernel(
                 kernel,
                 cl::NullRange,
