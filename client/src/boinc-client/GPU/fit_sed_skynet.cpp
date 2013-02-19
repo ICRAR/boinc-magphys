@@ -1343,9 +1343,9 @@ int main(int argc, char *argv[]){
             cerr << fit_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << endl;
         }
 
-        // Buffer necessary 'objects' onto device memory.
+        // Buffer necessary object space onto device memory.
         cl::Buffer d_clids=cl::Buffer(context, CL_MEM_READ_ONLY, CLMAX*sizeof(clid_t));
-        cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, CLMAX*sizeof(clmodel_t), h_clmodels);
+        cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, CLMAX*sizeof(clmodel_t));
         cl::Buffer d_clmods(context, CL_MEM_READ_ONLY, h_clmods.size()*sizeof(clmod_t));
         cl::Buffer d_clvar(context, CL_MEM_READ_ONLY, sizeof(clvar_t));
         cl::Buffer d_flux_obs(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
@@ -1353,7 +1353,7 @@ int main(int argc, char *argv[]){
         cl::Buffer d_flux_ir(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
         cl::Buffer d_w(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
 
-        // Write static 'objects' into reserved device memory.
+        // Write static objects into reserved device memory.
         queue.enqueueWriteBuffer(d_clmods, CL_TRUE, 0, h_clmods.size()*sizeof(clmod_t), &h_clmods[0]);
         queue.enqueueWriteBuffer(d_clvar, CL_TRUE, 0, sizeof(clvar_t), &h_clvar);
         queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
