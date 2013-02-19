@@ -1377,8 +1377,6 @@ int main(int argc, char *argv[]){
                 }
                 if(i_ir==n_ir){
                     i_sfh++;
-                }
-                if(i_ir==n_ir){
                     i_ir=0;
                 }
             }
