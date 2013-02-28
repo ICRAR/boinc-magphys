@@ -1,0 +1,11 @@
+all: fit_sed fit_sed_opencl
+
+fit_sed:
+	g++ -Wall -O3 -fsingle-precision-constant -static -o fit_sed fit_sed_skynet.cpp
+
+fit_sed_opencl:
+	g++ -Wall -O3 -fsingle-precision-constant -DUSE_OPENCL -I. -L/usr/lib -o fit_sed_opencl fit_sed_skynet.cpp -lOpenCL
+
+clean:
+	rm -f fit_sed
+	rm -f fit_sed_opencl

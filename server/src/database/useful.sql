@@ -19,3 +19,11 @@ update galaxy set status_id = 3
 where galaxy_id >= 443
       and galaxy_id <= 499
       and status_id = 2;
+
+SELECT CONCAT('OPTIMIZE TABLE ',table_schema,'.',table_name,';') OptimizeTableSQL
+FROM information_schema.tables
+WHERE table_schema in ('magphys','pogs')
+      AND engine = 'InnoDB'
+ORDER BY (data_length+index_length);
+
+show variables like 'innodb%';

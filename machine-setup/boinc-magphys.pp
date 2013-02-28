@@ -107,6 +107,20 @@ package { 'libpng':
     ensure => installed,
 }
 
+# NAGIOS
+package { 'nrpe':
+    ensure => installed,
+}
+package { 'nagios-common':
+    ensure => installed,
+}
+package { 'nagios-plugins':
+    ensure => installed,
+}
+package { 'nagios-plugins-all':
+    ensure => installed,
+}
+
 # Create the apache user for the web site
 user { 'apache':
   ensure  => present,

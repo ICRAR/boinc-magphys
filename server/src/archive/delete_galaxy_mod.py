@@ -67,7 +67,10 @@ def delete_galaxy(connection, galaxy_ids, delete_all):
                         connection.execute(PIXEL_HISTOGRAM.delete().where(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id1[0]))
 
                     connection.execute(PIXEL_RESULT.delete().where(PIXEL_RESULT.c.area_id == area_id1[0]))
-                    connection.execute(AREA_USER.delete().where(AREA_USER.c.area_id == area_id1[0]))
+
+                    # Only remove the AREA_USER if we are deleting everything
+                    if delete_all:
+                        connection.execute(AREA_USER.delete().where(AREA_USER.c.area_id == area_id1[0]))
 
                     transaction.commit()
                     transaction = connection.begin()

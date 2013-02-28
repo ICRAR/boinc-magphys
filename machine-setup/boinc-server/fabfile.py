@@ -93,6 +93,10 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('chmod 400 /etc/postfix/sasl_passwd')
     sudo('postmap /etc/postfix/sasl_passwd')
 
+    # Setup NAGIOS
+    sudo('chkconfig nrpe on')
+    sudo('service nrpe start')
+
     # Setup the HDF5
     with cd('/usr/local/src'):
         sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
@@ -676,6 +680,9 @@ BOINC
 
 NGAS
 1) If you need to move files from the server install NGAS
+
+NAGIOS
+1) Edit the config file and put the server address in it
 
 
 ##########################################################################

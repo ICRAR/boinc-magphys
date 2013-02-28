@@ -47,6 +47,106 @@
 // {F77} c     ===========================================================================
 // {F77} 
 
+// OpenCL implementation specific.
+#if defined(USE_OPENCL)
+#define __CL_ENABLE_EXCEPTIONS
+// Number of models to batch for kernel thread work.
+#define CLMAX 1000000
+// C++ binding header.
+#include <CL/cl.hpp>
+// We only use the vector class for OpenCL implementation
+// at present.
+#include <vector>
+
+// Identifier struct. Used to identify kernel thread to
+// a sfh and ir model combination.
+typedef struct clid {
+    int i_sfh; 
+    int i_ir; 
+} clid_t;
+
+// Model struct in which kernel thread writes.
+typedef struct clmodel {
+    double a;
+    double chi2;
+    double chi2_opt;
+    double chi2_ir;
+    double prob;
+    int ibin_psfh;
+    int ibin_pir; 
+    int ibin_pmu; 
+    int ibin_ptv; 
+    int ibin_ptvism;
+    int ibin_pssfr;
+    int ibin_psfr;
+    int ibin_pa;
+    int ibin_pldust;
+    int ibin_ptbg1;
+    int ibin_ptbg2;
+    int ibin_pism;
+    int ibin_pxi1;
+    int ibin_pxi2;
+    int ibin_pxi3;
+    int ibin_pmd; 
+} clmodel_t;
+
+// Struct to define arrays of indexes and models
+// used by kernel threads.
+typedef struct clmod {
+    double i_fmu_sfh;
+    double i_mu;
+    double i_tauv;
+    double i_tvism;
+    double i_lssfr;
+    double i_fmu_ir;
+    double i_fmu_ism;
+    double i_tbg1;
+    double i_tbg2;
+    double i_xi1;
+    double i_xi2;
+    double i_xi3;
+    double lssfr;
+    double logldust;
+    double mdust;
+    double ldust;
+    double lmdust;
+} clmod_t;
+
+// Struct containing var constants read by kernel
+// threads.
+typedef struct clvar {
+    int nbin_fmu;
+    int nbin_mu;
+    int nbin_tv;
+    int nbin_sfr;
+    int nbin_a;
+    int nbin_ld;
+    int nbin_fmu_ism;
+    int nbin_tbg1;
+    int nbin_tbg2;
+    int nbin_xi;
+    int nbin_md;
+    double a_max;
+    double a_min;
+    double sfr_max;
+    double sfr_min;
+    double ld_max;
+    double ld_min;
+    double md_max;
+    double md_min;
+    int nfilt;
+    int nfilt_sfh;
+    int nfilt_mix;
+    int i_gal;
+
+} clvar_t;
+
+// Array of identifier and model structs.
+static clid_t h_clids[CLMAX];
+static clmodel_t h_clmodels[CLMAX];
+
+#endif
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -64,6 +164,7 @@
 #define NBINMAX1 3000
 #define NBINMAX2 300
 #define MIN_HPBV 0.00001
+
 
 //Function prototypes for old FORTRAN functions.
 double get_cosmol_c(double h,double omega,double omega_lambda,double* q);
@@ -985,7 +1086,9 @@ int main(int argc, char *argv[]){
         pxi2[i]=0;
         pxi3[i]=0;
         pmd[i]=0;
+
     }      
+
 // {F77} 
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Compute histogram grids of the parameter likelihood distributions before
@@ -1123,6 +1226,7 @@ int main(int argc, char *argv[]){
         i_xi3[i_ir] = (int)(aux);
     }
 
+
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     HERE STARTS THE ACTUAL FIT
 // {F77} c
@@ -1147,6 +1251,229 @@ int main(int argc, char *argv[]){
 // {F77}          write(*,*) 'Starting fit.......'
 // {F77}          DO i_sfh=1,n_sfh
     cout << "Starting fit......." << endl;
+    df=0.15;
+
+// OpenCL implementation of fitting process.
+#if defined(USE_OPENCL)
+
+    // Build struct array of models and indexes of length NMOD that will be used
+    // in the kernel threads. Cleaner than passing individual arrays.
+    std::vector<clmod_t> h_clmods;
+    for(i=0; i<NMOD; i++){
+       clmod_t clmod;
+       clmod.i_fmu_sfh = i_fmu_sfh[i];
+       clmod.i_mu = i_mu[i];
+       clmod.i_tauv = i_tauv[i];
+       clmod.i_tvism = i_tvism[i];
+       clmod.i_lssfr = i_lssfr[i];
+       clmod.i_fmu_ir = i_fmu_ir[i];
+       clmod.i_fmu_ism = i_fmu_ism[i];
+       clmod.i_tbg1 = i_tbg1[i];
+       clmod.i_tbg2 = i_tbg2[i];
+       clmod.i_xi1 = i_xi1[i];
+       clmod.i_xi2 = i_xi2[i];
+       clmod.i_xi3 = i_xi3[i];
+       clmod.lssfr = lssfr[i];
+       clmod.logldust = logldust[i];
+       clmod.mdust = mdust[i];
+       clmod.ldust = ldust[i];
+       clmod.lmdust = lmdust[i];
+       h_clmods.push_back(clmod);
+    }
+
+    // Push constants into struct that kernel threads will use.
+    clvar_t h_clvar;
+    h_clvar.nbin_fmu = nbin_fmu;
+    h_clvar.nbin_mu = nbin_mu;
+    h_clvar.nbin_tv = nbin_tv;
+    h_clvar.nbin_sfr = nbin_sfr;
+    h_clvar.nbin_a = nbin_a;
+    h_clvar.nbin_ld = nbin_ld;
+    h_clvar.nbin_fmu_ism = nbin_fmu_ism;
+    h_clvar.nbin_tbg1 = nbin_tbg1;
+    h_clvar.nbin_tbg2 = nbin_tbg2;
+    h_clvar.nbin_xi = nbin_xi;
+    h_clvar.nbin_md = nbin_md;
+    h_clvar.a_max = a_max;
+    h_clvar.a_min = a_min;
+    h_clvar.sfr_max = sfr_max;
+    h_clvar.sfr_min = sfr_min;
+    h_clvar.ld_max = ld_max;
+    h_clvar.ld_min = ld_min;
+    h_clvar.md_max = md_max;
+    h_clvar.md_min = md_min;
+    h_clvar.nfilt = nfilt;
+    h_clvar.nfilt_sfh = nfilt_sfh;
+    h_clvar.nfilt_mix = nfilt_mix;
+    h_clvar.i_gal = i_gal;
+
+    // Catch all OpenCL errors and exit if one is thrown.
+    try{
+        // Read platforms and select first OpenCL device
+        std::vector<cl::Platform> platforms;
+        cl::Platform::get(&platforms);
+        if(platforms.size() == 0){ 
+            return EXIT_FAILURE;
+        }   
+        cl::Platform platform = platforms[0];
+        cl_context_properties cps[3] = {CL_CONTEXT_PLATFORM,(cl_context_properties)(platform)(),0};
+        cl::Context context(CL_DEVICE_TYPE_GPU,cps);
+        std::vector<cl::Device> devices;
+        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+        if(devices.size() == 0){ 
+            return EXIT_FAILURE;
+        }   
+        cl::Device device = devices[0];
+
+        // Create a command queue for first device.
+        cl::CommandQueue queue(cl::CommandQueue(context,device));
+
+        // Read in kernel program from file.
+        std::ifstream sourceFile("fit_sed_skynet.cl");
+        std::string sourceCode(
+            std::istreambuf_iterator<char>(sourceFile),
+            (std::istreambuf_iterator<char>()));
+        cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(), sourceCode.length()+1));
+        cl::Program fit_program = cl::Program(context, source);
+
+        // Attempt to build kernel program. Echo build error if unsuccesful.
+        try{
+            fit_program.build(devices);
+        } catch(cl::Error error){
+            cerr << fit_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << endl;
+        }
+
+        // Buffer necessary object space onto device memory.
+        cl::Buffer d_clids=cl::Buffer(context, CL_MEM_READ_ONLY, CLMAX*sizeof(clid_t));
+        cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, CLMAX*sizeof(clmodel_t));
+        cl::Buffer d_clmods(context, CL_MEM_READ_ONLY, h_clmods.size()*sizeof(clmod_t));
+        cl::Buffer d_clvar(context, CL_MEM_READ_ONLY, sizeof(clvar_t));
+        cl::Buffer d_flux_obs(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
+        cl::Buffer d_flux_sfh(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
+        cl::Buffer d_flux_ir(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
+        cl::Buffer d_w(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
+
+        // Write static objects into reserved device memory.
+        queue.enqueueWriteBuffer(d_clmods, CL_TRUE, 0, h_clmods.size()*sizeof(clmod_t), &h_clmods[0]);
+        queue.enqueueWriteBuffer(d_clvar, CL_TRUE, 0, sizeof(clvar_t), &h_clvar);
+        queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
+        queue.enqueueWriteBuffer(d_flux_sfh, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_sfh);
+        queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
+        queue.enqueueWriteBuffer(d_w, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), w);
+
+        // Prepare kernel program.
+        cl::Kernel kernel(fit_program, "fit");
+
+        // Parse kernel program arguments that will not change.
+        kernel.setArg(1, d_clids);
+        kernel.setArg(2, d_clmodels);
+        kernel.setArg(3, d_clmods);
+        kernel.setArg(4, d_clvar);
+        kernel.setArg(5, d_flux_obs);
+        kernel.setArg(6, d_flux_sfh);
+        kernel.setArg(7, d_flux_ir);
+        kernel.setArg(8, d_w);
+
+        // Set local workload size.
+        cl::NDRange localSize(64);
+
+        // Event that will be used for getting response.
+        cl::Event event;
+
+        i_sfh=0;
+        i_ir=0;
+        while(i_sfh<n_sfh){
+            int i_m = 0;
+            // Batch up models to process (up to CLMAX).
+            while(i_sfh<n_sfh && i_m<CLMAX){
+                while(i_ir<n_ir && i_m<CLMAX){
+                   if(fabs(fmu_sfh[i_sfh]-fmu_ir[i_ir]) <= df){
+                        h_clids[i_m].i_sfh=i_sfh;
+                        h_clids[i_m].i_ir=i_ir;
+                        i_m++;
+                   }
+                   i_ir++;
+                }
+                if(i_ir==n_ir){
+                    i_sfh++;
+                    i_ir=0;
+                }
+            }
+            n_models+=i_m;
+
+            // Write identifier struct array to device. This will change on a per batch basis.
+            queue.enqueueWriteBuffer(d_clids, CL_TRUE, 0, i_m*sizeof(clid_t), h_clids);
+            
+            // Parse kernel program arguments that will change.
+            kernel.setArg(0, i_m); 
+
+            // Set global workload size. This depends on number models.
+            cl::NDRange globalSize((int)(ceil(i_m/(double)64)*64));
+
+            // Start the work and wait for response.
+            queue.enqueueNDRangeKernel(
+                kernel,
+                cl::NullRange,
+                globalSize,
+                localSize,
+                NULL,
+                &event);
+            event.wait();
+
+            // Read processed model data back from device memory.
+            queue.enqueueReadBuffer(d_clmodels, CL_TRUE, 0, i_m*sizeof(clmodel_t), h_clmodels);
+
+            // Sequential loop for cumulative shared values.
+            // 
+            // TODO - Parallelize!
+            for(i=0; i<i_m; i++){
+                clid_t id = h_clids[i];
+                clmodel_t m = h_clmodels[i];
+
+                ptot += m.prob;
+                chi2_new=m.chi2;
+                chi2_new_opt=m.chi2_opt;
+                chi2_new_ir=m.chi2_ir;
+                if(chi2_new < chi2_sav){
+                    chi2_sav=chi2_new;
+                    sfh_sav=id.i_sfh;
+                    ir_sav=id.i_ir;
+                    a_sav=m.a;
+                    chi2_sav_opt=chi2_new_opt;
+                    chi2_sav_ir=chi2_new_ir;
+                }    
+                psfh[m.ibin_psfh]=psfh[m.ibin_psfh]+m.prob;
+                pir[m.ibin_pir]=pir[m.ibin_pir]+m.prob;
+                pmu[m.ibin_pmu]=pmu[m.ibin_pmu]+m.prob;
+                ptv[m.ibin_ptv]=ptv[m.ibin_ptv]+m.prob;
+                ptvism[m.ibin_ptvism]=ptvism[m.ibin_ptvism]+m.prob;
+                pssfr[m.ibin_pssfr]=pssfr[m.ibin_pssfr]+m.prob;
+                pa[m.ibin_pa]=pa[m.ibin_pa]+m.prob;
+                psfr[m.ibin_psfr]=psfr[m.ibin_psfr]+m.prob;
+                pldust[m.ibin_pldust]=pldust[m.ibin_pldust]+m.prob;
+                pism[m.ibin_pism]=pism[m.ibin_pism]+m.prob;
+                ptbg1[m.ibin_ptbg1]=ptbg1[m.ibin_ptbg1]+m.prob;
+                ptbg2[m.ibin_ptbg2]=ptbg2[m.ibin_ptbg2]+m.prob;
+                pxi1[m.ibin_pxi1]=pxi1[m.ibin_pxi1]+m.prob;
+                pxi2[m.ibin_pxi2]=pxi2[m.ibin_pxi2]+m.prob;
+                pxi3[m.ibin_pxi3]=pxi3[m.ibin_pxi3]+m.prob;
+                pmd[m.ibin_pmd]=pmd[m.ibin_pmd]+m.prob;
+            }
+            // To show progress in stdout.
+            cout << "\r";
+            cout << "Progress.... " << (int)(((float)i_sfh/(float)n_sfh)*100) << "%";
+            if(i_sfh == n_sfh){
+                cout << endl;
+            }
+            cout.flush();
+        }
+    } catch(cl::Error error){
+        cerr << "OpenCL error: " <<  error.what() << "(" << error.err() << ")" << endl;
+        return EXIT_FAILURE;
+    }
+
+// The non-OpenCL fitting process.
+#else
     for(i_sfh=0; i_sfh < n_sfh; i_sfh++){
 // {F77} c     Check progress of the fit...
 // {F77}             if (i_sfh.eq.(n_sfh/4)) then
@@ -1170,7 +1497,8 @@ int main(int argc, char *argv[]){
     
 // {F77} 
 // {F77}             df=0.15             !fmu_opt=fmu_ir +/- dfmu
-        df=0.15;
+       // Moved out of loop
+       //  df=0.15;
 // {F77} 
 // {F77} c     Search for the IR models with f_mu within the range set by df
 // {F77}             DO i_ir=1,n_ir
@@ -1419,7 +1747,7 @@ int main(int argc, char *argv[]){
 // {F77}                   ibin=1+dint(aux)
 // {F77}                   ibin = max(1,min(ibin,nbin_md))
 // {F77}                   pmd(ibin)=pmd(ibin)+prob
-                       lmdust[i_ir]=log10(mdust[i_ir]*ldust[i_sfh]*pow(10.0,a));
+                       lmdust[i_ir]=log10(mdust[i_ir]*ldust[i_sfh]*pow(10,a));
                        aux=((lmdust[i_ir]-md_min)/(md_max-md_min))*nbin_md;
                        ibin=(int)(aux);
                        ibin=max(0,min(ibin,nbin_md-1));
@@ -1431,6 +1759,7 @@ int main(int argc, char *argv[]){
                     }
             }
     }
+#endif
 // {F77} 
 // {F77} c     Chi2-weighted models: normalize to total probability ptot
 // {F77}          write(*,*) 'Number of random SFH models:       ', n_sfh
@@ -1748,13 +2077,31 @@ int main(int argc, char *argv[]){
 // {F77}      +        tvism(sfh_sav),mdust(ir_sav)*a_sav*ldust(sfh_sav),
 // {F77}      +        ssfr(sfh_sav)*a_sav
 // {F77} 
-   fprintf(fitfp,"%10.3f%10.3f%10.3f%10.3f%12.3E%12.3E%12.3E%10.1f%10.1f%10.3f%10.3f%10.3f%10.3f%10.3f%12.3E%12.3E",
-           // TODO - Rethink manual round to 3 decimal places to overcome round to nearest even IEEE standard.
-           fmu_sfh[sfh_sav],fmu_ir[ir_sav],round_nup(mu[sfh_sav],3),
-           tauv[sfh_sav],ssfr[sfh_sav],a_sav,ldust[sfh_sav]*a_sav,
-           tbg1[ir_sav],tbg2[ir_sav],fmu_ism[ir_sav],xi1[ir_sav],
-           xi2[ir_sav],xi3[ir_sav],tvism[sfh_sav],
-           mdust[ir_sav]*a_sav*ldust[sfh_sav],ssfr[sfh_sav]*a_sav);
+   // TODO - Reimplement this solution to get around IEEE round-to-nearest-even problem.
+   fprintf(fitfp,"%10.3f%10.3f%10.3f%10.3f",
+            round_nup(fmu_sfh[sfh_sav],3),
+            round_nup(fmu_ir[ir_sav],3),
+            round_nup(mu[sfh_sav],3),
+            round_nup(tauv[sfh_sav],3)
+          );
+   fprintf(fitfp,"%12.3E%12.3E%12.3E",
+            ssfr[sfh_sav],
+            a_sav,
+            ldust[sfh_sav]*a_sav
+          );
+   fprintf(fitfp,"%10.1f%10.1f%10.3f%10.3f%10.3f%10.3f%10.3f",
+            round_nup(tbg1[ir_sav],1),
+            round_nup(tbg2[ir_sav],1),
+            round_nup(fmu_ism[ir_sav],3),
+            round_nup(xi1[ir_sav],3),
+            round_nup(xi2[ir_sav],3),
+            round_nup(xi3[ir_sav],3),
+            round_nup(tvism[sfh_sav],3)
+          );
+   fprintf(fitfp,"%12.3E%12.3E",
+           mdust[ir_sav]*a_sav*ldust[sfh_sav],
+           ssfr[sfh_sav]*a_sav
+          );
    fprintf(fitfp,"\n");
 // {F77}          write(31,*) '#  '//filter_header(1:largo(filter_header))
     fprintf(fitfp," #   ");
@@ -3268,14 +3615,14 @@ void get_fsci(char dstr[]){
 }
 // Rounds up depending on double FP representability.
 double round_nup(double n, int p){
-   char buf1[18],buf2[18];
+   char buf1[20],buf2[20];
    // Simulate a print of full mantissa to check how to comes out.
-   snprintf(buf1,18,"%.18f",n);
-   snprintf(buf2,18,"%.*f%018d",p+2,n,0);
+   snprintf(buf1,20,"%.20f",n);
+   snprintf(buf2,20,"%.*f%020d",p+2,n,0);
    // IEEE dictates n will get rounded to nearest even if tie and FP is EXACTLY representable.
    // We must override this behavior.
    if(strcmp(buf1,buf2) == 0){
-       int m = pow(10,p);
+       int m = pow((float)10,p);
        return round(n*m)/m;
    }
    return n;
