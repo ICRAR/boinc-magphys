@@ -29,17 +29,24 @@ Put back the area user details deleted by accident
 http://cortex.ivec.org:7780/QUERY?query=files_list&format=list
 cortex.ivec.org:7780/REtrieVE?file_id=NGC3055.hdf5
 """
-from glob import glob
 import logging
-import argparse
 import os
-import h5py
-from sqlalchemy import create_engine, func, select
-from config import DB_LOGIN
-from database.database_support_core import AREA_USER, AREA
+import sys
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../server/src')))
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
+
+import argparse
+import h5py
+from glob import glob
+from sqlalchemy import create_engine, func, select
+from config import DB_LOGIN
+from database.database_support_core import AREA_USER, AREA
 
 class ReadableDir(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -81,6 +88,7 @@ for file in glob(path_name):
             LOG.info("{0}({1}) has {2} area_user records".format(file, galaxy_id, count))
 
         else:
+            LOG.info("Adding {0}({1})".format(file, galaxy_id, count))
             area_group = galaxy_group['area']
             area_user = area_group['area_user']
 
