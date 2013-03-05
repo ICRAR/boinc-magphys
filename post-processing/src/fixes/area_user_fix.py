@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.7
+#! /usr/bin/env python
 #
 #    (c) UWA, The University of Western Australia
 #    M468/35 Stirling Hwy
@@ -78,27 +78,35 @@ path_name = os.path.join(DIR, "*.hdf5")
 for file in glob(path_name):
     if os.path.isfile(file):
         LOG.info("Processing {0}".format(file))
-        h5_file = h5py.File(file, 'r')
-        galaxy_group = h5_file['galaxy']
-        galaxy_id = galaxy_group.attrs['galaxy_id']
 
-        # Do we need to do this file
-        count = connection.execute(select([func.count(AREA_USER.c.areauser_id)], from_obj=AREA_USER.join(AREA)).where(AREA.c.galaxy_id == galaxy_id)).first()[0]
-        if count > 0:
-            LOG.info("{0}({1}) has {2} area_user records".format(file, galaxy_id, count))
+        # Check file size
+        status_info = os.stat(file)
+        if status_info.st_size > 0:
+            # Open the file
+            h5_file = h5py.File(file, 'r')
+            galaxy_group = h5_file['galaxy']
+            galaxy_id = galaxy_group.attrs['galaxy_id']
 
-        else:
-            LOG.info("Adding {0}({1})".format(file, galaxy_id, count))
-            area_group = galaxy_group['area']
-            area_user = area_group['area_user']
+            # Do we need to do this file
+            count = connection.execute(select([func.count(AREA_USER.c.areauser_id)], from_obj=AREA_USER.join(AREA)).where(AREA.c.galaxy_id == galaxy_id)).first()[0]
+            if count > 0:
+                LOG.info("{0}({1}) has {2} area_user records".format(file, galaxy_id, count))
 
-            transaction = connection.begin()
-            insert = AREA_USER.insert()
-            for item in area_user:
-                # area_id - 0
-                # user_id - 1
-                # create_time - 2
-                connection.execute(insert, area_id=item[0], userid=item[1], create_time=item[2])
-            transaction.commit()
+            else:
+                LOG.info("Adding {0}({1})".format(file, galaxy_id, count))
+                area_group = galaxy_group['area']
+                area_user = area_group['area_user']
 
-        h5_file.close()
+                transaction = connection.begin()
+                insert = AREA_USER.insert()
+                for item in area_user:
+                    # area_id - 0
+                    # user_id - 1
+                    # create_time - 2
+                    connection.execute(insert, area_id=item[0], userid=item[1], create_time=item[2])
+                transaction.commit()
+
+            h5_file.close()
+
+        # Remove the file
+        os.remove(file)
