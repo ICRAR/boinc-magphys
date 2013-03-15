@@ -53,7 +53,7 @@ INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
 SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH
-PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys')
+PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys/magphys')
 
 def base_install(host0):
     """
@@ -118,8 +118,8 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
 
     # Setup BOINC
     if host0:
-        # Recommended version per http://boinc.berkeley.edu/download_all.php on 2012-07-10
-        run('svn co http://boinc.berkeley.edu/svn/trunk/boinc /home/ec2-user/boinc')
+        # Grab the latest trunk from GIT
+        run('git clone git://boinc.berkeley.edu/boinc.git')
 
         with cd('/home/ec2-user/boinc'):
             run('./_autosetup')

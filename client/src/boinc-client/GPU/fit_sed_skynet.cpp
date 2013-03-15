@@ -2017,10 +2017,10 @@ int main(int argc, char *argv[]){
 // {F77}          write(31,*) '#  '//filter_header(1:largo(filter_header))    
     fprintf(fitfp," #   ");
     for(k=0;k<nfilt;k++){
-        if(k==0){
-            fprintf(fitfp,"%s",filt_name[k]);
+        if(k != nfilt-1){
+            fprintf(fitfp,"%-12s",filt_name[k]);
         }else{
-            fprintf(fitfp,"%12s",filt_name[k]);
+            fprintf(fitfp,"%s",filt_name[k]);
         }
     }
     fprintf(fitfp,"\n");
@@ -2106,10 +2106,10 @@ int main(int argc, char *argv[]){
 // {F77}          write(31,*) '#  '//filter_header(1:largo(filter_header))
     fprintf(fitfp," #   ");
     for(k=0;k<nfilt;k++){
-        if(k==0){
-            fprintf(fitfp,"%s",filt_name[k]);
+        if(k != nfilt-1){
+            fprintf(fitfp,"%-12s",filt_name[k]);
         }else{
-            fprintf(fitfp,"%12s",filt_name[k]);
+            fprintf(fitfp,"%s",filt_name[k]);
         }
     }
     fprintf(fitfp,"\n");

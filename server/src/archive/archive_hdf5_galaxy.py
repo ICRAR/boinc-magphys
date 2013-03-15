@@ -61,7 +61,7 @@ args = vars(parser.parse_args())
 OUTPUT_DIRECTORY = args['output_dir']
 OUTPUT_FORMAT = 'Version 1.00'
 
-# Connect to the two databases
+# Connect to the databases
 engine_aws = create_engine(DB_LOGIN)
 connection = engine_aws.connect()
 
