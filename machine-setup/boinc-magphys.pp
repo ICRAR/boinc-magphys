@@ -68,9 +68,6 @@ package { 'python27-devel':
 package { 'MySQL-python':
     ensure => installed,
 }
-package { 'subversion':
-    ensure => installed,
-}
 package { 'rubygem-rake':
     ensure => installed,
 }
