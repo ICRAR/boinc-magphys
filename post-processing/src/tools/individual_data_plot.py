@@ -1,3 +1,4 @@
+#! /usr/bin/env python2.7
 #
 #    (c) UWA, The University of Western Australia
 #    M468/35 Stirling Hwy
@@ -23,30 +24,23 @@
 #    MA 02111-1307  USA
 #
 """
-Connect to the BOINC database
+Plot data about usage from the BOINC stats
 """
-from sqlalchemy import Column, MetaData, BigInteger, String, Table
+import logging
+import argparse
+from tools.usage_mod import plot_individual_data
 
-BOINC_METADATA = MetaData()
+LOG = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-RESULT = Table('result',
-    BOINC_METADATA,
-    Column('id'          , BigInteger, primary_key=True, autoincrement=True),
-    Column('server_state', BigInteger),
-    Column('workunitid'  , BigInteger),
-    Column('appid'       , BigInteger),
-    Column('name'        , String),
-)
+parser = argparse.ArgumentParser('Plot graphs of usage from theSkyNet POGS data ')
+parser.add_argument('file', nargs='*', help='the file to extract the individual data to plot from')
+args = vars(parser.parse_args())
 
-WORK_UNIT = Table('workunit',
-    BOINC_METADATA,
-    Column('id'              , BigInteger, primary_key=True, autoincrement=True),
-    Column('name'            , String),
-    Column('assimilate_state', BigInteger)
-)
+if len(args['file']) != 1:
+    parser.print_help()
+    exit(1)
 
-USER = Table('user',
-    BOINC_METADATA,
-    Column('id', BigInteger, primary_key=True, autoincrement=True),
-    Column('name', String)
-)
+plot_individual_data(args['file'][0])
+
+LOG.info('All Done.')

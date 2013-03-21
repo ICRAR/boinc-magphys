@@ -101,8 +101,8 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     with cd('/usr/local/src'):
         sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
         sudo('tar -xvzf szip-2.1.tar.gz')
-        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.10.tar.gz')
-        sudo('tar -xvzf hdf5-1.8.10.tar.gz')
+        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.10-patch1.tar.gz')
+        sudo('tar -xvzf hdf5-1.8.10-patch1.tar.gz')
         sudo('rm *.gz')
     with cd('/usr/local/src/szip-2.1'):
         sudo('./configure --prefix=/usr/local/szip')
