@@ -119,7 +119,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     # Setup BOINC
     if host0:
         # Grab the latest trunk from GIT
-        run('git clone git://boinc.berkeley.edu/boinc.git')
+        run('git clone git://boinc.berkeley.edu/boinc-v2.git')
 
         with cd('/home/ec2-user/boinc'):
             run('./_autosetup')
