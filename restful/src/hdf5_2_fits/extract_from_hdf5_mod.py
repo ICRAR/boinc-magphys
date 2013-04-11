@@ -104,6 +104,7 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_data)
     else:
         file_name = os.path.join(output_directory, '{0}_V{1}.{2}.{3}.fits'.format(galaxy_group.attrs['name'], galaxy_group.attrs['version_number'], feature, layer))
     hdu_list.writeto(file_name, clobber=True)
+    return file_name
 
 
 def get_features_and_layers(args):

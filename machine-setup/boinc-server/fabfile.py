@@ -108,7 +108,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         sudo('./configure --prefix=/usr/local/szip')
         sudo('make')
         sudo('make install')
-    with cd('/usr/local/src/hdf5-1.8.10'):
+    with cd('/usr/local/src/hdf5-1.8.10-patch1'):
         sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
         sudo('make')
         sudo('make install')
