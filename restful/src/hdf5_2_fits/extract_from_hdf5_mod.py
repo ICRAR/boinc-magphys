@@ -59,6 +59,7 @@ LAYERS = {
   'sfr_0_1gyr'   : 15,
 }
 
+
 def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_data):
     """
     Extract a feature from the HDF5 file into a FITS file
@@ -83,7 +84,6 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_data)
 #        for y in range(dimension_y):
 #            data[y, x] = pixel_data[x, y, layer_index, feature_index]
 
-
     utc_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S')
     hdu = pyfits.PrimaryHDU(data)
     hdu_list = pyfits.HDUList([hdu])
@@ -104,6 +104,7 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_data)
     else:
         file_name = os.path.join(output_directory, '{0}_V{1}.{2}.{3}.fits'.format(galaxy_group.attrs['name'], galaxy_group.attrs['version_number'], feature, layer))
     hdu_list.writeto(file_name, clobber=True)
+
 
 def get_features_and_layers(args):
     """
