@@ -27,18 +27,26 @@
 Extract data from the HDF5 file
 """
 import argparse
-import logging
-import h5py
+import sys
 import os
-from extract_from_hdf5_mod import build_fits_image, get_features_and_layers
-from utils.writeable_dir import WriteableDir
+import logging
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
+# Setup the Python Path
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
+
+from hdf5_2_fits.extract_from_hdf5_mod import get_features_and_layers
+from hdf5_2_fits.to_fits import generate_files
+
 parser = argparse.ArgumentParser('Extract elements from an HDF5 file',
-    epilog='You must select at least one feature parameter f0-f6 and one layer parameter l0-l15')
-parser.add_argument('files', nargs='+', help='the HDF5 files to extract data from')
+                                 epilog='You must select at least one feature parameter f0-f6 and one layer parameter l0-l15')
+
+parser.add_argument('email', nargs=1, help='the email address to send the data to')
+parser.add_argument('galaxy_name', nargs=1, help='the galaxy name to find the HDF5 file for')
 
 parser.add_argument('-f0', '--best_fit'        , action='store_true', help='extract best fit')
 parser.add_argument('-f1', '--percentile_50'   , action='store_true', help='extract percentile 50')
@@ -65,29 +73,12 @@ parser.add_argument('-l13', '--tau_v_ism'   , action='store_true', help='extract
 parser.add_argument('-l14', '--m_dust'      , action='store_true', help='extract M(dust)')
 parser.add_argument('-l15', '--sfr_0_1gyr'  , action='store_true', help='extract SFR_0.1Gyr')
 
-parser.add_argument('-o','--output_dir', action=WriteableDir, nargs=1, help='where the images will be written')
-
 args = vars(parser.parse_args())
 
-output_directory = args['output_dir']
 features, layers = get_features_and_layers(args)
 
 if len(features) == 0 or len(layers) == 0:
     parser.print_help()
     exit(1)
 
-for file in args['files']:
-    if os.path.isfile(file):
-        h5_file = h5py.File(file, 'r')
-        galaxy_group = h5_file['galaxy']
-        pixel_group = galaxy_group['pixel']
-        pixel_data = pixel_group['pixels']
-
-        for feature in features:
-            for layer in layers:
-                build_fits_image(feature, layer, output_directory, galaxy_group, pixel_data)
-
-        h5_file.close()
-
-    else:
-        LOG.error('The file %s does not exist', file)
+generate_files(galaxy_name=args['galaxy_name'][0], email=args['email'][0], features=features, layers=layers)

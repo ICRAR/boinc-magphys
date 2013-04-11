@@ -23,21 +23,28 @@
 #    MA 02111-1307  USA
 #
 """
-Check a directory is readable for argparse
+A scheduled task to delete old files
 """
-import argparse
+import glob
 import os
+import time
+from hdf5_2_fits import OUTPUT_DIRECTORY
+from hdf5_2_fits.to_fits import SpecialTask
+from start import celery
 
+@celery.task(base=SpecialTask, ignore_result=True, name='delete_old_files.delete')
+def delete():
+    """
+    Delete any old files in the output directory
 
-class ReadableDir(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if len(values) != 1:
-            raise argparse.ArgumentTypeError("ReadableDir:{0} is not a valid path".format(values))
-        prospective_dir=values[0]
-        if not os.path.isdir(prospective_dir):
-            raise argparse.ArgumentTypeError("ReadableDir:{0} is not a valid path".format(prospective_dir))
-        if os.access(prospective_dir, os.R_OK):
-            setattr(namespace,self.dest,prospective_dir)
-        else:
-            raise argparse.ArgumentTypeError("ReadableDir:{0} is not a writeable dir".format(prospective_dir))
+    :return:
+    """
+    print 'Delete called'
+    now = time.time()
+    file_pattern = os.path.join(OUTPUT_DIRECTORY, '*.tar.gz')
+    for file_name in glob.glob(file_pattern):
+        file_time = os.path.getmtime(file_name)
 
+        if file_time < now - 30:
+            print 'Deleting {0}'.format(file_name)
+            os.remove(file_name)

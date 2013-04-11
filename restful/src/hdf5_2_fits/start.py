@@ -23,21 +23,10 @@
 #    MA 02111-1307  USA
 #
 """
-Check a directory is readable for argparse
+Start celery running
 """
-import argparse
-import os
+from celery import Celery
+from hdf5_2_fits import celery_config
 
-
-class ReadableDir(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if len(values) != 1:
-            raise argparse.ArgumentTypeError("ReadableDir:{0} is not a valid path".format(values))
-        prospective_dir=values[0]
-        if not os.path.isdir(prospective_dir):
-            raise argparse.ArgumentTypeError("ReadableDir:{0} is not a valid path".format(prospective_dir))
-        if os.access(prospective_dir, os.R_OK):
-            setattr(namespace,self.dest,prospective_dir)
-        else:
-            raise argparse.ArgumentTypeError("ReadableDir:{0} is not a writeable dir".format(prospective_dir))
-
+celery = Celery()
+celery.config_from_object(celery_config.Config)

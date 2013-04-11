@@ -23,21 +23,30 @@
 #    MA 02111-1307  USA
 #
 """
-Check a directory is readable for argparse
+Load the configuration files
 """
-import argparse
-import os
+from os.path import dirname, exists
+from configobj import ConfigObj
 
+HDF5_DIRECTORY = None
+OUTPUT_DIRECTORY = None
+NGAS_HOSTNAME = None
+FROM_EMAIL = None
+SMTP_SERVER = None
 
-class ReadableDir(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if len(values) != 1:
-            raise argparse.ArgumentTypeError("ReadableDir:{0} is not a valid path".format(values))
-        prospective_dir=values[0]
-        if not os.path.isdir(prospective_dir):
-            raise argparse.ArgumentTypeError("ReadableDir:{0} is not a valid path".format(prospective_dir))
-        if os.access(prospective_dir, os.R_OK):
-            setattr(namespace,self.dest,prospective_dir)
-        else:
-            raise argparse.ArgumentTypeError("ReadableDir:{0} is not a writeable dir".format(prospective_dir))
+db_file_name = dirname(__file__) + '/restful.settings'
+if exists(db_file_name):
+    config = ConfigObj(db_file_name)
+    HDF5_DIRECTORY = config['HDF5_DIRECTORY']
+    OUTPUT_DIRECTORY = config['OUTPUT_DIRECTORY']
+    NGAS_HOSTNAME = config['NGAS_HOSTNAME']
+    FROM_EMAIL = config['FROM_EMAIL']
+    SMTP_SERVER = config['SMTP_SERVER']
 
+else:
+    HDF5_DIRECTORY = '/tmp'
+    OUTPUT_DIRECTORY = '/tmp'
+    NGAS_HOSTNAME = 'cortex'
+    FROM_EMAIL = 'kevin.vinsen@icrar.org'
+    #SMTP_SERVER = 'antivirus.uwa.edu.au'
+    SMTP_SERVER = 'smtp.ivec.org'

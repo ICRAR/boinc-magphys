@@ -23,15 +23,34 @@
 #    MA 02111-1307  USA
 #
 """
-Setup the distribution of the extract_from hdf5
+Tests for the to_fits module
 """
-from distutils.core import setup
+import unittest
 
-setup(name='extract_from_hdf5',
-    version='0.1',
-    description='Code to extract features from an HDF5 file and put them into a FITS file',
-    author='Kevin Vinsen',
-    author_email='kevin.vinsen@icrar.org',
-    requires=['pyfits(>=3.0.8)', 'h5py(>=2.1.0)', 'numpy(>=1.6.2)'],
-    py_modules=['extract_from_hdf5', 'extract_from_hdf5_mod'],
-    packages=['utils'])
+
+class testToFits(unittest.TestCase):
+    """
+    A test case for the to_fits module
+    """
+
+    def setUp(self):
+        """
+        Setup data used in tests
+        :return:
+        """
+        pass
+
+    def testCheckResults(self):
+        result = ''
+
+def suite():
+    """
+    Build the test suite
+    :return: the suite
+    """
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(testToFits))
+    return suite
+
+if __name__ == '__main__':
+    unittest.TextTestRunner(verbosity=2).run(suite())
