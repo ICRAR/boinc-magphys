@@ -50,3 +50,10 @@ else:
     FROM_EMAIL = 'kevin.vinsen@icrar.org'
     #SMTP_SERVER = 'antivirus.uwa.edu.au'
     SMTP_SERVER = 'smtp.ivec.org'
+
+print("""
+HDF5_DIRECTORY   = {0}
+OUTPUT_DIRECTORY = {1}
+NGAS_HOSTNAME    = {2}
+FROM_EMAIL       = {3}
+SMTP_SERVER      = {4}""".format(HDF5_DIRECTORY, OUTPUT_DIRECTORY, NGAS_HOSTNAME, FROM_EMAIL, SMTP_SERVER))
