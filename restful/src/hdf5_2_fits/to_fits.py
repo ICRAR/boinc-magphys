@@ -116,7 +116,7 @@ def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None):
     print('{0} - {1}'.format(galaxy_name, get_hdf5_file.request.id))
     ngas_file_name = galaxy_name + '.hdf5'
     path_name = get_file_name(HDF5_DIRECTORY, galaxy_name, 'hdf5')
-    command_string = 'wget --progress=dot -O {0} http://cortex.ivec.org:7780/RETRIEVE?file_id={1}'.format(path_name, urllib.quote(ngas_file_name, ''))
+    command_string = 'wget -O {0} http://cortex.ivec.org:7780/RETRIEVE?file_id={1}'.format(path_name, urllib.quote(ngas_file_name, ''))
     print(command_string)
     try:
         output = subprocess.check_output(shlex.split(command_string), stderr=subprocess.STDOUT)
@@ -216,6 +216,7 @@ def zip_up_files(galaxy_name, file_names):
     tar_file = tarfile.open(tar_file_name, 'w:gz')
     for file_name in file_names:
         tar_file.add(file_name)
+        os.remove(file_name)
 
 
 def check_results(output, path_name):
@@ -287,7 +288,7 @@ have been put in a gzip file called {1}.tar.gz. The file is available for downlo
 def clean_up_file(galaxy_name):
     """
     Remove the HDF file as it is not needed now
-    :param file_name: the filename
+    :param galaxy_name: the galaxy
     :return:
     """
     os.remove(get_file_name(HDF5_DIRECTORY, galaxy_name, 'hdf5'))
