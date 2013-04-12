@@ -213,10 +213,10 @@ def zip_up_files(galaxy_name, file_names):
     :return:
     """
     tar_file_name = get_file_name(OUTPUT_DIRECTORY, galaxy_name, 'tar.gz')
-    tar_file = tarfile.open(tar_file_name, 'w:gz')
-    for file_name in file_names:
-        tar_file.add(file_name)
-        os.remove(file_name)
+    with tarfile.open(tar_file_name, 'w:gz') as tar_file:
+        for file_name in file_names:
+            tar_file.add(file_name, arcname=os.path.basename(file_name))
+            os.remove(file_name)
 
 
 def check_results(output, path_name):
@@ -278,11 +278,11 @@ def get_final_message(galaxy_name, file_names):
     :param file_names: the files built
     :return: the built message
     """
-
-    return '''The files for the galaxy {1}:
-{0}
-
-have been put in a gzip file called {1}.tar.gz. The file is available for download here.'''.format('\n  * '.join(os.path.basename(file_names)), galaxy_name)
+    string = 'The files for the galaxy {0}:'.format(galaxy_name)
+    for file_name in file_names:
+        string += ' * {0}'.format(os.path.basename(file_name))
+    string += 'have been put in a gzip file called {0}.tar.gz. The file is available for download here.'.format(galaxy_name)
+    return string
 
 
 def clean_up_file(galaxy_name):
