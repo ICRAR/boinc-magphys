@@ -48,7 +48,6 @@ else:
     OUTPUT_DIRECTORY = '/tmp'
     NGAS_HOSTNAME = 'cortex'
     FROM_EMAIL = 'kevin.vinsen@icrar.org'
-    #SMTP_SERVER = 'antivirus.uwa.edu.au'
     SMTP_SERVER = 'smtp.ivec.org'
 
 print("""
