@@ -34,6 +34,7 @@ import subprocess
 import urllib
 import shlex
 from email.mime.text import MIMEText
+import uuid
 from celery import Task
 import h5py
 import tarfile
@@ -93,14 +94,15 @@ def generate_files(galaxy_name=None, email=None, features=None, layers=None):
     :return:
     """
     if galaxy_name is not None and email is not None and features is not None and layers is not None:
-        get_hdf5_file.delay(galaxy_name=galaxy_name, email=email, features=features, layers=layers)
+        uuid_str = str(uuid.uuid4())
+        get_hdf5_file.delay(galaxy_name=galaxy_name, email=email, features=features, layers=layers, uuid_string=uuid_str)
 
     else:
         raise ValueError('generate_files all four arguments must be supplied')
 
 
 @celery.task(base=SpecialTask, ignore_result=True, name='to_fits.get_hdf5_file')
-def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None):
+def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None, uuid_string=None):
     """
     Get the file from cortex.
     http://cortex.ivec.org:7780/RETRIEVE?file_id=NGC3055.hdf5
@@ -115,7 +117,7 @@ def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None):
     """
     print('{0} - {1}'.format(galaxy_name, get_hdf5_file.request.id))
     ngas_file_name = galaxy_name + '.hdf5'
-    path_name = get_file_name(HDF5_DIRECTORY, galaxy_name, 'hdf5')
+    path_name = get_file_name(HDF5_DIRECTORY, uuid_string, galaxy_name, 'hdf5')
     command_string = 'wget -O {0} http://cortex.ivec.org:7780/RETRIEVE?file_id={1}'.format(path_name, urllib.quote(ngas_file_name, ''))
     print(command_string)
     try:
@@ -124,7 +126,7 @@ def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None):
 
         if result:
             # Submit to the next step in the chain
-            build_files.delay(galaxy_name=galaxy_name, email=email, features=features, layers=layers)
+            build_files.delay(galaxy_name=galaxy_name, email=email, features=features, layers=layers, uuid_string=uuid_string)
 
         else:
             # Store the result in the task
@@ -147,7 +149,7 @@ def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None):
 
 
 @celery.task(base=SpecialTask, ignore_result=True, name='to_fits.build_files')
-def build_files(galaxy_name=None, email=None, features=None, layers=None):
+def build_files(galaxy_name=None, email=None, features=None, layers=None, uuid_string=None):
     """
     Build the files we need in parallel
 
@@ -158,7 +160,7 @@ def build_files(galaxy_name=None, email=None, features=None, layers=None):
     :return:
     """
     print('Building files for {0} - {1} - {2}'.format(galaxy_name, features, layers))
-    file_name = get_file_name(HDF5_DIRECTORY, galaxy_name, 'hdf5')
+    file_name = get_file_name(HDF5_DIRECTORY, uuid_string, galaxy_name, 'hdf5')
     if os.path.isfile(file_name):
         h5_file = h5py.File(file_name, 'r')
         galaxy_group = h5_file['galaxy']
@@ -166,12 +168,13 @@ def build_files(galaxy_name=None, email=None, features=None, layers=None):
         pixel_data = pixel_group['pixels']
 
         file_names = []
+        output_dir = os.path.join(OUTPUT_DIRECTORY, uuid_string)
         for feature in features:
             for layer in layers:
-                file_names.append(build_fits_image(feature, layer, OUTPUT_DIRECTORY, galaxy_group, pixel_data))
+                file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_data))
 
         h5_file.close()
-        zip_files_and_email.delay(galaxy_name=galaxy_name, email=email, file_names=file_names)
+        zip_files_and_email.delay(galaxy_name=galaxy_name, email=email, file_names=file_names, uuid_string=uuid_string)
 
     else:
         error = 'The file {0} does not exist'.format(file_name)
@@ -180,7 +183,7 @@ def build_files(galaxy_name=None, email=None, features=None, layers=None):
 
 
 @celery.task(base=SpecialTask, ignore_result=True, name='to_fits.zip_files_and_email')
-def zip_files_and_email(galaxy_name=None, email=None, file_names=None):
+def zip_files_and_email(galaxy_name=None, email=None, file_names=None, uuid_string=None):
     """
     Zip the files and send the email
 
@@ -189,30 +192,42 @@ def zip_files_and_email(galaxy_name=None, email=None, file_names=None):
     :param file_names: the fits files to be bundled
     :return:
     """
-    zip_up_files(galaxy_name, file_names)
-    send_email(email, get_final_message(galaxy_name, file_names), galaxy_name)
-    clean_up_file(galaxy_name)
+    zip_up_files(galaxy_name, file_names, uuid_string)
+    send_email(email, get_final_message(galaxy_name, file_names, uuid_string), galaxy_name)
+    clean_up_file(galaxy_name, uuid_string)
 
 
-def get_file_name(directory, galaxy_name, extension):
+def get_file_name(directory, uuid_str, galaxy_name, extension):
     """
     Get the file name from the galaxy
 
+    :param directory: the base directory
+    :param uuid_str: the uuid string for this task
+    :param extension: the extension to be used
     :param galaxy_name: the galaxy name
     :return:
     """
-    return os.path.join(directory, galaxy_name + '.' + extension)
+    # Find the name of the directory to use
+    dir_name = os.path.join(directory, uuid_str)
+
+    # Build it if needs be
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+
+    # Now we can put a file in it
+    return os.path.join(dir_name, galaxy_name + '.' + extension)
 
 
-def zip_up_files(galaxy_name, file_names):
+def zip_up_files(galaxy_name, file_names, uuid_string):
     """
     Zip all the files up into a file
 
+    :param uuid_string: the UUID string
     :param galaxy_name: the galaxy name
     :param file_names: the files to add
     :return:
     """
-    tar_file_name = get_file_name(OUTPUT_DIRECTORY, galaxy_name, 'tar.gz')
+    tar_file_name = get_file_name(OUTPUT_DIRECTORY, uuid_string, galaxy_name, 'tar.gz')
     with tarfile.open(tar_file_name, 'w:gz') as tar_file:
         for file_name in file_names:
             tar_file.add(file_name, arcname=os.path.basename(file_name))
@@ -270,25 +285,32 @@ def send_email(email, message, galaxy_name):
     smtp.quit()
 
 
-def get_final_message(galaxy_name, file_names):
+def get_final_message(galaxy_name, file_names, uuid_string):
     """
-    BUild the email message to send
+    Build the email message to send
 
+    :param uuid_string: the UUID string
     :param galaxy_name: the galaxy name
     :param file_names: the files built
     :return: the built message
     """
     string = 'The files for the galaxy {0}:'.format(galaxy_name)
     for file_name in file_names:
-        string += ' * {0}'.format(os.path.basename(file_name))
-    string += 'have been put in a gzip file called {0}.tar.gz. The file is available for download here.'.format(galaxy_name)
+        string += ' * {0}\n'.format(os.path.basename(file_name))
+    string += '''have been put in a gzip file called {0}.tar.gz.
+The file is available for download from http://ict.icrar.org/skynet-rest/{1}.
+The file will be available for 5 days and will then be deleted.'''.format(galaxy_name, uuid_string)
     return string
 
 
-def clean_up_file(galaxy_name):
+def clean_up_file(galaxy_name, uuid_string):
     """
     Remove the HDF file as it is not needed now
+    :param uuid_string: the UUID string
     :param galaxy_name: the galaxy
     :return:
     """
-    os.remove(get_file_name(HDF5_DIRECTORY, galaxy_name, 'hdf5'))
+    os.remove(get_file_name(HDF5_DIRECTORY, uuid_string, galaxy_name, 'hdf5'))
+    if HDF5_DIRECTORY != OUTPUT_DIRECTORY:
+        os.rmdir(os.path.join(HDF5_DIRECTORY, uuid_string))
+
