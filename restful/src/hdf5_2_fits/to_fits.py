@@ -168,7 +168,7 @@ def build_files(galaxy_name=None, email=None, features=None, layers=None, uuid_s
         pixel_data = pixel_group['pixels']
 
         file_names = []
-        output_dir = os.path.join(OUTPUT_DIRECTORY, uuid_string)
+        output_dir = create_if_necessary(OUTPUT_DIRECTORY, uuid_string)
         for feature in features:
             for layer in layers:
                 file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_data))
@@ -197,6 +197,24 @@ def zip_files_and_email(galaxy_name=None, email=None, file_names=None, uuid_stri
     clean_up_file(galaxy_name, uuid_string)
 
 
+def create_if_necessary(directory, uuid_str):
+    """
+    Create the directory if needed
+
+    :param directory: the parent directory
+    :param uuid_str: the uuid string that will become holding directory
+    :return:
+    """
+    # Find the name of the directory to use
+    dir_name = os.path.join(directory, uuid_str)
+
+    # Build it if needs be
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+
+    return dir_name
+
+
 def get_file_name(directory, uuid_str, galaxy_name, extension):
     """
     Get the file name from the galaxy
@@ -208,11 +226,7 @@ def get_file_name(directory, uuid_str, galaxy_name, extension):
     :return:
     """
     # Find the name of the directory to use
-    dir_name = os.path.join(directory, uuid_str)
-
-    # Build it if needs be
-    if not os.path.exists(dir_name):
-        os.makedirs(dir_name)
+    dir_name = create_if_necessary(directory, uuid_str)
 
     # Now we can put a file in it
     return os.path.join(dir_name, galaxy_name + '.' + extension)
