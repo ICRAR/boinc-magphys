@@ -308,11 +308,11 @@ def get_final_message(galaxy_name, file_names, uuid_string):
     :param file_names: the files built
     :return: the built message
     """
-    string = 'The files for the galaxy {0}:'.format(galaxy_name)
+    string = 'The files for the galaxy {0}:\n'.format(galaxy_name)
     for file_name in file_names:
         string += ' * {0}\n'.format(os.path.basename(file_name))
     string += '''have been put in a gzip file called {0}.tar.gz.
-The file is available for download from http://ict.icrar.org/skynet-rest/{1}.
+The file is available for download from http://ict.icrar.org/skynet-rest/files/{1}.
 The file will be available for 5 days and will then be deleted.'''.format(galaxy_name, uuid_string)
     return string
 
