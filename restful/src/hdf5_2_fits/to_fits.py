@@ -118,7 +118,7 @@ def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None, uuid
     print('{0} - {1}'.format(galaxy_name, get_hdf5_file.request.id))
     ngas_file_name = galaxy_name + '.hdf5'
     path_name = get_file_name(HDF5_DIRECTORY, uuid_string, galaxy_name, 'hdf5')
-    command_string = 'wget -O {0} http://cortex.ivec.org:7780/RETRIEVE?file_id={1}'.format(path_name, urllib.quote(ngas_file_name, ''))
+    command_string = 'wget -O {0} http://cortex.ivec.org:7780/RETRIEVE?file_id={1}&processing=ngamsMWACortexStageDppi'.format(path_name, urllib.quote(ngas_file_name, ''))
     print(command_string)
     try:
         output = subprocess.check_output(shlex.split(command_string), stderr=subprocess.STDOUT)

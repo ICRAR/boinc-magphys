@@ -43,18 +43,18 @@ class Config:
     CELERY_ENABLE_UTC = True
     CELERY_CHORD_PROPAGATES = True
     CELERY_TASK_PUBLISH_RETRY = True
-    CELERY_TASK_PUBLISH_RETRY_POLICY = {
-        'max_retries': 2,
-        'interval_start': 10,
-        'interval_step': 10,
-        'interval_max': 10,
-        }
 #    CELERY_TASK_PUBLISH_RETRY_POLICY = {
-#        'max_retries': 10,
-#        'interval_start': 300,
-#        'interval_step': 7200,
-#        'interval_max': 86400,
+#        'max_retries': 2,
+#        'interval_start': 10,
+#        'interval_step': 10,
+#        'interval_max': 10,
 #        }
+    CELERY_TASK_PUBLISH_RETRY_POLICY = {
+        'max_retries': 10,
+        'interval_start': 300,
+        'interval_step': 7200,
+        'interval_max': 86400,
+        }
     CELERYBEAT_SCHEDULE = {
         'delete-old-files': {
             'task': 'delete_old_files.delete',
@@ -70,4 +70,6 @@ class Config:
     CELERY_QUEUES = (
         Queue('default', Exchange('default'), routing_key='default'),
     )
+
+    # The task name is the same as the name given to the task
     CELERY_ROUTES = {'to_fits.get_hdf5_file': {'queue': 'get_files'}}
