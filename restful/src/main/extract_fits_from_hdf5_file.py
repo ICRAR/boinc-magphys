@@ -98,4 +98,5 @@ with open(args['file_name'][0], 'rb') as csv_file:
         else:
             galaxy_name = row[0]
 
+        LOG.info('Submitting job for {0}'.format(galaxy_name))
         generate_files(galaxy_name=galaxy_name, email=args['email'][0], features=features, layers=layers)
