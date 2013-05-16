@@ -70,4 +70,4 @@ class Config:
     CELERY_QUEUES = (
         Queue('default', Exchange('default'), routing_key='default'),
     )
-    CELERY_ROUTES = {'hdf5_2_fits.to_fits.get_hdf5_file': {'queue': 'get_files'}}
+    CELERY_ROUTES = {'to_fits.get_hdf5_file': {'queue': 'get_files'}}
