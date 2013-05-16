@@ -25,6 +25,7 @@
 """
 The Configuration of the celery system
 """
+from kombu import Exchange, Queue
 
 
 class Config:
@@ -35,10 +36,10 @@ class Config:
     BROKER_URL = 'redis://localhost:6379/0'
     CELERY_RESULT_BACKEND = 'redis://'
 
-    # List of modules to import when celery starts.
+    ## List of modules to import when celery starts.
     CELERY_IMPORTS = ('hdf5_2_fits.to_fits', 'hdf5_2_fits.delete_old_files',)
 
-    # General options
+    ## General options
     CELERY_ENABLE_UTC = True
     CELERY_CHORD_PROPAGATES = True
     CELERY_TASK_PUBLISH_RETRY = True
@@ -62,3 +63,11 @@ class Config:
             'args': ()
         },
     }
+
+    ## Queues & Routes
+    CELERY_CREATE_MISSING_QUEUES = True
+    CELERY_DEFAULT_QUEUE = 'default'
+    CELERY_QUEUES = (
+        Queue('default', Exchange('default'), routing_key='default'),
+    )
+    CELERY_ROUTES = {'hdf5_2_fits.to_fits.get_hdf5_file': {'queue': 'get_files'}}
