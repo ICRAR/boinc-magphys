@@ -25,25 +25,34 @@
 """
 Plot module data about usage from the BOINC stats
 """
+import StringIO
 import collections
 import glob
 import os
 import gzip
+import urllib2
 import xml.etree.ElementTree as ET
 import logging
+import csv
+import math
+import numpy
 
 from datetime import datetime
-import csv
 from matplotlib import pyplot
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import LogNorm
+from matplotlib.dates import date2num, num2date
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import numpy
+from sqlalchemy import create_engine, select
+from config import DB_LOGIN
+from database.database_support_core import GALAXY
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 COBBLESTONE_FACTOR = 150.0
+BINS = 8
+START_BIN = 0.001
 
 def add_usage_data(contents):
     """
@@ -69,25 +78,25 @@ def add_usage_data(contents):
 
     return gflops / COBBLESTONE_FACTOR, active_users, registered_users
 
-def get_usage_data(dir, file_name):
+def get_usage_data(dir_name, file_name):
     """
     Get the data we want to plot
 
-    :param dir: where the data files live
+    :param dir_name: where the data files live
     :param file_name: the output file to store the data in
     :return:
     """
-    files = os.path.join(dir, '*')
+    files = os.path.join(dir_name, '*')
 
     file_list = {}
     for directory in glob.glob(files):
         if os.path.isdir(directory):
-            file = os.path.join(directory, 'user.gz')
-            if os.path.isfile(file):
+            file_user = os.path.join(directory, 'user.gz')
+            if os.path.isfile(file_user):
                 base_name = os.path.basename(directory)
                 elements = base_name.split('_')
                 time = datetime(int(elements[1]), int(elements[2]), int(elements[3]), int(elements[4]), int(elements[5]))
-                file_list[time] = file
+                file_list[time] = file_user
 
     # Now sort the list
     file_list_sorted = collections.OrderedDict(sorted(file_list.items()))
@@ -95,9 +104,9 @@ def get_usage_data(dir, file_name):
     output_file = open(file_name, 'w')
     output_file.write('Date, gflops, active_users, registered_users\n')
 
-    for time, file in file_list_sorted.iteritems():
-        LOG.info('Processing %s', file)
-        gzip_file = gzip.open(file, 'rb')
+    for time, file_user in file_list_sorted.iteritems():
+        LOG.info('Processing %s', file_user)
+        gzip_file = gzip.open(file_user, 'rb')
         contents = gzip_file.read()
         gzip_file.close()
 
@@ -109,33 +118,33 @@ def get_usage_data(dir, file_name):
 
     output_file.close()
 
-def get_individual_data(dir, file_name, max_id):
+def get_individual_data(dir_name, file_name, max_id):
     """
     Get the data we want to plot
 
-    :param dir: where the data files live
+    :param dir_name: where the data files live
     :param file_name: the output file to store the data in
     :return:
     """
-    files = os.path.join(dir, '*')
+    files = os.path.join(dir_name, '*')
 
     file_list = {}
     for directory in glob.glob(files):
         if os.path.isdir(directory):
-            file = os.path.join(directory, 'user.gz')
-            if os.path.isfile(file):
+            file_user = os.path.join(directory, 'user.gz')
+            if os.path.isfile(file_user):
                 base_name = os.path.basename(directory)
                 elements = base_name.split('_')
                 time = datetime(int(elements[1]), int(elements[2]), int(elements[3]), int(elements[4]), int(elements[5]))
-                file_list[time] = file
+                file_list[time] = file_user
 
     # Now sort the list
     file_list_sorted = collections.OrderedDict(sorted(file_list.items()))
     with open(file_name, 'wb') as output_file:
         writer = csv.writer(output_file)
-        for time, file in file_list_sorted.iteritems():
-            LOG.info('Processing %s', file)
-            gzip_file = gzip.open(file, 'rb')
+        for time, file_user in file_list_sorted.iteritems():
+            LOG.info('Processing %s', file_user)
+            gzip_file = gzip.open(file_user, 'rb')
             contents = gzip_file.read()
             gzip_file.close()
 
@@ -157,13 +166,108 @@ def get_individual_data(dir, file_name, max_id):
 
             writer.writerow(data)
 
-def plot_individual_data(file):
+def plot_individual_data_stack(file_name):
     """
     Plot the individual data
-    :param file:
+    :param file_name: the filename
     :return:
     """
-    input_file = open(file, 'r')
+    input_file = open(file_name, 'r')
+    lines = input_file.readlines()
+    input_file.close()
+
+    csv_columns = len(lines[0].split(',')) - 1
+    csv_rows = len(lines)
+    shape = (csv_rows, csv_columns)
+    my_data = numpy.zeros(shape)
+    dates = []
+
+    LOG.info('Loading data ')
+    line_count = 0
+    for line in lines:
+        data = line.split(',')
+        my_data[line_count, :] = data[1:]
+        dates.append(datetime.strptime(data[0], '%Y-%m-%d %H:%M:%S'))
+        line_count += 1
+
+    # Remove blank columns
+    LOG.info('Removing blank columns from CSV data')
+    for column in reversed(range(csv_columns)):
+        if not numpy.any(my_data[:, column]):
+            my_data = numpy.delete(my_data, column, 1)
+
+    # Now bin the data into bins
+    LOG.info('Binning data')
+    shape = (BINS, csv_rows)
+    bins = numpy.zeros(shape)
+
+    edges = [START_BIN / 1000.0]
+    for i in range(BINS - 1):
+        value = START_BIN * math.pow(10, i)
+        edges.append(value)
+    edges.append(START_BIN * math.pow(10, BINS * 2))
+
+    for row in range(csv_rows):
+        histogram = numpy.histogram(my_data[row, :] / COBBLESTONE_FACTOR, bins=edges)
+        bins[:, row] = histogram[0]
+
+    # Now plot it
+    LOG.info('Printing')
+    pdf_pages = PdfPages('{0}.pdf'.format(file_name))
+    pyplot.xlabel('Date')
+    pyplot.ylabel('Users')
+    pyplot.xticks(rotation=30)
+
+    x = [date2num(date) for date in dates]
+    ax = pyplot.axes()
+    ax.locator_params(axis='x', nbins=20)
+    plots = ax.stackplot(x, bins)
+
+    # Cause the labels to be generated
+    pyplot.xlim(x[0], x[-1])
+    pyplot.tight_layout()
+
+    # Correct the dates on the y axis
+    labels = []
+    for location in ax.xaxis.get_ticklocs():
+        if location < 0 or location > x[-1]:
+            labels.append('')
+        else:
+            date = num2date(location)
+            labels.append(date.strftime("%d-%m-%y"))
+
+    ax.xaxis.set_ticklabels(labels)
+
+    # Add the legend
+    plot_count = 0
+    labels = []
+    proxy = []
+    # Ignore the last one
+    for plot in plots[:-1]:
+        fc = plot.get_facecolor()
+        proxy.append(pyplot.Rectangle((0, 0), 1, 1, fc=fc[0]))
+        if plot_count == 0:
+            labels.append('<= {0} Gflops'.format(edges[1]))
+        elif plot_count == BINS - 2:
+            labels.append('> {0} Gflops'.format(edges[BINS - 2]))
+        else:
+            labels.append('{0} to {1} Gflops'.format(edges[plot_count], edges[plot_count+1]))
+        plot_count += 1
+    pyplot.legend(proxy, labels, loc=2, prop={'size': 10})
+
+    # make sure everything fits
+    pyplot.tight_layout()
+    pdf_pages.savefig()
+    pdf_pages.close()
+
+
+def plot_individual_data(file_name):
+    """
+    Plot the individual data
+    :param file_name:
+    :return:
+    """
+    input_file = open(file_name, 'r')
     lines = input_file.readlines()
     input_file.close()
 
@@ -189,7 +293,7 @@ def plot_individual_data(file):
 
     # Now plot it
     LOG.info('Printing')
-    pdf_pages = PdfPages('{0}.pdf'.format(file))
+    pdf_pages = PdfPages('{0}.pdf'.format(file_name))
     ax = pyplot.axes()
     divider = make_axes_locatable(ax)
     ax_cb = divider.new_horizontal(size="5%", pad=0.05)
@@ -221,17 +325,17 @@ def plot_individual_data(file):
     pdf_pages.savefig()
     pdf_pages.close()
 
-def plot_usage_data(file):
+def plot_usage_data(file_name):
     """
     Plot the data
-    :param file:
+    :param file_name:
     :return:
     """
     col_headers = ['date','gflops','active_users','registered_users']
     convert_func = lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-    my_data = numpy.genfromtxt(file, delimiter=',', names=col_headers, skip_header=1, converters={'date':convert_func}, dtype=None)
+    my_data = numpy.genfromtxt(file_name, delimiter=',', names=col_headers, skip_header=1, converters={'date':convert_func}, dtype=None)
 
-    pdf_pages = PdfPages('{0}.pdf'.format(file))
+    pdf_pages = PdfPages('{0}.pdf'.format(file_name))
     pyplot.subplot(211)
     pyplot.plot(my_data['date'], my_data['active_users'], 'b-', label='Active')
     pyplot.plot(my_data['date'], my_data['registered_users'], 'g-', label='Registered')
@@ -246,6 +350,117 @@ def plot_usage_data(file):
     pyplot.ylabel('GFlops')
     pyplot.xticks(rotation=30)
     pyplot.grid(True)
+    pyplot.tight_layout()
+    pdf_pages.savefig()
+    pdf_pages.close()
+
+
+def plot_file_size_histogram(file_name):
+    """
+    Plot the file size histogram
+
+    :param file_name:
+    :return:
+    """
+    # Get the list of files
+    LOG.info('Getting the data')
+    response = urllib2.urlopen("http://cortex.ivec.org:7780/QUERY?query=files_list&format=list")
+    web_page = response.read()
+    file_sizes = []
+
+    LOG.info('Processing the data')
+    for line in StringIO.StringIO(web_page):
+        items = line.split()
+
+        file_size = items[5]
+
+        if int(file_size) > 0:
+            file_sizes.append(int(file_size) / 1000000.0)
+
+    LOG.info('Printing')
+    pdf_pages = PdfPages('{0}'.format(file_name))
+    pyplot.hist(file_sizes, bins=20, log=True)
+    pyplot.xlabel('Size (MByte)')
+    pyplot.ylabel('Frequency')
+    pyplot.grid(True)
+    pyplot.tight_layout()
+    pdf_pages.savefig()
+    pdf_pages.close()
+
+
+def plot_file_size_line(pdf_file_name):
+    """
+    Plot the file size histogram
+
+    :param pdf_file_name:
+    :return:
+    """
+    # Get the list of files
+    LOG.info('Getting the galaxies list from the database')
+    engine_aws = create_engine(DB_LOGIN)
+    connection = engine_aws.connect()
+    galaxy_details = {}
+    for galaxy in connection.execute(select([GALAXY])):
+        if galaxy[GALAXY.c.version_number] == 1:
+            name = galaxy[GALAXY.c.name]
+        else:
+            name = '{0}_V{1}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number])
+
+        galaxy_details[name] = (galaxy[GALAXY.c.dimension_z], galaxy[GALAXY.c.pixels_processed])
+        if len(galaxy_details) % 100 == 0:
+            LOG.info('Retrieved {0}'.format(len(galaxy_details)))
+    connection.close()
+
+    # Get the list of files
+    LOG.info('Getting the galaxies list from Cortex')
+    response = urllib2.urlopen("http://cortex.ivec.org:7780/QUERY?query=files_list&format=list")
+    web_page = response.read()
+
+    data = {}
+
+    LOG.info('Collecting the data')
+    for line in StringIO.StringIO(web_page):
+        items = line.split()
+
+        file_size = items[5]
+
+        if int(file_size) > 0:
+            file_size_mb = int(file_size) / 1000000.0
+
+            # Get the sizes from the database
+            file_name = items[2]
+            split = os.path.splitext(file_name)
+            name = split[0]
+
+            # Get the galaxy
+            galaxy = galaxy_details.get(name)
+
+            # Get the array
+            row_data = data.get(galaxy[0])
+            if row_data is None:
+                row_data = []
+                data[galaxy[0]] = row_data
+            row_data.append((name, file_size_mb, galaxy[1]))
+
+    LOG.info('Printing')
+    pdf_pages = PdfPages('{0}'.format(pdf_file_name))
+    # Print the data
+    markers = {11: 'o', 5: 'D', 6: '+'}
+    colours = {11: 'r', 5: 'g', 6: 'b'}
+    for key, value in data.iteritems():
+        x = []
+        y = []
+        for values in value:
+            x.append(values[2] / 1000.0)
+            y.append(values[1])
+        pyplot.scatter(x, y, marker=markers[key], c=colours[key], label='{0} filters'.format(key))
+
+    pyplot.xlabel('Pixels (K)')
+    pyplot.ylabel('Size (MB)')
+    pyplot.xlim(0,)
+    pyplot.ylim(0,)
+    pyplot.grid(True)
+    pyplot.legend(loc=2)
     pyplot.tight_layout()
     pdf_pages.savefig()
     pdf_pages.close()
