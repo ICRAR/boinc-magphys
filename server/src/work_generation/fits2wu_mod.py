@@ -649,10 +649,11 @@ class Fit2Wu:
         """
         insert = FITS_HEADER.insert()
         header = self._hdu_list[0].header
+        index = 0
         for keyword in header:
             # The new version of PyFits supports comments
-            value = header[keyword]
-            comment = header.comments[keyword]
+            value = header[index]
+            comment = header.comments[index]
             self._connection.execute(insert.values(galaxy_id=self._galaxy_id, keyword=keyword, value=value, comment=comment))
 
             if keyword == 'RA_CENT':
@@ -660,8 +661,10 @@ class Fit2Wu:
             elif keyword == 'DEC_CENT':
                 self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent=float(value)))
 
+            index += 1
+
     def _update_current(self):
         """
-        The current galaxy is current - mark all the others as npot
+        The current galaxy is current - mark all the others as not
         """
         self._connection.execute(GALAXY.update().where(GALAXY.c.name == self._galaxy_name).values(current=False))
