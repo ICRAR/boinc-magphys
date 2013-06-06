@@ -146,6 +146,7 @@ CREATE TABLE fits_header (
   galaxy_id     BIGINT UNSIGNED NOT NULL,
   keyword       VARCHAR(128) NOT NULL,
   value         VARCHAR(128) NOT NULL,
+  comment       VARCHAR(128),
 
   FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id),
 

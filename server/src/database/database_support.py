@@ -88,6 +88,7 @@ class FitsHeader(Base):
     galaxy_id     = Column(BigInteger, ForeignKey('galaxy.galaxy_id'))
     keyword       = Column(String(128))
     value         = Column(String(128))
+    comment       = Column(String(128))
 
     galaxy = relationship("Galaxy", backref=backref('fits_headers', order_by=galaxy_id))
 

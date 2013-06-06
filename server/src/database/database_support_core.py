@@ -81,7 +81,8 @@ FITS_HEADER = Table('fits_header',
     Column('fitsheader_id', BigInteger, primary_key=True, autoincrement=True),
     Column('galaxy_id'    , BigInteger, ForeignKey('galaxy.galaxy_id')),
     Column('keyword'      , String(128)),
-    Column('value'        , String(128))
+    Column('value'        , String(128)),
+    Column('comment'      , String(128)),
 )
 
 GALAXY = Table('galaxy',

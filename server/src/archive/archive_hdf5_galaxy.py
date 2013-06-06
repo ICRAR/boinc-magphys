@@ -44,7 +44,7 @@ import argparse
 import h5py
 import shutil
 import time
-from archive.archive_hdf5_mod import store_fits_header, store_area, store_image_filters, store_area_user, store_pixels
+from archive.archive_hdf5_mod import store_fits_header, store_area, store_image_filters, store_area_user, store_pixels, OUTPUT_FORMAT_1_01
 from config import DB_LOGIN, ARCHIVED, PROCESSED
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
@@ -59,7 +59,6 @@ parser.add_argument('galaxy_id', nargs='*', help='the galaxy_id or 4-30 if you n
 args = vars(parser.parse_args())
 
 OUTPUT_DIRECTORY = args['output_dir']
-OUTPUT_FORMAT = 'Version 1.00'
 
 # Connect to the databases
 engine_aws = create_engine(DB_LOGIN)
@@ -131,7 +130,7 @@ try:
             galaxy_group.attrs['sigma']            = float(galaxy[GALAXY.c.sigma])
             galaxy_group.attrs['pixel_count']      = galaxy[GALAXY.c.pixel_count]
             galaxy_group.attrs['pixels_processed'] = galaxy[GALAXY.c.pixels_processed]
-            galaxy_group.attrs['output_format']    = OUTPUT_FORMAT
+            galaxy_group.attrs['output_format']    = OUTPUT_FORMAT_1_01
 
             galaxy_id_aws = galaxy[GALAXY.c.galaxy_id]
 

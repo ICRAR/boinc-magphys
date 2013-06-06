@@ -106,7 +106,7 @@ try:
                 transaction_pleiades.commit()
                 transaction_pleiades = connection_aws.begin()
 
-            for fits_header in connection_aws.execute(select([FITS_HEADER]).where(FITS_HEADER.c.galaxy_id == galaxy_id_aws)):
+            for fits_header in connection_aws.execute(select([FITS_HEADER]).where(FITS_HEADER.c.galaxy_id == galaxy_id_aws).order_by(FITS_HEADER.c.fitsheader_id)):
                 insert_only(FITS_HEADER, fits_header, connection_pleiades)
             for image_filters_used in connection_aws.execute(select([IMAGE_FILTERS_USED]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id_aws)):
                 insert_only(IMAGE_FILTERS_USED, image_filters_used, connection_pleiades)
