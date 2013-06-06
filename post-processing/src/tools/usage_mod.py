@@ -362,37 +362,41 @@ def plot_file_size_histogram(file_name):
     :param file_name:
     :return:
     """
-    # Get the list of files
-    LOG.info('Getting the data')
-    response = urllib2.urlopen("http://cortex.ivec.org:7780/QUERY?query=files_list&format=list")
-    web_page = response.read()
-    file_sizes = []
-
-    LOG.info('Processing the data')
-    for line in StringIO.StringIO(web_page):
-        items = line.split()
-
-        file_size = items[5]
-
-        if int(file_size) > 0:
-            file_sizes.append(int(file_size) / 1000000.0)
+    data = get_hdf5_size_data()
+    hist_data = []
+    for key in [5, 6, 11]:
+        value = data[key]
+        sizes = []
+        for values in value:
+            sizes.append(values[1])
+        hist_data.append(sizes)
 
     LOG.info('Printing')
     pdf_pages = PdfPages('{0}'.format(file_name))
-    pyplot.hist(file_sizes, bins=20, log=True)
+    pyplot.hist(hist_data, bins=20, log=True, color=['crimson', 'burlywood', 'chartreuse'], label=['5 Filters', '6 Filters', '11 Filters'])
     pyplot.xlabel('Size (MByte)')
     pyplot.ylabel('Frequency')
     pyplot.grid(True)
+    pyplot.legend()
+
+    ax = pyplot.axes()
+    labels = []
+    for location in ax.yaxis.get_ticklocs():
+        if location < 0:
+            labels.append('')
+        else:
+            labels.append("{0}".format(int(location)))
+
+    ax.yaxis.set_ticklabels(labels)
+
     pyplot.tight_layout()
     pdf_pages.savefig()
     pdf_pages.close()
 
 
-def plot_file_size_line(pdf_file_name):
+def get_hdf5_size_data():
     """
-    Plot the file size histogram
-
-    :param pdf_file_name:
+    Get the HDF5 data we need
     :return:
     """
     # Get the list of files
@@ -410,14 +414,11 @@ def plot_file_size_line(pdf_file_name):
         if len(galaxy_details) % 100 == 0:
             LOG.info('Retrieved {0}'.format(len(galaxy_details)))
     connection.close()
-
     # Get the list of files
     LOG.info('Getting the galaxies list from Cortex')
     response = urllib2.urlopen("http://cortex.ivec.org:7780/QUERY?query=files_list&format=list")
     web_page = response.read()
-
     data = {}
-
     LOG.info('Collecting the data')
     for line in StringIO.StringIO(web_page):
         items = line.split()
@@ -441,6 +442,17 @@ def plot_file_size_line(pdf_file_name):
                 row_data = []
                 data[galaxy[0]] = row_data
             row_data.append((name, file_size_mb, galaxy[1]))
+    return data
+
+
+def plot_file_size_line(pdf_file_name):
+    """
+    Plot the file size histogram
+
+    :param pdf_file_name:
+    :return:
+    """
+    data = get_hdf5_size_data()
 
     LOG.info('Printing')
     pdf_pages = PdfPages('{0}'.format(pdf_file_name))

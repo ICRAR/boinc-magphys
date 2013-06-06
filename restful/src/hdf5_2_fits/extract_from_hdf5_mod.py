@@ -30,6 +30,9 @@ import os
 import pyfits
 from datetime import datetime
 
+OUTPUT_FORMAT_1_00 = 'Version 1.00'
+OUTPUT_FORMAT_1_01 = 'Version 1.01'
+
 FEATURES = {
   'best_fit'         : 0,
   'percentile_50'    : 1,
@@ -81,22 +84,27 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_data)
 
     for x in range(dimension_x):
         data[:, x] = pixel_data[x, :, layer_index, feature_index]
-#        for y in range(dimension_y):
-#            data[y, x] = pixel_data[x, y, layer_index, feature_index]
 
     utc_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S')
     hdu = pyfits.PrimaryHDU(data)
     hdu_list = pyfits.HDUList([hdu])
-    # Write the header
+
+    # Write our details first in the header
     hdu_list[0].header.update('MAGPHYST', layer                               , 'MAGPHYS Parameter')
-    hdu_list[0].header.update('DATE'    , utc_now)
+    hdu_list[0].header.update('DATE'    , utc_now                             , 'Creation UTC (CCCC-MM-DD) date of FITS header')
     hdu_list[0].header.update('GALAXYID', galaxy_group.attrs['galaxy_id']     , 'The POGS Galaxy Id')
     hdu_list[0].header.update('VRSNNMBR', galaxy_group.attrs['version_number'], 'The POGS Galaxy Version Number')
     hdu_list[0].header.update('REDSHIFT', str(galaxy_group.attrs['redshift']) , 'The POGS Galaxy redshift')
     hdu_list[0].header.update('SIGMA'   , str(galaxy_group.attrs['sigma'])    , 'The POGS Galaxy sigma')
 
+    output_format = galaxy_group.attrs['output_format']
     for fits_header in galaxy_group['fits_header']:
-        hdu_list[0].header.update(fits_header[0], fits_header[1])
+        keyword = fits_header[0]
+        if keyword not in ['SIMPLE', 'BITPIX', 'NAXIS', 'NAXIS1', 'NAXIS2', 'EXTEND', 'DATE']:
+            if output_format == OUTPUT_FORMAT_1_00 or keyword == 'COMMENT' or keyword == 'HISTORY':
+                hdu_list[0].header.update(keyword, fits_header[1])
+            else:
+                hdu_list[0].header.update(keyword, fits_header[1], fits_header[2])
 
     # Write the file
     if galaxy_group.attrs['version_number'] == 1:

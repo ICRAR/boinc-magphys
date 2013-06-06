@@ -34,6 +34,9 @@ from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
+OUTPUT_FORMAT_1_00 = 'Version 1.00'
+OUTPUT_FORMAT_1_01 = 'Version 1.01'
+
 PARAMETER_TYPES = ['f_mu (SFH)',
                    'f_mu (IR)',
                    'mu parameter',
@@ -93,10 +96,15 @@ data_type_area_user = numpy.dtype([
     ('userid', long),
     ('create_time', h5py.special_dtype(vlen=str)),
 ])
-data_type_fits_header = numpy.dtype([
+data_type_fits_header1_00 = numpy.dtype([
     ('keyword', h5py.special_dtype(vlen=str)),
     ('value',   h5py.special_dtype(vlen=str)),
 ])
+data_type_fits_header1_01 = numpy.dtype([
+    ('keyword', h5py.special_dtype(vlen=str)),
+    ('value',   h5py.special_dtype(vlen=str)),
+    ('comment', h5py.special_dtype(vlen=str)),
+    ])
 data_type_image_filter = numpy.dtype([
     ('image_number',    long),
     ('filter_id_red',   long),
@@ -170,21 +178,24 @@ def store_area_user(connection, galaxy_id, group):
         count += 1
     group.create_dataset('area_user', data=data, compression='gzip')
 
+
 def store_fits_header(connection, galaxy_id, group):
     """
     Store the fits header data for a galaxy in the HDF5 file
     """
     LOG.info('Storing the fits headers')
     count = connection.execute(select([func.count(FITS_HEADER.c.fitsheader_id)]).where(FITS_HEADER.c.galaxy_id == galaxy_id)).first()[0]
-    data = numpy.zeros(count, dtype=data_type_fits_header)
+    data = numpy.zeros(count, dtype=data_type_fits_header1_01)
     count = 0
     for fits_header in connection.execute(select([FITS_HEADER]).where(FITS_HEADER.c.galaxy_id == galaxy_id).order_by(FITS_HEADER.c.fitsheader_id)):
         data[count] = (
             fits_header[FITS_HEADER.c.keyword],
             fits_header[FITS_HEADER.c.value],
-            )
+            fits_header[FITS_HEADER.c.comment],
+        )
         count += 1
     group.create_dataset('fits_header', data=data, compression='gzip')
+
 
 def store_image_filters(connection, galaxy_id, group):
     """

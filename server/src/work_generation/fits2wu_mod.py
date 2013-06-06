@@ -41,7 +41,7 @@ from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, RUN_FILE, FITS_HEADER, RUN
 from image import directory_mod
 from image.fitsimage import FitsImage
-from work_generation import HEADER_PATTERNS, STAR_FORMATION_FILE, INFRARED_FILE
+from work_generation import STAR_FORMATION_FILE, INFRARED_FILE
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -56,6 +56,7 @@ DELAY_BOUND = 86400 * WG_REPORT_DEADLINE                               # Clients
 FPOPS_BOUND_PER_PIXEL = 50                                             # Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
 
+
 class Area:
     """
     An area
@@ -66,6 +67,7 @@ class Area:
         self.bottom_x = bottom_x
         self.bottom_y = bottom_y
 
+
 class PixelValue:
     """
     The pixel value
@@ -73,6 +75,7 @@ class PixelValue:
     def __init__(self, value, sigma):
         self.value = value
         self.sigma = sigma
+
 
 class Pixel:
     """
@@ -83,6 +86,7 @@ class Pixel:
         self.y = y
         self.pixels = pixels
         self.pixel_id = None
+
 
 class Fit2Wu:
     """
@@ -130,7 +134,7 @@ class Fit2Wu:
         self._end_y = self._hdu_list[0].data.shape[0]
         self._end_x = self._hdu_list[0].data.shape[1]
 
-        LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x':self._end_x,'y':self._end_y,'z':self._layer_count,'pix':self._end_x*self._end_y/1000000.0})
+        LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x': self._end_x, 'y': self._end_y, 'z': self._layer_count, 'pix': self._end_x * self._end_y / 1000000.0})
 
         # Update the version number
         version_number = self._get_version_number()
@@ -284,11 +288,11 @@ class Fit2Wu:
             max_x, pixels = self._get_pixels(pix_x, pix_y)
             if len(pixels) > 0:
                 area = Area(pix_x, pix_y, max_x, min(pix_y + WG_ROW_HEIGHT, self._end_y))
-                result1 = self._connection.execute(area_insert.values(galaxy_id = self._galaxy_id,
-                    top_x = area.top_x,
-                    top_y = area.top_y,
-                    bottom_x = area.bottom_x,
-                    bottom_y = area.bottom_y))
+                result1 = self._connection.execute(area_insert.values(galaxy_id=self._galaxy_id,
+                    top_x=area.top_x,
+                    top_y=area.top_y,
+                    bottom_x=area.bottom_x,
+                    bottom_y=area.bottom_y))
                 area.area_id = result1.inserted_primary_key[0]
 
                 for pixel in pixels:
@@ -646,18 +650,18 @@ class Fit2Wu:
         insert = FITS_HEADER.insert()
         header = self._hdu_list[0].header
         for keyword in header:
-            for pattern in HEADER_PATTERNS:
-                if pattern.search(keyword):
-                    value = header[keyword]
-                    self._connection.execute(insert.values(galaxy_id = self._galaxy_id, keyword = keyword, value = value))
+            # The new version of PyFits supports comments
+            value = header[keyword]
+            comment = header.comments[keyword]
+            self._connection.execute(insert.values(galaxy_id=self._galaxy_id, keyword=keyword, value=value, comment=comment))
 
-                    if keyword == 'RA_CENT':
-                        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(ra_cent = float(value)))
-                    elif keyword == 'DEC_CENT':
-                        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent = float(value)))
+            if keyword == 'RA_CENT':
+                self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(ra_cent=float(value)))
+            elif keyword == 'DEC_CENT':
+                self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent=float(value)))
 
     def _update_current(self):
         """
         The current galaxy is current - mark all the others as npot
         """
-        self._connection.execute(GALAXY.update().where(GALAXY.c.name == self._galaxy_name).values(current = False))
+        self._connection.execute(GALAXY.update().where(GALAXY.c.name == self._galaxy_name).values(current=False))
