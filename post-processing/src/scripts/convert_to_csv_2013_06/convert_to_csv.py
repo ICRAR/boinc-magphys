@@ -38,4 +38,4 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../server/src')))
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-convert_file('LAPsec_objnameadzextdeg.txt', 'galaxies.csv', 1)
+convert_file('LAPsec_objnameadzextdeg.txt', 'galaxies_{0}.csv', 1, 200)

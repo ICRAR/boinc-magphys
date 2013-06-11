@@ -110,3 +110,4 @@ for galaxy_name in names[:-1]:
 
 LOG.info('Submitting job for {0}'.format(galaxy_name))
 generate_files(galaxy_name=names[-1], email=args['email'][0], features=features, layers=layers, output_uuid_str=uuid_str)
+LOG.info('All done.')
