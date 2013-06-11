@@ -40,6 +40,7 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import csv
 import argparse
+import uuid
 from hdf5_2_fits.extract_from_hdf5_mod import get_features_and_layers
 from hdf5_2_fits.to_fits import generate_files
 
@@ -91,6 +92,7 @@ with open(args['file_name'][0], 'rb') as csv_file:
     reader = csv.reader(csv_file)
 
     # Skip the header
+    names = []
     reader.next()
     for row in reader:
         if int(row[1]) > 1:
@@ -98,5 +100,13 @@ with open(args['file_name'][0], 'rb') as csv_file:
         else:
             galaxy_name = row[0]
 
-        LOG.info('Submitting job for {0}'.format(galaxy_name))
-        generate_files(galaxy_name=galaxy_name, email=args['email'][0], features=features, layers=layers)
+        names.append(galaxy_name)
+
+# Execute the jobs
+uuid_str = str(uuid.uuid4())
+for galaxy_name in names[:-1]:
+    LOG.info('Submitting job for {0} - no email'.format(galaxy_name))
+    generate_files(galaxy_name=galaxy_name, email=args['email'][0], features=features, layers=layers, uuid_str=uuid_str)
+
+LOG.info('Submitting job for {0}'.format(galaxy_name))
+generate_files(galaxy_name=names[-1], email=args['email'][0], features=features, layers=layers, uuid_str=uuid_str)
