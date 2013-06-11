@@ -95,12 +95,13 @@ with open(args['file_name'][0], 'rb') as csv_file:
     names = []
     reader.next()
     for row in reader:
-        if int(row[1]) > 1:
-            galaxy_name = '{0}_V{1}'.format(row[0], row[1])
-        else:
-            galaxy_name = row[0]
+        if len(row) == 2:
+            if int(row[1]) > 1:
+                galaxy_name = '{0}_V{1}'.format(row[0], row[1])
+            else:
+                galaxy_name = row[0]
 
-        names.append(galaxy_name)
+            names.append(galaxy_name)
 
 # Execute the jobs
 uuid_str = str(uuid.uuid4())
@@ -108,6 +109,6 @@ for galaxy_name in names[:-1]:
     LOG.info('Submitting job for {0} - no confirmation'.format(galaxy_name))
     generate_files(galaxy_name=galaxy_name, email=args['email'][0], features=features, layers=layers, output_uuid_str=uuid_str, send_confirmation=False)
 
-LOG.info('Submitting job for {0}'.format(galaxy_name))
+LOG.info('Submitting job for {0}'.format(names[-1]))
 generate_files(galaxy_name=names[-1], email=args['email'][0], features=features, layers=layers, output_uuid_str=uuid_str)
 LOG.info('All done.')
