@@ -46,15 +46,18 @@ def correct_name(galaxy_name):
     return galaxy_name
 
 
-def convert_file(text_file_name, csv_file_name, run_id):
+def convert_file(text_file_name, csv_file_name, run_id, batch_size):
     # Connect to the database
     ENGINE = create_engine(DB_LOGIN)
     connection = ENGINE.connect()
 
+    result_map = {}
     try:
-        results = []
+        index = 1
         # Open the text file
         with open(text_file_name, 'r') as text_file:
+            results = []
+            result_map['{0:03d}'.format(index)] = results
             # For each line
             for line in text_file.readlines():
                 elements = line.split()
@@ -71,15 +74,23 @@ def convert_file(text_file_name, csv_file_name, run_id):
                     else:
                         results.append([galaxy_name, galaxy[GALAXY.c.version_number]])
 
-        with open(csv_file_name, 'w') as csv_file:
+                if len(results) > batch_size:
+                    index += 1
+                    results = []
+                    result_map['{0:03d}'.format(index)] = results
+                    LOG.info('Moving to batch {0:03d}'.format(index))
+
+    except Exception as e:
+        LOG.exception('Major error', e)
+
+    connection.close()
+
+    # Now write the results
+    for key, results in result_map.iteritems():
+        with open(csv_file_name.format(key), 'w') as csv_file:
             writer = csv.writer(csv_file)
 
             writer.writerow(['Galaxy','ID'])
 
             for result in results:
                 writer.writerow(result)
-
-    except Exception as e:
-        LOG.exception('Major error', e)
-
-    connection.close()
