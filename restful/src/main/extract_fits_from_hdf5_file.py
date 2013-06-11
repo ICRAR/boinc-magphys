@@ -105,8 +105,8 @@ with open(args['file_name'][0], 'rb') as csv_file:
 # Execute the jobs
 uuid_str = str(uuid.uuid4())
 for galaxy_name in names[:-1]:
-    LOG.info('Submitting job for {0} - no email'.format(galaxy_name))
-    generate_files(galaxy_name=galaxy_name, email=args['email'][0], features=features, layers=layers, uuid_str=uuid_str)
+    LOG.info('Submitting job for {0} - no confirmation'.format(galaxy_name))
+    generate_files(galaxy_name=galaxy_name, email=args['email'][0], features=features, layers=layers, output_uuid_str=uuid_str, send_confirmation=False)
 
 LOG.info('Submitting job for {0}'.format(galaxy_name))
-generate_files(galaxy_name=names[-1], email=args['email'][0], features=features, layers=layers, uuid_str=uuid_str)
+generate_files(galaxy_name=names[-1], email=args['email'][0], features=features, layers=layers, output_uuid_str=uuid_str)

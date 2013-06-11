@@ -83,7 +83,7 @@ class SpecialTask(Task):
 
 
 @celery.task(ignore_result=True, name='to_fits.generate_files')
-def generate_files(galaxy_name=None, email=None, features=None, layers=None, uuid_str=None):
+def generate_files(galaxy_name=None, email=None, features=None, layers=None, output_uuid_str=None, send_confirmation=True):
     """
     Generate the files request by the user from the HDF5 file and email them telling them where to download them from
 
@@ -94,16 +94,17 @@ def generate_files(galaxy_name=None, email=None, features=None, layers=None, uui
     :return:
     """
     if galaxy_name is not None and features is not None and layers is not None:
-        if uuid_str is None:
-            uuid_str = str(uuid.uuid4())
-        get_hdf5_file.delay(galaxy_name=galaxy_name, email=email, features=features, layers=layers, uuid_string=uuid_str)
+        if output_uuid_str is None:
+            output_uuid_str = str(uuid.uuid4())
+        input_uuid_str = str(uuid.uuid4())
+        get_hdf5_file.delay(galaxy_name=galaxy_name, email=email, features=features, layers=layers, output_uuid_str=output_uuid_str, input_uuid_str=input_uuid_str, send_confirmation=send_confirmation)
 
     else:
         raise ValueError('generate_files all four arguments must be supplied')
 
 
 @celery.task(base=SpecialTask, ignore_result=True, name='to_fits.get_hdf5_file')
-def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None, uuid_string=None):
+def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None, output_uuid_str=None, input_uuid_str=None, send_confirmation=True):
     """
     Get the file from cortex.
     http://cortex.ivec.org:7780/RETRIEVE?file_id=NGC3055.hdf5
@@ -118,7 +119,7 @@ def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None, uuid
     """
     print('{0} - {1}'.format(galaxy_name, get_hdf5_file.request.id))
     ngas_file_name = galaxy_name + '.hdf5'
-    path_name = get_file_name(HDF5_DIRECTORY, uuid_string, galaxy_name, 'hdf5')
+    path_name = get_file_name(HDF5_DIRECTORY, input_uuid_str, galaxy_name, 'hdf5')
     command_string = 'wget -O {0} http://cortex.ivec.org:7780/RETRIEVE?file_id={1}&processing=ngamsMWACortexStageDppi'.format(path_name, urllib.quote(ngas_file_name, ''))
     print(command_string)
     try:
@@ -127,7 +128,7 @@ def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None, uuid
 
         if result:
             # Submit to the next step in the chain
-            build_files.delay(galaxy_name=galaxy_name, email=email, features=features, layers=layers, uuid_string=uuid_string)
+            build_files.delay(galaxy_name=galaxy_name, email=email, features=features, layers=layers, output_uuid_str=output_uuid_str, input_uuid_str=input_uuid_str, send_confirmation=send_confirmation)
 
         else:
             # Store the result in the task
@@ -150,7 +151,7 @@ def get_hdf5_file(galaxy_name=None, email=None, features=None, layers=None, uuid
 
 
 @celery.task(base=SpecialTask, ignore_result=True, name='to_fits.build_files')
-def build_files(galaxy_name=None, email=None, features=None, layers=None, uuid_string=None):
+def build_files(galaxy_name=None, email=None, features=None, layers=None, output_uuid_str=None, input_uuid_str=None, send_confirmation=True):
     """
     Build the files we need in parallel
 
@@ -161,7 +162,7 @@ def build_files(galaxy_name=None, email=None, features=None, layers=None, uuid_s
     :return:
     """
     print('Building files for {0} - {1} - {2}'.format(galaxy_name, features, layers))
-    file_name = get_file_name(HDF5_DIRECTORY, uuid_string, galaxy_name, 'hdf5')
+    file_name = get_file_name(HDF5_DIRECTORY, input_uuid_str, galaxy_name, 'hdf5')
     if os.path.isfile(file_name):
         h5_file = h5py.File(file_name, 'r')
         galaxy_group = h5_file['galaxy']
@@ -169,13 +170,13 @@ def build_files(galaxy_name=None, email=None, features=None, layers=None, uuid_s
         pixel_data = pixel_group['pixels']
 
         file_names = []
-        output_dir = create_if_necessary(OUTPUT_DIRECTORY, uuid_string)
+        output_dir = create_if_necessary(OUTPUT_DIRECTORY, output_uuid_str)
         for feature in features:
             for layer in layers:
                 file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_data))
 
         h5_file.close()
-        zip_files_and_email.delay(galaxy_name=galaxy_name, email=email, file_names=file_names, uuid_string=uuid_string)
+        zip_files_and_email.delay(galaxy_name=galaxy_name, email=email, file_names=file_names, output_uuid_str=output_uuid_str, input_uuid_str=input_uuid_str, send_confirmation=send_confirmation)
 
     else:
         error = 'The file {0} does not exist'.format(file_name)
@@ -184,7 +185,7 @@ def build_files(galaxy_name=None, email=None, features=None, layers=None, uuid_s
 
 
 @celery.task(base=SpecialTask, ignore_result=True, name='to_fits.zip_files_and_email')
-def zip_files_and_email(galaxy_name=None, email=None, file_names=None, uuid_string=None):
+def zip_files_and_email(galaxy_name=None, email=None, file_names=None, output_uuid_str=None, input_uuid_str=None, send_confirmation=True):
     """
     Zip the files and send the email
 
@@ -193,10 +194,10 @@ def zip_files_and_email(galaxy_name=None, email=None, file_names=None, uuid_stri
     :param file_names: the fits files to be bundled
     :return:
     """
-    zip_up_files(galaxy_name, file_names, uuid_string)
-    if email is not None:
-        send_email(email, get_final_message(galaxy_name, file_names, uuid_string), galaxy_name)
-    clean_up_file(galaxy_name, uuid_string)
+    zip_up_files(galaxy_name, file_names, output_uuid_str)
+    if send_confirmation:
+        send_email(email, get_final_message(galaxy_name, file_names, output_uuid_str), galaxy_name)
+    clean_up_file(galaxy_name, input_uuid_str)
 
 
 def create_if_necessary(directory, uuid_str):
@@ -330,6 +331,5 @@ def clean_up_file(galaxy_name, uuid_string):
     :return:
     """
     os.remove(get_file_name(HDF5_DIRECTORY, uuid_string, galaxy_name, 'hdf5'))
-    if HDF5_DIRECTORY != OUTPUT_DIRECTORY:
-        os.rmdir(os.path.join(HDF5_DIRECTORY, uuid_string))
+    os.rmdir(os.path.join(HDF5_DIRECTORY, uuid_string))
 
