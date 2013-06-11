@@ -83,7 +83,7 @@ class SpecialTask(Task):
 
 
 @celery.task(ignore_result=True, name='to_fits.generate_files')
-def generate_files(galaxy_name=None, email=None, features=None, layers=None):
+def generate_files(galaxy_name=None, email=None, features=None, layers=None, uuid_str=None):
     """
     Generate the files request by the user from the HDF5 file and email them telling them where to download them from
 
@@ -93,8 +93,9 @@ def generate_files(galaxy_name=None, email=None, features=None, layers=None):
     :param layers: the layers requested
     :return:
     """
-    if galaxy_name is not None and email is not None and features is not None and layers is not None:
-        uuid_str = str(uuid.uuid4())
+    if galaxy_name is not None and features is not None and layers is not None:
+        if uuid_str is None:
+            uuid_str = str(uuid.uuid4())
         get_hdf5_file.delay(galaxy_name=galaxy_name, email=email, features=features, layers=layers, uuid_string=uuid_str)
 
     else:
@@ -193,7 +194,8 @@ def zip_files_and_email(galaxy_name=None, email=None, file_names=None, uuid_stri
     :return:
     """
     zip_up_files(galaxy_name, file_names, uuid_string)
-    send_email(email, get_final_message(galaxy_name, file_names, uuid_string), galaxy_name)
+    if email is not None:
+        send_email(email, get_final_message(galaxy_name, file_names, uuid_string), galaxy_name)
     clean_up_file(galaxy_name, uuid_string)
 
 
