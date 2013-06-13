@@ -39,6 +39,7 @@ from image import directory_mod
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
+
 class ImageBuilder:
     """
     This class scales each colour such that the median is centered on 1, and them applies the
@@ -97,7 +98,6 @@ class ImageBuilder:
                 filter_id_red = filter_id_red,
                 filter_id_blue = filter_id_blue,
                 filter_id_green = filter_id_green))
-
 
     def _get_filter_id(self, connection, filter_number):
         filter = connection.execute(select([FILTER]).where(FILTER.c.filter_number == filter_number)).first()
@@ -206,6 +206,7 @@ class ImageBuilder:
         if self.debug:
             for z in range(0, 256):
                 print z, redValuerange[z], greenValuerange[z], blueValuerange[z]
+
 
 class FitsImage:
     useHighCut = False
@@ -339,7 +340,7 @@ class FitsImage:
         else:
            return value
 
-    def markImage(self, inImageFileName, outImageFileName, galaxy_id, userid):
+    def mark_image(self, inImageFileName, outImageFileName, galaxy_id, userid):
         """
         Read the image for the galaxy and generate an image that highlights the areas
         that the specified user has generated results.
@@ -352,7 +353,7 @@ class FitsImage:
         for area in areas:
             for x in range(area[AREA.c.top_x], area[AREA.c.bottom_x]):
                 for y in range(area[AREA.c.top_y], area[AREA.c.bottom_y]):
-                    if x < height and y < width:
+                    if x < width and y < height:
                         self.markPixel(image, x, width-y-1)
 
         image.save(outImageFileName)

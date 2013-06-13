@@ -45,6 +45,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 ENGINE = create_engine(DB_LOGIN)
 
+
 def emailGalaxyReport(userid,galaxy_ids):
     # Docmosis specific variables
     rendURL='https://dws.docmosis.com/services/rs/render'
@@ -60,11 +61,13 @@ def emailGalaxyReport(userid,galaxy_ids):
     request.add_header('Content-Type','application/json; charset=UTF-8')
     response = urllib2.urlopen(request)
 
+
 class UserInfo:
     def __init__(self):
         self.id = ""
         self.name = ""
         self.email = ""
+
 
 class GalaxyInfo:
     """
@@ -83,6 +86,7 @@ class GalaxyInfo:
         self.dec_eqb1950 = 0
         self.pos1 = ""
         self.pos2 = ""
+
 
 def dataString(user,galaxies):
     hasParam = 1
@@ -133,6 +137,7 @@ def dataString(user,galaxies):
 
     return data
 
+
 def galaxyDetails(galaxy_ids):
     """
     Return list of galaxies with detailed data
@@ -163,6 +168,7 @@ def galaxyDetails(galaxy_ids):
     return galaxy_list
 
 
+
 def galaxyParameterImage(galaxy_id, name):
     """
     Returns base64 string version of galaxy image
@@ -183,6 +189,7 @@ def galaxyParameterImage(galaxy_id, name):
 
     return image64
 
+
 def userGalaxyImage(userid, galaxy_id, colour):
     """
     Returns base64 string version of galaxy image
@@ -202,7 +209,7 @@ def userGalaxyImage(userid, galaxy_id, colour):
 
     image = fitsimage.FitsImage(connection)
     inImageFileName = directory_mod.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
-    image.markImage(inImageFileName, outImageFileName, galaxy_id, userid)
+    image.mark_image(inImageFileName, outImageFileName, galaxy_id, userid)
     connection.close()
 
     file = open(outImageFileName, "rb")
@@ -212,23 +219,25 @@ def userGalaxyImage(userid, galaxy_id, colour):
 
     return image64
 
-def galaxyFilterLabel(galaxy_id,colour):
-   """
-   Return filters string for given galaxy and colour
-   """
-   connection = ENGINE.connect()
-   map_fl = {}
-   for filter in connection.execute(select([FILTER])):
-      map_fl[filter.filter_id] = filter.label
-   query = select([IMAGE_FILTERS_USED])
-   query = query.where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id,IMAGE_FILTERS_USED.c.image_number == colour))
-   image = connection.execute(query).first()
-   fstr = map_fl[image.filter_id_red]
-   fstr = fstr + ", " + map_fl[image.filter_id_green]
-   fstr = fstr + ", " + map_fl[image.filter_id_blue]
-   connection.close()
 
-   return fstr
+def galaxyFilterLabel(galaxy_id,colour):
+    """
+    Return filters string for given galaxy and colour
+    """
+    connection = ENGINE.connect()
+    map_fl = {}
+    for filter in connection.execute(select([FILTER])):
+      map_fl[filter.filter_id] = filter.label
+    query = select([IMAGE_FILTERS_USED])
+    query = query.where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id,IMAGE_FILTERS_USED.c.image_number == colour))
+    image = connection.execute(query).first()
+    fstr = map_fl[image.filter_id_red]
+    fstr = fstr + ", " + map_fl[image.filter_id_green]
+    fstr = fstr + ", " + map_fl[image.filter_id_blue]
+    connection.close()
+
+    return fstr
+
 
 def userDetails(userid):
     """
@@ -243,6 +252,7 @@ def userDetails(userid):
     database.close()
 
     return user_line
+
 
 def getCorrectedName(name):
     """
