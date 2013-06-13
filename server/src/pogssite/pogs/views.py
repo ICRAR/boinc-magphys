@@ -38,6 +38,7 @@ from database.database_support_core import AREA, AREA_USER, GALAXY, DOCMOSIS_TAS
 
 ENGINE = create_engine(DB_LOGIN)
 
+
 class GalaxyLine:
     def __init__(self):
         self.names = []
@@ -45,6 +46,7 @@ class GalaxyLine:
         self.redshifts = []
         self.widths = []
         self.heights = []
+
 
 class GalaxyInfo:
     def __init__(self):
@@ -56,6 +58,7 @@ class GalaxyInfo:
         self.redshift = 0
         self.dimensions = ""
         self.pct_complete = "0.00%"
+
 
 def getReferer(request):
     """
@@ -75,6 +78,7 @@ def getReferer(request):
         referer = getRefererFromCookie(request)
     return referer
 
+
 def getRefererFromCookie(request):
     try:
         referer = request.COOKIES['pogs_referer']
@@ -84,8 +88,10 @@ def getRefererFromCookie(request):
         referer = 'pogs'
     return referer
 
+
 def setReferrer(response, referer):
     response.set_cookie('pogs_referer', referer)
+
 
 def userGalaxies(request, userid):
     pogs_connection = ENGINE.connect()
@@ -123,6 +129,7 @@ def userGalaxies(request, userid):
     setReferrer(response, referer)
     return response
 
+
 def userGalaxy(request, userid, galaxy_id):
 
     userid = int(userid)
@@ -158,9 +165,9 @@ def userGalaxy(request, userid, galaxy_id):
             galaxy_name = galaxy[GALAXY.c.name] + "[" + str(galaxy[GALAXY.c.version_number]) + "]"
         galaxy_height = galaxy[GALAXY.c.dimension_x]
         galaxy_width = galaxy[GALAXY.c.dimension_y]
-        
+
         map_imf = {}
-        try: 
+        try:
             map_fl = {}
             for filter in connection.execute(select([FILTER])):
                 map_fl[filter.filter_id] = filter.label
@@ -169,8 +176,8 @@ def userGalaxy(request, userid, galaxy_id):
                 fstr = map_fl[image.filter_id_red]
                 fstr = fstr + ", " + map_fl[image.filter_id_green]
                 fstr = fstr + ", " + map_fl[image.filter_id_blue]
-                map_imf[image.image_number] = fstr 
-        except: 
+                map_imf[image.image_number] = fstr
+        except:
             for i in range(1, 5):
                 map_imf[i] = 'Unknown Filter'
 
@@ -183,16 +190,17 @@ def userGalaxy(request, userid, galaxy_id):
             'galaxy_name': galaxy_name,
             'galaxy_width': galaxy_width,
             'galaxy_height': galaxy_height,
-            'image1_filters': map_imf[1], 
-            'image2_filters': map_imf[2], 
-            'image3_filters': map_imf[3], 
-            'image4_filters': map_imf[4], 
+            'image1_filters': map_imf[1],
+            'image2_filters': map_imf[2],
+            'image3_filters': map_imf[3],
+            'image4_filters': map_imf[4],
             'referer':          referer,
         })
         response = HttpResponse(t.render(c))
 
     connection.close()
     return response
+
 
 def userGalaxyImage(request, userid, galaxy_id, colour):
     tmp = tempfile.mkstemp(".png", "pogs", None, False)
@@ -211,7 +219,7 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
 
     image = fitsimage.FitsImage(connection)
     inImageFileName = directory_mod.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
-    image.markImage(inImageFileName, outImageFileName, galaxy_id, userid)
+    image.mark_image(inImageFileName, outImageFileName, galaxy_id, userid)
     connection.close()
 
     sizeBytes = os.path.getsize(outImageFileName)
@@ -230,6 +238,7 @@ def userGalaxyImage(request, userid, galaxy_id, colour):
     response['Expires'] = expires
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
+
 
 def galaxy(request, galaxy_id):
     connection = ENGINE.connect()
@@ -254,8 +263,10 @@ def galaxy(request, galaxy_id):
     })
     return HttpResponse(t.render(c))
 
+
 def galaxyListOld(request, page):
     return HttpResponseRedirect("../GalaxyList?page=" + page)
+
 
 def galaxyList(request):
     try:
@@ -395,6 +406,7 @@ def galaxyList(request):
     setReferrer(response, referer)
     return response
 
+
 def galaxyImage(request, galaxy_id, colour):
     imageDirName = DJANGO_IMAGE_DIR
 
@@ -421,6 +433,7 @@ def galaxyImage(request, galaxy_id, colour):
     response['Expires'] = expires
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
+
 
 def galaxyThumbnailImage(request, galaxy_id, colour):
     imageDirName = DJANGO_IMAGE_DIR
@@ -449,6 +462,7 @@ def galaxyThumbnailImage(request, galaxy_id, colour):
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
 
+
 def galaxyParameterImage(request, galaxy_id, name):
     imageDirName = DJANGO_IMAGE_DIR
 
@@ -475,6 +489,7 @@ def galaxyParameterImage(request, galaxy_id, name):
     response['Expires'] = expires
     response['Cache-Control'] = "public, max-age=" + str(DELTA_SECONDS)
     return response
+
 
 def user_galaxies(connection, userid):
     """
