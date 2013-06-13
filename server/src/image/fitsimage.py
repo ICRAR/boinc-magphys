@@ -347,14 +347,16 @@ class FitsImage:
         """
         image = Image.open(inImageFileName, "r").convert("RGBA")
         width, height = image.size
+        LOG.info('Width: {0}, Height: {1}'.format(width, height))
 
         areas = self._connection.execute(select([AREA], from_obj=AREA.join(AREA_USER)).where(and_(AREA_USER.c.userid == userid, AREA.c.galaxy_id == galaxy_id)).order_by(AREA.c.top_x, AREA.c.top_y))
 
         for area in areas:
+            LOG.info('top_x: {0}, bottom_x: {1}, top_y: {2}, bottom_y: {3}'.format(area[AREA.c.top_x], area[AREA.c.bottom_x], area[AREA.c.top_y], area[AREA.c.bottom_y]))
             for x in range(area[AREA.c.top_x], area[AREA.c.bottom_x]):
                 for y in range(area[AREA.c.top_y], area[AREA.c.bottom_y]):
                     if x < width and y < height:
-                        self.markPixel(image, x, width-y-1)
+                        self.markPixel(image, x, height-y-1)
 
         image.save(outImageFileName)
 
