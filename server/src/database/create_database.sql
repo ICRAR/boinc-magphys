@@ -177,7 +177,8 @@ CREATE TABLE area_user (
 
   FOREIGN KEY(area_id) REFERENCES area(area_id),
 
-  INDEX (area_id)
+  INDEX (area_id),
+  INDEX (userid)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE pixel_result (

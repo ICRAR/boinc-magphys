@@ -47,13 +47,14 @@ from fabric.operations import prompt
 from fabric.utils import puts, abort, fastprint
 
 USERNAME = 'ec2-user'
-AMI_ID = 'ami-1624987f'
+AMI_ID = 'ami-05355a6c'
 INSTANCE_TYPE = 'm1.small'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
 SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys/magphys')
+
 
 def base_install(host0):
     """
@@ -172,6 +173,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         # Add them to the sudoers
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
+
 def build_mod_wsgi():
     """
     Build the WSGI for the Python web interface
@@ -189,6 +191,7 @@ def build_mod_wsgi():
     # Clean up
     sudo('rm -rf /tmp/build')
 
+
 def copy_public_keys():
     """
     Copy the public keys to the remote servers
@@ -199,6 +202,7 @@ def copy_public_keys():
         user, ext = os.path.splitext(filename)
         env.list_of_users.append(user)
         put(file, filename)
+
 
 def create_instance(stub_name, number_instances, ebs_size):
     """
@@ -268,6 +272,7 @@ def create_instance(stub_name, number_instances, ebs_size):
     puts('Host names = {0}'.format(host_names))
     return host_names
 
+
 def create_shared_home():
     # Link the area so we have a common home
     if env.host_string == env.hosts[0]:
@@ -276,6 +281,7 @@ def create_shared_home():
     else:
         sudo('rm -rf /home/ec2-user && ln -s /mnt/data/ec2-user/ /home/ec2-user')
         sudo('chown ec2-user:ec2-user /home/ec2-user')
+
 
 def format_drive():
     """
@@ -303,6 +309,7 @@ LABEL=data              /mnt/brick                   xfs     defaults        0 0
 # GlusterFS
 {0}:/gv0        /mnt/data                glusterfs defaults,transport=tcp,_netdev 1 0' >> /etc/fstab'''.format(env.host_string))
 
+
 def gluster_install():
     """
     Load the Gluster RPMs and start the service
@@ -318,6 +325,7 @@ def gluster_install():
     sudo('service glusterd start')
     run('rm *.rpm')
 
+
 def gluster_mount():
     if env.host_string == env.hosts[0]:
         host_names = ''
@@ -328,12 +336,14 @@ def gluster_mount():
     sudo('mkdir -p /mnt/data')
     sudo('mount -o transport=tcp -t glusterfs {0}:/gv0 /mnt/data'.format(env.host_string))
 
+
 def gluster_probe():
     for host_name in env.hosts:
         # Only probe other servers
         if env.host_string != host_name:
             sudo('gluster peer probe {0}'.format(host_name))
     sudo('gluster peer status')
+
 
 def single_install(with_db):
     """
@@ -460,6 +470,7 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
     run('ssh-keygen -t rsa -N "" -f /home/ec2-user/.ssh/id_rsa')
     run('cat /home/ec2-user/.ssh/id_rsa.pub >> /home/ec2-user/.ssh/authorized_keys')
 
+
 def to_boolean(choice, default=False):
     """
     Convert the yes/no to true/false
@@ -475,12 +486,14 @@ def to_boolean(choice, default=False):
 
     return default
 
+
 def yum_install():
     # Update the AMI completely
     sudo('yum --assumeyes --quiet update')
 
     # Install xfsprogs, puppet and git
     sudo('yum --assumeyes --quiet install xfsprogs puppet git')
+
 
 @task
 @serial
@@ -520,6 +533,7 @@ def setup_env():
         'additional' : host_names[1:]
     }
 
+
 @task
 @serial
 def single_server():
@@ -536,6 +550,7 @@ def single_server():
 
     # Wait for things to settle down
     time.sleep(15)
+
 
 @task
 @serial
@@ -555,6 +570,7 @@ def gluster1():
     # Wait for things to settle down
     time.sleep(15)
 
+
 @task
 @serial
 def gluster2():
@@ -567,6 +583,7 @@ def gluster2():
 
     # Wait for things to settle down
     time.sleep(15)
+
 
 @task
 @serial
@@ -584,6 +601,7 @@ def gluster3():
 
     # Wait for things to settle down
     time.sleep(15)
+
 
 @task
 @serial
@@ -610,6 +628,7 @@ def deploy_with_db():
     # Wait for things to settle down
     time.sleep(5)
 
+
 @task
 @serial
 def deploy_without_db():
@@ -634,6 +653,7 @@ def deploy_without_db():
 
     # Wait for things to settle down
     time.sleep(5)
+
 
 @task
 @serial
