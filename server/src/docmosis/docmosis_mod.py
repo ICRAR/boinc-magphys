@@ -36,7 +36,6 @@ from config import WG_BOINC_PROJECT_ROOT,DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, 
 from image import fitsimage, directory_mod
 from database.database_support_core import GALAXY,IMAGE_FILTERS_USED,FILTER
 
-# TODO - Look at using direct MySQL connection
 os.environ.setdefault("BOINC_PROJECT_DIR", WG_BOINC_PROJECT_ROOT)
 from Boinc import database
 
@@ -48,7 +47,7 @@ ENGINE = create_engine(DB_LOGIN)
 
 def emailGalaxyReport(userid,galaxy_ids):
     # Docmosis specific variables
-    rendURL='https://dws.docmosis.com/services/rs/render'
+    rendURL = 'https://dws.docmosis.com/services/rs/render'
 
     LOG.info("Retrieve user details")
     user = userDetails(userid)
@@ -174,7 +173,7 @@ def galaxyParameterImage(galaxy_id, name):
     Returns base64 string version of galaxy image
     """
 
-    imageDirName = DJANGO_IMAGE_DIR
+    imageDirName = DJANGO_IMAGE_DIR  # TODO
 
     connection = ENGINE.connect()
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()

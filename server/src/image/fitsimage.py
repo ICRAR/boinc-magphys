@@ -59,11 +59,11 @@ class ImageBuilder:
     height = 0
     blackRGB = (0, 0, 0)
 
-    redHiCut = math.pi/2
+    redHiCut = math.pi / 2
     redMedian = 0
-    greenHiCut = math.pi/2
+    greenHiCut = math.pi / 2
     greenMedian = 0
-    blueHiCut = math.pi/2
+    blueHiCut = math.pi / 2
     blueMedian = 0
 
     centre = 0.6
@@ -216,7 +216,7 @@ class FitsImage:
         self.sigma = None
         self._connection = connection
 
-    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, debug, galaxy_id):
+    def build_image(self, fitsFileName, imageDirName, imagePrefixName, debug, galaxy_id):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         """
@@ -297,14 +297,14 @@ class FitsImage:
 
         # Create Three Colour Images
         image1 = ImageBuilder(1, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
-            directory_mod.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True),
-            image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, self._connection, galaxy_id) # i, r, g
+                              directory_mod.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True),
+                              image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, self._connection, galaxy_id)  # i, r, g
         image2 = ImageBuilder(2, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None,
-            image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, self._connection, galaxy_id) # r, g, NUV
+                              image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, self._connection, galaxy_id)  # r, g, NUV
         image3 = ImageBuilder(3, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None,
-            image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, self._connection, galaxy_id) # 3.6, g, NUV
+                              image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, self._connection, galaxy_id)  # 3.6, g, NUV
         image4 = ImageBuilder(4, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None,
-            image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, self._connection, galaxy_id) # 22, r, NUV
+                              image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, self._connection, galaxy_id)  # 22, r, NUV
         images = [image1, image2, image3, image4]
 
         file = 0
@@ -338,7 +338,7 @@ class FitsImage:
         elif method == 'asinh':
             return math.asinh(value / self.sigma)
         else:
-           return value
+            return value
 
     def mark_image(self, inImageFileName, outImageFileName, galaxy_id, userid):
         """

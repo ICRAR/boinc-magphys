@@ -174,8 +174,8 @@ for galaxy in connection.execute(query):
 
     transaction = connection.begin()
     connection.execute(GALAXY.update().
-        where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).
-        values(image_time = datetime.datetime.now(), pixel_count = pixel_count, pixels_processed = pixels_processed))
+                       where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).
+                       values(image_time=datetime.datetime.now(), pixel_count=pixel_count, pixels_processed=pixels_processed))
     transaction.commit()
     galaxy_count += 1
 

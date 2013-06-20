@@ -28,11 +28,15 @@ Image generation functions
 import os
 import hashlib
 
+
 def filename_hash(name, hash_fanout):
     """
     Accepts a filename (without path) and the hash fanout.
     Returns the directory bucket where the file will reside.
     The hash fanout is typically provided by the project config file.
+
+    :param name:
+    :param hash_fanout:
     """
     h = hex(int(hashlib.md5(name).hexdigest()[:8], 16) % hash_fanout)[2:]
 
@@ -41,6 +45,7 @@ def filename_hash(name, hash_fanout):
     if h.endswith('L'):
         h = h[:-1]
     return h
+
 
 def get_file_path(dir_name, file_name, create):
     """
@@ -58,6 +63,7 @@ def get_file_path(dir_name, file_name, create):
         os.mkdir(hash_dir_name)
     return os.path.join(dir_name,hashed,file_name)
 
+
 def get_colour_image_path(imageDirName, imagePrefixName, colour, create):
     """
     Generates the relative path to the file given the directory name, image prefix
@@ -65,6 +71,7 @@ def get_colour_image_path(imageDirName, imagePrefixName, colour, create):
     many directories to avoid having too many files in a single directory.
     """
     return get_file_path(imageDirName, imagePrefixName + "_colour_" + str(colour) + ".png", create)
+
 
 def get_thumbnail_colour_image_path(imageDirName, imagePrefixName, colour, create):
     """

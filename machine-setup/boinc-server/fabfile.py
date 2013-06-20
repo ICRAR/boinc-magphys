@@ -38,6 +38,7 @@ import glob
 import boto
 import os
 import time
+import csv
 
 from fabric.api import run, sudo, put, env, require
 from fabric.context_managers import cd
@@ -52,7 +53,8 @@ INSTANCE_TYPE = 'm1.small'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
-SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH
+SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
+BOINC_AWS_KEYS = os.path.expanduser('~/Documents/Keys/aws')
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys/magphys')
 
 
@@ -62,7 +64,10 @@ def base_install(host0):
     """
     if host0:
         # Clone our code
-        run('git clone git://github.com/ICRAR/boinc-magphys.git')
+        if env.branch == '':
+            run('git clone git://github.com/ICRAR/boinc-magphys.git')
+        else:
+            run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
 
     # Puppet and git should be installed by the python
     with cd('/home/ec2-user/boinc-magphys/machine-setup'):
@@ -129,9 +134,9 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
 
         # Setup the pythonpath
         append('/home/ec2-user/.bash_profile',
-            ['',
-             'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src',
-             'export PYTHONPATH'])
+               ['',
+                'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src',
+                'export PYTHONPATH'])
 
     # Setup the python
     run('wget http://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
@@ -144,7 +149,6 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('pip-2.7 install Numpy')
     sudo('pip-2.7 install pyfits')
     sudo('pip-2.7 install pil')
-    sudo('pip-2.7 install django')
     sudo('pip-2.7 install fabric')
     sudo('pip-2.7 install configobj')
     sudo('pip-2.7 install MySQL-python')
@@ -173,23 +177,17 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         # Add them to the sudoers
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
+    # Create the .boto file
+    file_name = get_aws_keyfile()
+    with open(file_name, 'rb') as csv_file:
+        reader = csv.reader(csv_file)
+        # Skip the header
+        reader.next()
 
-def build_mod_wsgi():
-    """
-    Build the WSGI for the Python web interface
-    """
-    run('mkdir -p /tmp/build')
-
-    with cd('/tmp/build'):
-        run('wget http://modwsgi.googlecode.com/files/mod_wsgi-3.3.tar.gz')
-        run('tar -xvf mod_wsgi-3.3.tar.gz')
-    with cd('/tmp/build/mod_wsgi-3.3'):
-        run('./configure --with-python=/usr/bin/python2.7')
-        run('make')
-        sudo('make install')
-
-    # Clean up
-    sudo('rm -rf /tmp/build')
+        row = reader.next()
+        run('''echo "[Credentials]
+aws_access_key_id = {0}
+aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(row[1], row[2]))
 
 
 def copy_public_keys():
@@ -197,11 +195,11 @@ def copy_public_keys():
     Copy the public keys to the remote servers
     """
     env.list_of_users = []
-    for file in glob.glob(PUBLIC_KEYS + '/*.pub'):
-        filename = os.path.basename(file)
+    for key_file in glob.glob(PUBLIC_KEYS + '/*.pub'):
+        filename = os.path.basename(key_file)
         user, ext = os.path.splitext(filename)
         env.list_of_users.append(user)
-        put(file, filename)
+        put(key_file, filename)
 
 
 def create_instance(stub_name, number_instances, ebs_size):
@@ -281,6 +279,15 @@ def create_shared_home():
     else:
         sudo('rm -rf /home/ec2-user && ln -s /mnt/data/ec2-user/ /home/ec2-user')
         sudo('chown ec2-user:ec2-user /home/ec2-user')
+
+
+def get_aws_keyfile():
+    """
+    Get the aws key file
+
+    :return:
+    """
+    return os.path.join(BOINC_AWS_KEYS, '{0}.credentials.csv.txt'.format(env.aws_user))
 
 
 def format_drive():
@@ -388,24 +395,18 @@ databaseHostname = "{2}"
 databaseName = "magphys"
 boincDatabaseName = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'''.format(env.db_username, env.db_password, env.db_host_name, env.project_name))
 
-    # Setup Django files
-    run('''echo 'template_dir = "/home/ec2-user/boinc-magphys/server/src/templates"
-image_dir = "/home/ec2-user/galaxyImages"
-docmosis_key = "{0}"
-docmosis_template = "Report.doc"' >> /home/ec2-user/boinc-magphys/server/src/config/django.settings'''.format(env.docmosis_key))
+    # Setup Docmosis files
+    run('''echo 'docmosis_key = "{0}"
+docmosis_render_url = "https://dws.docmosis.com/services/rs/render"
+docmosis_template = "Report.doc"' >> /home/ec2-user/boinc-magphys/server/src/config/docmosis.settings'''.format(env.docmosis_key))
 
     # Setup Work Generation files
-    run('''echo 'image_directory = "/home/ec2-user/galaxyImages"
-min_pixels_per_file = "15"
+    run('''echo 'min_pixels_per_file = "15"
 row_height = "6"
 threshold = "1000"
 high_water_mark = "400"
 report_deadline = "7"
 boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
-
-    # Setup Apache for Django.
-    sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/wsgi.conf /etc/httpd/conf.d/')
-    sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/pogs.django.conf /etc/httpd/conf.d/')
 
     # Copy the config files
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
@@ -420,11 +421,12 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
     run('cp /home/ec2-user/boinc-magphys/server/logos/* /home/ec2-user/projects/{0}/html/user/logos/'.format(env.project_name))
 
     # Build the validator
-    with cd ('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
+    with cd('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
         run('make')
 
     # setup_website
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+        run('fab --set project_name={0} create_s3'.format(env.project_name))
         run('fab --set project_name={0} edit_files'.format(env.project_name))
         sudo('fab --set project_name={0} setup_website'.format(env.project_name))
 
@@ -478,8 +480,8 @@ def to_boolean(choice, default=False):
     :param choice: the text string input
     :type choice: string
     """
-    valid = {"yes":True,   "y":True,  "ye":True,
-             "no":False,     "n":False}
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
     choice_lower = choice.lower()
     if choice_lower in valid:
         return valid[choice_lower]
@@ -516,12 +518,23 @@ def setup_env():
         prompt('AWS Instance name stub: ', 'instance_stub_name')
     if 'project_name' not in env:
         prompt('BOINC project name: ', 'project_name')
+    if 'aws_user' not in env:
+        prompt('AWS User:', 'aws_user')
     if 'gmail_account' not in env:
         prompt('GMail Account:', 'gmail_account')
     if 'gmail_password' not in env:
         prompt('GMail Password:', 'gmail_password')
     if 'docmosis_key' not in env:
         prompt('Docmosis Key:', 'docmosis_key')
+    if 'branch' not in env:
+        prompt('Git Branch <return> for master:', 'branch')
+
+    # Check the aws key exists
+    file_name = get_aws_keyfile()
+    if not os.path.exists(file_name):
+        abort('Could not find the file {0}'.format(file_name))
+
+
 
     # Create the instance in AWS
     host_names = create_instance(env.instance_stub_name, env.instances, env.ebs_size)
@@ -529,8 +542,8 @@ def setup_env():
     env.user = USERNAME
     env.key_filename = AWS_KEY
     env.roledefs = {
-        'main' : [host_names[0]],
-        'additional' : host_names[1:]
+        'main': [host_names[0]],
+        'additional': host_names[1:]
     }
 
 
@@ -618,10 +631,6 @@ def deploy_with_db():
 
     # Wait for things to settle down
     time.sleep(5)
-    build_mod_wsgi()
-
-    # Wait for things to settle down
-    time.sleep(5)
     if env.host_string == env.hosts[0]:
         single_install(True)
 
@@ -641,10 +650,6 @@ def deploy_without_db():
 
     copy_public_keys()
     base_install(env.host_string == env.hosts[0])
-
-    # Wait for things to settle down
-    time.sleep(5)
-    build_mod_wsgi()
 
     # Wait for things to settle down
     time.sleep(5)
@@ -673,10 +678,6 @@ def final_messages():
 
 You need to do the following manual steps:
 
-Django
-1) Go to '/home/ec2-user/boinc-magphys/server/src/pogssite'
-2) run 'python27 manage.py syncdb' to initialise the django database
-
 SSH
 1) Edit the /etc/hosts file on each server and put in the hostname used
    by BOINC for each server
@@ -700,9 +701,6 @@ BOINC
 
 NGAS
 1) If you need to move files from the server install NGAS
-
-NAGIOS
-1) Edit the config file and put the server address in it
 
 
 ##########################################################################

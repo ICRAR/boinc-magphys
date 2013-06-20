@@ -59,35 +59,31 @@ else:
     boincDatabaseName = 'pogs'
     BOINC_DB_LOGIN = "mysql://root:@localhost/pogs"
 
-############### Django Settings ###############
+############### Docmosis Settings ###############
 
-DJANGO_TEMPLATE_DIR = None
-DJANGO_IMAGE_DIR = None
-DJANGO_FILE_NAME = dirname(__file__) + '/django.settings'
-if exists(DJANGO_FILE_NAME):
-    config = ConfigObj(DJANGO_FILE_NAME)
-    DJANGO_TEMPLATE_DIR = config['template_dir']
-    DJANGO_IMAGE_DIR = config['image_dir']
+DOCMOSIS_KEY = None
+DOCMOSIS_RENDER_URL = None
+DOCMOSIS_TEMPLATE = None
+DOCMOSIS_FILE_NAME = dirname(__file__) + '/docmosis.settings'
+if exists(DOCMOSIS_FILE_NAME):
+    config = ConfigObj(DOCMOSIS_FILE_NAME)
 
     # TODO - Remove try block once supported in production
     try:
-        DJANGO_DOCMOSIS_KEY = ''
-        DJANGO_DOCMOSIS_KEY = ''
-        DJANGO_DOCMOSIS_KEY = config['docmosis_key']
-        DJANGO_DOCMOSIS_TEMPLATE = config['docmosis_template']
+        DOCMOSIS_KEY = config['docmosis_key']
+        DOCMOSIS_RENDER_URL = config['docmosis_render_url']
+        DOCMOSIS_TEMPLATE = config['docmosis_template']
     except Exception, e:
         print "Could not load key: %s" % e
 
 else:
-    DJANGO_TEMPLATE_DIR = '/Users/rob/development/boinc-magphys/server/src/templates'
-    DJANGO_IMAGE_DIR = '/Users/rob/magphys/POGS_NGC1209'
-    DJANGO_DOCMOSIS_KEY = 'default'
-    DJANGO_DOCMOSIS_TEMPLATE = 'default'
+    DOCMOSIS_KEY = 'default'
+    DOCMOSIS_RENDER_URL = 'https://dws.docmosis.com/services/rs/render'
+    DOCMOSIS_TEMPLATE = 'Report.doc'
 
 ############### Work Generation Settings ###############
 
 work_generation_file_name = dirname(__file__) + '/work_generation.settings'
-WG_IMAGE_DIRECTORY = None
 WG_ROW_HEIGHT = None
 WG_MIN_PIXELS_PER_FILE = None
 WG_THRESHOLD = None
@@ -96,7 +92,6 @@ WG_BOINC_PROJECT_ROOT = None
 WG_REPORT_DEADLINE = None
 if exists(work_generation_file_name):
     config = ConfigObj(work_generation_file_name)
-    WG_IMAGE_DIRECTORY = config['image_directory']
     WG_MIN_PIXELS_PER_FILE = int(config['min_pixels_per_file'])
     WG_ROW_HEIGHT = int(config['row_height'])
     WG_THRESHOLD = int(config['threshold'])
@@ -104,7 +99,6 @@ if exists(work_generation_file_name):
     WG_BOINC_PROJECT_ROOT = config['boinc_project_root']
     WG_REPORT_DEADLINE = int(config['report_deadline'])
 else:
-    WG_IMAGE_DIRECTORY = '/home/ec2-user/galaxyImages'
     WG_MIN_PIXELS_PER_FILE = 15
     WG_ROW_HEIGHT = 10
     WG_THRESHOLD = 1500

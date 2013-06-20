@@ -29,25 +29,26 @@ import os
 import shutil
 from common.StreamEditor import StreamEditor
 
+
 class FileEditor(StreamEditor):
-    def __call__(self, file):
+    def __call__(self, edit_file):
         """Edit a file
 
-        :param file: the filename to edit
+        :param edit_file: the filename to edit
          """
-        if os.path.isfile(file):
+        if os.path.isfile(edit_file):
             # We have a file
-            (dir, tail) = os.path.split(file)
-            if os.access(dir, os.W_OK):
+            (directory, tail) = os.path.split(edit_file)
+            if os.access(directory, os.W_OK):
                 # Copy the file
-                shutil.copy(file, file + '.bak')
-                with open(file, 'r') as f:
+                shutil.copy(edit_file, edit_file + '.bak')
+                with open(edit_file, 'r') as f:
                     text = f.read()
                 text = StreamEditor.__call__(self, text)
 
-                with open(file, 'w') as f:
+                with open(edit_file, 'w') as f:
                     f.write(text)
             else:
-                raise IOError('Cannot write to {0}'.format(dir))
+                raise IOError('Cannot write to {0}'.format(directory))
         else:
-            raise IOError('File {0} not found'.format(file))
+            raise IOError('File {0} not found'.format(edit_file))

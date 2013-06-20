@@ -104,20 +104,6 @@ package { 'libpng':
     ensure => installed,
 }
 
-# NAGIOS
-package { 'nrpe':
-    ensure => installed,
-}
-package { 'nagios-common':
-    ensure => installed,
-}
-package { 'nagios-plugins':
-    ensure => installed,
-}
-package { 'nagios-plugins-all':
-    ensure => installed,
-}
-
 # Create the apache user for the web site
 user { 'apache':
   ensure  => present,
@@ -141,30 +127,6 @@ file { "/home/ec2-user/galaxies":
 
 # Where the BOINC code will reside
 file { "/home/ec2-user/boinc":
-    ensure => "directory",
-    owner  => ec2-user,
-    group  => ec2-user,
-    mode   => 775,
-}
-
-# When we generate an image this is where it goes
-file { "/home/ec2-user/galaxyImages":
-    ensure => "directory",
-    owner  => ec2-user,
-    group  => ec2-user,
-    mode   => 775,
-}
-
-# Where the output fits files go if generated
-file { "/home/ec2-user/output_fits":
-    ensure => "directory",
-    owner  => ec2-user,
-    group  => ec2-user,
-    mode   => 775,
-}
-
-# Where the HDF5 archive files go
-file { "/home/ec2-user/archive":
     ensure => "directory",
     owner  => ec2-user,
     group  => ec2-user,
