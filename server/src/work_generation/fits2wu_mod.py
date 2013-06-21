@@ -32,15 +32,17 @@ import os
 import json
 import shutil
 import math
+import boto
 import pyfits
 import subprocess
 
 from datetime import datetime
 from sqlalchemy.sql.expression import select, func, and_
-from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_IMAGE_DIRECTORY, WG_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
+from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, RUN_FILE, FITS_HEADER, RUN
 from image import directory_mod
 from image.fitsimage import FitsImage
+from utils.name_builder import get_galaxy_image_bucket
 from work_generation import STAR_FORMATION_FILE, INFRARED_FILE
 from hashlib import md5
 
@@ -197,6 +199,8 @@ class Fit2Wu:
         self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
 
         LOG.info('Building the images')
+        s3_connection = boto.connect_s3()
+        bucket = s3_connection.get_bucket(get_galaxy_image_bucket())
         # TODO: Copy to S3
         image = FitsImage(self._connection)
         image.build_image(self._filename, WG_IMAGE_DIRECTORY, filePrefixName, False, self._galaxy_id)

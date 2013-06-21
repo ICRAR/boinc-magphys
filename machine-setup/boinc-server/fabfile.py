@@ -99,28 +99,9 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('chmod 400 /etc/postfix/sasl_passwd')
     sudo('postmap /etc/postfix/sasl_passwd')
 
-    # Setup NAGIOS
-    sudo('chkconfig nrpe on')
-    sudo('service nrpe start')
-
     # Setup the HDF5
-    with cd('/usr/local/src'):
-        sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
-        sudo('tar -xvzf szip-2.1.tar.gz')
-        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz')
-        sudo('tar -xvzf hdf5-1.8.11.tar.gz')
-        sudo('rm *.gz')
-    with cd('/usr/local/src/szip-2.1'):
-        sudo('./configure --prefix=/usr/local/szip')
-        sudo('make')
-        sudo('make install')
-    with cd('/usr/local/src/hdf5-1.8.11'):
-        sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
-        sudo('make')
-        sudo('make install')
-    sudo('''echo "/usr/local/hdf5/lib
-/usr/local/szip/lib" >> /etc/ld.so.conf.d/hdf5.conf''')
-    sudo('ldconfig')
+    run('wget http://www.hdfgroup.org/ftp/HDF5/current/bin/RPMS/hdf5-1.8.11-1.with.szip.encoder.el5.x86_64.rpm')
+    sudo('yum --assumeyes --quiet install hdf5-1.8.11-1.with.szip.encoder.el5.x86_64.rpm')
 
     # Setup BOINC
     if host0:
@@ -326,7 +307,7 @@ def gluster_install():
     run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-fuse-3.3.1-1.el6.x86_64.rpm')
     run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-geo-replication-3.3.1-1.el6.x86_64.rpm')
     run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-server-3.3.1-1.el6.x86_64.rpm')
-    sudo('yum --assumeyes --quiet install *.rpm')
+    sudo('yum --assumeyes --quiet install glusterfs*.rpm')
     sudo('chkconfig glusterd --add')
     sudo('chkconfig glusterd on')
     sudo('service glusterd start')
@@ -406,6 +387,7 @@ row_height = "6"
 threshold = "1000"
 high_water_mark = "400"
 report_deadline = "7"
+project_name = "{0}"
 boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
 
     # Copy the config files
@@ -534,7 +516,9 @@ def setup_env():
     if not os.path.exists(file_name):
         abort('Could not find the file {0}'.format(file_name))
 
-
+    # Check the names supplied
+    if env.project_name.contains('_.,'):
+        abort('The project name must contain [A-Z][a-z][0-9]-')
 
     # Create the instance in AWS
     host_names = create_instance(env.instance_stub_name, env.instances, env.ebs_size)

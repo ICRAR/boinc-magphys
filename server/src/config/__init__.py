@@ -90,6 +90,7 @@ WG_THRESHOLD = None
 WG_HIGH_WATER_MARK = None
 WG_BOINC_PROJECT_ROOT = None
 WG_REPORT_DEADLINE = None
+WG_PROJECT_NAME = None
 if exists(work_generation_file_name):
     config = ConfigObj(work_generation_file_name)
     WG_MIN_PIXELS_PER_FILE = int(config['min_pixels_per_file'])
@@ -98,12 +99,14 @@ if exists(work_generation_file_name):
     WG_HIGH_WATER_MARK = int(config['high_water_mark'])
     WG_BOINC_PROJECT_ROOT = config['boinc_project_root']
     WG_REPORT_DEADLINE = int(config['report_deadline'])
+    WG_PROJECT_NAME = config['project_name']
 else:
     WG_MIN_PIXELS_PER_FILE = 15
     WG_ROW_HEIGHT = 10
     WG_THRESHOLD = 1500
     WG_HIGH_WATER_MARK = 3000
     WG_REPORT_DEADLINE = 7
+    WG_PROJECT_NAME = 'pogs_test'
 
 ############### Assimilator Settings ###############
 

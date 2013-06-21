@@ -32,7 +32,7 @@ import logging
 import votable_mod
 
 from sqlalchemy import *
-from config import WG_BOINC_PROJECT_ROOT,DJANGO_IMAGE_DIR, DJANGO_DOCMOSIS_KEY, DJANGO_DOCMOSIS_TEMPLATE, DB_LOGIN
+from config import WG_BOINC_PROJECT_ROOT, DOCMOSIS_KEY, DOCMOSIS_TEMPLATE, DB_LOGIN
 from image import fitsimage, directory_mod
 from database.database_support_core import GALAXY,IMAGE_FILTERS_USED,FILTER
 

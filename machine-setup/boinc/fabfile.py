@@ -377,5 +377,28 @@ def start_daemons():
 
 @task
 def create_s3():
+    # Create the bucket for the images
     s3 = boto.connect_s3()
-    s3.create_bucket('icrar.{0}.galaxy_images')
+    images_bucket = 'icrar.{0}.galaxy-images'.format(env.project_name)
+    bucket = s3.create_bucket(images_bucket)
+    bucket.set_acl('public-read')
+    bucket.configure_website()
+    bucket.set_policy('''{
+  "Version":"2013-06-20",
+  "Statement":[{
+	"Sid":"PublicReadForGetBucketObjects",
+    "Effect":"Allow",
+	"Principal": {
+            "AWS": "*"
+         },
+    "Action":["s3:GetObject"],
+    "Resource":["arn:aws:s3:::{0}/*"]
+    }
+  ]
+}
+'''.format(images_bucket))
+
+    # Create the bucket for the SED output files
+    file_bucket = 'icrar.{0}.sed-file'.format(env.project_name)
+    bucket = s3.create_bucket(file_bucket)
+
