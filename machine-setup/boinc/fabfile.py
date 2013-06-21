@@ -382,7 +382,7 @@ def create_s3():
     images_bucket = 'icrar.{0}.galaxy-images'.format(env.project_name)
     bucket = s3.create_bucket(images_bucket)
     bucket.set_acl('public-read')
-    bucket.configure_website()
+    bucket.configure_website(suffix='index.html')
     bucket.set_policy('''{
   "Version":"2013-06-20",
   "Statement":[{

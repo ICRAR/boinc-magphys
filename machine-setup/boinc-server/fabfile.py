@@ -99,41 +99,6 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('chmod 400 /etc/postfix/sasl_passwd')
     sudo('postmap /etc/postfix/sasl_passwd')
 
-    # Setup the HDF5
-    with cd('/usr/local/src'):
-        sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
-        sudo('tar -xvzf szip-2.1.tar.gz')
-        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz')
-        sudo('tar -xvzf hdf5-1.8.11.tar.gz')
-        sudo('rm *.gz')
-    with cd('/usr/local/src/szip-2.1'):
-        sudo('./configure --prefix=/usr/local/szip')
-        sudo('make')
-        sudo('make install')
-    with cd('/usr/local/src/hdf5-1.8.11'):
-        sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
-        sudo('make')
-        sudo('make install')
-    sudo('''echo "/usr/local/hdf5/lib
-/usr/local/szip/lib" >> /etc/ld.so.conf.d/hdf5.conf''')
-    sudo('ldconfig')
-
-    # Setup BOINC
-    if host0:
-        # Grab the latest trunk from GIT
-        run('git clone git://boinc.berkeley.edu/boinc-v2.git boinc')
-
-        with cd('/home/ec2-user/boinc'):
-            run('./_autosetup')
-            run('./configure --disable-client --disable-manager')
-            run('make')
-
-        # Setup the pythonpath
-        append('/home/ec2-user/.bash_profile',
-               ['',
-                'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src',
-                'export PYTHONPATH'])
-
     # Setup the python
     run('wget http://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
     sudo('sh setuptools-0.6c11-py2.7.egg')
@@ -154,13 +119,6 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('pip-2.7 install matplotlib')
     sudo('pip-2.7 install astropy')
 
-    with cd('/tmp'):
-        run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
-        run('tar -xvzf h5py-2.1.0.tar.gz')
-    with cd('/tmp/h5py-2.1.0'):
-        sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
-        sudo('python2.7 setup.py install')
-
     for user in env.list_of_users:
         sudo('useradd {0}'.format(user))
         sudo('mkdir /home/{0}/.ssh'.format(user))
@@ -174,16 +132,64 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
     # Create the .boto file
-    file_name = get_aws_keyfile()
-    with open(file_name, 'rb') as csv_file:
-        reader = csv.reader(csv_file)
-        # Skip the header
-        reader.next()
+    if host0:
+        file_name = get_aws_keyfile()
+        with open(file_name, 'rb') as csv_file:
+            reader = csv.reader(csv_file)
+            # Skip the header
+            reader.next()
 
-        row = reader.next()
-        run('''echo "[Credentials]
+            row = reader.next()
+            run('''echo "[Credentials]
 aws_access_key_id = {0}
 aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(row[1], row[2]))
+
+        # Setup the S3 environment
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+            run('fab --set project_name={0} create_s3'.format(env.project_name))
+
+        # Setup BOINC
+        # Grab the latest trunk from GIT
+        run('git clone git://boinc.berkeley.edu/boinc-v2.git boinc')
+
+        with cd('/home/ec2-user/boinc'):
+            run('./_autosetup')
+            run('./configure --disable-client --disable-manager')
+            run('make')
+
+        # Setup the pythonpath
+        append('/home/ec2-user/.bash_profile',
+               ['',
+                'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src',
+                'export PYTHONPATH'])
+
+    # Setup the HDF5
+    with cd('/usr/local/src'):
+        sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
+        sudo('tar -xvzf szip-2.1.tar.gz')
+        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz')
+        sudo('tar -xvzf hdf5-1.8.11.tar.gz')
+        sudo('rm *.gz')
+    with cd('/usr/local/src/szip-2.1'):
+        sudo('./configure --prefix=/usr/local/szip')
+        sudo('make')
+        sudo('make install')
+    with cd('/usr/local/src/hdf5-1.8.11'):
+        sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
+        sudo('make')
+        sudo('make install')
+    sudo('''echo "/usr/local/hdf5/lib
+/usr/local/szip/lib" >> /etc/ld.so.conf.d/hdf5.conf''')
+    sudo('ldconfig')
+
+    # Now install the H5py
+    with cd('/tmp'):
+        run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
+        run('tar -xvzf h5py-2.1.0.tar.gz')
+    with cd('/tmp/h5py-2.1.0'):
+        sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
+        sudo('python2.7 setup.py install')
+
 
 
 def copy_public_keys():
@@ -423,7 +429,6 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
 
     # setup_website
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        run('fab --set project_name={0} create_s3'.format(env.project_name))
         run('fab --set project_name={0} edit_files'.format(env.project_name))
         sudo('fab --set project_name={0} setup_website'.format(env.project_name))
 
