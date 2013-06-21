@@ -37,6 +37,7 @@ from os.path import splitext, split
 from fabric.decorators import task
 from fabric.operations import local, prompt
 from fabric.state import env
+from fabric.utils import puts
 import socket
 from common.FileEditor import FileEditor
 
@@ -383,20 +384,22 @@ def create_s3():
     bucket = s3.create_bucket(images_bucket)
     bucket.set_acl('public-read')
     bucket.configure_website(suffix='index.html')
-    bucket.set_policy('''{
-  "Version":"2013-06-20",
-  "Statement":[{
-	"Sid":"PublicReadForGetBucketObjects",
-    "Effect":"Allow",
-	"Principal": {
-            "AWS": "*"
-         },
-    "Action":["s3:GetObject"],
-    "Resource":["arn:aws:s3:::{0}/*"]
+    bucket_policy = '''{
+  "Statement":[
+    {
+        "Sid":"PublicReadForGetBucketObjects",
+        "Effect":"Allow",
+        "Principal": {
+                "AWS": "*"
+        },
+        "Action":["s3:GetObject"],
+        "Resource":["arn:aws:s3:::{0}/*"]
     }
   ]
 }
-'''.format(images_bucket))
+'''.format(images_bucket)
+    puts('Bucket Policy: {0}'.format(bucket_policy))
+    bucket.set_policy(bucket_policy)
 
     # Create the bucket for the SED output files
     file_bucket = 'icrar.{0}.sed-file'.format(env.project_name)
