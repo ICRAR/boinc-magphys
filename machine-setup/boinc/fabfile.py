@@ -384,7 +384,7 @@ def create_s3():
     bucket = s3.create_bucket(images_bucket)
     bucket.set_acl('public-read')
     bucket.configure_website(suffix='index.html')
-    bucket_policy = '''{
+    bucket.set_policy('''{
   "Statement":[
     {
         "Sid":"PublicReadForGetBucketObjects",
@@ -393,13 +393,11 @@ def create_s3():
                 "AWS": "*"
         },
         "Action":["s3:GetObject"],
-        "Resource":["arn:aws:s3:::{0}/*"]
+        "Resource":["arn:aws:s3:::%s/*"]
     }
   ]
 }
-'''.format(images_bucket)
-    puts('Bucket Policy: {0}'.format(bucket_policy))
-    bucket.set_policy(bucket_policy)
+''' % images_bucket)
 
     # Create the bucket for the SED output files
     file_bucket = 'icrar.{0}.sed-file'.format(env.project_name)
