@@ -100,8 +100,23 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('postmap /etc/postfix/sasl_passwd')
 
     # Setup the HDF5
-    run('wget http://www.hdfgroup.org/ftp/HDF5/current/bin/RPMS/hdf5-1.8.11-1.with.szip.encoder.el5.x86_64.rpm')
-    sudo('yum --assumeyes --quiet install hdf5-1.8.11-1.with.szip.encoder.el5.x86_64.rpm')
+    with cd('/usr/local/src'):
+        sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
+        sudo('tar -xvzf szip-2.1.tar.gz')
+        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz')
+        sudo('tar -xvzf hdf5-1.8.11.tar.gz')
+        sudo('rm *.gz')
+    with cd('/usr/local/src/szip-2.1'):
+        sudo('./configure --prefix=/usr/local/szip')
+        sudo('make')
+        sudo('make install')
+    with cd('/usr/local/src/hdf5-1.8.11'):
+        sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
+        sudo('make')
+        sudo('make install')
+    sudo('''echo "/usr/local/hdf5/lib
+/usr/local/szip/lib" >> /etc/ld.so.conf.d/hdf5.conf''')
+    sudo('ldconfig')
 
     # Setup BOINC
     if host0:
@@ -489,21 +504,27 @@ def setup_env():
     Allow the user to select if a Elastic IP address is to be used
     """
     if 'instances' not in env:
-        prompt('Number of instances: ', 'instances')
+        prompt('Number of instances: ', 'instances', default=1, validate=int)
     if 'ebs_size' not in env:
-        prompt('EBS Size (GB): ', 'ebs_size')
+        prompt('EBS Size (GB): ', 'ebs_size', default=10, validate=int)
     if 'ops_username' not in env:
-        prompt('Ops area username: ', 'ops_username')
+        prompt('Ops area username: ', 'ops_username', default='user')
     if 'ops_password' not in env:
         prompt('Password: ', 'ops_password')
-    if 'instance_stub_name' not in env:
-        prompt('AWS Instance name stub: ', 'instance_stub_name')
     if 'project_name' not in env:
         prompt('BOINC project name: ', 'project_name')
+
+    # Check the names supplied
+    for char in ['_', '.', ',','-','+']:
+        if char in env.project_name:
+            abort('The project name must just contain [A-Z][a-z][0-9]')
+
+    if 'instance_stub_name' not in env:
+        prompt('AWS Instance name stub: ', 'instance_stub_name', default=env.project_name)
     if 'aws_user' not in env:
-        prompt('AWS User:', 'aws_user')
+        prompt('AWS User:', 'aws_user', default='pogs_test')
     if 'gmail_account' not in env:
-        prompt('GMail Account:', 'gmail_account')
+        prompt('GMail Account:', 'gmail_account', default=env.project_name)
     if 'gmail_password' not in env:
         prompt('GMail Password:', 'gmail_password')
     if 'docmosis_key' not in env:
@@ -515,10 +536,6 @@ def setup_env():
     file_name = get_aws_keyfile()
     if not os.path.exists(file_name):
         abort('Could not find the file {0}'.format(file_name))
-
-    # Check the names supplied
-    if env.project_name.contains('_.,'):
-        abort('The project name must contain [A-Z][a-z][0-9]-')
 
     # Create the instance in AWS
     host_names = create_instance(env.instance_stub_name, env.instances, env.ebs_size)
