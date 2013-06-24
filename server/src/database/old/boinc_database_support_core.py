@@ -25,20 +25,28 @@
 """
 Connect to the BOINC database
 """
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.schema import Column
-from sqlalchemy.types import BigInteger, String
+from sqlalchemy import Column, MetaData, BigInteger, String, Table
 
-Base = declarative_base()
-class Result(Base):
-    __tablename__ = 'result'
-    id = Column(BigInteger, primary_key=True)
-    server_state = Column(BigInteger)
-    workunitid = Column(BigInteger)
-    appid = Column(BigInteger)
+BOINC_METADATA = MetaData()
 
-class Workunit(Base):
-    __tablename__ = 'workunit'
-    id = Column(BigInteger, primary_key=True)
-    name = Column(String)
-    assimilate_state = Column(BigInteger)
+RESULT = Table('result',
+               BOINC_METADATA,
+               Column('id', BigInteger, primary_key=True, autoincrement=True),
+               Column('server_state', BigInteger),
+               Column('workunitid', BigInteger),
+               Column('appid', BigInteger),
+               Column('name', String),
+)
+
+WORK_UNIT = Table('workunit',
+                  BOINC_METADATA,
+                  Column('id', BigInteger, primary_key=True, autoincrement=True),
+                  Column('name', String),
+                  Column('assimilate_state', BigInteger)
+)
+
+USER = Table('user',
+             BOINC_METADATA,
+             Column('id', BigInteger, primary_key=True, autoincrement=True),
+             Column('name', String)
+)
