@@ -32,7 +32,6 @@ import os
 import json
 import shutil
 import math
-import boto
 import pyfits
 import subprocess
 
@@ -40,9 +39,9 @@ from datetime import datetime
 from sqlalchemy.sql.expression import select, func, and_
 from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, RUN_FILE, FITS_HEADER, RUN
-from image import directory_mod
 from image.fitsimage import FitsImage
-from utils.name_builder import get_galaxy_image_bucket
+from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits
+from utils.s3_helper import add_file_to_bucket, get_bucket, get_s3_connection
 from work_generation import STAR_FORMATION_FILE, INFRARED_FILE
 from hashlib import md5
 
@@ -156,9 +155,6 @@ class Fit2Wu:
         if version_number > 1:
             self._update_current()
 
-        filePrefixName = self._galaxy_name + "_" + str(version_number)
-        fitsFileName = filePrefixName + ".fits"
-
         # Get the flops estimate amd cobblestone factor
         run = self._connection.execute(select([RUN]).where(RUN.c.run_id == self._run_id)).first()
         self._fpops_est_per_pixel = run[RUN.c.fpops_est]
@@ -199,14 +195,14 @@ class Fit2Wu:
         self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
 
         LOG.info('Building the images')
-        s3_connection = boto.connect_s3()
-        bucket = s3_connection.get_bucket(get_galaxy_image_bucket())
-        # TODO: Copy to S3
+        galaxy_file_name = get_galaxy_file_name(self._galaxy_name, self._galaxy_id, self._run_id)
+        s3_connection = get_s3_connection()
+        bucket = get_bucket(s3_connection, get_galaxy_image_bucket())
         image = FitsImage(self._connection)
-        image.build_image(self._filename, WG_IMAGE_DIRECTORY, filePrefixName, False, self._galaxy_id)
+        image.build_image(self._filename, galaxy_file_name, self._galaxy_id, bucket)
 
-        # TODO: Copy to S3 - renamed to make it unique
-        shutil.copyfile(self._filename, directory_mod.get_file_path(WG_IMAGE_DIRECTORY, fitsFileName, True))
+        # Copy the fits file to S3 - renamed to make it unique
+        add_file_to_bucket(get_bucket(s3_connection, get_files_bucket()), get_key_fits(self._galaxy_name, self._galaxy_id, self._run_id), self._filename)
 
         return self._work_units_added, self._pixel_count
 
@@ -393,7 +389,7 @@ class Fit2Wu:
         """
         new_full_path = self._fanout_path(filename)
         outfile = open(new_full_path, 'w')
-        outfile.write('#  %(data)s\n' % {'data': json.dumps(data)})
+        outfile.write('#  {0}\n'.format(json.dumps(data)))
 
         row_num = 0
         for pixel in pixels:
@@ -442,7 +438,15 @@ class Fit2Wu:
         cmd_create_work.extend(args_files)
 
         # Copy files into BOINC's download hierarchy
-        data = [{'galaxy':self._galaxy_name, 'area_id':area.area_id, 'pixels':pixels_in_area, 'top_x':area.top_x, 'top_y':area.top_y, 'bottom_x':area.bottom_x, 'bottom_y':area.bottom_y, }]
+        data = [{'galaxy':self._galaxy_name,
+                 'run_id':self._run_id,
+                 'galaxy_id':self._galaxy_id,
+                 'area_id':area.area_id,
+                 'pixels':pixels_in_area,
+                 'top_x':area.top_x,
+                 'top_y':area.top_y,
+                 'bottom_x':area.bottom_x,
+                 'bottom_y':area.bottom_y, }]
         self._create_observation_file(filename, data, pixels)
         self._create_job_xml(file_name_job, pixels_in_area)
         self._create_filters_dat(file_name_filters)

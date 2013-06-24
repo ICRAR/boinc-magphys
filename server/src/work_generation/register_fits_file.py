@@ -74,17 +74,16 @@ except ValueError:
     sigma = 0.0
     sigma_filename = SIGMA
 
-
 connection.execute(REGISTER.insert(),
-    galaxy_name = GALAXY_NAME,
-    redshift = REDSHIFT,
-    galaxy_type = GALAXY_TYPE,
-    filename = INPUT_FILE,
-    priority = PRIORITY,
-    register_time = datetime.now(),
-    run_id = RUN_ID,
-    sigma = sigma,
-    sigma_filename = sigma_filename)
+                   galaxy_name=GALAXY_NAME,
+                   redshift=REDSHIFT,
+                   galaxy_type=GALAXY_TYPE,
+                   filename=INPUT_FILE,
+                   priority=PRIORITY,
+                   register_time=datetime.now(),
+                   run_id=RUN_ID,
+                   sigma=sigma,
+                   sigma_filename=sigma_filename)
 transaction.commit()
 
 LOG.info('Registered %s %s %f %s %d %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY, RUN_ID)

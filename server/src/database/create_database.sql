@@ -204,70 +204,15 @@ CREATE TABLE pixel_result (
   xi_c_tot    DOUBLE,
   xi_pah_tot  DOUBLE,
   xi_mir_tot  DOUBLE,
-  x_w_tot     DOUBLE,
+  xi_w_tot    DOUBLE,
   tvism       DOUBLE,
   mdust       DOUBLE,
   sfr         DOUBLE,
-  i_opt       DOUBLE,
-  dmstar      DOUBLE,
-  dfmu_aux    DOUBLE,
-  dz          DOUBLE,
 
   KEY    (pxresult_id),
   INDEX  (area_id),
   UNIQUE (galaxy_id, x, y)
-) CHARACTER SET utf8 ENGINE=InnoDB
-PARTITION BY KEY (galaxy_id)
-PARTITIONS 16;
-
-
-CREATE TABLE pixel_filter (
-  pxfilter_id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  pxresult_id                BIGINT UNSIGNED NOT NULL,
-  filter_name                VARCHAR(100) NOT NULL,
-  observed_flux              DOUBLE NOT NULL,
-  observational_uncertainty  DOUBLE NOT NULL,
-  flux_bfm                   DOUBLE NOT NULL,
-  KEY (pxfilter_id)
-) CHARACTER SET utf8 ENGINE=InnoDB
-PARTITION BY KEY (pxresult_id)
-PARTITIONS 16;
-
-CREATE INDEX pxresult_ix ON pixel_filter(pxresult_id);
-
-CREATE TABLE pixel_parameter (
-  pxparameter_id    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  pxresult_id       BIGINT UNSIGNED NOT NULL,
-  parameter_name_id TINYINT NOT NULL,
-  percentile2_5     DOUBLE NOT NULL,
-  percentile16      DOUBLE NOT NULL,
-  percentile50      DOUBLE NOT NULL,
-  percentile84      DOUBLE NOT NULL,
-  percentile97_5    DOUBLE NOT NULL,
-  high_prob_bin     DOUBLE NOT NULL,
-  first_prob_bin    DOUBLE NOT NULL,
-  last_prob_bin     DOUBLE NOT NULL,
-  bin_step          DOUBLE NOT NULL,
-  KEY (pxparameter_id)
-) CHARACTER SET utf8 ENGINE=InnoDB
-PARTITION BY KEY (pxresult_id)
-PARTITIONS 16;
-
-CREATE INDEX pxresult_ix ON pixel_parameter(pxresult_id);
-
-CREATE TABLE pixel_histogram (
-  pxhistogram_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  pxparameter_id BIGINT UNSIGNED NOT NULL,
-  pxresult_id    BIGINT UNSIGNED NOT NULL,
-  x_axis         DOUBLE NOT NULL,
-  hist_value     DOUBLE NOT NULL,
-  KEY (pxhistogram_id)
-) CHARACTER SET utf8 ENGINE=InnoDB
-PARTITION BY KEY (pxresult_id)
-PARTITIONS 16;
-
-CREATE INDEX pxresult_ix ON pixel_histogram(pxresult_id);
-CREATE INDEX pxparameter_ix ON pixel_histogram(pxparameter_id);
+) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE user_pixel (
   userid BIGINT UNSIGNED NOT NULL PRIMARY KEY,
@@ -276,25 +221,26 @@ CREATE TABLE user_pixel (
 
 CREATE TABLE parameter_name (
   parameter_name_id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
-  name              VARCHAR(100) NOT NULL
+  name              VARCHAR(100) NOT NULL,
+  column_name       VARCHAR(100) NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-INSERT INTO parameter_name VALUES (1, 'f_mu (SFH)');
-INSERT INTO parameter_name VALUES (2, 'f_mu (IR)');
-INSERT INTO parameter_name VALUES (3, 'mu parameter');
-INSERT INTO parameter_name VALUES (4, 'tau_V');
-INSERT INTO parameter_name VALUES (5, 'sSFR_0.1Gyr');
-INSERT INTO parameter_name VALUES (6, 'M(stars)');
-INSERT INTO parameter_name VALUES (7, 'Ldust');
-INSERT INTO parameter_name VALUES (8, 'T_C^ISM');
-INSERT INTO parameter_name VALUES (9, 'T_W^BC');
-INSERT INTO parameter_name VALUES (10, 'xi_C^tot');
-INSERT INTO parameter_name VALUES (11, 'xi_PAH^tot');
-INSERT INTO parameter_name VALUES (12, 'xi_MIR^tot');
-INSERT INTO parameter_name VALUES (13, 'xi_W^tot');
-INSERT INTO parameter_name VALUES (14, 'tau_V^ISM');
-INSERT INTO parameter_name VALUES (15, 'M(dust)');
-INSERT INTO parameter_name VALUES (16, 'SFR_0.1Gyr');
+INSERT INTO parameter_name VALUES (1, 'f_mu (SFH)', 'fmu_sfh');
+INSERT INTO parameter_name VALUES (2, 'f_mu (IR)', 'fmu_ir');
+INSERT INTO parameter_name VALUES (3, 'mu parameter', 'mu');
+INSERT INTO parameter_name VALUES (4, 'tau_V', 'tauv');
+INSERT INTO parameter_name VALUES (5, 'sSFR_0.1Gyr', 's_sfr');
+INSERT INTO parameter_name VALUES (6, 'M(stars)', 'm');
+INSERT INTO parameter_name VALUES (7, 'Ldust', 'ldust');
+INSERT INTO parameter_name VALUES (8, 'T_C^ISM', 't_c_ism');
+INSERT INTO parameter_name VALUES (9, 'T_W^BC', 't_w_bc');
+INSERT INTO parameter_name VALUES (10, 'xi_C^tot', 'xi_c_tot');
+INSERT INTO parameter_name VALUES (11, 'xi_PAH^tot', 'xi_pah_tot');
+INSERT INTO parameter_name VALUES (12, 'xi_MIR^tot', 'xi_mir_tot');
+INSERT INTO parameter_name VALUES (13, 'xi_W^tot', 'xi_w_tot');
+INSERT INTO parameter_name VALUES (14, 'tau_V^ISM', 'tvism');
+INSERT INTO parameter_name VALUES (15, 'M(dust)', 'mdust');
+INSERT INTO parameter_name VALUES (16, 'SFR_0.1Gyr', 'sfr');
 
 CREATE TABLE image_filters_used (
   image_filters_used_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,

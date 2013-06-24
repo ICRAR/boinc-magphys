@@ -30,7 +30,7 @@ import argparse
 import logging
 import os
 import pyfits
-from work_generation import HEADER_PATTERNS
+import re
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -38,6 +38,17 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 parser = argparse.ArgumentParser()
 parser.add_argument('file_names', nargs='+', help='the files to be checked')
 args = vars(parser.parse_args())
+
+HEADER_PATTERNS = [re.compile('CDELT[0-9]+'),
+                   re.compile('CROTA[0-9]+'),
+                   re.compile('CRPIX[0-9]+'),
+                   re.compile('CRVAL[0-9]+'),
+                   re.compile('CTYPE[0-9]+'),
+                   re.compile('EQUINOX'),
+                   re.compile('EPOCH'),
+                   re.compile('RA_CENT'),
+                   re.compile('DEC_CENT'),
+                   ]
 
 for file_name in args['file_names']:
     if os.path.isfile(file_name):

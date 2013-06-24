@@ -37,7 +37,6 @@ from os.path import splitext, split
 from fabric.decorators import task
 from fabric.operations import local, prompt
 from fabric.state import env
-from fabric.utils import puts
 import socket
 from common.FileEditor import FileEditor
 
@@ -199,7 +198,7 @@ def edit_files():
       <output> update_credit.out </output>
     </task>
     <task>
-      <cmd> /home/ec2-user/boinc-magphys/post-processing/src/build_png_image.py </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/image/build_png_image.py </cmd>
       <period> 3 hour </period>
       <disabled> 0 </disabled>
       <output> build_png_image.out </output>
@@ -378,6 +377,12 @@ def start_daemons():
 
 @task
 def create_s3():
+    """
+    Create the S3 buckets
+
+    All the buckets use the galaxy name as the 'folder'
+    :return:
+    """
     # Create the bucket for the images
     s3 = boto.connect_s3()
     images_bucket = 'icrar.{0}.galaxy-images'.format(env.project_name)
@@ -399,7 +404,6 @@ def create_s3():
 }
 ''' % images_bucket)
 
-    # Create the bucket for the SED output files
-    file_bucket = 'icrar.{0}.sed-file'.format(env.project_name)
-    bucket = s3.create_bucket(file_bucket)
-
+    # Create the bucket for the output files
+    file_bucket = 'icrar.{0}.files'.format(env.project_name)
+    s3.create_bucket(file_bucket)

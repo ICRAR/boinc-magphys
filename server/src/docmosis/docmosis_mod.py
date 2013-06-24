@@ -225,8 +225,8 @@ def galaxyFilterLabel(galaxy_id,colour):
     """
     connection = ENGINE.connect()
     map_fl = {}
-    for filter in connection.execute(select([FILTER])):
-      map_fl[filter.filter_id] = filter.label
+    for filter_band in connection.execute(select([FILTER])):
+      map_fl[filter_band.filter_id] = filter_band.label
     query = select([IMAGE_FILTERS_USED])
     query = query.where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id,IMAGE_FILTERS_USED.c.image_number == colour))
     image = connection.execute(query).first()

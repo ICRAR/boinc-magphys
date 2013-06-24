@@ -33,14 +33,16 @@ import hashlib
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
+
 def get_redshift(filename):
     """
     Find and return the read shift
     """
     index = filename.index('_z')
-    redshift = filename[index+2:]
+    redshift = filename[index + 2:]
     redshift = redshift[:-5]
     return Decimal(redshift)
+
 
 def get_md5(filename):
     """
@@ -50,17 +52,17 @@ def get_md5(filename):
     >>> get_md5(/Users/kevinvinsen/Documents/ICRAR/work/boinc-magphys/server/runs/0001/starformhist_cb07_z0.0000.lbr.gz)
     a646f7f23f058e6519d1151508a448fa
     """
-    file = open(filename, "rb")
-    hash = hashlib.md5()
+    file_handle = open(filename, "rb")
+    md5_hash = hashlib.md5()
     hex_hash = None
     while True:
-        piece = file.read(10240)
+        piece = file_handle.read(10240)
 
         if piece:
-            hash.update(piece)
-        else: # we're at end of file
-            hex_hash = hash.hexdigest()
+            md5_hash.update(piece)
+        else:  # we're at end of file
+            hex_hash = md5_hash.hexdigest()
             break
 
-    file.close()
+    file_handle.close()
     return hex_hash

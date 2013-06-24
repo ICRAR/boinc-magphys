@@ -91,20 +91,20 @@ else:
         output = '{0}file_details.dat'.format(OUTPUT_DIR)
     else:
         output = '{0}/file_details.dat'.format(OUTPUT_DIR)
-    file = open(output, "wb")
+    file_handle = open(output, "wb")
 
     # Add the star formation files
     star_form_hist_files = glob.glob('{0}/starformhist_cb07_z*.lbr'.format(INPUT_DIR))
     star_form_hist_files.sort()
     for star_form_hist in star_form_hist_files:
         (head, file_1) = os.path.split(star_form_hist)
-        file.write('{0} {1} {2} {3} {4}\n'.format(file_1, STAR_FORMATION_FILE, get_md5(star_form_hist), get_redshift(file_1), os.path.getsize(star_form_hist)))
+        file_handle.write('{0} {1} {2} {3} {4}\n'.format(file_1, STAR_FORMATION_FILE, get_md5(star_form_hist), get_redshift(file_1), os.path.getsize(star_form_hist)))
 
     # Add the infrared files
     infrared_files = glob.glob('{0}/infrared_dce08_z*.lbr'.format(INPUT_DIR))
     infrared_files.sort()
     for infrared in infrared_files:
         (head, file_1) = os.path.split(infrared)
-        file.write('{0} {1} {2} {3} {4}\n'.format(file_1, INFRARED_FILE, get_md5(infrared), get_redshift(file_1), os.path.getsize(infrared)))
+        file_handle.write('{0} {1} {2} {3} {4}\n'.format(file_1, INFRARED_FILE, get_md5(infrared), get_redshift(file_1), os.path.getsize(infrared)))
 
-    file.close()
+    file_handle.close()

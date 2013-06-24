@@ -87,16 +87,16 @@ else:
     transaction = connection.begin()
     commit = True
     # Build the run
-    connection.execute(RUN.insert().values(run_id = RUN_ID,
-        directory          = INPUT_DIR,
-        short_description  = DESCRIPTION,
-        long_description   = DESCRIPTION,
-        fpops_est          = FPOPS_EST,
-        cobblestone_factor = COBBLESTONE_FACTOR))
+    connection.execute(RUN.insert().values(run_id=RUN_ID,
+                                           directory=INPUT_DIR,
+                                           short_description=DESCRIPTION,
+                                           long_description=DESCRIPTION,
+                                           fpops_est=FPOPS_EST,
+                                           cobblestone_factor=COBBLESTONE_FACTOR))
 
     # Read the filters file
-    with open('{0}/filters.dat'.format(INPUT_DIR), 'rb') as file:
-        for line in file:
+    with open('{0}/filters.dat'.format(INPUT_DIR), 'rb') as filters_file:
+        for line in filters_file:
             line = line.strip()
             if line.startswith('#'):
                 # It's a comment so we can ignore it
@@ -106,17 +106,17 @@ else:
 
                 # We should have 4 items
                 if len(details) == 4:
-                    filter = connection.execute(select([FILTER]).where(FILTER.c.filter_number == details[2])).first()
-                    if filter is None:
+                    filter_band = connection.execute(select([FILTER]).where(FILTER.c.filter_number == details[2])).first()
+                    if filter_band is None:
                         commit = False
                         LOG.error('The filter {0} {1} does not exist in the database'.format(details[0], details[2]))
                     else:
                         LOG.info('Adding the filter %s %s', details[0], details[2])
-                        connection.execute(RUN_FILTER.insert().values(run_id = RUN_ID, filter_id = filter[FILTER.c.filter_id]))
+                        connection.execute(RUN_FILTER.insert().values(run_id=RUN_ID, filter_id=filter_band[FILTER.c.filter_id]))
 
     # Add the file details
-    with open('{0}/file_details.dat'.format(INPUT_DIR), 'rb') as file:
-        for line in file:
+    with open('{0}/file_details.dat'.format(INPUT_DIR), 'rb') as filters_file:
+        for line in filters_file:
             line = line.strip()
             if line.startswith('#'):
                 # It's a comment so we can ignore it
@@ -130,12 +130,12 @@ else:
                         file_name = '{0}{1}'.format(URL_STEM, details[0])
                     else:
                         file_name = '{0}/{1}'.format(URL_STEM, details[0])
-                    connection.execute(RUN_FILE.insert().values(run_id = RUN_ID,
-                        file_name = file_name,
-                        file_type = int(details[1]),
-                        md5_hash = details[2],
-                        redshift = Decimal(details[3]),
-                        size = long(details[4])))
+                    connection.execute(RUN_FILE.insert().values(run_id=RUN_ID,
+                                                                file_name=file_name,
+                                                                file_type=int(details[1]),
+                                                                md5_hash=details[2],
+                                                                redshift=Decimal(details[3]),
+                                                                size=long(details[4])))
                     LOG.info('Adding %s', details[0])
 
     if commit:

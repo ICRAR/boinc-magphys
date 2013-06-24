@@ -38,13 +38,13 @@ def get_galaxy_image_bucket():
     return 'icrar.{0}.galaxy-images'.format(WG_PROJECT_NAME)
 
 
-def get_sed_file_bucket():
+def get_files_bucket():
     """
     Return the name of the bucket to hold sed files
 
     :return: the bucket name
     """
-    return 'icrar.{0}.sed-file'.format(WG_PROJECT_NAME)
+    return 'icrar.{0}.files'.format(WG_PROJECT_NAME)
 
 
 def get_galaxy_file_name(galaxy_name, galaxy_id, run_id):
@@ -57,3 +57,56 @@ def get_galaxy_file_name(galaxy_name, galaxy_id, run_id):
     :return: the galaxy name
     """
     return '{0}__{1}__{2}'.format(galaxy_name, run_id, galaxy_id)
+
+
+def get_key_fits(galaxy_name, galaxy_id, run_id):
+    """
+
+    :param galaxy_name:
+    :param galaxy_id:
+    :param run_id:
+    :return: the key to the fits file
+    """
+    return '{0}/{0}.fits'.format(get_galaxy_file_name(galaxy_name, run_id, galaxy_id))
+
+
+def get_key_sed(galaxy_name, galaxy_id, run_id, area_id):
+    """
+    Get the key for an SED file
+
+    :param area_id:
+    :param galaxy_name:
+    :param galaxy_id:
+    :param run_id:
+    :return: the key to the fits file
+    """
+    return '{0}/sed/{1}.fits'.format(get_galaxy_file_name(galaxy_name, run_id, galaxy_id), area_id)
+
+
+def get_colour_image_key(galaxy_key_prefix, colour):
+    """
+    Generates the key to the file given by the colour id
+    :param galaxy_key_prefix:
+    :param colour:
+    """
+    return galaxy_key_prefix + "/colour_" + str(colour) + ".png"
+
+
+def get_thumbnail_colour_image_key(galaxy_key_prefix, colour):
+    """
+    Generates the thumbnail key
+    :param galaxy_key_prefix:
+    :param colour:
+    """
+    return galaxy_key_prefix + "/tn_colour_" + str(colour) + ".png"
+
+
+def get_build_png_name(galaxy_key_prefix, parameter):
+    """
+    Generates the dynamic build png name
+
+    :param galaxy_key_prefix:
+    :param parameter:
+    :return:
+    """
+    return galaxy_key_prefix + "/" + parameter + ".png"

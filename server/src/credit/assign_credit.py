@@ -42,7 +42,7 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import boinc_path_config
 
-from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages, db_base
+from Boinc import database, configxml, db_base
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select
 from config import DB_LOGIN
@@ -79,7 +79,7 @@ class AssignCredit:
 
         # retrieve app where name = app.name
         database.connect()
-        app=database.Apps.find1(name=self.appname)
+        database.Apps.find1(name=self.appname)
 
         conn = db_base.get_dbconnection()
 
@@ -102,7 +102,7 @@ class AssignCredit:
                 if area is None:
                     print 'Area', area_id, 'not found, User', user_id, 'not Credited'
                 else:
-                    AREA_USER.insert().values(userid = user_id, area_id =  area_id)
+                    AREA_USER.insert().values(userid=user_id, area_id=area_id)
                     print 'User', user_id, 'Credited for Area', area_id
                     creditCount += 1
 

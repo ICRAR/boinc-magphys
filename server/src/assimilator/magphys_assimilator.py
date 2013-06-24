@@ -43,16 +43,18 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 import time
 import assimilator
 import boinc_path_config
-import math
 import gzip, traceback, datetime
-from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
+from Boinc import boinc_db
 from assimilator_utils import is_gzip
-from config import DB_LOGIN, MIN_HIST_VALUE
+from config import DB_LOGIN
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
-from database.database_support_core import PARAMETER_NAME, PIXEL_RESULT, PIXEL_FILTER, PIXEL_HISTOGRAM, PIXEL_PARAMETER, AREA, AREA_USER
+from database.database_support_core import PARAMETER_NAME, PIXEL_RESULT, AREA, AREA_USER, GALAXY
+from utils.name_builder import get_files_bucket, get_key_sed
+from utils.s3_helper import get_s3_connection, get_bucket, add_file_to_bucket
 
 ENGINE = create_engine(DB_LOGIN)
+
 
 class MagphysAssimilator(assimilator.Assimilator):
 
@@ -87,7 +89,14 @@ class MagphysAssimilator(assimilator.Assimilator):
                 self._area_id = pxresult[PIXEL_RESULT.c.area_id]
                 self._pxresult_id = pxresult[PIXEL_RESULT.c.pxresult_id]
 
-    def _save_results(self, connection, map_pixel_results, list_insert_filters, list_pixel_parameters, map_pixel_histograms):
+                # Find the galaxy details
+                galaxy = connection.execute(select([GALAXY], from_obj=GALAXY.join(AREA))
+                                            .where(AREA.c.area_id == self._area_id)).first()
+                self._galaxy_name = galaxy[GALAXY.c.name]
+                self._galaxy_id = galaxy[GALAXY.c.galaxy_id]
+                self._run_id = galaxy[GALAXY.c.run_id]
+
+    def _save_results(self, connection, map_pixel_results):
         """
         Add the pixel to the database
         """
@@ -95,29 +104,15 @@ class MagphysAssimilator(assimilator.Assimilator):
             # Update the filters
             connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == self._pxresult_id).values(map_pixel_results))
 
-            connection.execute(PIXEL_FILTER.insert(), list_insert_filters)
-
-            # Because I need to get the PK back we have to do each one separately
-            for pixel_parameter in list_pixel_parameters:
-                result = connection.execute(PIXEL_PARAMETER.insert(), pixel_parameter)
-                id = result.inserted_primary_key
-
-                # Add the ID to the list
-                list_pixel_histograms = map_pixel_histograms[pixel_parameter['parameter_name_id']]
-                for map_values in list_pixel_histograms:
-                    map_values['pxparameter_id'] = id[0]
-
-                connection.execute(PIXEL_HISTOGRAM.insert(), list_pixel_histograms)
-
-    def _process_result(self, connection, outFile, wu):
+    def _process_result(self, connection, out_file, wu):
         """
         Read the output file, add the values to the PixelResult row, and insert the filter,
         parameter and histogram rows.
         """
-        if is_gzip(outFile):
-            f = gzip.open(outFile , "rb")
+        if is_gzip(out_file):
+            f = gzip.open(out_file, "rb")
         else:
-            f = open(outFile, "r")
+            f = open(out_file, "r")
 
         self._area_id = None
         self._pxresult_id = None
@@ -128,11 +123,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         skynet_next2 = False
         result_count = 0
         map_pixel_results = {}
-        map_pixel_parameter = {}
-        map_pixel_histograms = {}
-        list_filters = []
-        list_pixel_parameters = []
-        list_pixel_histograms = []
+        column_name = None
         start_time = None
         try:
             for line in f:
@@ -140,13 +131,9 @@ class MagphysAssimilator(assimilator.Assimilator):
 
                 if line.startswith(" ####### "):
                     if self._pxresult_id is not None:
-                        self._save_results(connection, map_pixel_results, list_filters, list_pixel_parameters, map_pixel_histograms)
-                        #self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
+                        self._save_results(connection, map_pixel_results)
+                        self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
                     map_pixel_results = {}
-                    map_pixel_parameter = {}
-                    map_pixel_histograms = {}
-                    list_filters = []
-                    list_pixel_parameters = []
                     start_time = time.time()
                     values = line.split()
                     pointName = values[1]
@@ -161,70 +148,25 @@ class MagphysAssimilator(assimilator.Assimilator):
                     skynet_next2 = False
                     result_count += 1
                 elif self._pxresult_id is not None:
-                    if lineNo == 2:
-                        filterNames = line.split()
-                        for filterName in filterNames:
-                            if filterName != '#':
-                                list_filters.append({'filter_name': filterName, 'pxresult_id': self._pxresult_id})
-                    elif lineNo == 3:
-                        index = 0
-                        values = line.split()
-                        for value in values:
-                            filter = list_filters[index]
-                            filter['observed_flux'] = float(value)
-                            index += 1
-                    elif lineNo == 4:
-                        index = 0
-                        values = line.split()
-                        for value in values:
-                            filter = list_filters[index]
-                            filter['observational_uncertainty'] = float(value)
-                            index += 1
-                    elif lineNo == 9:
+                    if lineNo == 9:
                         values = line.split()
                         map_pixel_results['i_sfh'] = float(values[0])
                         map_pixel_results['i_ir'] = float(values[1])
                         map_pixel_results['chi2'] = float(values[2])
                         map_pixel_results['redshift'] = float(values[3])
                     elif lineNo == 11:
-                        values = line.split()
-                        map_pixel_results['fmu_sfh'] = float(values[0])
-                        map_pixel_results['fmu_ir'] = float(values[1])
-                        map_pixel_results['mu'] = float(values[2])
-                        map_pixel_results['tauv'] = float(values[3])
-                        map_pixel_results['s_sfr'] = float(values[4])
-                        map_pixel_results['m'] = float(values[5])
-                        map_pixel_results['ldust'] = float(values[6])
-                        map_pixel_results['t_w_bc'] = float(values[7])
-                        map_pixel_results['t_c_ism'] = float(values[8])
-                        map_pixel_results['xi_c_tot'] = float(values[9])
-                        map_pixel_results['xi_pah_tot'] = float(values[10])
-                        map_pixel_results['xi_mir_tot'] = float(values[11])
-                        map_pixel_results['x_w_tot'] = float(values[12])
-                        map_pixel_results['tvism'] = float(values[13])
-                        map_pixel_results['mdust'] = float(values[14])
-                        map_pixel_results['sfr'] = float(values[15])
-                    elif lineNo == 13:
-                        index = 0
-                        values = line.split()
-                        for value in values:
-                            filter = list_filters[index]
-                            filter['flux_bfm'] = float(value)
-                            index += 1
+                        # We prefer the median values
+                        pass
                     elif lineNo > 13:
                         if line.startswith("# ..."):
                             parts = line.split('...')
-                            parameterName = parts[1].strip()
-                            parameter_name_id = self._map_parameter_name[parameterName]
-                            map_pixel_parameter = {'parameter_name_id': parameter_name_id, 'pxresult_id': self._pxresult_id}
-                            list_pixel_parameters.append(map_pixel_parameter)
-                            list_pixel_histograms = []
-                            map_pixel_histograms[parameter_name_id] = list_pixel_histograms
+                            parameter_name = parts[1].strip()
+                            column_name = self._map_parameter_name[parameter_name]
                             percentiles_next = False
                             histogram_next = True
                             skynet_next1 = False
                             skynet_next2 = False
-                        elif line.startswith("#....percentiles of the PDF......") and len(map_pixel_parameter) > 0:
+                        elif line.startswith("#....percentiles of the PDF......"):
                             percentiles_next = True
                             histogram_next = False
                             skynet_next1 = False
@@ -241,32 +183,14 @@ class MagphysAssimilator(assimilator.Assimilator):
                             skynet_next2 = True
                         elif percentiles_next:
                             values = line.split()
-                            map_pixel_parameter['percentile2_5'] = float(values[0])
-                            map_pixel_parameter['percentile16'] = float(values[1])
-                            map_pixel_parameter['percentile50'] = float(values[2])
-                            map_pixel_parameter['percentile84'] = float(values[3])
-                            map_pixel_parameter['percentile97_5'] = float(values[4])
+                            map_pixel_results[column_name] = float(values[2])
                             percentiles_next = False
                         elif histogram_next:
-                            values = line.split()
-                            hist_value = float(values[1])
-                            if hist_value > MIN_HIST_VALUE and not math.isnan(hist_value):
-                                list_pixel_histograms.append({'pxresult_id': self._pxresult_id, 'x_axis': float(values[0]), 'hist_value': hist_value})
+                            pass
                         elif skynet_next1:
-                            values = line.split()
-                            map_pixel_results['i_opt'] = float(values[0])
-                            map_pixel_results['i_ir'] = float(values[1])
-                            map_pixel_results['dmstar'] = float(values[2])
-                            map_pixel_results['dfmu_aux'] = float(values[3])
-                            map_pixel_results['dz'] = float(values[4])
                             skynet_next1 = False
                         elif skynet_next2:
                             # We have the highest bin probability values which require the parameter_id
-                            values = line.split()
-                            map_pixel_parameter['high_prob_bin'] = float(values[0])
-                            map_pixel_parameter['first_prob_bin'] = float(values[1])
-                            map_pixel_parameter['last_prob_bin'] = float(values[2])
-                            map_pixel_parameter['bin_step'] = float(values[3])
                             skynet_next2 = False
 
         except IOError:
@@ -274,8 +198,8 @@ class MagphysAssimilator(assimilator.Assimilator):
         finally:
             f.close()
         if self._pxresult_id is not None:
-            self._save_results(connection, map_pixel_results, list_filters, list_pixel_parameters, map_pixel_histograms)
-            #self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
+            self._save_results(connection, map_pixel_results)
+            self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
         return result_count
 
     def assimilate_handler(self, wu, results, canonical_result):
@@ -287,21 +211,21 @@ class MagphysAssimilator(assimilator.Assimilator):
         transaction = None
         try:
             if wu.canonical_result:
-                outFile = self.get_file_path(canonical_result)
+                out_file = self.get_file_path(canonical_result)
                 self.area = None
-                if outFile:
-                     if os.path.isfile(outFile):
-                          pass
-                     else:
-                         self.logDebug("File [%s] not found\n", outFile)
-                         outFile = None
+                if out_file:
+                    if os.path.isfile(out_file):
+                        pass
+                    else:
+                        self.logDebug("File [%s] not found\n", out_file)
+                        out_file = None
 
-                if outFile:
-                    self.logDebug("Reading File [%s]\n", outFile)
+                if out_file:
+                    self.logDebug("Reading File [%s]\n", out_file)
                     start = time.time()
                     connection = ENGINE.connect()
                     transaction = connection.begin()
-                    resultCount = self._process_result(connection, outFile, wu)
+                    resultCount = self._process_result(connection, out_file, wu)
                     if self.noinsert:
                         transaction.rollback()
                     else:
@@ -311,9 +235,9 @@ class MagphysAssimilator(assimilator.Assimilator):
                         if self._area_id is None:
                             self.logDebug("The Area was not found\n")
                         else:
-                            connection.execute(AREA.update().
-                                where(AREA.c.area_id == self._area_id).
-                                values(workunit_id = wu.id, update_time = datetime.datetime.now()))
+                            connection.execute(AREA.update()
+                                               .where(AREA.c.area_id == self._area_id)
+                                               .values(workunit_id=wu.id, update_time=datetime.datetime.now()))
 
                             user_id_set = set()
                             for result in results:
@@ -326,6 +250,13 @@ class MagphysAssimilator(assimilator.Assimilator):
                             insert = AREA_USER.insert()
                             for user_id in user_id_set:
                                 connection.execute(insert, area_id=self._area_id, userid=user_id)
+
+                            # Copy the file to S3
+                            s3_connection = get_s3_connection()
+                            bucket = get_bucket(s3_connection, get_files_bucket())
+                            add_file_to_bucket(bucket,
+                                               get_key_sed(self._galaxy_name, self._galaxy_id, self._run_id, self._area_id),
+                                               out_file)
 
                         time_taken = '{0:.2f}'.format(time.time() - start)
                         self.logDebug("Saving %d results for workunit %d in %s seconds\n", resultCount, wu.id, time_taken)

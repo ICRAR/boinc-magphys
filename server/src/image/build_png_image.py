@@ -29,6 +29,7 @@ Build a PNG image from the data in the database
 import os
 import sys
 import logging
+from utils.name_builder import get_galaxy_image_bucket, get_build_png_name, get_galaxy_file_name
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -46,18 +47,16 @@ import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
-from config import DB_LOGIN
-from config import DJANGO_IMAGE_DIR
-from image import fitsimage, directory_mod
-from database.database_support_core import AREA, GALAXY, PIXEL_RESULT, PIXEL_PARAMETER
+from config import DB_LOGIN, WG_TMP
+from image import fitsimage
+from database.database_support_core import AREA, GALAXY, PIXEL_RESULT
 from PIL import Image
+from utils.s3_helper import get_s3_connection, get_bucket, add_file_to_bucket
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
 parser.add_argument('names', nargs='*', help='optional the name of the galaxies to produce')
 parser.add_argument('-all', action='store_true', help='build images for all the galaxies')
 args = vars(parser.parse_args())
-
-output_directory = DJANGO_IMAGE_DIR
 
 # First check the galaxy exists in the database
 engine = create_engine(DB_LOGIN)
@@ -140,6 +139,8 @@ FIRE_B = [0, 7, 15, 22, 30, 38, 45, 53, 61, 65, 69, 74, 78,
 
 fits_image = fitsimage.FitsImage(connection)
 galaxy_count = 0
+s3_connection = get_s3_connection()
+bucket = get_bucket(s3_connection, get_galaxy_image_bucket())
 for galaxy in connection.execute(query):
     LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
     array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(PNG_IMAGE_NAMES)), dtype=numpy.float)
@@ -155,18 +156,11 @@ for galaxy in connection.execute(query):
         if row[PIXEL_RESULT.c.workunit_id] is not None:
             pixels_processed += 1
 
-        # Now get the median values
-        for pixel_parameter in connection.execute(select([PIXEL_PARAMETER])
-        .where(and_(PIXEL_PARAMETER.c.pxresult_id == row[PIXEL_RESULT.c.pxresult_id], PIXEL_PARAMETER.c.parameter_name_id.in_([3, 6, 7, 16])))):
-            if pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] == 3:
-                array[row__y, row__x, 0] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
-            elif pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] == 6:
-                array[row__y, row__x, 1] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
-            elif pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] == 7:
-                array[row__y, row__x, 2] = pixel_parameter[PIXEL_PARAMETER.c.percentile50]
-            elif pixel_parameter[PIXEL_PARAMETER.c.parameter_name_id] == 16:
-                # the SFR is a log
-                array[row__y, row__x, 3] = math.pow(10, pixel_parameter[PIXEL_PARAMETER.c.percentile50])
+            array[row__y, row__x, 0] = row[PIXEL_RESULT.c.mu]
+            array[row__y, row__x, 1] = row[PIXEL_RESULT.c.m]
+            array[row__y, row__x, 2] = row[PIXEL_RESULT.c.ldust]
+            # the SFR is a log
+            array[row__y, row__x, 3] = math.pow(10, row[PIXEL_RESULT.c.sfr])
 
     name_count = 0
 
@@ -230,7 +224,13 @@ for galaxy in connection.execute(query):
                     green = FIRE_G[value]
                     blue = FIRE_B[value]
                     image.putpixel((x, height - y - 1), (red, green, blue))
-        out_name = directory_mod.get_file_path(output_directory, '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name), True)
-        image.save(out_name)
+
+        file_name = '{0}/image.png'.format(WG_TMP)
+        image.save(file_name)
+        add_file_to_bucket(bucket,
+                           get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.run_id]),
+                                              name),
+                           file_name)
+
 
 LOG.info('Built images for %d galaxies', galaxy_count)

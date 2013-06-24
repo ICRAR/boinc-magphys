@@ -409,6 +409,7 @@ threshold = "1000"
 high_water_mark = "400"
 report_deadline = "7"
 project_name = "{0}"
+tmp = "/tmp"
 boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
 
     # Copy the config files
