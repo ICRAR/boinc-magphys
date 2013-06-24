@@ -199,8 +199,8 @@ CREATE TABLE pixel_result (
   s_sfr       DOUBLE,
   m           DOUBLE,
   ldust       DOUBLE,
-  t_w_bc      DOUBLE,
   t_c_ism     DOUBLE,
+  t_w_bc      DOUBLE,
   xi_c_tot    DOUBLE,
   xi_pah_tot  DOUBLE,
   xi_mir_tot  DOUBLE,
@@ -222,7 +222,7 @@ CREATE TABLE user_pixel (
 CREATE TABLE parameter_name (
   parameter_name_id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
   name              VARCHAR(100) NOT NULL,
-  column_name       VARCHAR(100) NOT NULL
+  column_name       VARCHAR(20) NOT NULL
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 INSERT INTO parameter_name VALUES (1, 'f_mu (SFH)', 'fmu_sfh');

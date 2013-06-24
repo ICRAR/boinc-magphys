@@ -182,25 +182,25 @@ def store_files(dir, host):
     file_count = 0
 
     try:
-        for file in glob.glob(files):
-            size = os.path.getsize(file)
-            galaxy_id = get_galaxy_id(file, connection)
+        for file_name in glob.glob(files):
+            size = os.path.getsize(file_name)
+            galaxy_id = get_galaxy_id(file_name, connection)
             if galaxy_id >= 0:
-                LOG.info('File name: %s', file)
+                LOG.info('File name: %s', file_name)
                 LOG.info('File size: %d', size)
 
-                command = '/home/ec2-user/ngas_rt/bin/ngamsCClient -host {0} -port 7780 -cmd ARCHIVE -fileUri {1} -mimeType application/octet-stream'.format(host, file)
+                command = '/home/ec2-user/ngas_rt/bin/ngamsCClient -host {0} -port 7780 -cmd ARCHIVE -fileUri {1} -mimeType application/octet-stream'.format(host, file_name)
                 LOG.info(command)
 
-                if run_command(command, file):
+                if run_command(command, file_name):
                     LOG.info('File successfully loaded')
 
-                    os.remove(file)
+                    os.remove(file_name)
                     connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id = STORED))
                     file_count += 1
 
             else:
-                LOG.error('File name: %s', file)
+                LOG.error('File name: %s', file_name)
                 LOG.error('File size: %d', size)
                 LOG.error('Could not get the galaxy id')
 

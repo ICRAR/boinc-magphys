@@ -256,7 +256,8 @@ class MagphysAssimilator(assimilator.Assimilator):
                             bucket = get_bucket(s3_connection, get_files_bucket())
                             add_file_to_bucket(bucket,
                                                get_key_sed(self._galaxy_name, self._galaxy_id, self._run_id, self._area_id),
-                                               out_file)
+                                               out_file,
+                                               reduced_redundancy=True)
 
                         time_taken = '{0:.2f}'.format(time.time() - start)
                         self.logDebug("Saving %d results for workunit %d in %s seconds\n", resultCount, wu.id, time_taken)

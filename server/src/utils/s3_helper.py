@@ -52,7 +52,7 @@ def get_bucket(s3_connection, bucket_name):
     return s3_connection.get_bucket(bucket_name)
 
 
-def add_file_to_bucket(bucket, key_name, filename):
+def add_file_to_bucket(bucket, key_name, filename, reduced_redundancy=False):
     """
     Add file to a bucket
 
@@ -63,4 +63,4 @@ def add_file_to_bucket(bucket, key_name, filename):
     """
     key = Key(bucket)
     key.key = key_name
-    key.set_contents_from_filename(filename)
+    key.set_contents_from_filename(filename, reduced_redundancy=reduced_redundancy)
