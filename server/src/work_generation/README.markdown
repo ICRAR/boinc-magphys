@@ -14,21 +14,9 @@ The WU generator takes a image and breaks in into WU and loads them into the BOI
 
 ## Registering Runs
 
-To avoid having to store 100's of MBs of model files on the server we do this in two stages
-
-### Step 1  (Local machine)
-
-$ ./create_file_details.py input_dir output_dir
-$ ./create_file_details.py ~/boinc-magphys/runs/0001 ~/boinc-magphys/server/runs/0001
-
-* **input_dir** where the *.lbr files are stored
-* **output_dir** where the output file is written
-
-### Step 2 (Boinc Server)
-
-$ ./load_run_details.py run_id dir_with_files url_prefix comment
-$ ./load_run_details.py 1 /home/ec2-user/boinc-magphys/server/runs/0001 http://boinc-download.icrar.org/runs/0001/ 'PS Filters + SDSSu' 6 8.85
-$ ./load_run_details.py 2 /home/ec2-user/boinc-magphys/server/runs/0002 http://boinc-download.icrar.org/runs/0002/ 'SDSS Only' 5.5 8.85
+$ ./load_run_details.py run_id directory comment fpops_est cobblestone_factor
+$ ./load_run_details.py 1 /home/ec2-user/boinc-magphys/server/runs/0001 'PS Filters + SDSSu' 6 8.85
+$ ./load_run_details.py 2 /home/ec2-user/boinc-magphys/server/runs/0002 'SDSS Only' 5.5 8.85
 
 * **run_id** is the run id to be used
 * **dir_with_files** where the filters.dat and file_details.dat files can be found as we need to record the md5sum and size

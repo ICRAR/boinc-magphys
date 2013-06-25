@@ -26,7 +26,6 @@
 Image generation
 """
 import logging
-from boto.s3.key import Key
 import pyfits
 import math
 import numpy
@@ -70,6 +69,23 @@ class ImageBuilder:
     _centre = 0.6
 
     def __init__(self, bucket, image_number, image_file_key, thumbnail_file_key, red_filter, green_filter, blue_filter, width, height, centre, connection, galaxy_id):
+        """
+        Initialise the builder
+
+        :param bucket:
+        :param image_number:
+        :param image_file_key:
+        :param thumbnail_file_key:
+        :param red_filter:
+        :param green_filter:
+        :param blue_filter:
+        :param width:
+        :param height:
+        :param centre:
+        :param connection:
+        :param galaxy_id:
+        :return:
+        """
         self._bucket = bucket
         self._image_file_key = image_file_key
         self._thumbnail_file_key = thumbnail_file_key
@@ -86,8 +102,8 @@ class ImageBuilder:
         filter_id_blue = self._get_filter_id(connection, blue_filter)
         filter_id_green = self._get_filter_id(connection, green_filter)
 
-        image_filters_used = connection.execute(select([IMAGE_FILTERS_USED]).where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id, IMAGE_FILTERS_USED.c.image_number == image_number)))\
-                             .first()
+        image_filters_used = connection.execute(select([IMAGE_FILTERS_USED])
+                                                .where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id, IMAGE_FILTERS_USED.c.image_number == image_number))).first()
         if image_filters_used is None:
             connection.execute(IMAGE_FILTERS_USED.insert()
                                .values(image_number=image_number,
@@ -152,6 +168,10 @@ class ImageBuilder:
             return True
 
     def save_image(self):
+        """
+        Save the image
+        :return:
+        """
         red_sigma = self._centre / self._red_median
         green_sigma = self._centre / self._green_median
         blue_sigma = self._centre / self._blue_median
@@ -211,6 +231,13 @@ class ImageBuilder:
             self._save_to_s3(self._thumbnail_file_key)
 
     def _save_to_s3(self, image_file_key):
+        """
+        Save the image to an S3 bucket
+
+        :param image_file_key:
+        :return:
+        """
+        LOG.info('Saving an image to {0}'.format(image_file_key))
         file_name = '{0}/image.png'.format(WG_TMP)
         self._image.save(file_name)
         add_file_to_bucket(self._bucket, image_file_key, file_name)
@@ -227,6 +254,10 @@ class FitsImage:
     def build_image(self, fits_file_name, image_key_stub, galaxy_id, bucket):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
+        :param fits_file_name:
+        :param image_key_stub:
+        :param galaxy_id:
+        :param bucket:
         """
         # Use the new asinh algorithm.
         self._build_Image_Asinh(fits_file_name, image_key_stub, self.centre, galaxy_id, bucket)
@@ -234,6 +265,7 @@ class FitsImage:
     def _get_image_filters(self, hdulist):
         """
         Get the combinations to use
+        :param hdulist:
         """
         image1_filters = [0, 0, 0]
         image2_filters = [0, 0, 0]
@@ -269,6 +301,11 @@ class FitsImage:
     def _build_Image_Asinh(self, fits_file_name, galaxy_key_stub, centre, galaxy_id, bucket):
         """
         Build Three Colour Images using the asinh() function.
+        :param fits_file_name:
+        :param galaxy_key_stub:
+        :param centre:
+        :param galaxy_id:
+        :param bucket:
         """
         hdulist = pyfits.open(fits_file_name, memmap=True)
 
@@ -346,6 +383,10 @@ class FitsImage:
         """
         Read the image for the galaxy and generate an image that highlights the areas
         that the specified user has generated results.
+        :param inImageFileName:
+        :param outImageFileName:
+        :param galaxy_id:
+        :param userid:
         """
         # TODO: Get from S3
         image = Image.open(inImageFileName, "r").convert("RGBA")
@@ -369,6 +410,9 @@ class FitsImage:
         """
         Mark the specified pixel to highlight the area where the user has
         generated results.
+        :param image:
+        :param x:
+        :param y:
         """
         px = image.getpixel((x, y))
         r = int(px[0] + ((255 - px[0]) * 0.5))

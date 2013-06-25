@@ -25,6 +25,3 @@
 """
 Initialise the Constants used
 """
-
-STAR_FORMATION_FILE = 1
-INFRARED_FILE       = 2

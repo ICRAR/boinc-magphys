@@ -96,8 +96,6 @@ GALAXY = Table('galaxy',
                Column('redshift', Numeric(7, 5)),
                Column('create_time', TIMESTAMP),
                Column('image_time', TIMESTAMP),
-               Column('version_number', Integer),
-               Column('current', Boolean),
                Column('galaxy_type', String(10)),
                Column('ra_cent', Float),
                Column('dec_cent', Float),
@@ -183,17 +181,6 @@ RUN = Table('run',
             Column('directory', String(1000)),
             Column('fpops_est', Float),
             Column('cobblestone_factor', Float),
-)
-
-RUN_FILE = Table('run_file',
-                 MAGPHYS_METADATA,
-                 Column('run_file_id', BigInteger, primary_key=True),
-                 Column('run_id', BigInteger, ForeignKey('run.run_id')),
-                 Column('redshift', Numeric(7, 5)),
-                 Column('file_type', Integer),
-                 Column('file_name', String(1000)),
-                 Column('size', BigInteger),
-                 Column('md5_hash', String(100))
 )
 
 RUN_FILTER = Table('run_filter',

@@ -65,6 +65,7 @@ def delete_tables(connection):
     connection.execute('drop table pixel_histogram')
     connection.execute('drop table pixel_parameter')
     connection.execute('drop table pixel_filter')
+    connection.execute('drop table run_file')
 
 
 def migrate_database():

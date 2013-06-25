@@ -80,20 +80,6 @@ CREATE TABLE run_filter (
   INDEX (filter_id)
 )  CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE TABLE run_file (
-  run_file_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  run_id      BIGINT UNSIGNED NOT NULL,
-  redshift    DECIMAL(7, 5) NOT NULL,
-  file_type   INTEGER NOT NULL,
-  file_name   VARCHAR(1000) NOT NULL,
-  size        BIGINT NOT NULL,
-  md5_hash    VARCHAR (100) NOT NULL,
-
-  FOREIGN KEY (run_id) REFERENCES run(run_id),
-
-  INDEX (run_id)
-) CHARACTER SET utf8 ENGINE=InnoDB;
-
 CREATE TABLE register (
   register_id    BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   galaxy_name    VARCHAR(128) NOT NULL,
@@ -124,8 +110,6 @@ CREATE TABLE galaxy (
   sigma            DECIMAL(3,2) NOT NULL,
   create_time      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   image_time       TIMESTAMP,
-  version_number   INTEGER UNSIGNED NOT NULL DEFAULT 1,
-  current          BOOLEAN NOT NULL DEFAULT TRUE,
   galaxy_type      VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
   ra_cent          FLOAT,
   dec_cent         FLOAT,
