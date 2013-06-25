@@ -525,8 +525,8 @@ class Fit2Wu:
             names.append(filter_name_magphysn)
 
             found_filter = False
-            for filter_name_magphysn in list_filter_names:
-                if filter_name == filter_name[FILTER.c.name]:
+            for filter_name in list_filter_names:
+                if filter_name_magphysn == filter_name[FILTER.c.name]:
                     found_filter = True
                     break
 
