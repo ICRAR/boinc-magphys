@@ -27,6 +27,7 @@
 Convert a FITS file ready to be converted into Work Units
 """
 from __future__ import print_function
+import hashlib
 import logging
 import os
 import json
@@ -43,7 +44,6 @@ from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits
 from utils.s3_helper import add_file_to_bucket, get_bucket, get_s3_connection
 from work_generation import STAR_FORMATION_FILE, INFRARED_FILE
-from hashlib import md5
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -497,7 +497,7 @@ class Fit2Wu:
         :param file_name:
         :rtype : the string of the download directory
         """
-        s = md5.new(file_name).hexdigest()[1:8]
+        s = hashlib.md5(file_name).hexdigest()[:8]
         x = long(s, 16)
         return "%s/%x/%s" % (self._download_dir, x % self._fanout, file_name)
 
