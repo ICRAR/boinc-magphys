@@ -519,19 +519,19 @@ class Fit2Wu:
         names = []
         for layer in range(self._layer_count):
             hdu = self._hdu_list[layer]
-            filter_name = hdu.header['MAGPHYSN']
-            if filter_name is None:
+            filter_name_magphysn = hdu.header['MAGPHYSN']
+            if filter_name_magphysn is None:
                 raise LookupError('The layer {0} does not have MAGPHYSN in it'.format(layer))
-            names.append(filter_name)
+            names.append(filter_name_magphysn)
 
             found_filter = False
-            for filter_name in list_filter_names:
+            for filter_name_magphysn in list_filter_names:
                 if filter_name == filter_name[FILTER.c.name]:
                     found_filter = True
                     break
 
             if not found_filter:
-                raise LookupError('The filter {0} in the fits file is not expected'.format(filter_name))
+                raise LookupError('The filter {0} in the fits file is not expected'.format(filter_name_magphysn))
 
         # If the fit is using a S/N ratio file check the order is correct
         if self._signal_noise_hdu is not None:

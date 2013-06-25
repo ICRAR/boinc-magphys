@@ -256,39 +256,9 @@ def edit_files():
       <output> magphys_validator.log </output>
     </daemon>
     <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 0 </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper</cmd>
       <output> assimilator.0.log </output>
       <pid_file> assimilator.0.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 1 </cmd>
-      <output> assimilator.1.log </output>
-      <pid_file> assimilator.1.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 2 </cmd>
-      <output> assimilator.2.log </output>
-      <pid_file> assimilator.2.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 3 </cmd>
-      <output> assimilator.3.log </output>
-      <pid_file> assimilator.3.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 4 </cmd>
-      <output> assimilator.4.log </output>
-      <pid_file> assimilator.4.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 5 </cmd>
-      <output> assimilator.5.log </output>
-      <pid_file> assimilator.5.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
   </daemons>'''.format(env.project_name))
