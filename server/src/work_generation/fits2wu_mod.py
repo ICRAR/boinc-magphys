@@ -499,6 +499,16 @@ class Fit2Wu:
         """
         s = hashlib.md5(file_name).hexdigest()[:8]
         x = long(s, 16)
+
+        # Create the directory if needed
+        hash_dir_name = "%s/%x" % (self._download_dir, x % self._fanout)
+        if os.path.isfile(hash_dir_name):
+            pass
+        elif os.path.isdir(hash_dir_name):
+            pass
+        else:
+            os.mkdir(hash_dir_name)
+
         return "%s/%x/%s" % (self._download_dir, x % self._fanout, file_name)
 
     def _get_filters_sort_layers(self):
