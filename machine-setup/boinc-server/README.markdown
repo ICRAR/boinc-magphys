@@ -1,14 +1,24 @@
 # BOINC
 
-This directory contains the files to build the BOINC servers in the AWS cloud.
+This directory contains the files to build the various types of server required to support the POGS project in the AWS cloud.
 
-The **fabfile.py** does all the heavy lifting for building the test environment.
+The **fabfile.py** does all the heavy lifting for building the environments.
 
-* fab setup_env gluster1 gluster2 gluster3 deploy_with_db - will deploy everything on a dual gluster server including the DB
-* fab setup_env gluster1 gluster2 gluster3 deploy_without_db - will deploy everything on a dual gluster server without the DB
-* fab setup_env single_server deploy_with_db - will deploy everything on a single server with the DB
+# BASE AMI
 
-You can use a config file if you don't want to type values again and again, but the main one is hidden (I don't want DB passwords in clear text in GitHub :-) )
+This command creates the Base AMI that the others are based off.
 
-This will create a brand new EC2 instance and run the scripts for setting up a newer version of the server.
+* fab base_setup_env base_build_ami
 
+
+# Python Node
+
+This command creates the Python node instances.
+
+
+# BOINC Node
+
+These commands create the BOINC instances.
+
+* fab boinc_setup_env boinc_deploy_with_db - will deploy everything including the DB
+* fab boinc_setup_env boinc_deploy_without_db - will deploy everything without the DB
