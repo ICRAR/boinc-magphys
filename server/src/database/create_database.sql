@@ -121,7 +121,7 @@ CREATE TABLE galaxy (
   FOREIGN KEY (status_id) REFERENCES galaxy_status(galaxy_status_id),
 
   INDEX (run_id),
-  INDEX (name, version_number),
+  INDEX (name),
   INDEX (status_id)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
