@@ -298,7 +298,6 @@ def setup_website():
     Copy the config files and restart the httpd daemon
     """
     local('sudo cp /home/ec2-user/projects/{0}/{0}.httpd.conf /etc/httpd/conf.d'.format(env.project_name))
-    local('sudo /etc/init.d/httpd restart')
 
 
 @task

@@ -59,7 +59,7 @@ BOINC_AWS_KEYS = os.path.expanduser('~/Documents/Keys/aws')
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys/magphys')
 PIP_PACKAGES = 'sqlalchemy Numpy pyfits pil fabric configobj MySQL-python boto astropy'
 YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel '
-YUM_BOINC_PACKAGES = 'httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates '
+YUM_BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
 
 
 def base_install():
@@ -236,7 +236,10 @@ def boinc_install(with_db):
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
 
     # Clone our code
-    run('git clone git://github.com/ICRAR/boinc-magphys.git')
+    if env.branch == '':
+        run('git clone git://github.com/ICRAR/boinc-magphys.git')
+    else:
+        run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
 
     # Create the .boto file
     file_name = get_aws_keyfile()
@@ -306,13 +309,13 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         # Activate the DB
         sudo('mysql_install_db')
         sudo('chown -R mysql:mysql /var/lib/mysql/*')
-        run('''echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet apply''')
+        sudo('chkconfig mysqld --add')
+        sudo('chkconfig mysqld on')
         sudo('service mysqld start')
 
         # Wait for it to start up
         time.sleep(5)
 
-    if with_db:
         # Setup the database for recording WU's
         run('mysql --user=root < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql')
 
@@ -405,8 +408,10 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
             run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
         # Create users and start services
-        sudo('useradd apache -M -G ec2-user')
-        sudo('service mysqld start')
+        sudo('usermod -a -G ec2-user apache')
+        sudo('chkconfig httpd --add')
+        sudo('chkconfig httpd on')
+        sudo('service httpd start')
 
     # Setup the logrotation
     sudo('''echo "/home/ec2-user/projects/{0}/log_*/*.log
@@ -519,6 +524,13 @@ def boinc_setup_env():
 
     Allow the user to select if a Elastic IP address is to be used
     """
+    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
+    ec2_connection = boto.connect_ec2()
+    images = ec2_connection.get_all_images(owners=['self'])
+    puts('Available images')
+    for image in images:
+        puts('Image: {0: <10} Name: {1: <35} Description: {2}'.format(image.id, image.name, image.description))
+
     if 'ami_name' not in env:
         prompt('AMI id to build from: ', 'ami_id')
     if 'ops_username' not in env:
