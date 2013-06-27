@@ -41,7 +41,7 @@ import socket
 from common.FileEditor import FileEditor
 
 APP_NAME = "magphys_wrapper"
-PLATFORMS = ["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu"]
+PLATFORMS = ["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu", "arm-android-linux-gnu"]
 WINDOWS_PLATFORMS = ["windows_x86_64", "windows_intelx86"]
 
 

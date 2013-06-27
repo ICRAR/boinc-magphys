@@ -23,6 +23,10 @@
         <name>x86_64-apple-darwin</name>
         <user_friendly_name>Intel 64-bit Mac OS 10.5 or later</user_friendly_name>
     </platform>
+    <platform>
+        <name>arm-android-linux-gnu</name>
+        <user_friendly_name>Android running on ARM</user_friendly_name>
+    </platform>
     <app>
         <name>magphys_wrapper</name>
         <user_friendly_name>fitsedwrapper</user_friendly_name>
