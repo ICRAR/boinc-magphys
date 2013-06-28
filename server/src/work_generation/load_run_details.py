@@ -64,9 +64,6 @@ if os.path.isdir(INPUT_DIR):
     if not os.path.isfile('{0}/filters.dat'.format(INPUT_DIR)):
         errors.append('The file {0}/filters.dat does not exist'.format(INPUT_DIR))
 
-    if not os.path.isfile('{0}/file_details.dat'.format(INPUT_DIR)):
-        errors.append('The file {0}/file_details.dat does not exist'.format(INPUT_DIR))
-
     count = connection.execute(select([func.count(RUN.c.run_id)]).where(RUN.c.run_id == RUN_ID)).first()
     if count[0] > 0:
         errors.append('The run id {0} already exists'. format(RUN_ID))
