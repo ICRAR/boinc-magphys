@@ -67,7 +67,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
         # Load the parameter name map
         for parameter_name in connection.execute(select([PARAMETER_NAME])):
-            self._map_parameter_name[parameter_name[PARAMETER_NAME.c.name]] = parameter_name[PARAMETER_NAME.c.parameter_name_id]
+            self._map_parameter_name[parameter_name[PARAMETER_NAME.c.name]] = parameter_name[PARAMETER_NAME.c.column_name]
 
         connection.close()
 
