@@ -171,7 +171,6 @@ class Fit2Wu:
                                                                  galaxy_type=self._galaxy_type,
                                                                  ra_cent=0,
                                                                  dec_cent=0,
-                                                                 current=True,
                                                                  pixel_count=0,
                                                                  pixels_processed=0,
                                                                  run_id=self._run_id))
