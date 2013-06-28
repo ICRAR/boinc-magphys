@@ -83,17 +83,17 @@ class AssignCredit:
 
         conn = db_base.get_dbconnection()
 
-        userCount = 0
-        creditCount = 0
+        user_count = 0
+        credit_count = 0
 
         transaction = self._connection.begin()
 
-        qryCursor = conn.cursor()
-        delCursor = conn.cursor()
-        qryCursor.execute('select userid, workunitid from credited_job ')
-        results = qryCursor.fetchall()
+        query_cursor = conn.cursor()
+        delete_cursor = conn.cursor()
+        query_cursor.execute('select userid, workunitid from credited_job ')
+        results = query_cursor.fetchall()
         for result in results:
-            userCount += 1
+            user_count += 1
             user_id = result['userid']
             area_id = result['workunitid']
             area_user = self._connection.execute(select([AREA_USER]).where(and_(AREA_USER.c.userid == user_id, AREA_USER.c.area_id == area_id))).first()
@@ -104,15 +104,15 @@ class AssignCredit:
                 else:
                     AREA_USER.insert().values(userid=user_id, area_id=area_id)
                     print 'User', user_id, 'Credited for Area', area_id
-                    creditCount += 1
+                    credit_count += 1
 
-            delCursor.execute("delete from credited_job where userid = " + str(user_id) + "  and workunitid = " + str(area_id))
+            delete_cursor.execute("delete from credited_job where userid = " + str(user_id) + "  and workunitid = " + str(area_id))
 
         transaction.commit()
         conn.commit()
         database.close()
         self._connection.close()
-        print userCount, 'Users', creditCount, 'Credited'
+        print user_count, 'Users', credit_count, 'Credited'
 
 if __name__ == '__main__':
     assign = AssignCredit()

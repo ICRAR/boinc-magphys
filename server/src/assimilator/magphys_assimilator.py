@@ -102,6 +102,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         """
         if self._pxresult_id is not None and not self.noinsert:
             # Update the filters
+            LOG.info('pxresult_id: {0} Map: {1)'.format(self._pxresult_id, map_pixel_results))
             connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == self._pxresult_id).values(map_pixel_results))
 
     def _process_result(self, connection, out_file, wu):
@@ -149,11 +150,8 @@ class MagphysAssimilator(assimilator.Assimilator):
                     result_count += 1
                 elif self._pxresult_id is not None:
                     if lineNo == 9:
-                        values = line.split()
-                        map_pixel_results['i_sfh'] = float(values[0])
-                        map_pixel_results['i_ir'] = float(values[1])
-                        map_pixel_results['chi2'] = float(values[2])
-                        map_pixel_results['redshift'] = float(values[3])
+                        # We can ignore these
+                        pass
                     elif lineNo == 11:
                         # We prefer the median values
                         pass
