@@ -102,7 +102,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         """
         if self._pxresult_id is not None and not self.noinsert:
             # Update the filters
-            LOG.info('pxresult_id: {0} Map: {1}'.format(self._pxresult_id, map_pixel_results))
+            LOG.info('pxresult_id: {0} map: {1}'.format(self._pxresult_id, map_pixel_results))
             connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == self._pxresult_id).values(map_pixel_results))
 
     def _process_result(self, connection, out_file, wu):
