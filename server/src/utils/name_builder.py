@@ -80,7 +80,7 @@ def get_key_sed(galaxy_name, galaxy_id, run_id, area_id):
     :param run_id:
     :return: the key to the fits file
     """
-    return '{0}/sed/{1}.fits'.format(get_galaxy_file_name(galaxy_name, run_id, galaxy_id), area_id)
+    return '{0}/sed/{1}.sed'.format(get_galaxy_file_name(galaxy_name, run_id, galaxy_id), area_id)
 
 
 def get_colour_image_key(galaxy_key_prefix, colour):

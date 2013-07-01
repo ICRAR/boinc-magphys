@@ -144,6 +144,7 @@ NG/AMS Version: v1.0-MMA/2012-07-27T08:00:00
 
     return lines_processed == 12
 
+
 def run_command(command, file):
     """
     Execute a command

@@ -48,6 +48,7 @@ def sort_data(current_jobs):
 
     return return_data
 
+
 def finish_processing(galaxy_name, sorted_data):
     """
     Have we finished processing yet
