@@ -241,6 +241,9 @@ def boinc_install(with_db):
     else:
         run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
 
+    run('mkdir /home/ec2-user/galaxies')
+    run('mkdir /home/ec2-user/archive')
+
     # Create the .boto file
     file_name = get_aws_keyfile()
     with open(file_name, 'rb') as csv_file:
@@ -529,7 +532,7 @@ def boinc_setup_env():
     images = ec2_connection.get_all_images(owners=['self'])
     puts('Available images')
     for image in images:
-        puts('Image: {0: <10} Name: {1: <35} Description: {2}'.format(image.id, image.name, image.description))
+        puts('Image: {0: <15} {1: <35} {2}'.format(image.id, image.name, image.description))
 
     if 'ami_name' not in env:
         prompt('AMI id to build from: ', 'ami_id')
