@@ -194,14 +194,14 @@ class Fit2Wu:
         self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
 
         LOG.info('Building the images')
-        galaxy_file_name = get_galaxy_file_name(self._galaxy_name, self._galaxy_id, self._run_id)
+        galaxy_file_name = get_galaxy_file_name(self._galaxy_name, self._run_id, self._galaxy_id)
         s3_connection = get_s3_connection()
         bucket = get_bucket(s3_connection, get_galaxy_image_bucket())
         image = FitsImage(self._connection)
         image.build_image(self._filename, galaxy_file_name, self._galaxy_id, bucket)
 
         # Copy the fits file to S3 - renamed to make it unique
-        add_file_to_bucket(get_bucket(s3_connection, get_files_bucket()), get_key_fits(self._galaxy_name, self._galaxy_id, self._run_id), self._filename)
+        add_file_to_bucket(get_bucket(s3_connection, get_files_bucket()), get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
 
         return self._work_units_added, self._pixel_count
 

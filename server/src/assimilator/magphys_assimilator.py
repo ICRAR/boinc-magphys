@@ -132,7 +132,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 if line.startswith(" ####### "):
                     if self._pxresult_id is not None:
                         self._save_results(connection, map_pixel_results)
-                        self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
+                        #self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
                     map_pixel_results = {}
                     start_time = time.time()
                     values = line.split()
@@ -196,7 +196,7 @@ class MagphysAssimilator(assimilator.Assimilator):
             f.close()
         if self._pxresult_id is not None:
             self._save_results(connection, map_pixel_results)
-            self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
+            #self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
         return result_count
 
     def assimilate_handler(self, wu, results, canonical_result):
@@ -252,7 +252,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             s3_connection = get_s3_connection()
                             bucket = get_bucket(s3_connection, get_files_bucket())
                             add_file_to_bucket(bucket,
-                                               get_key_sed(self._galaxy_name, self._galaxy_id, self._run_id, self._area_id),
+                                               get_key_sed(self._galaxy_name, self._run_id, self._galaxy_id, self._area_id),
                                                out_file,
                                                reduced_redundancy=True)
 

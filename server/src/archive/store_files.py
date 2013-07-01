@@ -43,17 +43,12 @@ import argparse
 from archive.store_files_mod import store_files
 from utils.readable_dir import ReadableDir
 
-parser = argparse.ArgumentParser('Copy files into NGAS on Cortex')
+parser = argparse.ArgumentParser('Copy files into S3')
 parser.add_argument('-d','--dir', action=ReadableDir, nargs=1, help='where the HDF5 files are')
-parser.add_argument('--host', help='where the HDF5 files are written too')
 args = vars(parser.parse_args())
 
 DIR = args['dir']
-if args['host'] is None:
-    HOST = 'cortex.ivec.org'
-else:
-    HOST = args['host']
 
-file_count = store_files(DIR, HOST)
+file_count = store_files(DIR)
 
 LOG.info('All Done. Stored %d files.', file_count)

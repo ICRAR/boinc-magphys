@@ -47,7 +47,7 @@ def get_files_bucket():
     return 'icrar.{0}.files'.format(WG_PROJECT_NAME)
 
 
-def get_galaxy_file_name(galaxy_name, galaxy_id, run_id):
+def get_galaxy_file_name(galaxy_name, run_id, galaxy_id):
     """
     Return the fully formatted galaxy name
 
@@ -59,7 +59,7 @@ def get_galaxy_file_name(galaxy_name, galaxy_id, run_id):
     return '{0}__{1}__{2}'.format(galaxy_name, run_id, galaxy_id)
 
 
-def get_key_fits(galaxy_name, galaxy_id, run_id):
+def get_key_fits(galaxy_name, run_id, galaxy_id):
     """
 
     :param galaxy_name:
@@ -70,7 +70,7 @@ def get_key_fits(galaxy_name, galaxy_id, run_id):
     return '{0}/{0}.fits'.format(get_galaxy_file_name(galaxy_name, run_id, galaxy_id))
 
 
-def get_key_sed(galaxy_name, galaxy_id, run_id, area_id):
+def get_key_sed(galaxy_name, run_id, galaxy_id, area_id):
     """
     Get the key for an SED file
 

@@ -37,10 +37,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 parser = argparse.ArgumentParser('Delete Galaxy by galaxy_id')
 parser.add_argument('galaxy_id', nargs='+', help='the galaxy_id or 4-30 if you need a range')
-parser.add_argument('-a', '--all', action='store_true', help='delete everything including the galaxy, the images and the user areas')
 args = vars(parser.parse_args())
-
-delete_all = args['all']
 
 galaxy_ids = None
 if len(args['galaxy_id']) == 1 and args['galaxy_id'][0].find('-') > 1:
@@ -54,5 +51,5 @@ else:
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
-delete_galaxy(connection, galaxy_ids, delete_all)
+delete_galaxy(connection, galaxy_ids)
 connection.close()

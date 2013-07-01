@@ -228,7 +228,7 @@ for galaxy in connection.execute(query):
         file_name = '{0}/image.png'.format(WG_TMP)
         image.save(file_name)
         add_file_to_bucket(bucket,
-                           get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.run_id]),
+                           get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]),
                                               name),
                            file_name)
 

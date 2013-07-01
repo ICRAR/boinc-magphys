@@ -244,7 +244,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
     s3_connection = get_s3_connection()
     bucket = get_bucket(s3_connection, get_files_bucket())
-    for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
+    for key in bucket.list(prefix='{0}/sed/*'.format(galaxy_file_name)):
         temp_file = os.path.join(output_directory, 'temp.sed')
         key.get_contents_to_filename(temp_file)
 

@@ -108,7 +108,7 @@ try:
             LOG.info('Archiving Galaxy with galaxy_id of %d - %s', galaxy_id1, galaxy[GALAXY.c.name])
 
             # Copy the galaxy details
-            galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.run_id])
+            galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
             filename = os.path.join(OUTPUT_DIRECTORY, '{0}.hdf5'.format(galaxy_file_name))
 
             h5_file = h5py.File(filename, 'w')

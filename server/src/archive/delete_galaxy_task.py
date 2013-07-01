@@ -65,5 +65,5 @@ galaxy_ids = []
 for galaxy in connection.execute(select_statement):
     galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
 
-delete_galaxy(connection, galaxy_ids[0:20], False)
+delete_galaxy(connection, galaxy_ids[0:20])
 connection.close()
