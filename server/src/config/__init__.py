@@ -68,7 +68,7 @@ DOCMOSIS_FILE_NAME = dirname(__file__) + '/docmosis.settings'
 if exists(DOCMOSIS_FILE_NAME):
     config = ConfigObj(DOCMOSIS_FILE_NAME)
 
-    # TODO - Remove try block once supported in production
+    # Just in case it isn't setup
     try:
         DOCMOSIS_KEY = config['docmosis_key']
         DOCMOSIS_RENDER_URL = config['docmosis_render_url']
@@ -119,6 +119,6 @@ MIN_HIST_VALUE = 0.01
 ############### DB Settings ###############
 COMPUTING = 0
 PROCESSED = 1
-ARCHIVED  = 2
-STORED    = 3
-DELETED   = 4
+ARCHIVED = 2
+STORED = 3
+DELETED = 4

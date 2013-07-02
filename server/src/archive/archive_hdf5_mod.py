@@ -64,31 +64,32 @@ PARAMETER_TYPES = ['f_mu (SFH)',
 
 NUMBER_PARAMETERS = 16
 NUMBER_IMAGES = 7
+BLOCK_SIZE = 1000000
 
-INDEX_BEST_FIT         = 0
-INDEX_PERCENTILE_50    = 1
+INDEX_BEST_FIT = 0
+INDEX_PERCENTILE_50 = 1
 INDEX_HIGHEST_PROB_BIN = 2
-INDEX_PERCENTILE_2_5   = 3
-INDEX_PERCENTILE_16    = 4
-INDEX_PERCENTILE_84    = 5
-INDEX_PERCENTILE_97_5  = 6
+INDEX_PERCENTILE_2_5 = 3
+INDEX_PERCENTILE_16 = 4
+INDEX_PERCENTILE_84 = 5
+INDEX_PERCENTILE_97_5 = 6
 
-INDEX_F_MU_SFH     = 0
-INDEX_F_MU_IR      = 1
+INDEX_F_MU_SFH = 0
+INDEX_F_MU_IR = 1
 INDEX_MU_PARAMETER = 2
-INDEX_TAU_V        = 3
-INDEX_SSFR_0_1GYR  = 4
-INDEX_M_STARS      = 5
-INDEX_L_DUST       = 6
-INDEX_T_C_ISM      = 7
-INDEX_T_W_BC       = 8
-INDEX_XI_C_TOT     = 9
-INDEX_XI_PAH_TOT   = 10
-INDEX_XI_MIR_TOT   = 11
-INDEX_XI_W_TOT     = 12
-INDEX_TAU_V_ISM    = 13
-INDEX_M_DUST       = 14
-INDEX_SFR_0_1GYR   = 15
+INDEX_TAU_V = 3
+INDEX_SSFR_0_1GYR = 4
+INDEX_M_STARS = 5
+INDEX_L_DUST = 6
+INDEX_T_C_ISM = 7
+INDEX_T_W_BC = 8
+INDEX_XI_C_TOT = 9
+INDEX_XI_PAH_TOT = 10
+INDEX_XI_MIR_TOT = 11
+INDEX_XI_W_TOT = 12
+INDEX_TAU_V_ISM = 13
+INDEX_M_DUST = 14
+INDEX_SFR_0_1GYR = 15
 
 data_type_area = numpy.dtype([
     ('area_id',     long),
@@ -135,11 +136,15 @@ data_type_pixel_histogram = numpy.dtype([
     ('x_axis', float),
     ('hist_value', float),
 ])
+data_type_block_details = numpy.dtype([
+    ('block_id', long),
+    ('index',    long),
+    ('length',   long),
+])
 data_type_pixel_parameter = numpy.dtype([
     ('first_prob_bin', float),
     ('last_prob_bin',  float),
     ('bin_step',       float),
-
 ])
 data_type_pixel_filter = numpy.dtype([
     ('observed_flux',             float),
@@ -216,35 +221,44 @@ def store_image_filters(connection, galaxy_id, group):
     data = numpy.zeros(count, dtype=data_type_image_filter)
     count = 0
     for image_filters_used in connection.execute(select([IMAGE_FILTERS_USED]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id).order_by(IMAGE_FILTERS_USED.c.image_filters_used_id)):
-        data[count] = (
-            image_filters_used[IMAGE_FILTERS_USED.c.image_number],
-            image_filters_used[IMAGE_FILTERS_USED.c.filter_id_red],
-            image_filters_used[IMAGE_FILTERS_USED.c.filter_id_green],
-            image_filters_used[IMAGE_FILTERS_USED.c.filter_id_blue],
-            )
+        data[count] = (image_filters_used[IMAGE_FILTERS_USED.c.image_number],
+                       image_filters_used[IMAGE_FILTERS_USED.c.filter_id_red],
+                       image_filters_used[IMAGE_FILTERS_USED.c.filter_id_green],
+                       image_filters_used[IMAGE_FILTERS_USED.c.filter_id_blue], )
         count += 1
     group.create_dataset('image_filters', data=data, compression='gzip')
 
 
-def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, dimension_z, area_count, output_directory, map_parameter_name):
+def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, dimension_z, area_total, output_directory, map_parameter_name):
     """
     Store the pixel data
     """
-    LOG.info('Storing the pixel data for {0} - {1} areas to process'.format(galaxy_file_name, area_count))
+    LOG.info('Storing the pixel data for {0} - {1} areas to process'.format(galaxy_file_name, area_total))
     data = numpy.empty((dimension_x, dimension_y, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
     data.fill(numpy.NaN)
     data_pixel_details = group.create_dataset('pixel_details', (dimension_x, dimension_y), dtype=data_type_pixel, compression='gzip')
     data_pixel_parameters = group.create_dataset('pixel_parameters', (dimension_x, dimension_y, NUMBER_PARAMETERS), dtype=data_type_pixel_parameter, compression='gzip')
     data_pixel_filter = group.create_dataset('pixel_filters', (dimension_x, dimension_y, dimension_z), dtype=data_type_pixel_filter, compression='gzip')
-    data_pixel_histograms_grid = group.create_dataset('pixel_histograms_grid', (dimension_x, dimension_y, NUMBER_PARAMETERS), dtype=h5py.special_dtype(ref=h5py.RegionReference), compression='gzip')
-    histogram_map = {}
+    data_pixel_histograms_grid = group.create_dataset('pixel_histograms_grid', (dimension_x, dimension_y, NUMBER_PARAMETERS), dtype=data_type_block_details, compression='gzip')
+
+    histogram_group = group.create_group('histogram_blocks')
     histogram_list = []
-    count = 0
-    pixel_histogram_count = 0
+    pixel_count = 0
+    area_count = 0
+    block_id = 1
+    block_index = 0
+    histogram_data = histogram_group.create_dataset('block_1', (BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
 
     s3_connection = get_s3_connection()
     bucket = get_bucket(s3_connection, get_files_bucket())
-    for key in bucket.list(prefix='{0}/sed/*'.format(galaxy_file_name)):
+    for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
+        # Ignore the key
+        if key.key.endswith('/'):
+            continue
+
+        # Now process the file
+        start_time = time.time()
+        LOG.info('Processing file {0}'.format(key.key))
         temp_file = os.path.join(output_directory, 'temp.sed')
         key.get_contents_to_filename(temp_file)
 
@@ -260,24 +274,18 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
         histogram_next = False
         skynet_next1 = False
         skynet_next2 = False
-        result_count = 0
         map_pixel_results = {}
         list_filters = []
-        start_time = None
         try:
             for line in f:
                 line_number += 1
 
                 if line.startswith(" ####### "):
-                    if pxresult_id is not None:
-                        LOG.inf0('{0:0.3f} seconds for {1}'.format(time.time() - start_time, pxresult_id))
-
                     # Clear all the maps and stuff
                     map_pixel_results = {}
                     list_filters = []
 
-                    # Start the clock
-                    start_time = time.time()
+                    # Split the line to extract the data
                     values = line.split()
                     pointName = values[1]
                     pxresult_id = pointName[3:].rstrip()
@@ -287,7 +295,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                     histogram_next = False
                     skynet_next1 = False
                     skynet_next2 = False
-                    result_count += 1
+                    pixel_count += 1
                 elif pxresult_id is not None:
                     if line_number == 2:
                         filter_names = line.split()
@@ -301,11 +309,12 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                         for value in values:
                             list_filters.append([float(value)])
                     elif line_number == 4:
-                        index = 0
+                        filter_layer = 0
                         values = line.split()
                         for value in values:
-                            filter_description = list_filters[index]
+                            filter_description = list_filters[filter_layer]
                             filter_description.append(float(value))
+                            filter_layer += 1
                     elif line_number == 9:
                         values = line.split()
                         map_pixel_results['i_sfh'] = float(values[0])
@@ -352,12 +361,26 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             skynet_next1 = False
                             skynet_next2 = False
                             histogram_list = []
-                            histogram_map[(x, y, parameter_name_id - 1)] = histogram_list
                         elif line.startswith("#....percentiles of the PDF......"):
                             percentiles_next = True
                             histogram_next = False
                             skynet_next1 = False
                             skynet_next2 = False
+
+                            # Write out the histogram into a block for compression improvement
+                            data_pixel_histograms_grid[x, y, parameter_name_id - 1] = (block_id, block_index, len(histogram_list))
+                            for pixel_histogram_item in histogram_list:
+                                # Do we need a new block
+                                if block_index >= BLOCK_SIZE:
+                                    block_id += 1
+                                    block_index = 0
+                                    histogram_data = histogram_group.create_dataset('block_{0}'.format(block_id), (BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
+
+                                histogram_data[block_index] = (
+                                    pixel_histogram_item[0],
+                                    pixel_histogram_item[1],
+                                )
+                                block_index += 1
                         elif line.startswith(" #...theSkyNet"):
                             percentiles_next = False
                             histogram_next = False
@@ -382,7 +405,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             hist_value = float(values[1])
                             if hist_value > MIN_HIST_VALUE and not math.isnan(hist_value):
                                 histogram_list.append((float(values[0]), hist_value))
-                                pixel_histogram_count += 1
                         elif skynet_next1:
                             values = line.split()
                             data_pixel_details[x, y] = (
@@ -418,29 +440,9 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             LOG.error('IOError after {0} lines'.format(line_number))
         finally:
             f.close()
-        if pxresult_id is not None:
-            LOG.inf0('{0:0.3f} seconds for {1}'.format(time.time() - start_time, pxresult_id))
 
-    count += 1
-
-    if count % 500 == 0:
-        LOG.info('Processed {0} of {1}'.format(count, area_count))
-
-    # Only now can we add the histograms
-    data_pixel_histograms_list = group.create_dataset('pixel_histograms_list', (pixel_histogram_count,), dtype=data_type_pixel_histogram, compression='gzip')
-    pixel_histogram_count = 0
-    for key, value in histogram_map.iteritems():
-        (x, y, z) = key
-        pixel_histogram_start = pixel_histogram_count
-        for pixel_histogram_item in value:
-            data_pixel_histograms_list[pixel_histogram_count] = (
-                pixel_histogram_item[0],
-                pixel_histogram_item[1],
-            )
-            pixel_histogram_count += 1
-        # only store it if we have it
-        if pixel_histogram_count - pixel_histogram_start > 0:
-            data_pixel_histograms_grid[x, y, z] = data_pixel_histograms_list.regionref[pixel_histogram_start:pixel_histogram_count]
+        area_count += 1
+        LOG.info('{0:0.3f} seconds for file {1}. {2} of {3} areas.'.format(time.time() - start_time, key.key, area_count, area_total))
 
     pixel_dataset = group.create_dataset('pixels', data=data, compression='gzip')
     pixel_dataset.attrs['DIM3_F_MU_SFH'] = INDEX_F_MU_SFH
@@ -468,7 +470,9 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     pixel_dataset.attrs['DIM4_PERCENTILE_84'] = INDEX_PERCENTILE_84
     pixel_dataset.attrs['DIM4_PERCENTILE_97_5'] = INDEX_PERCENTILE_97_5
 
-    return count
+    LOG.info('Created {0} blocks'.format(block_id))
+
+    return pixel_count
 
 
 def is_gzip(file_to_check):
