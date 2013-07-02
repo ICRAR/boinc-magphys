@@ -42,17 +42,19 @@ import uuid
 import docmosis_mod
 from datetime import datetime
 from sqlalchemy.engine import create_engine
-from sqlalchemy.sql import select, update, and_
+from sqlalchemy.sql import select, and_
 from config import DB_LOGIN
 from database.database_support_core import DOCMOSIS_TASK, DOCMOSIS_TASK_GALAXY
 
 ENGINE = create_engine(DB_LOGIN)
+
 
 class TaskInfo():
     def __init__(self):
         self.task_id = ""
         self.userid = ""
         self.galaxy_ids = []
+
 
 def main():
     """
@@ -64,50 +66,51 @@ def main():
 
     connection = ENGINE.connect()
 
-    assignTasks(token,connection)
+    assign_tasks(token, connection)
     LOG.info("Worker started with token %s" % token)
-    tasks = getTasks(token,connection)
+    tasks = get_tasks(token, connection)
     LOG.info("Got %d tasks to process" % len(tasks))
     for task in tasks:
         LOG.info("Task id #%s - Processing start" % task.task_id)
         try:
-            runTask(task,connection)
+            run_task(task, connection)
             LOG.info("Task id #%s - Completed succesfully" % task.task_id)
         except Exception, e:
-            LOG.info("Task id #%s - Failed with error \"%s\"" % (task.task_id,e))
+            LOG.info("Task id #%s - Failed with error \"%s\"" % (task.task_id, e))
             LOG.exception('Major Error')
-            deassignTask(task,connection)
+            deassign_task(task, connection)
     LOG.info("Worker finished")
     connection.close()
 
-def runTask(task,connection):
+
+def run_task(task, connection):
     try:
-        docmosis_mod.emailGalaxyReport(task.userid,task.galaxy_ids)
+        docmosis_mod.email_galaxy_report(connection, task.userid, task.galaxy_ids)
         query = DOCMOSIS_TASK.update()
         query = query.where(DOCMOSIS_TASK.c.task_id == task.task_id)
-        query = query.values(finish_time = datetime.now(), status = 2)
+        query = query.values(finish_time=datetime.now(), status=2)
         connection.execute(query)
     except:
         raise
 
-def assignTasks(token,connection):
 
+def assign_tasks(token, connection):
     query = DOCMOSIS_TASK.update()
     query = query.where(and_(DOCMOSIS_TASK.c.worker_token == None, DOCMOSIS_TASK.c.status == 1))
-    query = query.values(worker_token = token)
+    query = query.values(worker_token=token)
     connection.execute(query)
 
-def deassignTask(task,connection):
 
+def deassign_task(task, connection):
     query = DOCMOSIS_TASK.update()
     query = query.where(DOCMOSIS_TASK.c.task_id == task.task_id)
-    query = query.values(worker_token = None, status = 1)
+    query = query.values(worker_token=None, status=1)
     connection.execute(query)
 
-def getTasks(token,connection):
 
+def get_tasks(token, connection):
     query = select([DOCMOSIS_TASK])
-    query = query.where(and_(DOCMOSIS_TASK.c.worker_token == token,DOCMOSIS_TASK.c.status == 1))
+    query = query.where(and_(DOCMOSIS_TASK.c.worker_token == token, DOCMOSIS_TASK.c.status == 1))
     tasks = connection.execute(query)
     task_list = []
     for task in tasks:
@@ -123,6 +126,6 @@ def getTasks(token,connection):
 
     return task_list
 
+
 if __name__ == '__main__':
     main()
-

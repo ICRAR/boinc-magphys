@@ -59,8 +59,21 @@ def add_file_to_bucket(bucket, key_name, filename, reduced_redundancy=False):
     :param bucket:
     :param key_name:
     :param filename:
-    :return:
     """
     key = Key(bucket)
     key.key = key_name
     key.set_contents_from_filename(filename, reduced_redundancy=reduced_redundancy)
+
+
+def get_file_from_bucket(bucket, key_name, file_name):
+    """
+    Get a file from S3 into a local file
+
+    :param bucket:
+    :param key_name:
+    :param file_name:
+    :return:
+    """
+    key = Key(bucket)
+    key.key = key_name
+    key.get_contents_to_filename(file_name)

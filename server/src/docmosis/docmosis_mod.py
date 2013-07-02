@@ -29,12 +29,14 @@ import datetime
 import os
 import tempfile
 import logging
+from utils.name_builder import get_galaxy_image_bucket, get_build_png_name, get_galaxy_file_name, get_colour_image_key
+from utils.s3_helper import get_bucket, get_s3_connection, get_file_from_bucket
 import votable_mod
 
 from sqlalchemy import *
 from config import WG_BOINC_PROJECT_ROOT, DOCMOSIS_KEY, DOCMOSIS_TEMPLATE, DB_LOGIN
-from image import fitsimage, directory_mod
-from database.database_support_core import GALAXY,IMAGE_FILTERS_USED,FILTER
+from image import fitsimage
+from database.database_support_core import GALAXY, IMAGE_FILTERS_USED, FILTER
 
 os.environ.setdefault("BOINC_PROJECT_DIR", WG_BOINC_PROJECT_ROOT)
 from Boinc import database
@@ -45,20 +47,20 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 ENGINE = create_engine(DB_LOGIN)
 
 
-def emailGalaxyReport(userid,galaxy_ids):
+def email_galaxy_report(connection, userid, galaxy_ids):
     # Docmosis specific variables
     rendURL = 'https://dws.docmosis.com/services/rs/render'
 
     LOG.info("Retrieve user details")
-    user = userDetails(userid)
+    user = user_details(userid)
     LOG.info("Retrieve galaxy details")
-    galaxies = galaxyDetails(galaxy_ids)
+    galaxies = galaxy_details(connection, galaxy_ids)
     LOG.info("Build JSON data payload")
-    data = dataString(user,galaxies)
+    data = data_string(connection, user, galaxies)
     LOG.info("Send payload to Docmosis")
-    request = urllib2.Request(rendURL,data)
-    request.add_header('Content-Type','application/json; charset=UTF-8')
-    response = urllib2.urlopen(request)
+    request = urllib2.Request(rendURL, data)
+    request.add_header('Content-Type', 'application/json; charset=UTF-8')
+    urllib2.urlopen(request)
 
 
 class UserInfo:
@@ -77,7 +79,6 @@ class GalaxyInfo:
         self.galaxy_type = ""
         self.redshift = 0.0
         self.name = ""
-        self.version_number = 0
         self.design = ""
         self.ra_eqj2000 = 0
         self.dec_eqj2000 = 0
@@ -85,41 +86,46 @@ class GalaxyInfo:
         self.dec_eqb1950 = 0
         self.pos1 = ""
         self.pos2 = ""
+        self.run_id = 0
 
 
-def dataString(user,galaxies):
+def data_string(connection, user, galaxies):
+    s3_connection = get_s3_connection()
+    bucket = get_bucket(s3_connection, get_galaxy_image_bucket())
+
     hasParam = 1
-    # Prep. data for send to Osmosis
+    # Prep. data for send to docsmosis
     dl = []
     dl.append('{\n')
-    dl.append('"accessKey":"' + DJANGO_DOCMOSIS_KEY + '",\n')
-    dl.append('"templateName":"' + DJANGO_DOCMOSIS_TEMPLATE + '",\n')
+    dl.append('"accessKey":"' + DOCMOSIS_KEY + '",\n')
+    dl.append('"templateName":"' + DOCMOSIS_TEMPLATE + '",\n')
     dl.append('"outputName":"DetailedUserReport.pdf",\n')
     dl.append('"storeTo":"mailto:' + user.email + '",\n')
     dl.append('"mailSubject":"theSkyNet POGS - Detailed User Report",\n')
     dl.append('"data":{\n')
     dl.append('"user":"' + user.name + '",\n')
-    dl.append('"date":"' + str(datetime.date.today()) +'",\n')
+    dl.append('"date":"' + str(datetime.date.today()) + '",\n')
     dl.append('"galaxy":[\n')
     # Loop through galaxies user has worked on.
     for galaxy in galaxies:
+        galaxy_key = get_galaxy_file_name(galaxy.name, galaxy.run_id, galaxy.galaxy_id)
         dl.append('{\n')
         dl.append('"galid":"' + galaxy.name + ' (version ' + str(galaxy.version_number) + ')",\n')
-        dl.append('"pic1":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,1) + '",\n')
-        dl.append('"pic2":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,2) + '",\n')
-        dl.append('"pic3":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,3) + '",\n')
-        dl.append('"pic4":"image:base64:' + userGalaxyImage(user.id,galaxy.galaxy_id,4) + '",\n')
-        dl.append('"pic1_label":"' + galaxyFilterLabel(galaxy.galaxy_id,1) + '",\n')
-        dl.append('"pic2_label":"' + galaxyFilterLabel(galaxy.galaxy_id,2) + '",\n')
-        dl.append('"pic3_label":"' + galaxyFilterLabel(galaxy.galaxy_id,3) + '",\n')
-        dl.append('"pic4_label":"' + galaxyFilterLabel(galaxy.galaxy_id,4) + '",\n')
-        # Only if there is paramater images
+        dl.append('"pic1":"image:base64:' + user_galaxy_image(bucket, galaxy_key, connection, user.id, galaxy.galaxy_id, 1) + '",\n')
+        dl.append('"pic2":"image:base64:' + user_galaxy_image(bucket, galaxy_key, connection, user.id, galaxy.galaxy_id, 2) + '",\n')
+        dl.append('"pic3":"image:base64:' + user_galaxy_image(bucket, galaxy_key, connection, user.id, galaxy.galaxy_id, 3) + '",\n')
+        dl.append('"pic4":"image:base64:' + user_galaxy_image(bucket, galaxy_key, connection, user.id, galaxy.galaxy_id, 4) + '",\n')
+        dl.append('"pic1_label":"' + galaxy_filter_label(connection, galaxy.galaxy_id, 1) + '",\n')
+        dl.append('"pic2_label":"' + galaxy_filter_label(connection, galaxy.galaxy_id, 2) + '",\n')
+        dl.append('"pic3_label":"' + galaxy_filter_label(connection, galaxy.galaxy_id, 3) + '",\n')
+        dl.append('"pic4_label":"' + galaxy_filter_label(connection, galaxy.galaxy_id, 4) + '",\n')
+        # Only if there is parameter images
         if hasParam:
             dl.append('"add":"true",\n')
-            dl.append('"pic5":"image:base64:' + galaxyParameterImage(galaxy.galaxy_id,'mu') + '",\n')
-            dl.append('"pic6":"image:base64:' + galaxyParameterImage(galaxy.galaxy_id,'m') + '",\n')
-            dl.append('"pic7":"image:base64:' + galaxyParameterImage(galaxy.galaxy_id,'ldust') + '",\n')
-            dl.append('"pic8":"image:base64:' + galaxyParameterImage(galaxy.galaxy_id,'sfr') + '",\n')
+            dl.append('"pic5":"image:base64:' + galaxy_parameter_image(bucket, galaxy_key, 'mu') + '",\n')
+            dl.append('"pic6":"image:base64:' + galaxy_parameter_image(bucket, galaxy_key, 'm') + '",\n')
+            dl.append('"pic7":"image:base64:' + galaxy_parameter_image(bucket, galaxy_key, 'ldust') + '",\n')
+            dl.append('"pic8":"image:base64:' + galaxy_parameter_image(bucket, galaxy_key, 'sfr') + '",\n')
         dl.append('"gatype":"' + galaxy.galaxy_type + '",\n')
         dl.append('"gars":"' + str(galaxy.redshift) + '",\n')
         dl.append('"gades":"' + galaxy.design + '",\n')
@@ -137,108 +143,98 @@ def dataString(user,galaxies):
     return data
 
 
-def galaxyDetails(galaxy_ids):
+def galaxy_details(connection, galaxy_ids):
     """
     Return list of galaxies with detailed data
     """
-
-    connection = ENGINE.connect()
-    query = select([GALAXY])
-    query = query.where(GALAXY.c.galaxy_id.in_([str(id) for id in galaxy_ids]))
+    query = select([GALAXY]).where(GALAXY.c.galaxy_id.in_([str(galaxy_id) for galaxy_id in galaxy_ids]))
     galaxies = connection.execute(query)
 
     galaxy_list = []
     for galaxy in galaxies:
-        vomap = votable_mod.getVOData(getCorrectedName(galaxy.name))
+        vomap = votable_mod.getVOData(get_corrected_name(galaxy.name))
         galaxy_line = GalaxyInfo()
-        galaxy_line.name = galaxy.name
+        galaxy_line.name = galaxy[GALAXY.c.name]
         galaxy_line.design = vomap['design']
         galaxy_line.ra_eqj2000 = vomap['ra_eqj2000']
         galaxy_line.dec_eqj2000 = vomap['dec_eqj2000']
         galaxy_line.ra_eqb1950 = vomap['ra_eqb1950']
         galaxy_line.dec_eqb1950 = vomap['dec_eqb1950']
-        galaxy_line.version_number = galaxy.version_number
-        galaxy_line.galaxy_type = galaxy.galaxy_type
-        galaxy_line.galaxy_id = galaxy.galaxy_id
-        galaxy_line.redshift = galaxy.redshift
+        galaxy_line.galaxy_type = galaxy[GALAXY.c.galaxy_type]
+        galaxy_line.galaxy_id = galaxy[GALAXY.c.galaxy_id]
+        galaxy_line.redshift = galaxy[GALAXY.c.redshift]
+        galaxy_line.run_id = galaxy[GALAXY.c.run_id]
         galaxy_list.append(galaxy_line)
-    connection.close()
 
     return galaxy_list
 
 
-
-def galaxyParameterImage(galaxy_id, name):
+def galaxy_parameter_image(bucket, galaxy_key, name):
     """
     Returns base64 string version of galaxy image
     """
+    tmp_file = get_temp_file('.png')
+    key = get_build_png_name(galaxy_key, name)
+    get_file_from_bucket(bucket, key, tmp_file)
 
-    imageDirName = DJANGO_IMAGE_DIR  # TODO
+    out_file = open(tmp_file, "rb")
+    image64 = base64.b64encode(out_file.read())
+    out_file.close()
 
-    connection = ENGINE.connect()
-    galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
-
-    imageFileName = '{0}_{1}_{2}.png'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number], name)
-    filename = directory_mod.get_file_path(imageDirName, imageFileName, False)
-    connection.close()
-
-    file = open(filename, "rb")
-    image64 = base64.b64encode(file.read())
-    file.close()
+    os.remove(tmp_file)
 
     return image64
 
 
-def userGalaxyImage(userid, galaxy_id, colour):
+def get_temp_file(extension):
+    """
+    Get a temporary file
+    """
+    tmp = tempfile.mkstemp(extension, "pogs", None, False)
+    tmp_file = tmp[0]
+    os.close(tmp_file)
+    return tmp[1]
+
+
+def user_galaxy_image(bucket, galaxy_key, connection, userid, galaxy_id, colour):
     """
     Returns base64 string version of galaxy image
     """
+    image_file_name = get_temp_file(".png")
+    marked_image_file_name = get_temp_file(".png")
 
-    tmp = tempfile.mkstemp(".png", "pogs", None, False)
-    file = tmp[0]
-    os.close(file)
-
-    imageDirName = DJANGO_IMAGE_DIR
-
-    outImageFileName = tmp[1]
-
-    connection = ENGINE.connect()
-    galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
-    imagePrefixName = galaxy[GALAXY.c.name] + "_" + str(galaxy[GALAXY.c.version_number])
+    key = get_colour_image_key(galaxy_key, colour)
+    get_file_from_bucket(bucket, key, image_file_name)
 
     image = fitsimage.FitsImage(connection)
-    inImageFileName = directory_mod.get_colour_image_path(imageDirName, imagePrefixName, colour, False)
-    image.mark_image(inImageFileName, outImageFileName, galaxy_id, userid)
-    connection.close()
+    image.mark_image(image_file_name, marked_image_file_name, galaxy_id, userid)
 
-    file = open(outImageFileName, "rb")
-    image64 = base64.b64encode(file.read())
-    file.close()
-    os.remove(outImageFileName)
+    out_file = open(marked_image_file_name, "rb")
+    image64 = base64.b64encode(out_file.read())
+    out_file.close()
+    os.remove(marked_image_file_name)
+    os.remove(image_file_name)
 
     return image64
 
 
-def galaxyFilterLabel(galaxy_id,colour):
+def galaxy_filter_label(connection, galaxy_id, colour):
     """
     Return filters string for given galaxy and colour
     """
-    connection = ENGINE.connect()
     map_fl = {}
     for filter_band in connection.execute(select([FILTER])):
-      map_fl[filter_band.filter_id] = filter_band.label
-    query = select([IMAGE_FILTERS_USED])
-    query = query.where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id,IMAGE_FILTERS_USED.c.image_number == colour))
+        map_fl[filter_band.filter_id] = filter_band.label
+    query = select([IMAGE_FILTERS_USED]).where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id, IMAGE_FILTERS_USED.c.image_number == colour))
     image = connection.execute(query).first()
     fstr = map_fl[image.filter_id_red]
     fstr = fstr + ", " + map_fl[image.filter_id_green]
     fstr = fstr + ", " + map_fl[image.filter_id_blue]
-    connection.close()
 
     return fstr
 
 
-def userDetails(userid):
+def user_details(userid):
     """
     Fill user details from BOINC database
     """
@@ -253,7 +249,7 @@ def userDetails(userid):
     return user_line
 
 
-def getCorrectedName(name):
+def get_corrected_name(name):
     """
     Get the corrected name
     """

@@ -379,17 +379,16 @@ class FitsImage:
 
         hdulist.close()
 
-    def mark_image(self, inImageFileName, outImageFileName, galaxy_id, userid):
+    def mark_image(self, in_image_file_name, out_image_file_name, galaxy_id, userid):
         """
         Read the image for the galaxy and generate an image that highlights the areas
         that the specified user has generated results.
-        :param inImageFileName:
-        :param outImageFileName:
+        :param in_image_file_name:
+        :param out_image_file_name:
         :param galaxy_id:
         :param userid:
         """
-        # TODO: Get from S3
-        image = Image.open(inImageFileName, "r").convert("RGBA")
+        image = Image.open(in_image_file_name, "r").convert("RGBA")
         width, height = image.size
         LOG.info('Width: {0}, Height: {1}'.format(width, height))
 
@@ -404,7 +403,7 @@ class FitsImage:
                     if x < width and y < height:
                         self._mark_pixel(image, x, height - y - 1)
 
-        image.save(outImageFileName)
+        image.save(out_image_file_name)
 
     def _mark_pixel(self, image, x, y):
         """
