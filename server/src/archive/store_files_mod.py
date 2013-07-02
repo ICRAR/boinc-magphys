@@ -55,7 +55,7 @@ def get_galaxy_id(hdf5_file_name):
     if index > 0:
         # Is the rest of the filename digits
         if root[index + 2:].isdigit():
-            return int(root[index + 2:]), root
+            return int(root[index + 2:]), tail
 
     return -1, None
 
