@@ -110,6 +110,7 @@ CREATE TABLE galaxy (
   sigma            DECIMAL(3,2) NOT NULL,
   create_time      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   image_time       TIMESTAMP,
+  version_number   INTEGER UNSIGNED NOT NULL DEFAULT 1,
   galaxy_type      VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
   ra_cent          FLOAT,
   dec_cent         FLOAT,
