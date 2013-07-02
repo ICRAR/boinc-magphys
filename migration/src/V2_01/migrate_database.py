@@ -23,7 +23,7 @@
 #    MA 02111-1307  USA
 #
 """
-Migrate files to new locations
+Migrate the database
 """
 import logging
 
@@ -31,8 +31,11 @@ LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 
-def migrate_files():
-    LOG.info('Migrating the files')
+def correct_galaxy(connection):
+    connection.execute('ALTER TABLE galaxy DROP COLUMN version_number')
 
-    # Images -> S3
-    # HDF5 -> S3
+
+def migrate_database(connection):
+    LOG.info('Migrating the database')
+    correct_galaxy(connection)
+

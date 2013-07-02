@@ -26,14 +26,9 @@
 Migrate the database
 """
 import logging
-from sqlalchemy import create_engine
-from config import DB_LOGIN
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
-
-
-ENGINE = create_engine(DB_LOGIN)
 
 
 def correct_pixel_results(connection):
@@ -68,15 +63,9 @@ def delete_tables(connection):
     connection.execute('drop table run_file')
 
 
-def migrate_database():
+def migrate_database(connection):
     LOG.info('Migrating the database')
-    connection = ENGINE.connect()
+    correct_pixel_results(connection)
+    delete_tables(connection)
+    correct_parameter_name(connection)
 
-    try:
-        correct_pixel_results(connection)
-        delete_tables(connection)
-        correct_parameter_name(connection)
-    except:
-        LOG.exception('Major error')
-    finally:
-        connection.close()

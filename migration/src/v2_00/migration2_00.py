@@ -28,8 +28,11 @@ Migrate the files and database
 import logging
 import os
 import sys
-from v2_0.migrate_database import migrate_database
-from v2_0.migrate_files import migrate_files
+from sqlalchemy import create_engine
+from config import DB_LOGIN
+from v2_00.migrate_database import migrate_database
+from v2_00.migrate_files import migrate_files
+from v2_00.remove_galaxies_with_no_hdf5_file import remove_galaxies_with_no_hdf5_file
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -39,5 +42,16 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../server/src')))
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-migrate_database()
-migrate_files()
+ENGINE = create_engine(DB_LOGIN)
+connection = ENGINE.connect()
+
+try:
+    remove_galaxies_with_no_hdf5_file(connection)
+    migrate_files(connection)
+    migrate_database(connection)
+
+except Exception:
+    LOG.exception('Major error')
+
+finally:
+    connection.close()
