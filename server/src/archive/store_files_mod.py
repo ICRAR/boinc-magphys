@@ -73,6 +73,7 @@ def store_files(hdf5_dir):
     ENGINE = create_engine(DB_LOGIN)
     connection = ENGINE.connect()
 
+    files = os.path.join(hdf5_dir, '*.hdf5')
     file_count = 0
 
     try:

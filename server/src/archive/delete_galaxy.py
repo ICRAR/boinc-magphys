@@ -41,9 +41,9 @@ args = vars(parser.parse_args())
 
 galaxy_ids = None
 if len(args['galaxy_id']) == 1 and args['galaxy_id'][0].find('-') > 1:
-    list = args['galaxy_id'][0].split('-')
+    list_range = args['galaxy_id'][0].split('-')
     LOG.info('Range from %s to %s', list[0], list[1])
-    galaxy_ids = range(int(list[0]), int(list[1]) + 1)
+    galaxy_ids = range(int(list_range[0]), int(list_range[1]) + 1)
 else:
     galaxy_ids = args['galaxy_id']
 
