@@ -111,6 +111,15 @@ def base_install():
         sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
         sudo('python2.7 setup.py install')
 
+    # Load the Gluster FS RPM's
+    run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-3.3.1-1.el6.x86_64.rpm')
+    run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-fuse-3.3.1-1.el6.x86_64.rpm')
+    sudo('yum --assumeyes --quiet install glusterfs*.rpm')
+    run('rm glusterfs*.rpm')
+
+    sudo('mkdir -p /mnt/data')
+
+
 
 def copy_public_keys():
     """
@@ -457,6 +466,14 @@ def yum_update():
     sudo('yum --assumeyes --quiet update')
 
 
+def resize_file_system():
+    """
+    Resize the file system as AWS doesn't do that when you start an AMI
+    """
+    # Resize the file system
+    sudo('resize2fs /dev/sda1')
+
+
 def yum_pip_update():
     """
     Make sure things are up to date
@@ -477,7 +494,7 @@ def base_setup_env():
     if 'ebs_size' not in env:
         prompt('EBS Size (GB): ', 'ebs_size', default=20, validate=int)
     if 'ami_name' not in env:
-        prompt('AMI Name: ', 'ami_name', default='BaseSetup')
+        prompt('AMI Name: ', 'ami_name', default='BasePythonSetup')
 
     # Create the instance in AWS
     ec2_instance, ec2_connection = create_instance(env.ebs_size, env.ami_name)
@@ -587,6 +604,7 @@ def boinc_deploy_with_db():
     """
     require('hosts', provided_by=[boinc_setup_env])
 
+    resize_file_system()
     yum_pip_update()
     copy_public_keys()
 
@@ -605,6 +623,7 @@ def boinc_deploy_without_db():
     """
     require('hosts', provided_by=[boinc_setup_env])
 
+    resize_file_system()
     yum_pip_update()
     copy_public_keys()
 

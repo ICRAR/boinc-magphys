@@ -2,7 +2,7 @@
 
 This directory contains the files to build the various types of server required to support the POGS project in the AWS cloud.
 
-The **fabfile.py** does all the heavy lifting for building the environments.
+The **fabfile.py** does all the heavy lifting for building the environments. It loads all the Python and the GlusterFS client
 
 # BASE AMI
 
