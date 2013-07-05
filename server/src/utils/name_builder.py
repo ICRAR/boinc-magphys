@@ -70,6 +70,17 @@ def get_key_fits(galaxy_name, run_id, galaxy_id):
     return '{0}/{0}.fits'.format(get_galaxy_file_name(galaxy_name, run_id, galaxy_id))
 
 
+def get_key_hdf5(galaxy_name, run_id, galaxy_id):
+    """
+
+    :param galaxy_name:
+    :param galaxy_id:
+    :param run_id:
+    :return: the key to the fits file
+    """
+    return '{0}/{0}.hdf5'.format(get_galaxy_file_name(galaxy_name, run_id, galaxy_id))
+
+
 def get_key_sed(galaxy_name, run_id, galaxy_id, area_id):
     """
     Get the key for an SED file
