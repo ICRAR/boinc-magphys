@@ -32,14 +32,14 @@ import os
 from sqlalchemy import create_engine
 from config import DB_LOGIN, STORED
 from database.database_support_core import GALAXY
-from utils.name_builder import get_galaxy_image_bucket
+from utils.name_builder import get_files_bucket, get_key_hdf5
 from utils.s3_helper import get_s3_connection, get_bucket, add_file_to_bucket
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 
-def get_galaxy_id(hdf5_file_name):
+def get_galaxy_id_and_name(hdf5_file_name):
     """
     Get the galaxy id from the filename
 
@@ -55,9 +55,9 @@ def get_galaxy_id(hdf5_file_name):
     if index > 0:
         # Is the rest of the filename digits
         if root[index + 2:].isdigit():
-            return int(root[index + 2:]), tail
+            return int(root[index + 2:]), root
 
-    return -1, None
+    return -1, None, None
 
 
 def store_files(hdf5_dir):
@@ -78,14 +78,18 @@ def store_files(hdf5_dir):
 
     try:
         s3_connection = get_s3_connection()
-        bucket = get_bucket(s3_connection, get_galaxy_image_bucket())
+        bucket_name = get_files_bucket()
+        bucket = get_bucket(s3_connection, bucket_name)
 
         for file_name in glob.glob(files):
             size = os.path.getsize(file_name)
-            galaxy_id, key = get_galaxy_id(file_name)
+            galaxy_id, galaxy_name = get_galaxy_id_and_name(file_name)
             if galaxy_id >= 0:
+                key = get_key_hdf5(galaxy_name)
                 LOG.info('File name: %s', file_name)
                 LOG.info('File size: %d', size)
+                LOG.info('Bucket:    %s', bucket_name)
+                LOG.info('Key:       %s', key)
 
                 add_file_to_bucket(bucket, key, file_name)
                 file_count += 1

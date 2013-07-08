@@ -61,6 +61,7 @@ def get_galaxy_file_name(galaxy_name, run_id, galaxy_id):
 
 def get_key_fits(galaxy_name, run_id, galaxy_id):
     """
+    Get the key for a fits file
 
     :param galaxy_name:
     :param galaxy_id:
@@ -72,6 +73,7 @@ def get_key_fits(galaxy_name, run_id, galaxy_id):
 
 def get_key_hdf5(galaxy_name, run_id, galaxy_id):
     """
+    Get the key for an HDF5 file
 
     :param galaxy_name:
     :param galaxy_id:
