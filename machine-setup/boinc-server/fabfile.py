@@ -251,7 +251,7 @@ def boinc_install(with_db):
         run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
 
     run('mkdir /home/ec2-user/galaxies')
-    run('mkdir /home/ec2-user/archive')
+    run('mkdir -p /home/ec2-user/archive/to_store')
 
     # Create the .boto file
     file_name = get_aws_keyfile()
