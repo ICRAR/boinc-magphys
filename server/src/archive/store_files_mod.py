@@ -28,11 +28,12 @@
 import glob
 import logging
 import os
+import datetime
 
 from sqlalchemy import create_engine
 from config import DB_LOGIN, STORED
 from database.database_support_core import GALAXY
-from utils.name_builder import get_files_bucket, get_key_hdf5
+from utils.name_builder import get_files_bucket
 from utils.s3_helper import get_s3_connection, get_bucket, add_file_to_bucket
 
 LOG = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ def store_files(hdf5_dir):
             size = os.path.getsize(file_name)
             galaxy_id, galaxy_name = get_galaxy_id_and_name(file_name)
             if galaxy_id >= 0:
-                key = get_key_hdf5(galaxy_name)
+                key = '{0}/{0}.hdf5'.format(galaxy_name)
                 LOG.info('File name: %s', file_name)
                 LOG.info('File size: %d', size)
                 LOG.info('Bucket:    %s', bucket_name)
@@ -94,7 +95,7 @@ def store_files(hdf5_dir):
                 add_file_to_bucket(bucket, key, file_name)
                 file_count += 1
                 os.remove(file_name)
-                connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=STORED))
+                connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=STORED, status_time=datetime.datetime.now()))
 
             else:
                 LOG.error('File name: %s', file_name)

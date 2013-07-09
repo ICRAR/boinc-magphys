@@ -63,8 +63,13 @@ def delete_tables(connection):
     connection.execute('drop table run_file')
 
 
+def correct_galaxy(connection):
+    connection.execute('ALTER TABLE galaxy ADD COLUMN status_time TIMESTAMP NULL')
+
+
 def migrate_database(connection):
     LOG.info('Migrating the database')
+    correct_galaxy(connection)
     correct_pixel_results(connection)
     delete_tables(connection)
     correct_parameter_name(connection)

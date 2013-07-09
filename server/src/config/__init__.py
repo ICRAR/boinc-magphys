@@ -92,6 +92,7 @@ WG_BOINC_PROJECT_ROOT = None
 WG_REPORT_DEADLINE = None
 WG_PROJECT_NAME = None
 WG_TMP = None
+WG_DELETE_DELAY = None
 if exists(work_generation_file_name):
     config = ConfigObj(work_generation_file_name)
     WG_MIN_PIXELS_PER_FILE = int(config['min_pixels_per_file'])
@@ -102,6 +103,7 @@ if exists(work_generation_file_name):
     WG_REPORT_DEADLINE = int(config['report_deadline'])
     WG_PROJECT_NAME = config['project_name']
     WG_TMP = config['tmp']
+    WG_DELETE_DELAY = config['delete_delay']
 else:
     WG_MIN_PIXELS_PER_FILE = 15
     WG_ROW_HEIGHT = 10
@@ -110,6 +112,7 @@ else:
     WG_REPORT_DEADLINE = 7
     WG_PROJECT_NAME = 'pogs_test'
     WG_TMP = '/tmp'
+    WG_DELETE_DELAY = 5
 
 ############### Assimilator Settings ###############
 

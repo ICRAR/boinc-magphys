@@ -104,6 +104,7 @@ GALAXY = Table('galaxy',
                Column('pixel_count', Integer),
                Column('pixels_processed', Integer),
                Column('status_id', Integer, ForeignKey('galaxy_status.galaxy_status_id')),
+               Column('status_time', TIMESTAMP),
 )
 
 GALAXY_STATUS = Table('galaxy_status',

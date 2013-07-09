@@ -44,6 +44,7 @@ import argparse
 import h5py
 import shutil
 import time
+import datetime
 from archive.archive_hdf5_mod import store_fits_header, store_area, store_image_filters, store_area_user, store_pixels, OUTPUT_FORMAT_1_02
 from config import DB_LOGIN, ARCHIVED, PROCESSED
 from sqlalchemy import create_engine
@@ -169,7 +170,7 @@ try:
                 os.makedirs(to_store)
             shutil.move(filename, to_store)
 
-            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=ARCHIVED))
+            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=ARCHIVED, status_time=datetime.datetime.now()))
 
             end_time = time.time()
             LOG.info('Galaxy with galaxy_id of %d was archived.', galaxy_id1)

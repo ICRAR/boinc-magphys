@@ -117,6 +117,7 @@ CREATE TABLE galaxy (
   pixel_count      INTEGER,
   pixels_processed INTEGER,
   status_id        SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  status_time      TIMESTAMP,
 
   FOREIGN KEY (run_id) REFERENCES run(run_id),
   FOREIGN KEY (status_id) REFERENCES galaxy_status(galaxy_status_id),

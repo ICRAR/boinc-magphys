@@ -28,7 +28,9 @@ Functions used to delete a galaxy
 import logging
 import time
 from boto.s3.key import Key
+import datetime
 from sqlalchemy.sql import select, func
+from config import DELETED
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT
 from utils.name_builder import get_files_bucket, get_galaxy_file_name
 from utils.s3_helper import get_s3_connection, get_bucket
@@ -59,26 +61,24 @@ def delete_galaxy(connection, galaxy_ids):
                     time.sleep(1)
                     counter += 1
 
-                connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=4))
+                connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=DELETED, status_time=datetime.datetime.now()))
                 transaction.commit()
 
                 # Now empty the bucket
-                if False:
-                    s3_connection = get_s3_connection()
-                    bucket = get_bucket(s3_connection, get_files_bucket())
-                    galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
-                    for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
-                        # Ignore the key
-                        if key.key.endswith('/'):
-                            continue
+                s3_connection = get_s3_connection()
+                bucket = get_bucket(s3_connection, get_files_bucket())
+                galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+                for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
+                    # Ignore the key
+                    if key.key.endswith('/'):
+                        continue
 
-                        bucket.delete_key(key)
-
-                    # Now the folder
-                    key = Key(bucket)
-                    key.key = '{0}/sed/'.format(galaxy_file_name)
                     bucket.delete_key(key)
 
+                # Now the folder
+                key = Key(bucket)
+                key.key = '{0}/sed/'.format(galaxy_file_name)
+                bucket.delete_key(key)
 
             LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id1)
             transaction.commit()
