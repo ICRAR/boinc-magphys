@@ -56,7 +56,7 @@ args = vars(parser.parse_args())
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
-delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=WG_DELETE_DELAY)
+delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=float(WG_DELETE_DELAY))
 LOG.info('Deleting {0} days ago ({1})'.format(WG_DELETE_DELAY, delete_delay_ago))
 if args['mod'] is None:
     select_statement = select([GALAXY]).where(and_(GALAXY.c.status_id == STORED, GALAXY.c.status_time < delete_delay_ago)).order_by(GALAXY.c.galaxy_id)
