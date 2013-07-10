@@ -49,7 +49,6 @@ def delete_galaxy(connection, galaxy_ids):
                 LOG.info('Error: Galaxy with galaxy_id of %d was not found', galaxy_id1)
             else:
                 LOG.info('Deleting Galaxy with galaxy_id of %d - %s', galaxy_id1, galaxy[GALAXY.c.name])
-                transaction = connection.begin()
                 area_count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])).first()[0]
                 counter = 1
 
