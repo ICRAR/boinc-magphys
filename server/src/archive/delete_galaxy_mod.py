@@ -61,8 +61,6 @@ def delete_galaxy(connection, galaxy_ids):
                     time.sleep(0.1)
                     counter += 1
 
-                connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=DELETED, status_time=datetime.datetime.now()))
-
                 # Now empty the bucket
                 s3_connection = get_s3_connection()
                 bucket = get_bucket(s3_connection, get_files_bucket())
@@ -80,6 +78,7 @@ def delete_galaxy(connection, galaxy_ids):
                 bucket.delete_key(key)
 
             LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id1)
+            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=DELETED, status_time=datetime.datetime.now()))
             transaction.commit()
 
     except Exception:
