@@ -58,11 +58,10 @@ def delete_galaxy(connection, galaxy_ids):
                     connection.execute(PIXEL_RESULT.delete().where(PIXEL_RESULT.c.area_id == area_id1[0]))
 
                     # Give the rest of the world a chance to access the database
-                    time.sleep(1)
+                    time.sleep(0.1)
                     counter += 1
 
                 connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=DELETED, status_time=datetime.datetime.now()))
-                transaction.commit()
 
                 # Now empty the bucket
                 s3_connection = get_s3_connection()
