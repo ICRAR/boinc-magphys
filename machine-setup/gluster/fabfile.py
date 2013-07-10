@@ -61,10 +61,10 @@ def base_install():
     sudo('yum --assumeyes --quiet install glusterfs*.rpm')
     sudo('chkconfig glusterd --add')
     sudo('chkconfig glusterd on')
-    sudo('service glusterd start')
+    #sudo('service glusterd start')
     run('rm glusterfs*.rpm')
 
-    sudo('mkdir -p /mnt/brick')
+    sudo('mkdir -p /mnt/brick01')
 
 
 def create_instance(ebs_size, ami_name):
@@ -79,6 +79,7 @@ def create_instance(ebs_size, ami_name):
 
     dev_sda1 = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
     dev_sda1.size = int(ebs_size)  # size in Gigabytes
+
     bdm = blockdevicemapping.BlockDeviceMapping()
     bdm['/dev/sda1'] = dev_sda1
     reservations = ec2_connection.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, block_device_map=bdm)
@@ -110,15 +111,6 @@ def create_instance(ebs_size, ami_name):
 
     # Return the instance
     return instance, ec2_connection
-
-
-def make_swap():
-    """
-    Make the swap space
-    """
-    sudo('dd if=/dev/zero of=/swapfile bs=1M count=2048')
-    sudo('mkswap /swapfile')
-    sudo('swapon /swapfile')
 
 
 def resize_file_system():
@@ -170,11 +162,13 @@ def base_build_ami():
     # Make sure yum is up to date
     yum_update()
 
-    # Make the swap we might need
-    make_swap()
-
     # Perform the base install
     base_install()
+
+    # When glusterfs-server package is first installed, it creates a node UUID file at /var/lib/glusterd/glusterd.info
+    # So, when gluster resolves the hostname to a UUID, it creates a conflict.
+    sudo('service glusterd stop')
+    sudo('rm /var/lib/glusterd/glusterd.info')
 
     # Save the instance as an AMI
     puts("Stopping the instance")
