@@ -36,7 +36,6 @@ DB_NAME = None
 BOINC_DB_NAME = None
 DB_LOGIN = None
 BOINC_DB_LOGIN = None
-PLEIADES_DB_LOGIN = None
 
 db_file_name = dirname(__file__) + '/database.settings'
 if exists(db_file_name):
@@ -48,7 +47,6 @@ if exists(db_file_name):
     BOINC_DB_NAME = config['boincDatabaseName']
     DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@" + DB_HOSTNAME + "/" + DB_NAME
     BOINC_DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@" + DB_HOSTNAME + "/" + BOINC_DB_NAME
-    PLEIADES_DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@pleiades01.icrar.org/" + DB_NAME
 
 else:
     DB_LOGIN = "mysql://root:@localhost/magphys"
@@ -56,30 +54,8 @@ else:
     DB_PASSWORD = ''
     DB_HOSTNAME = 'localhost'
     DB_NAME = 'magphys'
-    boincDatabaseName = 'pogs'
+    BOINC_DB_NAME = 'pogs'
     BOINC_DB_LOGIN = "mysql://root:@localhost/pogs"
-
-############### Docmosis Settings ###############
-
-DOCMOSIS_KEY = None
-DOCMOSIS_RENDER_URL = None
-DOCMOSIS_TEMPLATE = None
-DOCMOSIS_FILE_NAME = dirname(__file__) + '/docmosis.settings'
-if exists(DOCMOSIS_FILE_NAME):
-    config = ConfigObj(DOCMOSIS_FILE_NAME)
-
-    # Just in case it isn't setup
-    try:
-        DOCMOSIS_KEY = config['docmosis_key']
-        DOCMOSIS_RENDER_URL = config['docmosis_render_url']
-        DOCMOSIS_TEMPLATE = config['docmosis_template']
-    except Exception, e:
-        print "Could not load key: %s" % e
-
-else:
-    DOCMOSIS_KEY = 'default'
-    DOCMOSIS_RENDER_URL = 'https://dws.docmosis.com/services/rs/render'
-    DOCMOSIS_TEMPLATE = 'Report.doc'
 
 ############### Work Generation Settings ###############
 

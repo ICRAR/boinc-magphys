@@ -356,11 +356,6 @@ databaseHostname = "{2}"
 databaseName = "magphys"
 boincDatabaseName = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'''.format(env.db_username, env.db_password, env.db_host_name, env.project_name))
 
-    # Setup Docmosis files
-    run('''echo 'docmosis_key = "{0}"
-docmosis_render_url = "https://dws.docmosis.com/services/rs/render"
-docmosis_template = "Report.doc"' >> /home/ec2-user/boinc-magphys/server/src/config/docmosis.settings'''.format(env.docmosis_key))
-
     # Setup Work Generation files
     run('''echo 'min_pixels_per_file = "15"
 row_height = "6"
@@ -573,8 +568,6 @@ def boinc_setup_env():
         prompt('GMail Account:', 'gmail_account', default=env.project_name)
     if 'gmail_password' not in env:
         prompt('GMail Password:', 'gmail_password')
-    if 'docmosis_key' not in env:
-        prompt('Docmosis Key:', 'docmosis_key')
     if 'branch' not in env:
         prompt('Git Branch <return> for master:', 'branch')
     if 'create_s3' not in env:

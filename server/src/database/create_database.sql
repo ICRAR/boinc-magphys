@@ -239,25 +239,3 @@ CREATE TABLE image_filters_used (
 
   INDEX (galaxy_id, image_number)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
-
-CREATE TABLE docmosis_task (
-  task_id       BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  userid        INTEGER NOT NULL,
-  worker_token  VARCHAR(32) NULL DEFAULT NULL,
-  create_time   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  finish_time   TIMESTAMP NULL DEFAULT NULL,
-  status        SMALLINT UNSIGNED NOT NULL DEFAULT '0'
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE docmosis_task_galaxy (
-  task_id       BIGINT UNSIGNED NOT NULL,
-  galaxy_id     BIGINT UNSIGNED NOT NULL,
-
-  PRIMARY KEY (task_id,galaxy_id),
-  KEY task_id (task_id),
-  KEY galaxy_id (galaxy_id),
-
-  FOREIGN KEY (task_id) REFERENCES docmosis_task(task_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;

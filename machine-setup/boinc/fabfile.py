@@ -216,12 +216,6 @@ def edit_files():
       <output> fits2wu.out </output>
     </task>
     <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/docmosis/docmosis_worker.py </cmd>
-      <period> 4 min </period>
-      <disabled> 0 </disabled>
-      <output> docmosis_worker.out </output>
-    </task>
-    <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/delete_galaxy_task.py </cmd>
       <period> 30 minutes </period>
       <disabled> 0 </disabled>

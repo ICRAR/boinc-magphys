@@ -187,19 +187,3 @@ RUN_FILTER = Table('run_filter',
                    Column('run_id', BigInteger, ForeignKey('run.run_id')),
                    Column('filter_id', BigInteger, ForeignKey('filter.filter_id'))
 )
-
-DOCMOSIS_TASK = Table('docmosis_task',
-                      MAGPHYS_METADATA,
-                      Column('task_id', BigInteger, primary_key=True, autoincrement=True),
-                      Column('userid', Integer),
-                      Column('worker_token', String(15)),
-                      Column('create_time', TIMESTAMP, nullable=False),
-                      Column('finish_time', TIMESTAMP),
-                      Column('status', Integer)
-)
-
-DOCMOSIS_TASK_GALAXY = Table('docmosis_task_galaxy',
-                             MAGPHYS_METADATA,
-                             Column('task_id', BigInteger, ForeignKey('docmosis_task.task_id'), primary_key=True),
-                             Column('galaxy_id', BigInteger, primary_key=True)
-)

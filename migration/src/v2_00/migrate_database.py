@@ -61,6 +61,8 @@ def delete_tables(connection):
     connection.execute('drop table pixel_parameter')
     connection.execute('drop table pixel_filter')
     connection.execute('drop table run_file')
+    connection.execute('drop table docmosis_task_galaxy')
+    connection.execute('drop table docmosis_task')
 
 
 def correct_galaxy(connection):
