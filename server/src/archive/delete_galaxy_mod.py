@@ -26,27 +26,20 @@
 Functions used to delete a galaxy
 """
 import logging
-import os
 import time
-from config import WG_IMAGE_DIRECTORY
+from boto.s3.key import Key
+import datetime
 from sqlalchemy.sql import select, func
-from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, PIXEL_FILTER, PIXEL_PARAMETER, PIXEL_HISTOGRAM, AREA_USER, FITS_HEADER
-from image import directory_mod
+from config import DELETED
+from database.database_support_core import GALAXY, AREA, PIXEL_RESULT
+from utils.name_builder import get_files_bucket, get_galaxy_file_name
+from utils.s3_helper import get_s3_connection, get_bucket
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-def remove_file(file):
-    """
-    Remove a file after checking it exists
-    """
-    if os.path.isfile(file):
-        LOG.info('Removing file {0}'.format(file))
-        os.remove(file)
-    else:
-        LOG.warning('The file {0} does not exist'.format(file))
 
-def delete_galaxy(connection, galaxy_ids, delete_all):
+def delete_galaxy(connection, galaxy_ids):
     try:
         for galaxy_id_str in galaxy_ids:
             transaction = connection.begin()
@@ -61,43 +54,30 @@ def delete_galaxy(connection, galaxy_ids, delete_all):
 
                 for area_id1 in connection.execute(select([AREA.c.area_id]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).order_by(AREA.c.area_id)):
                     LOG.info("Deleting galaxy {0} area {1}. {2} of {3}".format(galaxy_id_str, area_id1[0], counter, area_count))
-                    for pxresult_id1 in connection.execute(select([PIXEL_RESULT.c.pxresult_id]).where(PIXEL_RESULT.c.area_id == area_id1[0]).order_by(PIXEL_RESULT.c.pxresult_id)):
-                        connection.execute(PIXEL_FILTER.delete().where(PIXEL_FILTER.c.pxresult_id == pxresult_id1[0]))
-                        connection.execute(PIXEL_PARAMETER.delete().where(PIXEL_PARAMETER.c.pxresult_id == pxresult_id1[0]))
-                        connection.execute(PIXEL_HISTOGRAM.delete().where(PIXEL_HISTOGRAM.c.pxresult_id == pxresult_id1[0]))
-
                     connection.execute(PIXEL_RESULT.delete().where(PIXEL_RESULT.c.area_id == area_id1[0]))
 
-                    # Only remove the AREA_USER if we are deleting everything
-                    if delete_all:
-                        connection.execute(AREA_USER.delete().where(AREA_USER.c.area_id == area_id1[0]))
-
-                    transaction.commit()
-                    transaction = connection.begin()
-
                     # Give the rest of the world a chance to access the database
-                    time.sleep(1)
+                    time.sleep(0.1)
                     counter += 1
 
-                if delete_all:
-                    connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
-                    connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
-                    connection.execute(GALAXY.delete().where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
+                # Now empty the bucket
+                s3_connection = get_s3_connection()
+                bucket = get_bucket(s3_connection, get_files_bucket())
+                galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+                for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
+                    # Ignore the key
+                    if key.key.endswith('/'):
+                        continue
 
-                    file_prefix_name = galaxy[GALAXY.c.name] + "_" + str(galaxy[GALAXY.c.version_number])
-                    for i in [1, 2, 3, 4]:
-                        file_name = directory_mod.get_colour_image_path(WG_IMAGE_DIRECTORY, file_prefix_name, i, False)
-                        remove_file(file_name)
+                    bucket.delete_key(key)
 
-                        file_name = directory_mod.get_thumbnail_colour_image_path(WG_IMAGE_DIRECTORY, file_prefix_name, i, False)
-                        remove_file(file_name)
-
-                    fits_file_name = directory_mod.get_file_path(WG_IMAGE_DIRECTORY, file_prefix_name + '.fits', False)
-                    remove_file(fits_file_name)
-
-                connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id = 4))
+                # Now the folder
+                key = Key(bucket)
+                key.key = '{0}/sed/'.format(galaxy_file_name)
+                bucket.delete_key(key)
 
             LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id1)
+            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=DELETED, status_time=datetime.datetime.now()))
             transaction.commit()
 
     except Exception:

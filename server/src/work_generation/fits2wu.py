@@ -41,6 +41,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
+from Boinc import configxml
 from datetime import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import and_, func, select
@@ -79,6 +80,12 @@ if count is not None and count >= WG_THRESHOLD:
     LOG.info('Nothing to do')
 
 else:
+    # Get the BOINC downloads and fanout values
+    boinc_config = configxml.ConfigFile().read()
+    download_dir = boinc_config.config.download_dir
+    fanout = long(boinc_config.config.uldl_dir_fanout)
+    LOG.info("download_dir: %s, fanout: %d", download_dir, fanout)
+
     # Normal operation
     files_processed = 0
     if args['register'] is None:
@@ -95,20 +102,20 @@ else:
                 transaction = connection.begin()
                 if not os.path.isfile(registration[REGISTER.c.filename]):
                     LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
-                    connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+                    connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 elif registration[REGISTER.c.sigma_filename] is not None and not os.path.isfile(registration[REGISTER.c.sigma_filename]):
                     LOG.error('The file %s does not exist', registration[REGISTER.c.sigma_filename])
-                    connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+                    connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 else:
                     LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
-                    fit2wu = Fit2Wu(connection, LIMIT)
+                    fit2wu = Fit2Wu(connection, LIMIT, download_dir, fanout)
                     (work_units_added, pixel_count) = fit2wu.process_file(registration)
                     # One WU = MIN_QUORUM Results
                     files_processed += (work_units_added * MIN_QUORUM)
                     os.remove(registration[REGISTER.c.filename])
                     if registration.sigma_filename is not None:
                         os.remove(registration[REGISTER.c.sigma_filename])
-                    connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+                    connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
 
                 transaction.commit()
 
@@ -121,19 +128,19 @@ else:
             transaction = connection.begin()
             if not os.path.isfile(registration[REGISTER.c.filename]):
                 LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
-                connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+                connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
             elif registration[REGISTER.c.sigma_filename] is not None and not os.path.isfile(registration[REGISTER.c.sigma_filename]):
                 LOG.error('The file %s does not exist', registration[REGISTER.c.sigma_filename])
-                connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+                connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
             else:
                 LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
-                fit2wu = Fit2Wu(connection, LIMIT)
+                fit2wu = Fit2Wu(connection, LIMIT, download_dir, fanout)
                 (work_units_added, pixel_count) = fit2wu.process_file(registration)
                 files_processed = work_units_added * MIN_QUORUM
                 os.remove(registration[REGISTER.c.filename])
                 if registration[REGISTER.c.sigma_filename] is not None:
                     os.remove(registration[REGISTER.c.sigma_filename])
-                connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time = datetime.now()))
+                connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
 
             transaction.commit()
 

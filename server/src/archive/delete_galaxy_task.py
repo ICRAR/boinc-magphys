@@ -29,6 +29,7 @@ Delete a galaxy and all it's related data.
 import logging
 import os
 import sys
+import datetime
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -41,7 +42,7 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import argparse
 from archive.delete_galaxy_mod import delete_galaxy
-from config import DB_LOGIN, STORED
+from config import DB_LOGIN, STORED, WG_DELETE_DELAY
 from sqlalchemy import create_engine, and_
 from sqlalchemy.sql import select
 from database.database_support_core import GALAXY
@@ -55,15 +56,17 @@ args = vars(parser.parse_args())
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
+delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=float(WG_DELETE_DELAY))
+LOG.info('Deleting {0} days ago ({1})'.format(WG_DELETE_DELAY, delete_delay_ago))
 if args['mod'] is None:
-    select_statement = select([GALAXY]).where(GALAXY.c.status_id == STORED).order_by(GALAXY.c.galaxy_id)
+    select_statement = select([GALAXY]).where(and_(GALAXY.c.status_id == STORED, GALAXY.c.status_time < delete_delay_ago)).order_by(GALAXY.c.galaxy_id)
 else:
-    select_statement = select([GALAXY]).where(and_(GALAXY.c.status_id == STORED, GALAXY.c.galaxy_id % args['mod'][0] == args['mod'][1])).order_by(GALAXY.c.galaxy_id)
+    select_statement = select([GALAXY]).where(and_(GALAXY.c.status_id == STORED, GALAXY.c.status_time < delete_delay_ago, GALAXY.c.galaxy_id % args['mod'][0] == args['mod'][1])).order_by(GALAXY.c.galaxy_id)
     LOG.info('Using modulus {0} - remainder {1}'.format(args['mod'][0], args['mod'][1]))
 
 galaxy_ids = []
 for galaxy in connection.execute(select_statement):
     galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
 
-delete_galaxy(connection, galaxy_ids[0:20], False)
+delete_galaxy(connection, galaxy_ids[0:20])
 connection.close()

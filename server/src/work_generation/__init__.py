@@ -25,9 +25,3 @@
 """
 Initialise the Constants used
 """
-
-import re
-import sys
-
-STAR_FORMATION_FILE = 1
-INFRARED_FILE       = 2

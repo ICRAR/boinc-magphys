@@ -38,6 +38,8 @@ import glob
 import boto
 import os
 import time
+import csv
+from boto.ec2 import blockdevicemapping
 
 from fabric.api import run, sudo, put, env, require
 from fabric.context_managers import cd
@@ -47,25 +49,225 @@ from fabric.operations import prompt
 from fabric.utils import puts, abort, fastprint
 
 USERNAME = 'ec2-user'
-AMI_ID = 'ami-1624987f'
+AMI_ID = 'ami-05355a6c'
 INSTANCE_TYPE = 'm1.small'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
-SECURITY_GROUPS = ['icrar-boinc-server'] # Security group allows SSH
+KEY_NAME_VPC = 'icrar_theskynet_public_prod'
+SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
+SECURITY_GROUPS_VPC = ['default', 'Prod-theSkyNet']  # Security group allows SSH
+BOINC_AWS_KEYS = os.path.expanduser('~/Documents/Keys/aws')
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys/magphys')
+PIP_PACKAGES = 'sqlalchemy Numpy pyfits pil fabric configobj MySQL-python boto astropy'
+YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel '
+YUM_BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
 
-def base_install(host0):
+
+def base_install():
     """
     Perform the basic install
     """
-    if host0:
-        # Clone our code
-        run('git clone git://github.com/ICRAR/boinc-magphys.git')
+    # Install the bits we need - we need the MySQL so the python connector will build
+    sudo('yum --assumeyes --quiet install {0}'.format(YUM_BASE_PACKAGES))
 
-    # Puppet and git should be installed by the python
-    with cd('/home/ec2-user/boinc-magphys/machine-setup'):
-        sudo('puppet apply boinc-magphys.pp')
+    # Setup the python
+    run('wget http://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
+    sudo('sh setuptools-0.6c11-py2.7.egg')
+    run('rm setuptools-0.6c11-py2.7.egg')
+    sudo('rm -f /usr/bin/easy_install')
+    sudo('easy_install-2.7 pip')
+    sudo('rm -f /usr/bin/pip')
+    sudo('pip-2.7 install {0}'.format(PIP_PACKAGES))
+
+    # Setup the pythonpath
+    append('/home/ec2-user/.bash_profile',
+           ['',
+            'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src',
+            'export PYTHONPATH'])
+
+    # Setup the HDF5
+    with cd('/usr/local/src'):
+        sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
+        sudo('tar -xvzf szip-2.1.tar.gz')
+        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz')
+        sudo('tar -xvzf hdf5-1.8.11.tar.gz')
+        sudo('rm *.gz')
+    with cd('/usr/local/src/szip-2.1'):
+        sudo('./configure --prefix=/usr/local/szip')
+        sudo('make')
+        sudo('make install')
+    with cd('/usr/local/src/hdf5-1.8.11'):
+        sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
+        sudo('make')
+        sudo('make install')
+    sudo('''echo "/usr/local/hdf5/lib
+/usr/local/szip/lib" >> /etc/ld.so.conf.d/hdf5.conf''')
+    sudo('ldconfig')
+
+    # Now install the H5py
+    with cd('/tmp'):
+        run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
+        run('tar -xvzf h5py-2.1.0.tar.gz')
+    with cd('/tmp/h5py-2.1.0'):
+        sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
+        sudo('python2.7 setup.py install')
+
+    # Load NFS
+    sudo('yum --assumeyes --quiet install nfs-utils')
+
+    sudo('mkdir -p /mnt/data')
+
+
+
+def copy_public_keys():
+    """
+    Copy the public keys to the remote servers
+    """
+    env.list_of_users = []
+    for key_file in glob.glob(PUBLIC_KEYS + '/*.pub'):
+        filename = os.path.basename(key_file)
+        user, ext = os.path.splitext(filename)
+        env.list_of_users.append(user)
+        put(key_file, filename)
+
+
+def create_instance(ebs_size, ami_name):
+    """
+    Create the AWS instance
+    :param ebs_size:
+    """
+    puts('Creating the instance {1} with disk size {0} GB'.format(ebs_size, ami_name))
+
+    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
+    ec2_connection = boto.connect_ec2()
+
+    dev_sda1 = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
+    dev_sda1.size = int(ebs_size)  # size in Gigabytes
+    bdm = blockdevicemapping.BlockDeviceMapping()
+    bdm['/dev/sda1'] = dev_sda1
+    reservations = ec2_connection.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, block_device_map=bdm)
+    instance = reservations.instances[0]
+    # Sleep so Amazon recognizes the new instance
+    for i in range(4):
+        fastprint('.')
+        time.sleep(5)
+
+    # Are we running yet?
+    while not instance.update() == 'running':
+        fastprint('.')
+        time.sleep(5)
+
+    # Sleep a bit more Amazon recognizes the new instance
+    for i in range(4):
+        fastprint('.')
+        time.sleep(5)
+    puts('.')
+
+    ec2_connection.create_tags([instance.id], {'Name': '{0}'.format(ami_name)})
+
+    # The instance is started, but not useable (yet)
+    puts('Started the instance now waiting for the SSH daemon to start.')
+    for i in range(12):
+        fastprint('.')
+        time.sleep(5)
+    puts('.')
+
+    # Return the instance
+    return instance, ec2_connection
+
+
+def start_ami_instance(ami_id, instance_name, subnet_id):
+    """
+    Start an AMI instance running
+    :param ami_id:
+    :param instance_name:
+    """
+    puts('Starting the instance {0} from id {0}'.format(instance_name, ami_id))
+
+    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
+    ec2_connection = boto.connect_ec2()
+
+    if subnet_id == '':
+        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
+    else:
+        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME_VPC, security_groups=SECURITY_GROUPS_VPC, subnet_id=subnet_id)
+
+    instance = reservations.instances[0]
+    # Sleep so Amazon recognizes the new instance
+    for i in range(4):
+        fastprint('.')
+        time.sleep(5)
+
+    # Are we running yet?
+    while not instance.update() == 'running':
+        fastprint('.')
+        time.sleep(5)
+
+    # Sleep a bit more Amazon recognizes the new instance
+    for i in range(4):
+        fastprint('.')
+        time.sleep(5)
+    puts('.')
+
+    ec2_connection.create_tags([instance.id], {'Name': '{0}'.format(instance_name)})
+
+    # The instance is started, but not useable (yet)
+    puts('Started the instance(s) now waiting for the SSH daemon to start.')
+    for i in range(12):
+        fastprint('.')
+        time.sleep(5)
+    puts('.')
+
+    # Return the instance
+    return instance
+
+
+def get_aws_keyfile():
+    """
+    Get the aws key file
+
+    :return:
+    """
+    return os.path.join(BOINC_AWS_KEYS, '{0}.credentials.csv.txt'.format(env.aws_user))
+
+
+def make_swap():
+    """
+    Make the swap space
+    """
+    sudo('dd if=/dev/zero of=/swapfile bs=1M count=2048')
+    sudo('mkswap /swapfile')
+    sudo('swapon /swapfile')
+
+
+def boinc_install(with_db):
+    """
+    Perform the tasks to install the whole BOINC server on a single machine
+    """
+    # Get the packages
+    sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
+
+    # Clone our code
+    if env.branch == '':
+        run('git clone git://github.com/ICRAR/boinc-magphys.git')
+    else:
+        run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
+
+    run('mkdir /home/ec2-user/galaxies')
+    run('mkdir -p /home/ec2-user/archive/to_store')
+
+    # Create the .boto file
+    file_name = get_aws_keyfile()
+    with open(file_name, 'rb') as csv_file:
+        reader = csv.reader(csv_file)
+        # Skip the header
+        reader.next()
+
+        row = reader.next()
+        run('''echo "[Credentials]
+aws_access_key_id = {0}
+aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(row[1], row[2]))
 
     # Setup postfix
     sudo('service sendmail stop')
@@ -93,73 +295,12 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('chmod 400 /etc/postfix/sasl_passwd')
     sudo('postmap /etc/postfix/sasl_passwd')
 
-    # Setup NAGIOS
-    sudo('chkconfig nrpe on')
-    sudo('service nrpe start')
+    # Setup the S3 environment
+    if to_boolean(env.create_s3):
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+            run('fab --set project_name={0} create_s3'.format(env.project_name))
 
-    # Setup the HDF5
-    with cd('/usr/local/src'):
-        sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
-        sudo('tar -xvzf szip-2.1.tar.gz')
-        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz')
-        sudo('tar -xvzf hdf5-1.8.11.tar.gz')
-        sudo('rm *.gz')
-    with cd('/usr/local/src/szip-2.1'):
-        sudo('./configure --prefix=/usr/local/szip')
-        sudo('make')
-        sudo('make install')
-    with cd('/usr/local/src/hdf5-1.8.11'):
-        sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
-        sudo('make')
-        sudo('make install')
-    sudo('''echo "/usr/local/hdf5/lib
-/usr/local/szip/lib" >> /etc/ld.so.conf.d/hdf5.conf''')
-    sudo('ldconfig')
-
-    # Setup BOINC
-    if host0:
-        # Grab the latest trunk from GIT
-        run('git clone git://boinc.berkeley.edu/boinc-v2.git boinc')
-
-        with cd('/home/ec2-user/boinc'):
-            run('./_autosetup')
-            run('./configure --disable-client --disable-manager')
-            run('make')
-
-        # Setup the pythonpath
-        append('/home/ec2-user/.bash_profile',
-            ['',
-             'PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src',
-             'export PYTHONPATH'])
-
-    # Setup the python
-    run('wget http://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
-    sudo('sh setuptools-0.6c11-py2.7.egg')
-    run('rm setuptools-0.6c11-py2.7.egg')
-    sudo('rm -f /usr/bin/easy_install')
-    sudo('easy_install-2.7 pip')
-    sudo('rm -f /usr/bin/pip')
-    sudo('pip-2.7 install sqlalchemy')
-    sudo('pip-2.7 install Numpy')
-    sudo('pip-2.7 install pyfits')
-    sudo('pip-2.7 install pil')
-    sudo('pip-2.7 install django')
-    sudo('pip-2.7 install fabric')
-    sudo('pip-2.7 install configobj')
-    sudo('pip-2.7 install MySQL-python')
-    sudo('pip-2.7 install boto')
-
-    # Plotting and reporting
-    sudo('pip-2.7 install matplotlib')
-    sudo('pip-2.7 install astropy')
-
-    with cd('/tmp'):
-        run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
-        run('tar -xvzf h5py-2.1.0.tar.gz')
-    with cd('/tmp/h5py-2.1.0'):
-        sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
-        sudo('python2.7 setup.py install')
-
+    # Setup Users
     for user in env.list_of_users:
         sudo('useradd {0}'.format(user))
         sudo('mkdir /home/{0}/.ssh'.format(user))
@@ -172,184 +313,25 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         # Add them to the sudoers
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
-def build_mod_wsgi():
-    """
-    Build the WSGI for the Python web interface
-    """
-    run('mkdir -p /tmp/build')
+    # Grab the latest trunk from GIT
+    run('git clone git://boinc.berkeley.edu/boinc-v2.git boinc')
 
-    with cd('/tmp/build'):
-        run('wget http://modwsgi.googlecode.com/files/mod_wsgi-3.3.tar.gz')
-        run('tar -xvf mod_wsgi-3.3.tar.gz')
-    with cd('/tmp/build/mod_wsgi-3.3'):
-        run('./configure --with-python=/usr/bin/python2.7')
+    with cd('/home/ec2-user/boinc'):
+        run('./_autosetup')
+        run('./configure --disable-client --disable-manager')
         run('make')
-        sudo('make install')
 
-    # Clean up
-    sudo('rm -rf /tmp/build')
-
-def copy_public_keys():
-    """
-    Copy the public keys to the remote servers
-    """
-    env.list_of_users = []
-    for file in glob.glob(PUBLIC_KEYS + '/*.pub'):
-        filename = os.path.basename(file)
-        user, ext = os.path.splitext(filename)
-        env.list_of_users.append(user)
-        put(file, filename)
-
-def create_instance(stub_name, number_instances, ebs_size):
-    """
-    Create the AWS instance
-    """
-    puts('Creating {0} instances with "{1}" as the stub'.format(number_instances, stub_name))
-
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    conn = boto.connect_ec2()
-
-    reservations = conn.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, min_count=number_instances, max_count=number_instances)
-    instances = reservations.instances
-    # Sleep so Amazon recognizes the new instance
-    for i in range(4):
-        fastprint('.')
-        time.sleep(5)
-
-    # Are we running yet?
-    for i in range(int(number_instances)):
-        while not instances[i].update() == 'running':
-            fastprint('.')
-            time.sleep(5)
-
-    # Sleep a bit more Amazon recognizes the new instance
-    for i in range(4):
-        fastprint('.')
-        time.sleep(5)
-    puts('.')
-
-    # Tag the instance
-    for i in range(int(number_instances)):
-        conn.create_tags([instances[i].id], {'Name': '{0}{1:02d}'.format(stub_name, i)})
-
-    # Associate an Elastic IP
-    for instance in instances:
-        puts('Current DNS name is {0}. About to get an Elastic IP'.format(instance.dns_name))
-        public_ip = conn.allocate_address()
-        if not conn.associate_address(instance_id=instance.id, public_ip=public_ip.public_ip):
-            abort('Could not associate the IP {0} to the instance {1}'.format(public_ip.public_ip, instance.id))
-
-    # Give AWS time to switch everything over
-    time.sleep(10)
-
-    # Load the new instance data as the dns_name may have changed
-    for instance in instances:
-        instance.update(True)
-    for instance in instances:
-        puts('Current DNS name is {0} after associating the Elastic IP'.format(instance.dns_name))
-
-    # Add the extra storage
-    for instance in instances:
-        volume = conn.create_volume(ebs_size, instance.placement)
-        time.sleep(4)
-        volume.attach(instance.id, '/dev/sdg')
-
-    # The instance is started, but not useable (yet)
-    puts('Started the instance(s) now waiting for the SSH daemon to start.')
-    for i in range(12):
-        fastprint('.')
-        time.sleep(5)
-    puts('.')
-
-    # we have to return an ASCII string
-    host_names = []
-    for instance in instances:
-        host_names.append(str(instance.dns_name))
-    puts('Host names = {0}'.format(host_names))
-    return host_names
-
-def create_shared_home():
-    # Link the area so we have a common home
-    if env.host_string == env.hosts[0]:
-        sudo('mv /home/ec2-user /mnt/data && ln -s /mnt/data/ec2-user/ /home/ec2-user')
-        sudo('chown ec2-user:ec2-user /home/ec2-user')
-    else:
-        sudo('rm -rf /home/ec2-user && ln -s /mnt/data/ec2-user/ /home/ec2-user')
-        sudo('chown ec2-user:ec2-user /home/ec2-user')
-
-def format_drive():
-    """
-    Format the drive
-    """
-    # Create the swap
-    sudo('dd if=/dev/zero of=/swapfile bs=1M count=2048')
-    sudo('mkswap /swapfile')
-    sudo('swapon /swapfile')
-
-    # Create the shared drives
-    sudo('parted -a optimal /dev/sdg --script mklabel gpt')
-    sudo('parted -a optimal /dev/sdg --script mkpart primary 0% 100%')
-    time.sleep(2)
-    sudo('mkfs.xfs -f -L data /dev/sdg1')
-    sudo('mkdir -p /mnt/brick')
-    sudo('chattr +i /mnt/brick')
-    sudo('mount /dev/sdg1 /mnt/brick')
-    sudo('''echo '
-# Swap
-/swapfile swap swap defaults 0 0
-#
-# XFS mounts
-LABEL=data              /mnt/brick                   xfs     defaults        0 0
-# GlusterFS
-{0}:/gv0        /mnt/data                glusterfs defaults,transport=tcp,_netdev 1 0' >> /etc/fstab'''.format(env.host_string))
-
-def gluster_install():
-    """
-    Load the Gluster RPMs and start the service
-    """
-    # Load the Gluster FS RPM's
-    run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-3.3.1-1.el6.x86_64.rpm')
-    run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-fuse-3.3.1-1.el6.x86_64.rpm')
-    run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-geo-replication-3.3.1-1.el6.x86_64.rpm')
-    run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-server-3.3.1-1.el6.x86_64.rpm')
-    sudo('yum --assumeyes --quiet install *.rpm')
-    sudo('chkconfig glusterd --add')
-    sudo('chkconfig glusterd on')
-    sudo('service glusterd start')
-    run('rm *.rpm')
-
-def gluster_mount():
-    if env.host_string == env.hosts[0]:
-        host_names = ''
-        for host_name in env.hosts:
-            host_names += host_name + ':/mnt/brick '
-        sudo('gluster volume create gv0 replica 2 {0}'.format(host_names))
-        sudo('gluster volume start gv0')
-    sudo('mkdir -p /mnt/data')
-    sudo('mount -o transport=tcp -t glusterfs {0}:/gv0 /mnt/data'.format(env.host_string))
-
-def gluster_probe():
-    for host_name in env.hosts:
-        # Only probe other servers
-        if env.host_string != host_name:
-            sudo('gluster peer probe {0}'.format(host_name))
-    sudo('gluster peer status')
-
-def single_install(with_db):
-    """
-    Perform the tasks to install the whole BOINC server on a single machine
-    """
     if with_db:
         # Activate the DB
         sudo('mysql_install_db')
         sudo('chown -R mysql:mysql /var/lib/mysql/*')
-        run('''echo "service { 'mysqld': ensure => running, enable => true }" | sudo puppet apply''')
+        sudo('chkconfig mysqld --add')
+        sudo('chkconfig mysqld on')
         sudo('service mysqld start')
 
         # Wait for it to start up
         time.sleep(5)
 
-    if with_db:
         # Setup the database for recording WU's
         run('mysql --user=root < /home/ec2-user/boinc-magphys/server/src/database/create_database.sql')
 
@@ -378,24 +360,15 @@ databaseHostname = "{2}"
 databaseName = "magphys"
 boincDatabaseName = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'''.format(env.db_username, env.db_password, env.db_host_name, env.project_name))
 
-    # Setup Django files
-    run('''echo 'template_dir = "/home/ec2-user/boinc-magphys/server/src/templates"
-image_dir = "/home/ec2-user/galaxyImages"
-docmosis_key = "{0}"
-docmosis_template = "Report.doc"' >> /home/ec2-user/boinc-magphys/server/src/config/django.settings'''.format(env.docmosis_key))
-
     # Setup Work Generation files
-    run('''echo 'image_directory = "/home/ec2-user/galaxyImages"
-min_pixels_per_file = "15"
+    run('''echo 'min_pixels_per_file = "15"
 row_height = "6"
 threshold = "1000"
 high_water_mark = "400"
 report_deadline = "7"
+project_name = "{0}"
+tmp = "/tmp"
 boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
-
-    # Setup Apache for Django.
-    sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/wsgi.conf /etc/httpd/conf.d/')
-    sudo('cp /home/ec2-user/boinc-magphys/server/src/pogssite/config/pogs.django.conf /etc/httpd/conf.d/')
 
     # Copy the config files
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
@@ -410,39 +383,46 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
     run('cp /home/ec2-user/boinc-magphys/server/logos/* /home/ec2-user/projects/{0}/html/user/logos/'.format(env.project_name))
 
     # Build the validator
-    with cd ('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
+    with cd('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
         run('make')
 
     # setup_website
-    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        run('fab --set project_name={0} edit_files'.format(env.project_name))
-        sudo('fab --set project_name={0} setup_website'.format(env.project_name))
+    if to_boolean(env.start_boinc):
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+            run('fab --set project_name={0} edit_files'.format(env.project_name))
+            sudo('fab --set project_name={0} setup_website'.format(env.project_name))
 
-    # This is needed because the files that Apache serve are inside the user's home directory.
-    run('chmod 711 /home/ec2-user')
-    run('chmod -R oug+r /home/ec2-user/projects/{0}'.format(env.project_name))
-    run('chmod -R oug+x /home/ec2-user/projects/{0}/html'.format(env.project_name))
-    run('chmod ug+w /home/ec2-user/projects/{0}/log_*'.format(env.project_name))
-    run('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(env.project_name))
+        # This is needed because the files that Apache serve are inside the user's home directory.
+        run('chmod 711 /home/ec2-user')
+        run('chmod -R oug+r /home/ec2-user/projects/{0}'.format(env.project_name))
+        run('chmod -R oug+x /home/ec2-user/projects/{0}/html'.format(env.project_name))
+        run('chmod ug+w /home/ec2-user/projects/{0}/log_*'.format(env.project_name))
+        run('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(env.project_name))
 
-    # Setup the forums
-    with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
-        run('php create_forums.php')
+        # Setup the forums
+        with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
+            run('php create_forums.php')
 
-    # Copy files into place
-    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
-        run('fab --set project_name={0} create_first_version'.format(env.project_name))
-        run('fab --set project_name={0} start_daemons'.format(env.project_name))
+        # Copy files into place
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+            run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
+            run('fab --set project_name={0} create_first_version'.format(env.project_name))
+            run('fab --set project_name={0} start_daemons'.format(env.project_name))
 
-    # Setup the crontab job to keep things ticking
-    run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
-    run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
-    run('crontab /tmp/crontab.txt')
+        # Setup the crontab job to keep things ticking
+        run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
+        run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
+        run('crontab /tmp/crontab.txt')
 
-    # Setup the ops area password
-    with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
-        run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
+        # Setup the ops area password
+        with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
+            run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
+
+        # Create users and start services
+        sudo('usermod -a -G ec2-user apache')
+        sudo('chkconfig httpd --add')
+        sudo('chkconfig httpd on')
+        sudo('service httpd start')
 
     # Setup the logrotation
     sudo('''echo "/home/ec2-user/projects/{0}/log_*/*.log
@@ -460,6 +440,7 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
     run('ssh-keygen -t rsa -N "" -f /home/ec2-user/.ssh/id_rsa')
     run('cat /home/ec2-user/.ssh/id_rsa.pub >> /home/ec2-user/.ssh/authorized_keys')
 
+
 def to_boolean(choice, default=False):
     """
     Convert the yes/no to true/false
@@ -467,177 +448,192 @@ def to_boolean(choice, default=False):
     :param choice: the text string input
     :type choice: string
     """
-    valid = {"yes":True,   "y":True,  "ye":True,
-             "no":False,     "n":False}
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
     choice_lower = choice.lower()
     if choice_lower in valid:
         return valid[choice_lower]
 
     return default
 
-def yum_install():
+
+def yum_update():
+    """
+    Make sure things are up to date
+    """
     # Update the AMI completely
     sudo('yum --assumeyes --quiet update')
 
-    # Install xfsprogs, puppet and git
-    sudo('yum --assumeyes --quiet install xfsprogs puppet git')
+
+def resize_file_system():
+    """
+    Resize the file system as AWS doesn't do that when you start an AMI
+    """
+    # Resize the file system
+    sudo('resize2fs /dev/sda1')
+
+
+def yum_pip_update():
+    """
+    Make sure things are up to date
+    """
+    # Update the AMI completely
+    sudo('yum --assumeyes --quiet update')
+
+    # Update the pip install
+    sudo('pip-2.7 install -U {0}'.format(PIP_PACKAGES))
+
 
 @task
 @serial
-def setup_env():
-    """Configure the single server environment
+def base_setup_env():
+    """
+    Ask a series of questions before deploying to the cloud.
+    """
+    if 'ebs_size' not in env:
+        prompt('EBS Size (GB): ', 'ebs_size', default=20, validate=int)
+    if 'ami_name' not in env:
+        prompt('AMI Name: ', 'ami_name', default='BasePythonSetup')
 
+    # Create the instance in AWS
+    ec2_instance, ec2_connection = create_instance(env.ebs_size, env.ami_name)
+    env.ec2_instance = ec2_instance
+    env.ec2_connection = ec2_connection
+    env.hosts = [ec2_instance.dns_name]
+
+    # Add these to so we connect magically
+    env.user = USERNAME
+    env.key_filename = AWS_KEY
+
+
+@task
+@serial
+def base_build_ami():
+    """
+    Build the base AMI
+    """
+    require('hosts', provided_by=[base_setup_env])
+
+    # Make sure yum is up to date
+    yum_update()
+
+    # Make the swap we might need
+    make_swap()
+
+    # Perform the base install
+    base_install()
+
+    # Save the instance as an AMI
+    puts("Stopping the instance")
+    env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
+    while not env.ec2_instance.update() == 'stopped':
+        fastprint('.')
+        time.sleep(5)
+
+    puts("The AMI is being created. Don't forget to terminate the instance if not needed")
+    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base BOINC-MAGPHYS AMI')
+
+    puts('All done')
+
+@task
+@serial
+def boinc_setup_env():
+    """
     Ask a series of questions before deploying to the cloud.
 
     Allow the user to select if a Elastic IP address is to be used
     """
-    if 'instances' not in env:
-        prompt('Number of instances: ', 'instances')
-    if 'ebs_size' not in env:
-        prompt('EBS Size (GB): ', 'ebs_size')
+    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
+    ec2_connection = boto.connect_ec2()
+    images = ec2_connection.get_all_images(owners=['self'])
+    puts('Available images')
+    for image in images:
+        puts('Image: {0: <15} {1: <35} {2}'.format(image.id, image.name, image.description))
+
+    if 'ami_name' not in env:
+        prompt('AMI id to build from: ', 'ami_id')
     if 'ops_username' not in env:
-        prompt('Ops area username: ', 'ops_username')
+        prompt('Ops area username: ', 'ops_username', default='user')
     if 'ops_password' not in env:
         prompt('Password: ', 'ops_password')
-    if 'instance_stub_name' not in env:
-        prompt('AWS Instance name stub: ', 'instance_stub_name')
     if 'project_name' not in env:
         prompt('BOINC project name: ', 'project_name')
+
+    # Check the names supplied
+    for char in ['_', '.', ',', '-', '+']:
+        if char in env.project_name:
+            abort('The project name must just contain [A-Z][a-z][0-9]')
+
+    if 'instance_name' not in env:
+        prompt('AWS Instance name: ', 'instance_name', default=env.project_name)
+    if 'aws_user' not in env:
+        prompt('AWS User:', 'aws_user', default='pogs_test')
     if 'gmail_account' not in env:
-        prompt('GMail Account:', 'gmail_account')
+        prompt('GMail Account:', 'gmail_account', default=env.project_name)
     if 'gmail_password' not in env:
         prompt('GMail Password:', 'gmail_password')
-    if 'docmosis_key' not in env:
-        prompt('Docmosis Key:', 'docmosis_key')
+    if 'branch' not in env:
+        prompt('Git Branch <return> for master:', 'branch')
+    if 'create_s3' not in env:
+        prompt('Create S3 Buckets:', 'create_s3', default='Y')
+    if 'start_boinc' not in env:
+        prompt('Start the BOINC system:', 'start_boinc', default='Y')
+    if 'subnet_id' not in env:
+        prompt('The subnet id:', 'subnet_id', default='')
+
+    # Check the aws key exists
+    file_name = get_aws_keyfile()
+    if not os.path.exists(file_name):
+        abort('Could not find the file {0}'.format(file_name))
 
     # Create the instance in AWS
-    host_names = create_instance(env.instance_stub_name, env.instances, env.ebs_size)
-    env.hosts = host_names
+    ec2_instance = start_ami_instance(env.ami_id, env.instance_name, env.subnet_id)
+    env.hosts = [ec2_instance.dns_name]
     env.user = USERNAME
     env.key_filename = AWS_KEY
-    env.roledefs = {
-        'main' : [host_names[0]],
-        'additional' : host_names[1:]
-    }
+
 
 @task
 @serial
-def single_server():
-    """
-    Copy the files and start building a single server
-    """
-    require('hosts', provided_by=[setup_env])
-
-    yum_install()
-
-    # Wait for things to settle down
-    time.sleep(15)
-    format_drive()
-
-    # Wait for things to settle down
-    time.sleep(15)
-
-@task
-@serial
-def gluster1():
-    """
-    Copy the files and start Gluster
-    """
-    require('hosts', provided_by=[setup_env])
-
-    yum_install()
-    gluster_install()
-
-    # Wait for things to settle down
-    time.sleep(15)
-    format_drive()
-
-    # Wait for things to settle down
-    time.sleep(15)
-
-@task
-@serial
-def gluster2():
-    """
-    Because AWS has public and private names we need to do the peer probe on all the nodes
-    """
-    require('hosts', provided_by=[setup_env])
-
-    gluster_probe()
-
-    # Wait for things to settle down
-    time.sleep(15)
-
-@task
-@serial
-def gluster3():
-    """
-    Create and Start the Gluster Volume (on host[0]) and mount it on all nodes
-    """
-    require('hosts', provided_by=[setup_env])
-
-    gluster_mount()
-
-    # Wait for things to settle down
-    time.sleep(15)
-    create_shared_home()
-
-    # Wait for things to settle down
-    time.sleep(15)
-
-@task
-@serial
-def deploy_with_db():
+def boinc_deploy_with_db():
     """
     Deploy the single server environment
 
     Deploy the single server system in the AWS cloud with everything running on a single server
     """
-    require('hosts', provided_by=[setup_env])
+    require('hosts', provided_by=[boinc_setup_env])
 
+    resize_file_system()
+    yum_pip_update()
     copy_public_keys()
-    base_install(env.host_string == env.hosts[0])
 
     # Wait for things to settle down
     time.sleep(5)
-    build_mod_wsgi()
+    boinc_install(True)
 
-    # Wait for things to settle down
-    time.sleep(5)
-    if env.host_string == env.hosts[0]:
-        single_install(True)
-
-    # Wait for things to settle down
-    time.sleep(5)
 
 @task
 @serial
-def deploy_without_db():
+def boinc_deploy_without_db():
     """
     Deploy the single server environment
 
     Deploy the single server system in the AWS cloud with everything running on a single server
     """
-    require('hosts', provided_by=[setup_env])
+    require('hosts', provided_by=[boinc_setup_env])
 
+    resize_file_system()
+    yum_pip_update()
     copy_public_keys()
-    base_install(env.host_string == env.hosts[0])
 
     # Wait for things to settle down
     time.sleep(5)
-    build_mod_wsgi()
+    boinc_install(False)
 
-    # Wait for things to settle down
-    time.sleep(5)
-    if env.host_string == env.hosts[0]:
-        single_install(False)
-
-    # Wait for things to settle down
-    time.sleep(5)
 
 @task
 @serial
-def final_messages():
+def boinc_final_messages():
     """
     Print the final messages
     """
@@ -652,10 +648,6 @@ def final_messages():
 
 
 You need to do the following manual steps:
-
-Django
-1) Go to '/home/ec2-user/boinc-magphys/server/src/pogssite'
-2) run 'python27 manage.py syncdb' to initialise the django database
 
 SSH
 1) Edit the /etc/hosts file on each server and put in the hostname used
@@ -677,12 +669,6 @@ BOINC
 1) Modify the config.xml to run tasks on the other nodes
 2) If the database is on one of the servers setup the DB host in
    config.xml
-
-NGAS
-1) If you need to move files from the server install NGAS
-
-NAGIOS
-1) Edit the config file and put the server address in it
 
 
 ##########################################################################

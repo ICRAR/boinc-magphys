@@ -29,6 +29,7 @@ Look at the running galaxies and see if they are done
 import logging
 import os
 import sys
+import datetime
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -72,7 +73,7 @@ try:
 
     transaction = connection.begin()
     for galaxy_id in processed:
-        connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id = PROCESSED))
+        connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=PROCESSED, status_time=datetime.datetime.now()))
     transaction.commit()
 
     LOG.info('Marked %d galaxies ready for archiving', len(processed))

@@ -54,6 +54,7 @@ COBBLESTONE_FACTOR = 150.0
 BINS = 8
 START_BIN = 0.001
 
+
 def add_usage_data(contents):
     """
     Parse the XML and return the data to be added
@@ -68,7 +69,7 @@ def add_usage_data(contents):
     registered_users = 0
     for user in root:
         registered_users += 1
-        expavg_credit =  user.find('expavg_credit').text
+        expavg_credit = user.find('expavg_credit').text
         expavg_credit = float(expavg_credit)
 
         if expavg_credit > 1:
@@ -77,6 +78,7 @@ def add_usage_data(contents):
         gflops += expavg_credit
 
     return gflops / COBBLESTONE_FACTOR, active_users, registered_users
+
 
 def get_usage_data(dir_name, file_name):
     """
@@ -118,6 +120,7 @@ def get_usage_data(dir_name, file_name):
 
     output_file.close()
 
+
 def get_individual_data(dir_name, file_name, max_id):
     """
     Get the data we want to plot
@@ -148,7 +151,6 @@ def get_individual_data(dir_name, file_name, max_id):
             contents = gzip_file.read()
             gzip_file.close()
 
-
             # Extract the data
             root = ET.fromstring(contents)
             data = [0.0] * (max_id + 1)
@@ -159,12 +161,13 @@ def get_individual_data(dir_name, file_name, max_id):
                 user_id = user.find('id').text
                 user_id = int(user_id)
 
-                expavg_credit =  user.find('expavg_credit').text
+                expavg_credit = user.find('expavg_credit').text
                 expavg_credit = float(expavg_credit)
 
                 data[user_id] = expavg_credit
 
             writer.writerow(data)
+
 
 def plot_individual_data_stack(file_name):
     """
@@ -251,7 +254,7 @@ def plot_individual_data_stack(file_name):
         elif plot_count == BINS - 2:
             labels.append('> {0} Gflops'.format(edges[BINS - 2]))
         else:
-            labels.append('{0} to {1} Gflops'.format(edges[plot_count], edges[plot_count+1]))
+            labels.append('{0} to {1} Gflops'.format(edges[plot_count], edges[plot_count + 1]))
         plot_count += 1
     pyplot.legend(proxy, labels, loc=2, prop={'size': 10})
 
@@ -324,6 +327,7 @@ def plot_individual_data(file_name):
     pyplot.tight_layout()
     pdf_pages.savefig()
     pdf_pages.close()
+
 
 def plot_usage_data(file_name):
     """

@@ -28,6 +28,8 @@ Fabric to be run on the BOINC server to configure things
 
 # Add the parent directory to the path
 import sys
+import boto
+
 sys.path.append('..')
 
 from glob import glob
@@ -38,13 +40,18 @@ from fabric.state import env
 import socket
 from common.FileEditor import FileEditor
 
-APP_NAME="magphys_wrapper"
-PLATFORMS=["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu"]
-WINDOWS_PLATFORMS=["windows_x86_64", "windows_intelx86"]
+APP_NAME = "magphys_wrapper"
+PLATFORMS = ["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu", "arm-android-linux-gnu"]
+WINDOWS_PLATFORMS = ["windows_x86_64", "windows_intelx86"]
+
 
 def create_version_xml(platform, app_version, directory, exe):
     """
     Create the version.xml file
+    :param platform:
+    :param app_version:
+    :param directory:
+    :param exe:
     """
     outfile = open(directory + '/version.xml', 'w')
     outfile.write('''<version>
@@ -70,6 +77,7 @@ def create_version_xml(platform, app_version, directory, exe):
 </version>'''.format(platform, app_version, exe))
     outfile.close()
 
+
 def copy_files(app_version):
     """
     Copy the application files
@@ -79,13 +87,14 @@ def copy_files(app_version):
     for platform in PLATFORMS:
         local('mkdir -p /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
 
-        for file in glob('/home/ec2-user/boinc-magphys/client/platforms/{0}/*'.format(platform)):
-            head, tail = split(file)
-            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(file, APP_NAME, app_version, platform, env.project_name, tail))
+        for filename in glob('/home/ec2-user/boinc-magphys/client/platforms/{0}/*'.format(platform)):
+            head, tail = split(filename)
+            local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(filename, APP_NAME, app_version, platform, env.project_name, tail))
         if platform in WINDOWS_PLATFORMS:
             create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name), '.exe')
         else:
             create_version_xml(platform, app_version, '/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name), '')
+
 
 def sign_files(app_version):
     """
@@ -94,13 +103,14 @@ def sign_files(app_version):
     Sign the application files
     """
     for platform in PLATFORMS:
-        for file in glob('/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}/*'.format(APP_NAME, app_version, platform, env.project_name)):
-            path_ext = splitext(file)
+        for filename in glob('/home/ec2-user/projects/{3}/apps/{0}/{1}/{2}/*'.format(APP_NAME, app_version, platform, env.project_name)):
+            path_ext = splitext(filename)
             if len(path_ext) == 2 and (path_ext[1] == '.sig' or path_ext[1] == '.xml'):
                 # Ignore this one
                 pass
             else:
-                local('/home/ec2-user/boinc/tools/sign_executable {0} /home/ec2-user/projects/{1}/keys/code_sign_private | tee {0}.sig'.format(file, env.project_name))
+                local('/home/ec2-user/boinc/tools/sign_executable {0} /home/ec2-user/projects/{1}/keys/code_sign_private | tee {0}.sig'.format(filename, env.project_name))
+
 
 @task
 def edit_files():
@@ -126,6 +136,12 @@ def edit_files():
       <period> 24 hours </period>
       <disabled> 0 </disabled>
       <output> antique_file_deleter.out </output>
+    </task>
+    <task>
+      <cmd> find /home/ec2-user/projects/{0}/archives -type d -ctime +28 -exec rm -rf {} \;</cmd>
+      <period> 24 hours </period>
+      <disabled> 0 </disabled>
+      <output> db_purge_clean_up.out </output>
     </task>
     <task>
       <cmd>db_dump -d 2 --dump_spec ../db_dump_spec.xml</cmd>
@@ -188,7 +204,7 @@ def edit_files():
       <output> update_credit.out </output>
     </task>
     <task>
-      <cmd> /home/ec2-user/boinc-magphys/post-processing/src/build_png_image.py </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/image/build_png_image.py </cmd>
       <period> 3 hour </period>
       <disabled> 0 </disabled>
       <output> build_png_image.out </output>
@@ -198,12 +214,6 @@ def edit_files():
       <period> 9 minutes </period>
       <disabled> 0 </disabled>
       <output> fits2wu.out </output>
-    </task>
-    <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/docmosis/docmosis_worker.py </cmd>
-      <period> 4 min </period>
-      <disabled> 0 </disabled>
-      <output> docmosis_worker.out </output>
     </task>
     <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/delete_galaxy_task.py </cmd>
@@ -241,58 +251,33 @@ def edit_files():
       <cmd> file_deleter -d 2 </cmd>
     </daemon>
     <daemon>
+      <cmd> db_purge -min_age_days 14 --max_wu_per_file 10000 --gzip --daily_dir  -d 2 </cmd>
+    </daemon>
+    <daemon>
       <cmd> /home/ec2-user/boinc-magphys/server/src/magphys_validator/magphys_validator -d 3 --app magphys_wrapper --credit_from_wu --update_credited_job </cmd>
       <pid_file> magphys_validator.pid </pid_file>
       <output> magphys_validator.log </output>
     </daemon>
     <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 0 </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper</cmd>
       <output> assimilator.0.log </output>
       <pid_file> assimilator.0.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 1 </cmd>
-      <output> assimilator.1.log </output>
-      <pid_file> assimilator.1.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 2 </cmd>
-      <output> assimilator.2.log </output>
-      <pid_file> assimilator.2.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 3 </cmd>
-      <output> assimilator.3.log </output>
-      <pid_file> assimilator.3.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 4 </cmd>
-      <output> assimilator.4.log </output>
-      <pid_file> assimilator.4.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
-    <daemon>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/assimilator/magphys_assimilator.py -d 3 -app magphys_wrapper -mod 6 5 </cmd>
-      <output> assimilator.5.log </output>
-      <pid_file> assimilator.5.pid </pid_file>
-      <disabled>0</disabled>
-    </daemon>
   </daemons>'''.format(env.project_name))
-    file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>',to='''
+    file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>', to='''
     <prefer_primary_platform>1</prefer_primary_platform>
     <max_wus_in_progress>10</max_wus_in_progress>
     <shmem_work_items>200</shmem_work_items>
     <feeder_query_size>300</feeder_query_size>
     <reliable_priority_on_over>5</reliable_priority_on_over>
     <delete_delay_hours>24</delete_delay_hours>
+    <uldl_dir_fanout>1024</uldl_dir_fanout>
     <msg_to_host/>
     <one_result_per_user_per_wu/>
     <one_result_per_host_per_wu/>''')
     file_editor('/home/ec2-user/projects/{0}/config.xml'.format(env.project_name))
+
 
 @task
 def setup_postfix():
@@ -307,6 +292,7 @@ root@{0}.ec2.internal      {1}@gmail.com
 apache@{0}.ec2.internal    {1}@gmail.com" >> /etc/postfix/generic' '''.format(host_name, env.gmail_account))
     local('sudo postmap /etc/postfix/generic')
 
+
 @task
 def setup_website():
     """
@@ -315,7 +301,7 @@ def setup_website():
     Copy the config files and restart the httpd daemon
     """
     local('sudo cp /home/ec2-user/projects/{0}/{0}.httpd.conf /etc/httpd/conf.d'.format(env.project_name))
-    local('sudo /etc/init.d/httpd restart')
+
 
 @task
 def create_first_version():
@@ -334,6 +320,7 @@ def create_first_version():
     local('cd /home/ec2-user/projects/{0}; bin/xadd'.format(env.project_name))
     local('cd /home/ec2-user/projects/{0}; yes | bin/update_versions'.format(env.project_name))
 
+
 @task
 def create_new_version():
     """
@@ -349,6 +336,7 @@ def create_new_version():
     # Not sure why, but the with cd() doesn't work
     local('cd /home/ec2-user/projects/{0}; yes | bin/update_versions'.format(env.project_name))
 
+
 @task
 def start_daemons():
     """
@@ -357,3 +345,37 @@ def start_daemons():
     Run the BOINC script to start the daemons
     """
     local('cd /home/ec2-user/projects/{0}; bin/start'.format(env.project_name))
+
+
+@task
+def create_s3():
+    """
+    Create the S3 buckets
+
+    All the buckets use the galaxy name as the 'folder'
+    :return:
+    """
+    # Create the bucket for the images
+    s3 = boto.connect_s3()
+    images_bucket = 'icrar.{0}.galaxy-images'.format(env.project_name)
+    bucket = s3.create_bucket(images_bucket)
+    bucket.set_acl('public-read')
+    bucket.configure_website(suffix='index.html')
+    bucket.set_policy('''{
+  "Statement":[
+    {
+        "Sid":"PublicReadForGetBucketObjects",
+        "Effect":"Allow",
+        "Principal": {
+                "AWS": "*"
+        },
+        "Action":["s3:GetObject"],
+        "Resource":["arn:aws:s3:::%s/*"]
+    }
+  ]
+}
+''' % images_bucket)
+
+    # Create the bucket for the output files
+    file_bucket = 'icrar.{0}.files'.format(env.project_name)
+    s3.create_bucket(file_bucket)

@@ -28,13 +28,14 @@ Image generation
 import logging
 import pyfits
 import math
-import os
 import numpy
 from PIL import Image
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
+from config import WG_TMP
 from database.database_support_core import IMAGE_FILTERS_USED, FILTER, AREA, AREA_USER
-from image import directory_mod
+from utils.name_builder import get_colour_image_key, get_thumbnail_colour_image_key
+from utils.s3_helper import add_file_to_bucket
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -45,128 +46,153 @@ class ImageBuilder:
     This class scales each colour such that the median is centered on 1, and them applies the
     asinh() function to the value.  The hiCut is set to truncate the top 200 values.
     """
-    debug = False
-    imageFileName = ""
-    thumbnailFileName = ""
-    image = None
-    redFilter = 0
-    greenFilter = 0
-    blueFilter = 0
-    redData = None
-    blueData = None
-    greenData = None
-    width = 0
-    height = 0
-    blackRGB = (0, 0, 0)
+    _image_file_key = ""
+    _thumbnail_file_key = ""
+    _image = None
+    _red_filter = 0
+    _green_filter = 0
+    _blue_filter = 0
+    _red_data = None
+    _blue_data = None
+    _green_data = None
+    _width = 0
+    _height = 0
+    _black_RGB = (0, 0, 0)
 
-    redHiCut = math.pi/2
-    redMedian = 0
-    greenHiCut = math.pi/2
-    greenMedian = 0
-    blueHiCut = math.pi/2
-    blueMedian = 0
+    _red_hi_cut = math.pi / 2
+    _red_median = 0
+    _green_hi_cut = math.pi / 2
+    _green_median = 0
+    _blue_hi_cut = math.pi / 2
+    _blue_median = 0
 
-    centre = 0.6
+    _centre = 0.6
 
-    def __init__(self, image_number, imageFileName, thumbnailFileName, redFilter, greenFilter, blueFilter, width, height, debug, centre, connection, galaxy_id):
-        self.imageFileName = imageFileName
-        self.thumbnailFileName = thumbnailFileName
-        self.redFilter = redFilter
-        self.greenFilter = greenFilter
-        self.blueFilter = blueFilter
-        self.width = width
-        self.height = height
-        self.debug = debug
-        self.centre = centre
-        self.image = Image.new("RGB", (self.width, self.height), self.blackRGB)
+    def __init__(self, bucket, image_number, image_file_key, thumbnail_file_key, red_filter, green_filter, blue_filter, width, height, centre, connection, galaxy_id):
+        """
+        Initialise the builder
 
-        # Get the id's before we build as SqlAlchemy flushes which will cause an error as
-        filter_id_red = self._get_filter_id(connection, redFilter)
-        filter_id_blue = self._get_filter_id(connection, blueFilter)
-        filter_id_green = self._get_filter_id(connection, greenFilter)
+        :param bucket:
+        :param image_number:
+        :param image_file_key:
+        :param thumbnail_file_key:
+        :param red_filter:
+        :param green_filter:
+        :param blue_filter:
+        :param width:
+        :param height:
+        :param centre:
+        :param connection:
+        :param galaxy_id:
+        :return:
+        """
+        self._bucket = bucket
+        self._image_file_key = image_file_key
+        self._thumbnail_file_key = thumbnail_file_key
+        self._red_filter = red_filter
+        self._green_filter = green_filter
+        self._blue_filter = blue_filter
+        self._width = width
+        self._height = height
+        self._centre = centre
+        self._image = Image.new("RGB", (self._width, self._height), self._black_RGB)
 
-        image_filters_used = connection.execute(select([IMAGE_FILTERS_USED]).where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id, IMAGE_FILTERS_USED.c.image_number == image_number))).first()
+        # Get the id's before we build as SqlAlchemy flushes which will cause an error
+        filter_id_red = self._get_filter_id(connection, red_filter)
+        filter_id_blue = self._get_filter_id(connection, blue_filter)
+        filter_id_green = self._get_filter_id(connection, green_filter)
+
+        image_filters_used = connection.execute(select([IMAGE_FILTERS_USED])
+                                                .where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id, IMAGE_FILTERS_USED.c.image_number == image_number))).first()
         if image_filters_used is None:
-            connection.execute(IMAGE_FILTERS_USED.insert().values(image_number = image_number,
-                galaxy_id = galaxy_id,
-                filter_id_red = filter_id_red,
-                filter_id_blue = filter_id_blue,
-                filter_id_green = filter_id_green))
+            connection.execute(IMAGE_FILTERS_USED.insert()
+                               .values(image_number=image_number,
+                                       galaxy_id=galaxy_id,
+                                       filter_id_red=filter_id_red,
+                                       filter_id_blue=filter_id_blue,
+                                       filter_id_green=filter_id_green))
         else:
-            connection.execute(IMAGE_FILTERS_USED.update().where(IMAGE_FILTERS_USED.c.image_filters_used_id == image_filters_used[IMAGE_FILTERS_USED.c.image_filters_used_id]).values(image_number = image_number,
-                galaxy_id = galaxy_id,
-                filter_id_red = filter_id_red,
-                filter_id_blue = filter_id_blue,
-                filter_id_green = filter_id_green))
+            connection.execute(IMAGE_FILTERS_USED.update()
+                               .where(IMAGE_FILTERS_USED.c.image_filters_used_id == image_filters_used[IMAGE_FILTERS_USED.c.image_filters_used_id])
+                               .values(image_number=image_number,
+                                       galaxy_id=galaxy_id,
+                                       filter_id_red=filter_id_red,
+                                       filter_id_blue=filter_id_blue,
+                                       filter_id_green=filter_id_green))
 
     def _get_filter_id(self, connection, filter_number):
-        filter = connection.execute(select([FILTER]).where(FILTER.c.filter_number == filter_number)).first()
-        return filter[FILTER.c.filter_id]
+        filter_data = connection.execute(select([FILTER]).where(FILTER.c.filter_number == filter_number)).first()
+        return filter_data[FILTER.c.filter_id]
 
-    def setData(self, filter, data):
+    def set_data(self, filter_band, data):
         values = []
-        for x in range(0, self.width-1):
-            for y in range(0, self.height-1):
+        for x in range(0, self._width - 1):
+            for y in range(0, self._height - 1):
                 value = data[y, x]
                 if not math.isnan(value) and value > 0:
                     values.append(value)
 
         values.sort()
         if len(values) > 1000:
-            topCount = int(len(values)*0.005)
-            topValue = values[len(values)-topCount]
+            top_count = int(len(values) * 0.005)
+            top_value = values[len(values) - top_count]
         elif len(values) > 0:
-            topValue = values[len(values)-1]
+            top_value = values[len(values) - 1]
         else:
-            topValue = 1
+            top_value = 1
+
         if len(values) > 1:
-            medianvalue = values[int(len(values)/2)]
+            median_value = values[int(len(values) / 2)]
         elif len(values) > 0:
-            medianvalue = values[0]
+            median_value = values[0]
         else:
-            medianvalue = 1
+            median_value = 1
 
-        if self.redFilter == filter:
-            self.redData = numpy.copy(data)
-            self.redHiCut = topValue
-            self.redMedian = medianvalue
-        elif self.greenFilter == filter:
-            self.greenData = numpy.copy(data)
-            self.greenHiCut = topValue
-            self.greenMedian = medianvalue
-        elif self.blueFilter == filter:
-            self.blueData = numpy.copy(data)
-            self.blueHiCut = topValue
-            self.blueMedian = medianvalue
+        if self._red_filter == filter_band:
+            self._red_data = numpy.copy(data)
+            self._red_hi_cut = top_value
+            self._red_median = median_value
+        elif self._green_filter == filter_band:
+            self._green_data = numpy.copy(data)
+            self._green_hi_cut = top_value
+            self._green_median = median_value
+        elif self._blue_filter == filter_band:
+            self._blue_data = numpy.copy(data)
+            self._blue_hi_cut = top_value
+            self._blue_median = median_value
 
-    def isValid(self):
-        if self.redData is None or self.greenData is None or self.blueData is None:
+    def is_valid(self):
+        if self._red_data is None or self._green_data is None or self._blue_data is None:
             return False
         else:
             return True
 
-    def saveImage(self):
-        redSigma = self.centre / self.redMedian
-        greenSigma = self.centre / self.greenMedian
-        blueSigma = self.centre / self.blueMedian
+    def save_image(self):
+        """
+        Save the image
+        :return:
+        """
+        red_sigma = self._centre / self._red_median
+        green_sigma = self._centre / self._green_median
+        blue_sigma = self._centre / self._blue_median
 
-        redMult = 255.0 / math.asinh(self.redHiCut * redSigma)
-        greenMult = 255.0 / math.asinh(self.greenHiCut * greenSigma)
-        blueMult = 255.0 / math.asinh(self.blueHiCut * blueSigma)
+        red_multiplier = 255.0 / math.asinh(self._red_hi_cut * red_sigma)
+        green_multiplier = 255.0 / math.asinh(self._green_hi_cut * green_sigma)
+        blue_multiplier = 255.0 / math.asinh(self._blue_hi_cut * blue_sigma)
 
-        redValuerange = []
-        greenValuerange = []
-        blueValuerange = []
+        red_value_range = []
+        green_value_range = []
+        blue_value_range = []
         for z in range(0, 256):
-            redValuerange.append(0)
-            greenValuerange.append(0)
-            blueValuerange.append(0)
+            red_value_range.append(0)
+            green_value_range.append(0)
+            blue_value_range.append(0)
 
-        for x in range(0, self.width-1):
-            for y in range(0, self.height-1):
-                red = self.redData[y,x]
-                green = self.greenData[y,x]
-                blue = self.blueData[y,x]
+        for x in range(0, self._width - 1):
+            for y in range(0, self._height - 1):
+                red = self._red_data[y, x]
+                green = self._green_data[y, x]
+                blue = self._blue_data[y, x]
                 if math.isnan(red):
                     red = 0
                 if math.isnan(green):
@@ -174,9 +200,9 @@ class ImageBuilder:
                 if math.isnan(blue):
                     blue = 0
                 if red > 0 or green > 0 or blue > 0:
-                    red = math.asinh(red * redSigma) * redMult
-                    green = math.asinh(green * greenSigma) * greenMult
-                    blue = math.asinh(blue * blueSigma) * blueMult
+                    red = math.asinh(red * red_sigma) * red_multiplier
+                    green = math.asinh(green * green_sigma) * green_multiplier
+                    blue = math.asinh(blue * blue_sigma) * blue_multiplier
                     if red < 0:
                         red = 0
                     elif red > 255:
@@ -193,19 +219,28 @@ class ImageBuilder:
                     green = int(green)
                     blue = int(blue)
 
-                    redValuerange[red] += 1
-                    greenValuerange[green] += 1
-                    blueValuerange[blue] += 1
-                    self.image.putpixel((x, self.height-y-1), (red, green, blue))
-        self.image.save(self.imageFileName)
+                    red_value_range[red] += 1
+                    green_value_range[green] += 1
+                    blue_value_range[blue] += 1
+                    self._image.putpixel((x, self._height - y - 1), (red, green, blue))
 
-        if self.thumbnailFileName:
-            self.image = self.image.resize((80,80), Image.ANTIALIAS)
-            self.image.save(self.thumbnailFileName)
+        self._save_to_s3(self._image_file_key)
 
-        if self.debug:
-            for z in range(0, 256):
-                print z, redValuerange[z], greenValuerange[z], blueValuerange[z]
+        if self._thumbnail_file_key:
+            self._image = self._image.resize((80, 80), Image.ANTIALIAS)
+            self._save_to_s3(self._thumbnail_file_key)
+
+    def _save_to_s3(self, image_file_key):
+        """
+        Save the image to an S3 bucket
+
+        :param image_file_key:
+        :return:
+        """
+        LOG.info('Saving an image to {0}'.format(image_file_key))
+        file_name = '{0}/image.png'.format(WG_TMP)
+        self._image.save(file_name)
+        add_file_to_bucket(self._bucket, image_file_key, file_name)
 
 
 class FitsImage:
@@ -216,21 +251,26 @@ class FitsImage:
         self.sigma = None
         self._connection = connection
 
-    def buildImage(self, fitsFileName, imageDirName, imagePrefixName, debug, galaxy_id):
+    def build_image(self, fits_file_name, image_key_stub, galaxy_id, bucket):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
+        :param fits_file_name:
+        :param image_key_stub:
+        :param galaxy_id:
+        :param bucket:
         """
         # Use the new asinh algorithm.
-        self._buildImageAsinh(fitsFileName, imageDirName, imagePrefixName, debug, self.centre, galaxy_id)
+        self._build_Image_Asinh(fits_file_name, image_key_stub, self.centre, galaxy_id, bucket)
 
     def _get_image_filters(self, hdulist):
         """
         Get the combinations to use
+        :param hdulist:
         """
-        image1_filters = [0,0,0]
-        image2_filters = [0,0,0]
-        image3_filters = [0,0,0]
-        image4_filters = [0,0,0]
+        image1_filters = [0, 0, 0]
+        image2_filters = [0, 0, 0]
+        image3_filters = [0, 0, 0]
+        image4_filters = [0, 0, 0]
 
         filters_used = []
 
@@ -238,30 +278,17 @@ class FitsImage:
             filter_number = hdu.header['MAGPHYSI']
             filters_used.append(filter_number)
 
-        if 323 in filters_used \
-            and 324 in filters_used \
-            and 325 in filters_used \
-            and 326 in filters_used \
-            and 327 in filters_used:
+        if 323 in filters_used and 324 in filters_used and 325 in filters_used and 326 in filters_used and 327 in filters_used:
             image1_filters = [326, 325, 324]
             image2_filters = [325, 324, 323]
             image3_filters = [326, 324, 323]
             image4_filters = [327, 325, 323]
-        elif 229 in filters_used\
-            and 230 in filters_used\
-            and 231 in filters_used\
-            and 232 in filters_used\
-            and 233 in filters_used:
+        elif 229 in filters_used and 230 in filters_used and 231 in filters_used and 232 in filters_used and 233 in filters_used:
             image1_filters = [232, 231, 230]
             image2_filters = [231, 230, 229]
             image3_filters = [232, 230, 229]
             image4_filters = [233, 231, 229]
-        elif 116 in filters_used \
-            and 117 in filters_used \
-            and 118 in filters_used \
-            and 124 in filters_used \
-            and 280 in filters_used \
-            and 283 in filters_used:
+        elif 116 in filters_used and 117 in filters_used and 118 in filters_used and 124 in filters_used and 280 in filters_used and 283 in filters_used:
             image1_filters = [118, 117, 116]
             image2_filters = [117, 116, 124]
             image3_filters = [280, 116, 124]
@@ -271,23 +298,16 @@ class FitsImage:
 
         return image1_filters, image2_filters, image3_filters, image4_filters
 
-    def _buildImageAsinh(self, fitsFileName, imageDirName, imagePrefixName, debug, centre, galaxy_id):
+    def _build_Image_Asinh(self, fits_file_name, galaxy_key_stub, centre, galaxy_id, bucket):
         """
         Build Three Colour Images using the asinh() function.
+        :param fits_file_name:
+        :param galaxy_key_stub:
+        :param centre:
+        :param galaxy_id:
+        :param bucket:
         """
-        if imageDirName[-1] != "/":
-            imageDirName += "/"
-        if os.path.isfile(imageDirName):
-            LOG.info('Directory %s exists', imageDirName)
-            return 1
-        elif os.path.isdir(imageDirName):
-            pass
-        else:
-            os.mkdir(imageDirName)
-
-        hdulist = pyfits.open(fitsFileName, memmap=True)
-        if debug:
-            hdulist.info()
+        hdulist = pyfits.open(fits_file_name, memmap=True)
 
         hdu = hdulist[0]
         width = hdu.header['NAXIS1']
@@ -296,76 +316,104 @@ class FitsImage:
         (image1_filters, image2_filters, image3_filters, image4_filters) = self._get_image_filters(hdulist)
 
         # Create Three Colour Images
-        image1 = ImageBuilder(1, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 1, True),
-            directory_mod.get_thumbnail_colour_image_path(imageDirName, imagePrefixName, 1, True),
-            image1_filters[0], image1_filters[1], image1_filters[2], width, height, debug, centre, self._connection, galaxy_id) # i, r, g
-        image2 = ImageBuilder(2, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 2, True), None,
-            image2_filters[0], image2_filters[1], image2_filters[2], width, height, debug, centre, self._connection, galaxy_id) # r, g, NUV
-        image3 = ImageBuilder(3, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 3, True), None,
-            image3_filters[0], image3_filters[1], image3_filters[2], width, height, debug, centre, self._connection, galaxy_id) # 3.6, g, NUV
-        image4 = ImageBuilder(4, directory_mod.get_colour_image_path(imageDirName, imagePrefixName, 4, True), None,
-            image4_filters[0], image4_filters[1], image4_filters[2], width, height, debug, centre, self._connection, galaxy_id) # 22, r, NUV
+        image1 = ImageBuilder(bucket,
+                              1,
+                              get_colour_image_key(galaxy_key_stub, 1),
+                              get_thumbnail_colour_image_key(galaxy_key_stub, 1),
+                              image1_filters[0],
+                              image1_filters[1],
+                              image1_filters[2],
+                              width,
+                              height,
+                              centre,
+                              self._connection,
+                              galaxy_id)  # i, r, g
+        image2 = ImageBuilder(bucket,
+                              2,
+                              get_colour_image_key(galaxy_key_stub, 2),
+                              None,
+                              image2_filters[0],
+                              image2_filters[1],
+                              image2_filters[2],
+                              width,
+                              height,
+                              centre,
+                              self._connection,
+                              galaxy_id)  # r, g, NUV
+        image3 = ImageBuilder(bucket,
+                              3,
+                              get_colour_image_key(galaxy_key_stub, 3),
+                              None,
+                              image3_filters[0],
+                              image3_filters[1],
+                              image3_filters[2],
+                              width,
+                              height,
+                              centre,
+                              self._connection,
+                              galaxy_id)  # 3.6, g, NUV
+        image4 = ImageBuilder(bucket,
+                              4,
+                              get_colour_image_key(galaxy_key_stub, 4),
+                              None,
+                              image4_filters[0],
+                              image4_filters[1],
+                              image4_filters[2],
+                              width,
+                              height,
+                              centre,
+                              self._connection,
+                              galaxy_id)  # 22, r, NUV
         images = [image1, image2, image3, image4]
 
-        file = 0
         for hdu in hdulist:
-            file += 1
-            if debug:
-                print hdu,
-                print file
-
-            filter = hdu.header['MAGPHYSI']
+            filter_band = hdu.header['MAGPHYSI']
             for image in images:
-                image.setData(filter, hdu.data)
+                image.set_data(filter_band, hdu.data)
 
         for image in images:
-            if image.isValid():
-                image.saveImage()
+            if image.is_valid():
+                image.save_image()
             else:
                 print 'not valid'
 
         hdulist.close()
 
-    def applyFunc(self, value, method):
-        if method == 'atan':
-            return math.atan(value / self.sigma)
-        elif method == 'log':
-            return math.log((value / self.sigma) + 1.0)
-        elif method == 'log-old':
-            return math.log(value)
-        elif method == 'log10':
-            return math.log(value, 10.0)
-        elif method == 'asinh':
-            return math.asinh(value / self.sigma)
-        else:
-           return value
-
-    def mark_image(self, inImageFileName, outImageFileName, galaxy_id, userid):
+    def mark_image(self, in_image_file_name, out_image_file_name, galaxy_id, userid):
         """
         Read the image for the galaxy and generate an image that highlights the areas
         that the specified user has generated results.
+        :param in_image_file_name:
+        :param out_image_file_name:
+        :param galaxy_id:
+        :param userid:
         """
-        image = Image.open(inImageFileName, "r").convert("RGBA")
+        image = Image.open(in_image_file_name, "r").convert("RGBA")
         width, height = image.size
         LOG.info('Width: {0}, Height: {1}'.format(width, height))
 
-        areas = self._connection.execute(select([AREA], from_obj=AREA.join(AREA_USER)).where(and_(AREA_USER.c.userid == userid, AREA.c.galaxy_id == galaxy_id)).order_by(AREA.c.top_x, AREA.c.top_y))
+        areas = self._connection.execute(select([AREA], from_obj=AREA.join(AREA_USER))
+                                         .where(and_(AREA_USER.c.userid == userid, AREA.c.galaxy_id == galaxy_id))
+                                         .order_by(AREA.c.top_x, AREA.c.top_y))
 
         for area in areas:
             # LOG.info('top_x: {0}, bottom_x: {1}, top_y: {2}, bottom_y: {3}'.format(area[AREA.c.top_x], area[AREA.c.bottom_x], area[AREA.c.top_y], area[AREA.c.bottom_y]))
             for x in range(area[AREA.c.top_x], area[AREA.c.bottom_x]):
                 for y in range(area[AREA.c.top_y], area[AREA.c.bottom_y]):
                     if x < width and y < height:
-                        self.markPixel(image, x, height-y-1)
+                        self._mark_pixel(image, x, height - y - 1)
 
-        image.save(outImageFileName)
+        image.save(out_image_file_name)
 
-    def markPixel(self, image, x, y):
+    def _mark_pixel(self, image, x, y):
         """
         Mark the specified pixel to highlight the area where the user has
         generated results.
+        :param image:
+        :param x:
+        :param y:
         """
-        px = image.getpixel((x,y))
+        px = image.getpixel((x, y))
         r = int(px[0] + ((255 - px[0]) * 0.5))
         g = int(px[1] + ((255 - px[1]) * 0.5))
         b = int(px[2] + ((255 - px[2]) * 0.5))
@@ -381,4 +429,4 @@ class FitsImage:
             g = 85
         if b < 85:
             b = 85
-        image.putpixel((x,y), (r, g, b))
+        image.putpixel((x, y), (r, g, b))

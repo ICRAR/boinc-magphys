@@ -36,7 +36,6 @@ DB_NAME = None
 BOINC_DB_NAME = None
 DB_LOGIN = None
 BOINC_DB_LOGIN = None
-PLEIADES_DB_LOGIN = None
 
 db_file_name = dirname(__file__) + '/database.settings'
 if exists(db_file_name):
@@ -48,7 +47,6 @@ if exists(db_file_name):
     BOINC_DB_NAME = config['boincDatabaseName']
     DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@" + DB_HOSTNAME + "/" + DB_NAME
     BOINC_DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@" + DB_HOSTNAME + "/" + BOINC_DB_NAME
-    PLEIADES_DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@pleiades01.icrar.org/" + DB_NAME
 
 else:
     DB_LOGIN = "mysql://root:@localhost/magphys"
@@ -56,60 +54,41 @@ else:
     DB_PASSWORD = ''
     DB_HOSTNAME = 'localhost'
     DB_NAME = 'magphys'
-    boincDatabaseName = 'pogs'
+    BOINC_DB_NAME = 'pogs'
     BOINC_DB_LOGIN = "mysql://root:@localhost/pogs"
-
-############### Django Settings ###############
-
-DJANGO_TEMPLATE_DIR = None
-DJANGO_IMAGE_DIR = None
-DJANGO_FILE_NAME = dirname(__file__) + '/django.settings'
-if exists(DJANGO_FILE_NAME):
-    config = ConfigObj(DJANGO_FILE_NAME)
-    DJANGO_TEMPLATE_DIR = config['template_dir']
-    DJANGO_IMAGE_DIR = config['image_dir']
-
-    # TODO - Remove try block once supported in production
-    try:
-        DJANGO_DOCMOSIS_KEY = ''
-        DJANGO_DOCMOSIS_KEY = ''
-        DJANGO_DOCMOSIS_KEY = config['docmosis_key']
-        DJANGO_DOCMOSIS_TEMPLATE = config['docmosis_template']
-    except Exception, e:
-        print "Could not load key: %s" % e
-
-else:
-    DJANGO_TEMPLATE_DIR = '/Users/rob/development/boinc-magphys/server/src/templates'
-    DJANGO_IMAGE_DIR = '/Users/rob/magphys/POGS_NGC1209'
-    DJANGO_DOCMOSIS_KEY = 'default'
-    DJANGO_DOCMOSIS_TEMPLATE = 'default'
 
 ############### Work Generation Settings ###############
 
 work_generation_file_name = dirname(__file__) + '/work_generation.settings'
-WG_IMAGE_DIRECTORY = None
 WG_ROW_HEIGHT = None
 WG_MIN_PIXELS_PER_FILE = None
 WG_THRESHOLD = None
 WG_HIGH_WATER_MARK = None
 WG_BOINC_PROJECT_ROOT = None
 WG_REPORT_DEADLINE = None
+WG_PROJECT_NAME = None
+WG_TMP = None
+WG_DELETE_DELAY = None
 if exists(work_generation_file_name):
     config = ConfigObj(work_generation_file_name)
-    WG_IMAGE_DIRECTORY = config['image_directory']
     WG_MIN_PIXELS_PER_FILE = int(config['min_pixels_per_file'])
     WG_ROW_HEIGHT = int(config['row_height'])
     WG_THRESHOLD = int(config['threshold'])
     WG_HIGH_WATER_MARK = int(config['high_water_mark'])
     WG_BOINC_PROJECT_ROOT = config['boinc_project_root']
     WG_REPORT_DEADLINE = int(config['report_deadline'])
+    WG_PROJECT_NAME = config['project_name']
+    WG_TMP = config['tmp']
+    WG_DELETE_DELAY = config['delete_delay']
 else:
-    WG_IMAGE_DIRECTORY = '/home/ec2-user/galaxyImages'
     WG_MIN_PIXELS_PER_FILE = 15
     WG_ROW_HEIGHT = 10
     WG_THRESHOLD = 1500
     WG_HIGH_WATER_MARK = 3000
     WG_REPORT_DEADLINE = 7
+    WG_PROJECT_NAME = 'pogs_test'
+    WG_TMP = '/tmp'
+    WG_DELETE_DELAY = 5
 
 ############### Assimilator Settings ###############
 
@@ -119,6 +98,6 @@ MIN_HIST_VALUE = 0.01
 ############### DB Settings ###############
 COMPUTING = 0
 PROCESSED = 1
-ARCHIVED  = 2
-STORED    = 3
-DELETED   = 4
+ARCHIVED = 2
+STORED = 3
+DELETED = 4
