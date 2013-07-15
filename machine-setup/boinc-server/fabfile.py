@@ -54,7 +54,9 @@ INSTANCE_TYPE = 'm1.small'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
+KEY_NAME_VPC = 'icrar_theskynet_public_prod'
 SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
+SECURITY_GROUPS_VPC = ['default', 'Prod-theSkyNet']  # Security group allows SSH
 BOINC_AWS_KEYS = os.path.expanduser('~/Documents/Keys/aws')
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys/magphys')
 PIP_PACKAGES = 'sqlalchemy Numpy pyfits pil fabric configobj MySQL-python boto astropy'
@@ -111,11 +113,8 @@ def base_install():
         sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
         sudo('python2.7 setup.py install')
 
-    # Load the Gluster FS RPM's
-    run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-3.3.1-1.el6.x86_64.rpm')
-    run('wget http://download.gluster.org/pub/gluster/glusterfs/3.3/3.3.1/EPEL.repo/epel-6/x86_64/glusterfs-fuse-3.3.1-1.el6.x86_64.rpm')
-    sudo('yum --assumeyes --quiet install glusterfs*.rpm')
-    run('rm glusterfs*.rpm')
+    # Load NFS
+    sudo('yum --assumeyes --quiet install nfs-utils')
 
     sudo('mkdir -p /mnt/data')
 
@@ -178,7 +177,7 @@ def create_instance(ebs_size, ami_name):
     return instance, ec2_connection
 
 
-def start_ami_instance(ami_id, instance_name):
+def start_ami_instance(ami_id, instance_name, subnet_id):
     """
     Start an AMI instance running
     :param ami_id:
@@ -188,7 +187,12 @@ def start_ami_instance(ami_id, instance_name):
 
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     ec2_connection = boto.connect_ec2()
-    reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
+
+    if subnet_id == '':
+        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
+    else:
+        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME_VPC, security_groups=SECURITY_GROUPS_VPC, subnet_id=subnet_id)
+
     instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
     for i in range(4):
@@ -574,6 +578,8 @@ def boinc_setup_env():
         prompt('Create S3 Buckets:', 'create_s3', default='Y')
     if 'start_boinc' not in env:
         prompt('Start the BOINC system:', 'start_boinc', default='Y')
+    if 'subnet_id' not in env:
+        prompt('The subnet id:', 'subnet_id', default='')
 
     # Check the aws key exists
     file_name = get_aws_keyfile()
@@ -581,7 +587,7 @@ def boinc_setup_env():
         abort('Could not find the file {0}'.format(file_name))
 
     # Create the instance in AWS
-    ec2_instance = start_ami_instance(env.ami_id, env.instance_name)
+    ec2_instance = start_ami_instance(env.ami_id, env.instance_name, env.subnet_id)
     env.hosts = [ec2_instance.dns_name]
     env.user = USERNAME
     env.key_filename = AWS_KEY
