@@ -185,10 +185,10 @@ def start_ami_instance(ami_id, instance_name):
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     ec2_connection = boto.connect_ec2()
 
-    if env.vpc_id == '':
+    if env.subnet_id == '':
         reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
     else:
-        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME_VPC, security_groups=SECURITY_GROUPS_VPC)
+        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, subnet_id=env.subnet_id, key_name=KEY_NAME_VPC, security_groups=SECURITY_GROUPS_VPC)
 
     instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
@@ -578,20 +578,22 @@ def boinc_setup_env():
     if 'instance_name' not in env:
         prompt('AWS Instance name: ', 'instance_name', default='base-boinc-ami')
     if 'gmail_account' not in env:
-        prompt('GMail Account:', 'gmail_account')
+        prompt('GMail Account:', 'gmail_account', default='theSkyNet.BOINC')
     if 'gmail_password' not in env:
         prompt('GMail Password:', 'gmail_password')
     if 'nfs_server' not in env:
         prompt('NFS Server:', 'nfs_server', default='')
-    if 'vpc_id' not in env:
-        prompt('VPC id:', 'vpc_id', default='')
+    if 'subnet_id' not in env:
+        prompt('Subnet id:', 'subnet_id', default='')
 
     # Create the instance in AWS
     ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
-    env.hosts = [ec2_instance.dns_name]
-
+    if env.subnet_id == '':
+        env.hosts = [ec2_instance.public_dns_name]
+    else:
+        env.hosts = [ec2_instance.private_dns_name]
     # Add these to so we connect magically
     env.user = USERNAME
     env.key_filename = AWS_KEY
@@ -668,7 +670,7 @@ def pogs_setup_env():
     if 'aws_user' not in env:
         prompt('AWS User:', 'aws_user', default='pogs_test')
     if 'gmail_account' not in env:
-        prompt('GMail Account:', 'gmail_account', default=env.project_name)
+        prompt('GMail Account:', 'gmail_account', default='theSkyNet.BOINC')
     if 'branch' not in env:
         prompt('Git Branch <return> for master:', 'branch')
     if 'create_s3' not in env:
