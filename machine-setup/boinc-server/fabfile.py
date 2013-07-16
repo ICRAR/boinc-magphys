@@ -301,6 +301,7 @@ def pogs_install(with_db):
 
     if env.nfs_server != '':
         nfs_mkdir('galaxies')
+        nfs_mkdir('archive')
         nfs_mkdir('archive/to_store')
         nfs_mkdir('boinc-magphys')
 
