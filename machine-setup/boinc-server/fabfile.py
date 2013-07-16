@@ -457,9 +457,7 @@ def mount_nfs():
     sudo('''echo '
 # NFS
 {0}:/mnt/disk0    /mnt/disk0       nfs rsize=8192,wsize=8192,timeo=14,intr 0 0' >> /etc/fstab'''.format(env.nfs_server))
-    sudo('chown ec2-user:ec2-user /mnt/disk0')
-    run('mkdir -p /mnt/disk0/boinc')
-    run('ln -s /mnt/disk0/boinc /home/ec2-user/boinc')
+    nfs_mkdir('boinc')
 
 
 def nfs_mkdir(directory):
@@ -469,7 +467,7 @@ def nfs_mkdir(directory):
     :param directory:
     :return:
     """
-    run('mkdir -p /mnt/disk0/{0}'.format(directory))
+    run('mkdir /mnt/disk0/{0}'.format(directory))
     run('ln -s /mnt/disk0/{0} /home/ec2-user/{0}'.format(directory))
 
 
