@@ -463,8 +463,14 @@ def mount_nfs():
 
 
 def nfs_mkdir(directory):
-    sudo('mkdir -p /mnt/disk0/{0}'.format(directory))
-    sudo('ln -s /mnt/disk0/{0} /home/ec2-user/{0}'.format(directory))
+    """
+    Create a directory on the NFS share
+
+    :param directory:
+    :return:
+    """
+    run('mkdir -p /mnt/disk0/{0}'.format(directory))
+    run('ln -s /mnt/disk0/{0} /home/ec2-user/{0}'.format(directory))
 
 
 def to_boolean(choice, default=False):
