@@ -56,7 +56,7 @@ KEY_NAME = 'icrar-boinc'
 KEY_NAME_VPC = 'icrar_theskynet_public_prod'
 SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
 SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for the VPC
-PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys/magphys')
+PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
 PIP_PACKAGES = 'sqlalchemy Numpy pyfits pil fabric configobj MySQL-python boto astropy'
 YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel '
 YUM_BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
@@ -355,7 +355,7 @@ boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
         # Make the BOINC project
         with cd('/home/ec2-user/boinc/tools'):
             run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'
-            .format(env.hosts[0], env.db_username, env.db_host_name, env.db_password, env.project_name))
+                .format(env.hosts[0], env.db_username, env.db_host_name, env.db_password, env.project_name))
 
         run('''echo 'databaseUserid = "{0}"
 databasePassword = "{1}"
@@ -628,12 +628,12 @@ def pogs_setup_env():
     """
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     ec2_connection = boto.connect_ec2()
-    images = ec2_connection.get_all_images(owners=['self'])
-    puts('Available images')
-    for image in images:
-        puts('Image: {0: <15} {1: <35} {2}'.format(image.id, image.name, image.description))
-
     if 'ami_id' not in env:
+        images = ec2_connection.get_all_images(owners=['self'])
+        puts('Available images')
+        for image in images:
+            puts('Image: {0: <15} {1: <35} {2}'.format(image.id, image.name, image.description))
+
         prompt('AMI id to build from: ', 'ami_id')
     if 'ami_name' not in env:
         prompt('AMI Name: ', 'ami_name', default='base-magphys-ami')
