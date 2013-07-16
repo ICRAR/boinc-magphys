@@ -207,6 +207,7 @@ def start_ami_instance(ami_id, instance_name):
     if env.subnet_id != '':
         puts('Allocating public IP address.')
         allocation = ec2_connection.allocate_address('vpc')
+        time.sleep(5)
         if not ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
             abort('Could not associate the IP to the instance {0}'.format(instance.id))
 
