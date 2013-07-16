@@ -292,30 +292,6 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('usermod -a -G ec2-user apache')
 
 
-def start_pogs():
-    # Copy files into place
-    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-        run('fab --set project_name={0} create_first_version'.format(env.project_name))
-        run('fab --set project_name={0} start_daemons'.format(env.project_name))
-
-    # Setup the crontab job to keep things ticking
-    run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
-    run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
-    run('crontab /tmp/crontab.txt')
-
-    # Setup the logrotation
-    sudo('''echo "/home/ec2-user/projects/{0}/log_*/*.log
-/home/ec2-user/projects/{0}/log_*/*.out
-{{
-  notifempty
-  daily
-  compress
-  rotate 10
-  dateext
-  copytruncate
-}}" > /etc/logrotate.d/boinc'''.format(env.project_name))
-
-
 def pogs_install(with_db):
     """
     Perform the tasks to install the whole BOINC server on a single machine
@@ -323,7 +299,7 @@ def pogs_install(with_db):
     # Get the packages
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
 
-    if env.nfs_server:
+    if env.nfs_server != '':
         nfs_mkdir('/home/ec2-user/galaxies')
         nfs_mkdir('/home/ec2-user/archive/to_store')
         nfs_mkdir('/home/ec2-user/boinc-magphys')
@@ -395,6 +371,7 @@ high_water_mark = "400"
 report_deadline = "7"
 project_name = "{0}"
 tmp = "/tmp"
+delete_delay = "5"
 boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
 
     # Copy the config files
@@ -782,3 +759,29 @@ BOINC
 ##########################################################################
 ##########################################################################
 ''')
+
+
+@task
+@serial
+def start_pogs():
+    # Copy files into place
+    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+        run('fab --set project_name={0} create_first_version'.format(env.project_name))
+        run('fab --set project_name={0} start_daemons'.format(env.project_name))
+
+    # Setup the crontab job to keep things ticking
+    run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
+    run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
+    run('crontab /tmp/crontab.txt')
+
+    # Setup the logrotation
+    sudo('''echo "/home/ec2-user/projects/{0}/log_*/*.log
+/home/ec2-user/projects/{0}/log_*/*.out
+{{
+  notifempty
+  daily
+  compress
+  rotate 10
+  dateext
+  copytruncate
+}}" > /etc/logrotate.d/boinc'''.format(env.project_name))
