@@ -119,7 +119,6 @@ def base_install():
     sudo('mkdir -p /mnt/data')
 
 
-
 def copy_public_keys():
     """
     Copy the public keys to the remote servers
@@ -177,21 +176,21 @@ def create_instance(ebs_size, ami_name):
     return instance, ec2_connection
 
 
-def start_ami_instance(ami_id, instance_name, subnet_id):
+def start_ami_instance(ami_id, instance_name):
     """
     Start an AMI instance running
     :param ami_id:
     :param instance_name:
     """
-    puts('Starting the instance {0} from id {0}'.format(instance_name, ami_id))
+    puts('Starting the instance {0} from id {1}'.format(instance_name, ami_id))
 
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     ec2_connection = boto.connect_ec2()
 
-    if subnet_id == '':
+    if env.vpc_id == '':
         reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
     else:
-        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME_VPC, security_groups=SECURITY_GROUPS_VPC, subnet_id=subnet_id)
+        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME_VPC, security_groups=SECURITY_GROUPS_VPC)
 
     instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
@@ -220,7 +219,7 @@ def start_ami_instance(ami_id, instance_name, subnet_id):
     puts('.')
 
     # Return the instance
-    return instance
+    return instance, ec2_connection
 
 
 def get_aws_keyfile():
@@ -241,33 +240,12 @@ def make_swap():
     sudo('swapon /swapfile')
 
 
-def boinc_install(with_db):
+def boinc_install():
     """
     Perform the tasks to install the whole BOINC server on a single machine
     """
     # Get the packages
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
-
-    # Clone our code
-    if env.branch == '':
-        run('git clone git://github.com/ICRAR/boinc-magphys.git')
-    else:
-        run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
-
-    run('mkdir /home/ec2-user/galaxies')
-    run('mkdir -p /home/ec2-user/archive/to_store')
-
-    # Create the .boto file
-    file_name = get_aws_keyfile()
-    with open(file_name, 'rb') as csv_file:
-        reader = csv.reader(csv_file)
-        # Skip the header
-        reader.next()
-
-        row = reader.next()
-        run('''echo "[Credentials]
-aws_access_key_id = {0}
-aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(row[1], row[2]))
 
     # Setup postfix
     sudo('service sendmail stop')
@@ -295,11 +273,6 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('chmod 400 /etc/postfix/sasl_passwd')
     sudo('postmap /etc/postfix/sasl_passwd')
 
-    # Setup the S3 environment
-    if to_boolean(env.create_s3):
-        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-            run('fab --set project_name={0} create_s3'.format(env.project_name))
-
     # Setup Users
     for user in env.list_of_users:
         sudo('useradd {0}'.format(user))
@@ -320,6 +293,73 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
         run('./_autosetup')
         run('./configure --disable-client --disable-manager')
         run('make')
+
+    # Create users and services
+    sudo('usermod -a -G ec2-user apache')
+
+
+def start_pogs():
+    # Copy files into place
+    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+        run('fab --set project_name={0} create_first_version'.format(env.project_name))
+        run('fab --set project_name={0} start_daemons'.format(env.project_name))
+
+    # Setup the crontab job to keep things ticking
+    run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
+    run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
+    run('crontab /tmp/crontab.txt')
+
+    # Setup the logrotation
+    sudo('''echo "/home/ec2-user/projects/{0}/log_*/*.log
+/home/ec2-user/projects/{0}/log_*/*.out
+{{
+  notifempty
+  daily
+  compress
+  rotate 10
+  dateext
+  copytruncate
+}}" > /etc/logrotate.d/boinc'''.format(env.project_name))
+
+
+def pogs_install(with_db):
+    """
+    Perform the tasks to install the whole BOINC server on a single machine
+    """
+    # Get the packages
+    sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
+
+    if env.nfs_server:
+        nfs_mkdir('/home/ec2-user/galaxies')
+        nfs_mkdir('/home/ec2-user/archive/to_store')
+        nfs_mkdir('/home/ec2-user/boinc-magphys')
+
+    else:
+        run('mkdir /home/ec2-user/galaxies')
+        run('mkdir -p /home/ec2-user/archive/to_store')
+
+    # Clone our code
+    if env.branch == '':
+        run('git clone git://github.com/ICRAR/boinc-magphys.git')
+    else:
+        run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
+
+    # Create the .boto file
+    file_name = get_aws_keyfile()
+    with open(file_name, 'rb') as csv_file:
+        reader = csv.reader(csv_file)
+        # Skip the header
+        reader.next()
+
+        row = reader.next()
+        run('''echo "[Credentials]
+aws_access_key_id = {0}
+aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(row[1], row[2]))
+
+    # Setup the S3 environment
+    if to_boolean(env.create_s3):
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+            run('fab --set project_name={0} create_s3'.format(env.project_name))
 
     if with_db:
         # Activate the DB
@@ -352,7 +392,7 @@ boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
         # Make the BOINC project
         with cd('/home/ec2-user/boinc/tools'):
             run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'
-                .format(env.hosts[0], env.db_username, env.db_host_name, env.db_password, env.project_name))
+            .format(env.hosts[0], env.db_username, env.db_host_name, env.db_password, env.project_name))
 
         run('''echo 'databaseUserid = "{0}"
 databasePassword = "{1}"
@@ -386,59 +426,57 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
     with cd('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
         run('make')
 
-    # setup_website
-    if to_boolean(env.start_boinc):
-        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-            run('fab --set project_name={0} edit_files'.format(env.project_name))
-            sudo('fab --set project_name={0} setup_website'.format(env.project_name))
+    # Setup the ops area password
+    with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
+        run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
-        # This is needed because the files that Apache serve are inside the user's home directory.
-        run('chmod 711 /home/ec2-user')
-        run('chmod -R oug+r /home/ec2-user/projects/{0}'.format(env.project_name))
-        run('chmod -R oug+x /home/ec2-user/projects/{0}/html'.format(env.project_name))
-        run('chmod ug+w /home/ec2-user/projects/{0}/log_*'.format(env.project_name))
-        run('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(env.project_name))
+    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+        run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
+        run('fab --set project_name={0} edit_files'.format(env.project_name))
+        sudo('fab --set project_name={0} setup_website'.format(env.project_name))
 
-        # Setup the forums
-        with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
-            run('php create_forums.php')
+    # This is needed because the files that Apache serve are inside the user's home directory.
+    run('chmod 711 /home/ec2-user')
+    run('chmod -R oug+r /home/ec2-user/projects/{0}'.format(env.project_name))
+    run('chmod -R oug+x /home/ec2-user/projects/{0}/html'.format(env.project_name))
+    run('chmod ug+w /home/ec2-user/projects/{0}/log_*'.format(env.project_name))
+    run('chmod ug+wx /home/ec2-user/projects/{0}/upload'.format(env.project_name))
 
-        # Copy files into place
-        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
-            run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
-            run('fab --set project_name={0} create_first_version'.format(env.project_name))
-            run('fab --set project_name={0} start_daemons'.format(env.project_name))
+    # Setup the forums
+    with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
+        run('php create_forums.php')
 
-        # Setup the crontab job to keep things ticking
-        run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
-        run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
-        run('crontab /tmp/crontab.txt')
+    # Save the instance as an AMI
+    puts("Stopping the instance")
+    env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
+    while not env.ec2_instance.update() == 'stopped':
+        fastprint('.')
+        time.sleep(5)
 
-        # Setup the ops area password
-        with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
-            run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
+    puts("The AMI is being created. Don't forget to terminate the instance if not needed")
+    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base MAGPHYS AMI')
 
-        # Create users and start services
-        sudo('usermod -a -G ec2-user apache')
-        sudo('chkconfig httpd --add')
-        sudo('chkconfig httpd on')
-        sudo('service httpd start')
+    puts('All done')
 
-    # Setup the logrotation
-    sudo('''echo "/home/ec2-user/projects/{0}/log_*/*.log
-/home/ec2-user/projects/{0}/log_*/*.out
-{{
-  notifempty
-  daily
-  compress
-  rotate 10
-  dateext
-  copytruncate
-}}" > /etc/logrotate.d/boinc'''.format(env.project_name))
 
-    # Setup the ssh key
-    run('ssh-keygen -t rsa -N "" -f /home/ec2-user/.ssh/id_rsa')
-    run('cat /home/ec2-user/.ssh/id_rsa.pub >> /home/ec2-user/.ssh/authorized_keys')
+def mount_nfs():
+    """
+    We have a NFS server so mount it
+    :return:
+    """
+    sudo('yum install nfs-utils')
+    sudo('mkdir -p /mnt/disk0')
+    sudo('mount -t nfs {0}:/mnt/disk0 /mnt/disk0'.format(env.nfs_server))
+    sudo('mkdir -p /mnt/disk0/boinc')
+    sudo('ln -s /mnt/disk0/boinc /home/ec2-user/boinc')
+    sudo('''echo '
+# NFS
+{0}:/mnt/disk0    /mnt/disk0       nfs rsize=8192,wsize=8192,timeo=14,intr 0 0' >> /etc/fstab'''.format(env.nfs_server))
+
+
+def nfs_mkdir(directory):
+    sudo('mkdir -p /mnt/disk0/{0}'.format(directory))
+    sudo('ln -s /mnt/disk0/{0} /home/ec2-user/{0}'.format(directory))
 
 
 def to_boolean(choice, default=False):
@@ -493,7 +531,7 @@ def base_setup_env():
     if 'ebs_size' not in env:
         prompt('EBS Size (GB): ', 'ebs_size', default=20, validate=int)
     if 'ami_name' not in env:
-        prompt('AMI Name: ', 'ami_name', default='BasePythonSetup')
+        prompt('AMI Name: ', 'ami_name', default='base-python-ami')
 
     # Create the instance in AWS
     ec2_instance, ec2_connection = create_instance(env.ebs_size, env.ami_name)
@@ -531,9 +569,10 @@ def base_build_ami():
         time.sleep(5)
 
     puts("The AMI is being created. Don't forget to terminate the instance if not needed")
-    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base BOINC-MAGPHYS AMI')
+    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base python AMI')
 
     puts('All done')
+
 
 @task
 @serial
@@ -550,8 +589,91 @@ def boinc_setup_env():
     for image in images:
         puts('Image: {0: <15} {1: <35} {2}'.format(image.id, image.name, image.description))
 
-    if 'ami_name' not in env:
+    if 'ami_id' not in env:
         prompt('AMI id to build from: ', 'ami_id')
+    if 'ami_name' not in env:
+        prompt('AMI Name: ', 'ami_name', default='base-boinc-ami')
+    if 'instance_name' not in env:
+        prompt('AWS Instance name: ', 'instance_name', default='base-boinc-ami')
+    if 'gmail_account' not in env:
+        prompt('GMail Account:', 'gmail_account')
+    if 'gmail_password' not in env:
+        prompt('GMail Password:', 'gmail_password')
+    if 'nfs_server' not in env:
+        prompt('NFS Server:', 'nfs_server', default='')
+    if 'vpc_id' not in env:
+        prompt('VPC id:', 'vpc_id', default='')
+
+    # Check the aws key exists
+    file_name = get_aws_keyfile()
+    if not os.path.exists(file_name):
+        abort('Could not find the file {0}'.format(file_name))
+
+    # Create the instance in AWS
+    ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
+    env.ec2_instance = ec2_instance
+    env.ec2_connection = ec2_connection
+    env.hosts = [ec2_instance.dns_name]
+
+    # Add these to so we connect magically
+    env.user = USERNAME
+    env.key_filename = AWS_KEY
+
+
+@task
+@serial
+def boinc_build_ami():
+    """
+    Deploy the single server environment
+
+    Deploy the single server system in the AWS cloud with everything running on a single server
+    """
+    require('hosts', provided_by=[boinc_setup_env])
+
+    resize_file_system()
+    yum_pip_update()
+    copy_public_keys()
+
+    # Wait for things to settle down
+    time.sleep(5)
+
+    # Do we need to mount the NFS system?
+    if env.nfs_server != '':
+        mount_nfs()
+    boinc_install()
+
+    # Save the instance as an AMI
+    puts("Stopping the instance")
+    env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
+    while not env.ec2_instance.update() == 'stopped':
+        fastprint('.')
+        time.sleep(5)
+
+    puts("The AMI is being created. Don't forget to terminate the instance if not needed")
+    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base BOINC AMI')
+
+    puts('All done')
+
+
+@task
+@serial
+def pogs_setup_env():
+    """
+    Ask a series of questions before deploying to the cloud.
+
+    Allow the user to select if a Elastic IP address is to be used
+    """
+    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
+    ec2_connection = boto.connect_ec2()
+    images = ec2_connection.get_all_images(owners=['self'])
+    puts('Available images')
+    for image in images:
+        puts('Image: {0: <15} {1: <35} {2}'.format(image.id, image.name, image.description))
+
+    if 'ami_id' not in env:
+        prompt('AMI id to build from: ', 'ami_id')
+    if 'ami_name' not in env:
+        prompt('AMI Name: ', 'ami_name', default='base-magphys-ami')
     if 'ops_username' not in env:
         prompt('Ops area username: ', 'ops_username', default='user')
     if 'ops_password' not in env:
@@ -570,16 +692,10 @@ def boinc_setup_env():
         prompt('AWS User:', 'aws_user', default='pogs_test')
     if 'gmail_account' not in env:
         prompt('GMail Account:', 'gmail_account', default=env.project_name)
-    if 'gmail_password' not in env:
-        prompt('GMail Password:', 'gmail_password')
     if 'branch' not in env:
         prompt('Git Branch <return> for master:', 'branch')
     if 'create_s3' not in env:
         prompt('Create S3 Buckets:', 'create_s3', default='Y')
-    if 'start_boinc' not in env:
-        prompt('Start the BOINC system:', 'start_boinc', default='Y')
-    if 'subnet_id' not in env:
-        prompt('The subnet id:', 'subnet_id', default='')
 
     # Check the aws key exists
     file_name = get_aws_keyfile()
@@ -587,15 +703,18 @@ def boinc_setup_env():
         abort('Could not find the file {0}'.format(file_name))
 
     # Create the instance in AWS
-    ec2_instance = start_ami_instance(env.ami_id, env.instance_name, env.subnet_id)
+    ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
+    env.ec2_instance = ec2_instance
+    env.ec2_connection = ec2_connection
     env.hosts = [ec2_instance.dns_name]
+    puts('env.hosts: {0}'.format(env.hosts))
     env.user = USERNAME
     env.key_filename = AWS_KEY
 
 
 @task
 @serial
-def boinc_deploy_with_db():
+def pogs_deploy_with_db():
     """
     Deploy the single server environment
 
@@ -609,16 +728,16 @@ def boinc_deploy_with_db():
 
     # Wait for things to settle down
     time.sleep(5)
-    boinc_install(True)
+    pogs_install(True)
 
 
 @task
 @serial
-def boinc_deploy_without_db():
+def pogs_deploy_without_db():
     """
     Deploy the single server environment
 
-    Deploy the single server system in the AWS cloud with everything running on a single server
+    Deploy the single server system in the AWS cloud with the database running on a different server
     """
     require('hosts', provided_by=[boinc_setup_env])
 
@@ -628,7 +747,7 @@ def boinc_deploy_without_db():
 
     # Wait for things to settle down
     time.sleep(5)
-    boinc_install(False)
+    pogs_install(False)
 
 
 @task
