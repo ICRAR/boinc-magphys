@@ -599,7 +599,15 @@ def boinc_setup_env():
     ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
-    env.hosts = [ec2_instance.public_dns_name]
+    if env.subnet_id == '':
+        env.hosts = [ec2_instance.ip_address]
+    else:
+        puts('Instance {0}'.format(ec2_instance))
+        puts('Instance.public_dns_name {0}'.format(ec2_instance.public_dns_name))
+        puts('Instance.private_dns_name {0}'.format(ec2_instance.private_dns_name))
+        puts('Instance.private_ip_address {0}'.format(ec2_instance.private_ip_address))
+        puts('Instance.ip_address {0}'.format(ec2_instance.ip_address))
+        env.hosts = [ec2_instance.private_ip_address]
 
     # Add these to so we connect magically
     env.user = USERNAME
