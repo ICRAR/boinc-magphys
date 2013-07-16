@@ -209,13 +209,15 @@ def start_ami_instance(ami_id, instance_name):
 
     ec2_connection.create_tags([instance.id], {'Name': '{0}'.format(instance_name)})
 
-    allocation = ec2_connection.allocate_address('vpc')
-    if not ec2_connection.associate_address(instance_id=instance.id, allocation_id=str(allocation.allocation_id)):
-        abort('Could not associate the IP to the instance {0}'.format(instance.id))
+    if env.subnet_id != '':
+        puts('Allocating public IP address.')
+        allocation = ec2_connection.allocate_address('vpc')
+        if not ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
+            abort('Could not associate the IP to the instance {0}'.format(instance.id))
 
-    # Give AWS time to switch everything over
-    time.sleep(10)
-    instance.update(True)
+        # Give AWS time to switch everything over
+        time.sleep(10)
+        instance.update(True)
 
     # The instance is started, but not useable (yet)
     puts('Started the instance(s) now waiting for the SSH daemon to start.')
@@ -574,12 +576,11 @@ def boinc_setup_env():
     """
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     ec2_connection = boto.connect_ec2()
-    images = ec2_connection.get_all_images(owners=['self'])
-    puts('Available images')
-    for image in images:
-        puts('Image: {0: <15} {1: <35} {2}'.format(image.id, image.name, image.description))
-
     if 'ami_id' not in env:
+        images = ec2_connection.get_all_images(owners=['self'])
+        puts('Available images')
+        for image in images:
+            puts('Image: {0: <15} {1: <35} {2}'.format(image.id, image.name, image.description))
         prompt('AMI id to build from: ', 'ami_id')
     if 'ami_name' not in env:
         prompt('AMI Name: ', 'ami_name', default='base-boinc-ami')
@@ -598,10 +599,8 @@ def boinc_setup_env():
     ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
-    if env.subnet_id == '':
-        env.hosts = [ec2_instance.public_dns_name]
-    else:
-        env.hosts = [ec2_instance.private_dns_name]
+    env.hosts = [ec2_instance.public_dns_name]
+
     # Add these to so we connect magically
     env.user = USERNAME
     env.key_filename = AWS_KEY
@@ -675,8 +674,6 @@ def pogs_setup_env():
 
     if 'instance_name' not in env:
         prompt('AWS Instance name: ', 'instance_name', default=env.project_name)
-    if 'aws_user' not in env:
-        prompt('AWS User:', 'aws_user', default='pogs_test')
     if 'gmail_account' not in env:
         prompt('GMail Account:', 'gmail_account', default='theSkyNet.BOINC')
     if 'branch' not in env:
@@ -687,12 +684,16 @@ def pogs_setup_env():
         prompt('AWS Access Key:', 'aws_access_key_id', default='')
     if 'aws_secret_access_key' not in env:
         prompt('AWS Secret Access Key:', 'aws_secret_access_key', default='')
+    if 'nfs_server' not in env:
+        prompt('NFS Server:', 'nfs_server', default='')
+    if 'subnet_id' not in env:
+        prompt('Subnet id:', 'subnet_id', default='')
 
     # Create the instance in AWS
     ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
-    env.hosts = [ec2_instance.dns_name]
+    env.hosts = [ec2_instance.public_dns_name]
     puts('env.hosts: {0}'.format(env.hosts))
     env.user = USERNAME
     env.key_filename = AWS_KEY
