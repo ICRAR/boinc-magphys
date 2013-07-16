@@ -301,10 +301,10 @@ def pogs_install(with_db):
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
     if env.nfs_server != '':
-        nfs_mkdir('galaxies')
         nfs_mkdir('archive')
         nfs_mkdir('archive/to_store')
         nfs_mkdir('boinc-magphys')
+        nfs_mkdir('galaxies')
         nfs_mkdir('projects')
 
     else:
