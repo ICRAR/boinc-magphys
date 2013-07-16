@@ -304,6 +304,7 @@ def pogs_install(with_db):
         nfs_mkdir('archive')
         nfs_mkdir('archive/to_store')
         nfs_mkdir('boinc-magphys')
+        nfs_mkdir('projects')
 
     else:
         run('mkdir /home/ec2-user/galaxies')
@@ -672,7 +673,8 @@ def pogs_setup_env():
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
     env.hosts = [ec2_instance.ip_address]
-    puts('env.hosts: {0}'.format(env.hosts))
+
+    # Add these to so we connect magically
     env.user = USERNAME
     env.key_filename = AWS_KEY
 
@@ -685,7 +687,7 @@ def pogs_deploy_with_db():
 
     Deploy the single server system in the AWS cloud with everything running on a single server
     """
-    require('hosts', provided_by=[boinc_setup_env])
+    require('hosts', provided_by=[pogs_setup_env])
 
     resize_file_system()
     yum_pip_update()
@@ -704,7 +706,7 @@ def pogs_deploy_without_db():
 
     Deploy the single server system in the AWS cloud with the database running on a different server
     """
-    require('hosts', provided_by=[boinc_setup_env])
+    require('hosts', provided_by=[pogs_setup_env])
 
     resize_file_system()
     yum_pip_update()
@@ -721,8 +723,7 @@ def boinc_final_messages():
     """
     Print the final messages
     """
-    if env.host_string == env.hosts[0]:
-        puts('''
+    puts('''
 
 
 ##########################################################################
@@ -734,13 +735,7 @@ def boinc_final_messages():
 You need to do the following manual steps:
 
 SSH
-1) Edit the /etc/hosts file on each server and put in the hostname used
-   by BOINC for each server
-   Like this:
-   127.0.0.1   localhost localhost.localdomain
-    23.23.126.96 ip-10-80-75-121 ec2-23-23-126.96.compute-1.amazonaws.com
-    23.21.118.134 ip-10-83-98-164 ec2-23-21-188-134.compute-1.amazonaws.com
-2) Connect to each of the servers from the other to ensure they can connect
+1) Connect to each of the servers from the other to ensure they can connect
 
 MYSQL
 1) Modify the database.settings file to have the private hostname for the

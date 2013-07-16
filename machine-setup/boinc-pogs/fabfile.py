@@ -138,7 +138,7 @@ def edit_files():
       <output> antique_file_deleter.out </output>
     </task>
     <task>
-      <cmd> find /home/ec2-user/projects/{0}/archives -type d -ctime +28 -exec rm -rf {} \;</cmd>
+      <cmd> find /home/ec2-user/projects/{0}/archives -type d -ctime +28 -exec rm -rf {{}} \;</cmd>
       <period> 24 hours </period>
       <disabled> 0 </disabled>
       <output> db_purge_clean_up.out </output>
