@@ -324,7 +324,7 @@ aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(env.aws_access_ke
 
     # Setup the S3 environment
     if to_boolean(env.create_s3):
-        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
             run('fab --set project_name={0} create_s3'.format(env.project_name))
 
     if with_db:
@@ -397,7 +397,7 @@ boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magp
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
-    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
         run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
         run('fab --set project_name={0} edit_files'.format(env.project_name))
         sudo('fab --set project_name={0} setup_website'.format(env.project_name))
@@ -762,7 +762,7 @@ BOINC
 @serial
 def start_pogs():
     # Copy files into place
-    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc'):
+    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
         run('fab --set project_name={0} create_first_version'.format(env.project_name))
         run('fab --set project_name={0} start_daemons'.format(env.project_name))
 
