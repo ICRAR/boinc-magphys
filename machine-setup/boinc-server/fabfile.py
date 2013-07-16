@@ -209,6 +209,14 @@ def start_ami_instance(ami_id, instance_name):
 
     ec2_connection.create_tags([instance.id], {'Name': '{0}'.format(instance_name)})
 
+    allocation = ec2_connection.allocate_address('vpc')
+    if not ec2_connection.associate_address(instance_id=instance.id, allocation_id=str(allocation.allocation_id)):
+        abort('Could not associate the IP to the instance {0}'.format(instance.id))
+
+    # Give AWS time to switch everything over
+    time.sleep(10)
+    instance.update(True)
+
     # The instance is started, but not useable (yet)
     puts('Started the instance(s) now waiting for the SSH daemon to start.')
     for i in range(12):
