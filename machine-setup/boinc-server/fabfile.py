@@ -38,7 +38,6 @@ import glob
 import boto
 import os
 import time
-import csv
 from boto.ec2 import blockdevicemapping
 
 from fabric.api import run, sudo, put, env, require
@@ -57,7 +56,6 @@ KEY_NAME = 'icrar-boinc'
 KEY_NAME_VPC = 'icrar_theskynet_public_prod'
 SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
 SECURITY_GROUPS_VPC = ['default', 'Prod-theSkyNet']  # Security group allows SSH
-BOINC_AWS_KEYS = os.path.expanduser('~/Documents/Keys/aws')
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys/magphys')
 PIP_PACKAGES = 'sqlalchemy Numpy pyfits pil fabric configobj MySQL-python boto astropy'
 YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel '
@@ -222,15 +220,6 @@ def start_ami_instance(ami_id, instance_name):
     return instance, ec2_connection
 
 
-def get_aws_keyfile():
-    """
-    Get the aws key file
-
-    :return:
-    """
-    return os.path.join(BOINC_AWS_KEYS, '{0}.credentials.csv.txt'.format(env.aws_user))
-
-
 def make_swap():
     """
     Make the swap space
@@ -345,16 +334,9 @@ def pogs_install(with_db):
         run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
 
     # Create the .boto file
-    file_name = get_aws_keyfile()
-    with open(file_name, 'rb') as csv_file:
-        reader = csv.reader(csv_file)
-        # Skip the header
-        reader.next()
-
-        row = reader.next()
-        run('''echo "[Credentials]
+    run('''echo "[Credentials]
 aws_access_key_id = {0}
-aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(row[1], row[2]))
+aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(env.aws_access_key_id, env.aws_secret_access_key))
 
     # Setup the S3 environment
     if to_boolean(env.create_s3):
@@ -604,11 +586,6 @@ def boinc_setup_env():
     if 'vpc_id' not in env:
         prompt('VPC id:', 'vpc_id', default='')
 
-    # Check the aws key exists
-    file_name = get_aws_keyfile()
-    if not os.path.exists(file_name):
-        abort('Could not find the file {0}'.format(file_name))
-
     # Create the instance in AWS
     ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
     env.ec2_instance = ec2_instance
@@ -696,11 +673,10 @@ def pogs_setup_env():
         prompt('Git Branch <return> for master:', 'branch')
     if 'create_s3' not in env:
         prompt('Create S3 Buckets:', 'create_s3', default='Y')
-
-    # Check the aws key exists
-    file_name = get_aws_keyfile()
-    if not os.path.exists(file_name):
-        abort('Could not find the file {0}'.format(file_name))
+    if 'aws_access_key_id' not in env:
+        prompt('AWS Access Key:', 'aws_access_key_id', default='')
+    if 'aws_secret_access_key' not in env:
+        prompt('AWS Secret Access Key:', 'aws_secret_access_key', default='')
 
     # Create the instance in AWS
     ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
