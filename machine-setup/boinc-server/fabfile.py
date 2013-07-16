@@ -268,19 +268,6 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('chmod 400 /etc/postfix/sasl_passwd')
     sudo('postmap /etc/postfix/sasl_passwd')
 
-    # Setup Users
-    for user in env.list_of_users:
-        sudo('useradd {0}'.format(user))
-        sudo('mkdir /home/{0}/.ssh'.format(user))
-        sudo('chmod 700 /home/{0}/.ssh'.format(user))
-        sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
-        sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
-        sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
-        sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
-
-        # Add them to the sudoers
-        sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
-
     # Grab the latest trunk from GIT
     run('git clone git://boinc.berkeley.edu/boinc-v2.git boinc')
 
@@ -299,6 +286,19 @@ def pogs_install(with_db):
     """
     # Get the packages
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
+
+    # Setup Users
+    for user in env.list_of_users:
+        sudo('useradd {0}'.format(user))
+        sudo('mkdir /home/{0}/.ssh'.format(user))
+        sudo('chmod 700 /home/{0}/.ssh'.format(user))
+        sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
+        sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
+        sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
+        sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
+
+        # Add them to the sudoers
+        sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
     if env.nfs_server != '':
         nfs_mkdir('galaxies')
@@ -598,7 +598,6 @@ def boinc_build_ami():
 
     resize_file_system()
     yum_pip_update()
-    copy_public_keys()
 
     # Wait for things to settle down
     time.sleep(5)
