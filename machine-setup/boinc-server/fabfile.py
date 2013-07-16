@@ -55,7 +55,7 @@ AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
 KEY_NAME_VPC = 'icrar_theskynet_public_prod'
 SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
-SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group allows SSH
+SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for the VPC
 PUBLIC_KEYS = os.path.expanduser('~/Documents/Keys/magphys')
 PIP_PACKAGES = 'sqlalchemy Numpy pyfits pil fabric configobj MySQL-python boto astropy'
 YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel '
@@ -188,7 +188,7 @@ def start_ami_instance(ami_id, instance_name):
     if env.subnet_id == '':
         reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
     else:
-        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, subnet_id=env.subnet_id, key_name=KEY_NAME_VPC, security_groups=SECURITY_GROUPS_VPC)
+        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, subnet_id=env.subnet_id, key_name=KEY_NAME_VPC, security_group_ids=SECURITY_GROUPS_VPC)
 
     instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
