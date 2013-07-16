@@ -138,7 +138,7 @@ def edit_files():
       <output> antique_file_deleter.out </output>
     </task>
     <task>
-      <cmd> find /home/ec2-user/projects/{0}/archives -type d -ctime +28 -exec rm -rf {} \;</cmd>
+      <cmd> find /home/ec2-user/projects/{0}/archives -type d -ctime +28 -exec rm -rf {1} \;</cmd>
       <period> 24 hours </period>
       <disabled> 0 </disabled>
       <output> db_purge_clean_up.out </output>
@@ -264,7 +264,7 @@ def edit_files():
       <pid_file> assimilator.0.pid </pid_file>
       <disabled>0</disabled>
     </daemon>
-  </daemons>'''.format(env.project_name))
+  </daemons>'''.format(env.project_name, '{}'))
     file_editor.substitute('<one_result_per_user_per_wu>', end='</one_result_per_user_per_wu>', to='''
     <prefer_primary_platform>1</prefer_primary_platform>
     <max_wus_in_progress>10</max_wus_in_progress>
