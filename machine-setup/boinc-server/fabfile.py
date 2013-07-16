@@ -111,11 +111,6 @@ def base_install():
         sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
         sudo('python2.7 setup.py install')
 
-    # Load NFS
-    sudo('yum --assumeyes --quiet install nfs-utils')
-
-    sudo('mkdir -p /mnt/data')
-
 
 def copy_public_keys():
     """
@@ -459,11 +454,12 @@ def mount_nfs():
     sudo('yum install nfs-utils')
     sudo('mkdir -p /mnt/disk0')
     sudo('mount -t nfs {0}:/mnt/disk0 /mnt/disk0'.format(env.nfs_server))
-    sudo('mkdir -p /mnt/disk0/boinc')
-    sudo('ln -s /mnt/disk0/boinc /home/ec2-user/boinc')
     sudo('''echo '
 # NFS
 {0}:/mnt/disk0    /mnt/disk0       nfs rsize=8192,wsize=8192,timeo=14,intr 0 0' >> /etc/fstab'''.format(env.nfs_server))
+    sudo('chown ec2-user:ec2-user /mnt/disk0')
+    run('mkdir -p /mnt/disk0/boinc')
+    run('ln -s /mnt/disk0/boinc /home/ec2-user/boinc')
 
 
 def nfs_mkdir(directory):
@@ -529,7 +525,7 @@ def base_setup_env():
     ec2_instance, ec2_connection = create_instance(env.ebs_size, env.ami_name)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
-    env.hosts = [ec2_instance.dns_name]
+    env.hosts = [ec2_instance.ip_address]
 
     # Add these to so we connect magically
     env.user = USERNAME
@@ -693,7 +689,7 @@ def pogs_setup_env():
     ec2_instance, ec2_connection = start_ami_instance(env.ami_id, env.instance_name)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
-    env.hosts = [ec2_instance.public_dns_name]
+    env.hosts = [ec2_instance.ip_address]
     puts('env.hosts: {0}'.format(env.hosts))
     env.user = USERNAME
     env.key_filename = AWS_KEY
