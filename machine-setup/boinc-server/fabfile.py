@@ -300,9 +300,9 @@ def pogs_install(with_db):
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
 
     if env.nfs_server != '':
-        nfs_mkdir('/home/ec2-user/galaxies')
-        nfs_mkdir('/home/ec2-user/archive/to_store')
-        nfs_mkdir('/home/ec2-user/boinc-magphys')
+        nfs_mkdir('galaxies')
+        nfs_mkdir('archive/to_store')
+        nfs_mkdir('boinc-magphys')
 
     else:
         run('mkdir /home/ec2-user/galaxies')
