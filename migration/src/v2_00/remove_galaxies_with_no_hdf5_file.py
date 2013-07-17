@@ -31,23 +31,27 @@ import logging
 from sqlalchemy import select, create_engine
 from config import DB_LOGIN, DELETED
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, AREA_USER, FITS_HEADER
+from v2_00 import DRY_RUN
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 
 def delete_galaxy(galaxy_id):
-    transaction = connection.begin()
-    for area_id1 in connection.execute(select([AREA.c.area_id]).where(AREA.c.galaxy_id == galaxy_id).order_by(AREA.c.area_id)):
-        connection.execute(PIXEL_RESULT.delete().where(PIXEL_RESULT.c.area_id == area_id1[0]))
-        connection.execute(AREA_USER.delete().where(AREA_USER.c.area_id == area_id1[0]))
+    if DRY_RUN:
+        LOG.info('DRY_RUN: deleting galaxy_id: {0}'.format(galaxy_id))
+    else:
+        transaction = connection.begin()
+        for area_id1 in connection.execute(select([AREA.c.area_id]).where(AREA.c.galaxy_id == galaxy_id).order_by(AREA.c.area_id)):
+            connection.execute(PIXEL_RESULT.delete().where(PIXEL_RESULT.c.area_id == area_id1[0]))
+            connection.execute(AREA_USER.delete().where(AREA_USER.c.area_id == area_id1[0]))
 
-    connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy_id))
-    connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy_id))
-    connection.execute(GALAXY.delete().where(GALAXY.c.galaxy_id == galaxy_id))
+        connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy_id))
+        connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy_id))
+        connection.execute(GALAXY.delete().where(GALAXY.c.galaxy_id == galaxy_id))
 
-    LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id)
-    transaction.commit()
+        LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id)
+        transaction.commit()
 
 
 def remove_galaxies_with_no_hdf5_file(connection):

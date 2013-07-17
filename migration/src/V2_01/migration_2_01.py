@@ -46,6 +46,7 @@ connection = ENGINE.connect()
 
 try:
     migrate_database(connection)
+    remove_lower_case_from_galaxy_name()
 
 except Exception:
     LOG.exception('Major error')
