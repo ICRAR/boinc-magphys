@@ -46,9 +46,7 @@ ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
 try:
-    remove_galaxies_with_no_hdf5_file(connection)
     migrate_files(connection)
-    migrate_database(connection)
 
 except Exception:
     LOG.exception('Major error')
