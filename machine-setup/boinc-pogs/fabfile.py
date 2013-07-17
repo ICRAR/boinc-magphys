@@ -132,6 +132,11 @@ def edit_files():
     file_editor.substitute('  <tasks>', end='</daemons>', to='''
   <tasks>
     <task>
+      <cmd>census</cmd>
+      <period>1 day</period>
+      <output> census.out </output>
+    </task>
+    <task>
       <cmd> antique_file_deleter -d 2 </cmd>
       <period> 24 hours </period>
       <disabled> 0 </disabled>
@@ -217,13 +222,13 @@ def edit_files():
     </task>
     <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/delete_galaxy_task.py </cmd>
-      <period> 30 minutes </period>
+      <period> 4 hours </period>
       <disabled> 0 </disabled>
       <output> delete_galaxy_task.out </output>
     </task>
     <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/archive_hdf5_galaxy.py -o /home/ec2-user/archive </cmd>
-      <period> 30 minutes </period>
+      <period> 4 hours </period>
       <disabled> 0 </disabled>
       <output> archive_hdf5_galaxy.out </output>
     </task>
@@ -271,8 +276,6 @@ def edit_files():
     <shmem_work_items>200</shmem_work_items>
     <feeder_query_size>300</feeder_query_size>
     <reliable_priority_on_over>5</reliable_priority_on_over>
-    <delete_delay_hours>24</delete_delay_hours>
-    <uldl_dir_fanout>1024</uldl_dir_fanout>
     <msg_to_host/>
     <one_result_per_user_per_wu/>
     <one_result_per_host_per_wu/>''')

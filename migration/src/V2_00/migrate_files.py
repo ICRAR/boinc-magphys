@@ -36,7 +36,7 @@ import subprocess
 from database.database_support_core import GALAXY
 from utils.name_builder import get_galaxy_image_bucket, get_files_bucket, get_galaxy_file_name, get_key_fits, get_thumbnail_colour_image_key, get_colour_image_key, get_build_png_name, get_key_hdf5
 from utils.s3_helper import get_bucket, get_s3_connection, add_file_to_bucket
-from v2_00 import DRY_RUN
+from V2_00 import DRY_RUN
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -148,7 +148,7 @@ def check_results(output, path_name):
 
 def add_file_to_bucket1(file_bucket, key, path_name):
     if DRY_RUN:
-        LOG.info('DRY_RUN: bucket: {0}, key: {1}, file: {3}'.format('file_bucket, key, path_name'))
+        LOG.info('DRY_RUN: bucket: {0}, key: {1}, file: {2}'.format('file_bucket, key, path_name'))
     else:
         add_file_to_bucket(file_bucket, key, path_name)
 

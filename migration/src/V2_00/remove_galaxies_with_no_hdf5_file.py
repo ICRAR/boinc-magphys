@@ -31,7 +31,7 @@ import logging
 from sqlalchemy import select, create_engine
 from config import DB_LOGIN, DELETED
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, AREA_USER, FITS_HEADER, IMAGE_FILTERS_USED
-from v2_00 import DRY_RUN
+from V2_00 import DRY_RUN
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)

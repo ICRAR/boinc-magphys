@@ -26,7 +26,7 @@
 Migrate the database
 """
 import logging
-from v2_00 import DRY_RUN
+from V2_00 import DRY_RUN
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
