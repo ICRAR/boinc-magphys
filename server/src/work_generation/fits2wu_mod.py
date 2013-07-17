@@ -41,7 +41,7 @@ from sqlalchemy.sql.expression import select
 from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN
 from image.fitsimage import FitsImage
-from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits
+from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
 from utils.s3_helper import add_file_to_bucket, get_bucket, get_s3_connection
 
 LOG = logging.getLogger(__name__)
@@ -202,6 +202,8 @@ class Fit2Wu:
 
         # Copy the fits file to S3 - renamed to make it unique
         add_file_to_bucket(get_bucket(s3_connection, get_files_bucket()), get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
+        if self._sigma_filename is not None:
+            add_file_to_bucket(get_bucket(s3_connection, get_files_bucket()), get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
 
         return self._work_units_added, self._pixel_count
 
