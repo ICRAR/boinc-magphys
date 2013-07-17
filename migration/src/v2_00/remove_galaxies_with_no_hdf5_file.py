@@ -37,7 +37,7 @@ LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 
-def delete_galaxy(galaxy_id):
+def delete_galaxy(connection, galaxy_id):
     if DRY_RUN:
         LOG.info('DRY_RUN: deleting galaxy_id: {0}'.format(galaxy_id))
     else:
@@ -83,7 +83,7 @@ def remove_galaxies_with_no_hdf5_file(connection):
             list_of_galaxies_to_delete.append(galaxy[GALAXY.c.galaxy_id])
 
     for galaxy_id in list_of_galaxies_to_delete:
-        delete_galaxy(galaxy_id)
+        delete_galaxy(connection, galaxy_id)
 
 if __name__ == '__main__':
     ENGINE = create_engine(DB_LOGIN)
