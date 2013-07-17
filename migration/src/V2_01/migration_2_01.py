@@ -28,7 +28,6 @@ Migration for V2.01
 import logging
 import os
 import sys
-from V2_01.migrate_database import migrate_database
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -40,13 +39,13 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 from sqlalchemy import create_engine
 from config import DB_LOGIN
+from V2_01.migrate_database import migrate_database
 
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
 try:
     migrate_database(connection)
-    remove_lower_case_from_galaxy_name()
 
 except Exception:
     LOG.exception('Major error')

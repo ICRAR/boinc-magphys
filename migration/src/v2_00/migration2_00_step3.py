@@ -40,13 +40,13 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 from sqlalchemy import create_engine
 from config import DB_LOGIN
-from v2_00.migrate_database import migrate_database
+from v2_00.migrate_files import migrate_files
 
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
 try:
-    migrate_database(connection)
+    migrate_files(connection)
 
 except Exception:
     LOG.exception('Major error')
