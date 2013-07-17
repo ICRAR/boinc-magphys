@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 def execute(connection, sql):
     if DRY_RUN:
-        LOG.info('DRY_RUN: execute: {0}', sql)
+        LOG.info('DRY_RUN: execute: {0}'.format(sql))
     else:
         connection.execute(sql)
 
