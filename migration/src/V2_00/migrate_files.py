@@ -98,23 +98,23 @@ def migrate_image_files(connection, image_bucket, file_bucket):
                 add_file_to_bucket1(file_bucket, get_key_fits(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), file_name)
             else:
                 galaxy_key = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
-                if file_name.find('_tn_colour_1.png'):
+                if file_name.endswith('_tn_colour_1.png'):
                     add_file_to_bucket1(image_bucket, get_thumbnail_colour_image_key(galaxy_key, 1), file_name)
-                elif file_name.find('_colour_1.png'):
+                elif file_name.endswith('_colour_1.png'):
                     add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 1), file_name)
-                elif file_name.find('_colour_2.png'):
+                elif file_name.endswith('_colour_2.png'):
                     add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 2), file_name)
-                elif file_name.find('_colour_3.png'):
+                elif file_name.endswith('_colour_3.png'):
                     add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 3), file_name)
-                elif file_name.find('_colour_4.png'):
+                elif file_name.endswith('_colour_4.png'):
                     add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 4), file_name)
-                elif file_name.find('_mu.png'):
+                elif file_name.endswith('_mu.png'):
                     add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'mu'), file_name)
-                elif file_name.find('_m.png'):
+                elif file_name.endswith('_m.png'):
                     add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'm'), file_name)
-                elif file_name.find('_ldust.png'):
+                elif file_name.endswith('_ldust.png'):
                     add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'ldust'), file_name)
-                elif file_name.find('_sfr.png'):
+                elif file_name.endswith('_sfr.png'):
                     add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'sfr'), file_name)
 
 
