@@ -379,3 +379,7 @@ def create_s3():
     # Create the bucket for the output files
     file_bucket = 'icrar.{0}.files'.format(env.project_name)
     s3.create_bucket(file_bucket)
+
+    # Create the bucket for the stas files
+    file_bucket = 'icrar.{0}.archive'.format(env.project_name)
+    s3.create_bucket(file_bucket)
