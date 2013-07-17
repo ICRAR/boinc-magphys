@@ -148,7 +148,7 @@ def check_results(output, path_name):
 
 def add_file_to_bucket1(file_bucket, key, path_name):
     if DRY_RUN:
-        LOG.info('DRY_RUN: bucket: {0}, key: {1}, file: {2}'.format('file_bucket, key, path_name'))
+        LOG.info('DRY_RUN: bucket: {0}, key: {1}, file: {2}'.format(file_bucket, key, path_name))
     else:
         add_file_to_bucket(file_bucket, key, path_name)
 
