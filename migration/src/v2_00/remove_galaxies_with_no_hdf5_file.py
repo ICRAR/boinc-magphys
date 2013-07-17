@@ -30,7 +30,7 @@ import StringIO
 import logging
 from sqlalchemy import select, create_engine
 from config import DB_LOGIN, DELETED
-from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, AREA_USER, FITS_HEADER
+from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, AREA_USER, FITS_HEADER, IMAGE_FILTERS_USED
 from v2_00 import DRY_RUN
 
 LOG = logging.getLogger(__name__)
@@ -48,6 +48,7 @@ def delete_galaxy(connection, galaxy_id):
 
         connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy_id))
         connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy_id))
+        connection.execute(IMAGE_FILTERS_USED.delete().where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id))
         connection.execute(GALAXY.delete().where(GALAXY.c.galaxy_id == galaxy_id))
 
         LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id)
