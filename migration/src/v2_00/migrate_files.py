@@ -36,6 +36,7 @@ import subprocess
 from database.database_support_core import GALAXY
 from utils.name_builder import get_galaxy_image_bucket, get_files_bucket, get_galaxy_file_name, get_key_fits, get_thumbnail_colour_image_key, get_colour_image_key, get_build_png_name, get_key_hdf5
 from utils.s3_helper import get_bucket, get_s3_connection, add_file_to_bucket
+from v2_00 import DRY_RUN
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -94,27 +95,27 @@ def migrate_image_files(connection, image_bucket, file_bucket):
         galaxy = connection.execute(select([GALAXY]).where(and_(GALAXY.c.name == name, GALAXY.c.version_number == version))).first()
         if galaxy is not None:
             if extension == '.fits':
-                add_file_to_bucket(file_bucket, get_key_fits(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), file_name)
+                add_file_to_bucket1(file_bucket, get_key_fits(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), file_name)
             else:
                 galaxy_key = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
                 if file_name.find('_tn_colour_1.png'):
-                    add_file_to_bucket(image_bucket, get_thumbnail_colour_image_key(galaxy_key, 1), file_name)
+                    add_file_to_bucket1(image_bucket, get_thumbnail_colour_image_key(galaxy_key, 1), file_name)
                 elif file_name.find('_colour_1.png'):
-                    add_file_to_bucket(image_bucket, get_colour_image_key(galaxy_key, 1), file_name)
+                    add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 1), file_name)
                 elif file_name.find('_colour_2.png'):
-                    add_file_to_bucket(image_bucket, get_colour_image_key(galaxy_key, 2), file_name)
+                    add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 2), file_name)
                 elif file_name.find('_colour_3.png'):
-                    add_file_to_bucket(image_bucket, get_colour_image_key(galaxy_key, 3), file_name)
+                    add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 3), file_name)
                 elif file_name.find('_colour_4.png'):
-                    add_file_to_bucket(image_bucket, get_colour_image_key(galaxy_key, 4), file_name)
+                    add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 4), file_name)
                 elif file_name.find('_mu.png'):
-                    add_file_to_bucket(image_bucket, get_build_png_name(galaxy_key, 'mu'), file_name)
+                    add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'mu'), file_name)
                 elif file_name.find('_m.png'):
-                    add_file_to_bucket(image_bucket, get_build_png_name(galaxy_key, 'm'), file_name)
+                    add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'm'), file_name)
                 elif file_name.find('_ldust.png'):
-                    add_file_to_bucket(image_bucket, get_build_png_name(galaxy_key, 'ldust'), file_name)
+                    add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'ldust'), file_name)
                 elif file_name.find('_sfr.png'):
-                    add_file_to_bucket(image_bucket, get_build_png_name(galaxy_key, 'sfr'), file_name)
+                    add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'sfr'), file_name)
 
 
 def get_temp_file(extension):
@@ -136,10 +137,20 @@ def check_results(output, path_name):
     :return: True if the files was downloaded correctly
     """
     print('checking file transfer')
-    if output.find('HTTP request sent, awaiting response... 200 OK') >= 0 and output.find('Length:') >= 0 and output.find('Saving to:') >= 0 \
-        and os.path.exists(path_name) and os.path.getsize(path_name) > 100:
+    if output.find('HTTP request sent, awaiting response... 200 OK') >= 0 \
+            and output.find('Length:') >= 0 \
+            and output.find('Saving to:') >= 0 \
+            and os.path.exists(path_name) \
+            and os.path.getsize(path_name) > 100:
         return True
     return output
+
+
+def add_file_to_bucket1(file_bucket, key, path_name):
+    if DRY_RUN:
+        LOG.info('DRY_RUN: bucket: {0}, key: {1}, file: {3}'.format('file_bucket, key, path_name'))
+    else:
+        add_file_to_bucket(file_bucket, key, path_name)
 
 
 def migrate_hdf5_files(connection, file_bucket):
@@ -155,7 +166,7 @@ def migrate_hdf5_files(connection, file_bucket):
         try:
             output = subprocess.check_output(shlex.split(command_string), stderr=subprocess.STDOUT)
             if check_results(output, path_name):
-                add_file_to_bucket(file_bucket, get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), path_name)
+                add_file_to_bucket1(file_bucket, get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), path_name)
             else:
                 LOG.error('Big error with {0}'.format(ngas_file_name))
         except subprocess.CalledProcessError as e:
