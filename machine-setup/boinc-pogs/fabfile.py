@@ -39,6 +39,7 @@ from fabric.operations import local, prompt
 from fabric.state import env
 import socket
 from common.FileEditor import FileEditor
+from boto.s3.lifecycle import Transition, Rule, Lifecycle
 
 APP_NAME = "magphys_wrapper"
 PLATFORMS = ["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu", "arm-android-linux-gnu"]
@@ -383,6 +384,11 @@ def create_s3():
     file_bucket = 'icrar.{0}.files'.format(env.project_name)
     s3.create_bucket(file_bucket)
 
-    # Create the bucket for the stas files
+    # Create the bucket for the stats files
     file_bucket = 'icrar.{0}.archive'.format(env.project_name)
-    s3.create_bucket(file_bucket)
+    bucket = s3.create_bucket(file_bucket)
+    to_glacier = Transition(days=10, storage_class='GLACIER')
+    rule = Rule('ruleid', status='Enabled', transition=to_glacier)
+    lifecycle = Lifecycle()
+    lifecycle.append(rule)
+    bucket.configure_lifecycle(lifecycle)

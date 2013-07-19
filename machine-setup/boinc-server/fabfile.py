@@ -360,22 +360,28 @@ boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/dat
             run('./make_project -v --no_query --drop_db_first --url_base http://{0} --db_user {1} --db_host={2} --db_passwd={3} {4}'
                 .format(env.hosts[0], env.db_username, env.db_host_name, env.db_password, env.project_name))
 
-        run('''echo 'databaseUserid = "{0}"
+        run('''echo '# DB Settings
+databaseUserid = "{0}"
 databasePassword = "{1}"
 databaseHostname = "{2}"
 databaseName = "magphys"
-boincDatabaseName = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'''.format(env.db_username, env.db_password, env.db_host_name, env.project_name))
+boincDatabaseName = "{3}"
 
-    # Setup Work Generation files
-    run('''echo 'min_pixels_per_file = "15"
-row_height = "6"
+# Work Generation settings
+min_pixels_per_file = "15"
+row_height = "7"
 threshold = "1000"
 high_water_mark = "400"
 report_deadline = "7"
-project_name = "{0}"
-tmp = "/tmp"
+
+# Archive settings
 delete_delay = "5"
-boinc_project_root = "/home/ec2-user/projects/{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/work_generation.settings'''.format(env.project_name))
+boinc_statistics_delay = "2"
+
+# POGS Settings
+tmp = "/tmp"
+boinc_project_root = "/home/ec2-user/projects/{3}"
+project_name = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.db_username, env.db_password, env.db_host_name, env.project_name))
 
     # Copy the config files
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))

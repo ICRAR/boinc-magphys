@@ -38,7 +38,7 @@ import subprocess
 
 from datetime import datetime
 from sqlalchemy.sql.expression import select
-from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, WG_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
+from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN
 from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
@@ -48,7 +48,7 @@ LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 APP_NAME = 'magphys_wrapper'
-BIN_PATH = WG_BOINC_PROJECT_ROOT + '/bin'
+BIN_PATH = POGS_BOINC_PROJECT_ROOT + '/bin'
 TEMPLATES_PATH1 = 'templates'                                          # In true BOINC style, this is magically relative to the project root
 TEMPLATES_PATH2 = '/home/ec2-user/boinc-magphys/server/runs'           # Where the Server file & model files are
 MIN_QUORUM = 2                                                         # Validator run when there are at least this many results for a work unit
@@ -219,10 +219,10 @@ class Fit2Wu:
         """
         Build the template files we need if they don't exist
         """
-        self._template_file = '{0}/{1:=04d}/fitsed_wu_{2}.xml'.format(WG_BOINC_PROJECT_ROOT, self._run_id, self._rounded_redshift)
+        self._template_file = '{0}/{1:=04d}/fitsed_wu_{2}.xml'.format(POGS_BOINC_PROJECT_ROOT, self._run_id, self._rounded_redshift)
         if not os.path.isfile(self._template_file):
             # Make the directory we need
-            directory = '{0}/{1:=04d}'.format(WG_BOINC_PROJECT_ROOT, self._run_id)
+            directory = '{0}/{1:=04d}'.format(POGS_BOINC_PROJECT_ROOT, self._run_id)
             if not os.path.isdir(directory):
                 os.mkdir(directory)
             template_file = open(self._template_file, 'wb')

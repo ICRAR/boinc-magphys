@@ -24,12 +24,11 @@
 #    MA 02111-1307  USA
 #
 """
-Delete a galaxy and all it's related data.
+Archive the stats stored in .../html/stats_archive to S3
 """
 import logging
 import os
 import sys
-import datetime
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -41,32 +40,18 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import argparse
-from archive.delete_galaxy_mod import delete_galaxy
-from config import DB_LOGIN, STORED, ARC_DELETE_DELAY
-from sqlalchemy import create_engine, and_
-from sqlalchemy.sql import select
-from database.database_support_core import GALAXY
+from archive.archive_boinc_stats_mod import process_ami, process_boinc
+from utils.sanity_checks import pass_sanity_checks
 
-# Get the arguments
-parser = argparse.ArgumentParser('Delete Galaxies that have been stored')
-parser.add_argument('-mod', '--mod', nargs=2, help=' M N - the modulus M to used and which value to check N ')
+parser = argparse.ArgumentParser('Archive BOINC statistics to S3')
+parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
 args = vars(parser.parse_args())
 
-# First check the galaxy exists in the database
-ENGINE = create_engine(DB_LOGIN)
-connection = ENGINE.connect()
 
-delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=float(ARC_DELETE_DELAY))
-LOG.info('Deleting {0} days ago ({1})'.format(ARC_DELETE_DELAY, delete_delay_ago))
-if args['mod'] is None:
-    select_statement = select([GALAXY]).where(and_(GALAXY.c.status_id == STORED, GALAXY.c.status_time < delete_delay_ago)).order_by(GALAXY.c.galaxy_id)
+if args['option'] == 'boinc':
+    # We're running from the BOINC server
+    process_boinc()
 else:
-    select_statement = select([GALAXY]).where(and_(GALAXY.c.status_id == STORED, GALAXY.c.status_time < delete_delay_ago, GALAXY.c.galaxy_id % args['mod'][0] == args['mod'][1])).order_by(GALAXY.c.galaxy_id)
-    LOG.info('Using modulus {0} - remainder {1}'.format(args['mod'][0], args['mod'][1]))
-
-galaxy_ids = []
-for galaxy in connection.execute(select_statement):
-    galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
-
-delete_galaxy(connection, galaxy_ids[0:20])
-connection.close()
+    # We're running from a specially created AMI
+    if pass_sanity_checks():
+        process_ami()
