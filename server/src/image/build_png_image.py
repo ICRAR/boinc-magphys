@@ -47,7 +47,7 @@ import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
-from config import DB_LOGIN, WG_TMP
+from config import DB_LOGIN, POGS_TMP
 from image import fitsimage
 from database.database_support_core import AREA, GALAXY, PIXEL_RESULT
 from PIL import Image
@@ -225,7 +225,7 @@ for galaxy in connection.execute(query):
                     blue = FIRE_B[value]
                     image.putpixel((x, height - y - 1), (red, green, blue))
 
-        file_name = '{0}/image.png'.format(WG_TMP)
+        file_name = '{0}/image.png'.format(POGS_TMP)
         image.save(file_name)
         add_file_to_bucket(bucket,
                            get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]),

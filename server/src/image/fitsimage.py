@@ -32,7 +32,7 @@ import numpy
 from PIL import Image
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
-from config import WG_TMP
+from config import POGS_TMP
 from database.database_support_core import IMAGE_FILTERS_USED, FILTER, AREA, AREA_USER
 from utils.name_builder import get_colour_image_key, get_thumbnail_colour_image_key
 from utils.s3_helper import add_file_to_bucket
@@ -238,7 +238,7 @@ class ImageBuilder:
         :return:
         """
         LOG.info('Saving an image to {0}'.format(image_file_key))
-        file_name = '{0}/image.png'.format(WG_TMP)
+        file_name = '{0}/image.png'.format(POGS_TMP)
         self._image.save(file_name)
         add_file_to_bucket(self._bucket, image_file_key, file_name)
 

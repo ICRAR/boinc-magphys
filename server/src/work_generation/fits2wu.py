@@ -45,7 +45,7 @@ from Boinc import configxml
 from datetime import datetime
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import and_, func, select
-from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, WG_BOINC_PROJECT_ROOT
+from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import REGISTER
 from work_generation.fits2wu_mod import Fit2Wu, MIN_QUORUM
@@ -70,7 +70,7 @@ if args['limit'] is not None:
     LIMIT = args['limit']
 
 # The BOINC scripts/apps do not feel at home outside their directory
-os.chdir(WG_BOINC_PROJECT_ROOT)
+os.chdir(POGS_BOINC_PROJECT_ROOT)
 
 # Connect to the database - the login string is set in the database package
 ENGINE = create_engine(DB_LOGIN)
@@ -99,7 +99,8 @@ else:
                 LOG.info('No registrations waiting')
                 break
             else:
-                transaction = connection.begin()
+                # As the load work unit component adds data to the data base we need autocommit on to ensure each pixel matches
+                #transaction = connection.begin()
                 if not os.path.isfile(registration[REGISTER.c.filename]):
                     LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
@@ -117,15 +118,14 @@ else:
                         os.remove(registration[REGISTER.c.sigma_filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
 
-                transaction.commit()
-
     # We want an explict galaxy to load
     else:
         registration = connection.execute(select([REGISTER]).where(and_(REGISTER.c.register_id == args['register'], REGISTER.c.create_time == None))).first()
         if registration is None:
             LOG.info('No registration waiting with the id %d', args['register'])
         else:
-            transaction = connection.begin()
+            # As the load work unit component adds data to the data base we need autocommit on to ensure each pixel matches
+            #transaction = connection.begin()
             if not os.path.isfile(registration[REGISTER.c.filename]):
                 LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
                 connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
@@ -141,8 +141,6 @@ else:
                 if registration[REGISTER.c.sigma_filename] is not None:
                     os.remove(registration[REGISTER.c.sigma_filename])
                 connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
-
-            transaction.commit()
 
     LOG.info('Done - added %d Results', files_processed)
 
