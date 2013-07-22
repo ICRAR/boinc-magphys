@@ -57,7 +57,7 @@ connection.close()
 
 sorted_data = sort_data(current_jobs)
 for key in sorted(sorted_data.iterkeys()):
-    LOG.info('{0}: {1} areas'.format(key, len(sorted_data[key])))
+    LOG.info('{0}: {1} results'.format(key, len(sorted_data[key])))
 
 # Connect to the database - the login string is set in the database package
 ENGINE = create_engine(DB_LOGIN)

@@ -42,6 +42,7 @@ connection = ENGINE.connect()
 
 transaction = connection.begin()
 
+
 def get_filter_id(filter_number):
     """
     Get the filter id
@@ -73,6 +74,7 @@ def insert_or_update(image_number, galaxy_id, red_filter, green_filter, blue_fil
             filter_id_red = filter_id_red,
             filter_id_blue = filter_id_blue,
             filter_id_green = filter_id_green))
+
 
 for galaxy in connection.execute(select([GALAXY])):
     LOG.info('Processing %d - %s', galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.name])
