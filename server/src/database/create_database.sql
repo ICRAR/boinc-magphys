@@ -83,7 +83,7 @@ CREATE TABLE run_filter (
 CREATE TABLE register (
   register_id    BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   galaxy_name    VARCHAR(128) NOT NULL,
-  redshift       DECIMAL(7, 5) NOT NULL,
+  redshift       DECIMAL(10, 7) NOT NULL,
   galaxy_type    VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
   sigma          DECIMAL(3,2) NOT NULL,
   filename       VARCHAR(1000) NOT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE galaxy (
   dimension_x      INTEGER UNSIGNED NOT NULL,
   dimension_y      INTEGER UNSIGNED NOT NULL,
   dimension_z      INTEGER UNSIGNED NOT NULL,
-  redshift         DECIMAL(7, 5) NOT NULL,
+  redshift         DECIMAL(10, 7) NOT NULL,
   sigma            DECIMAL(3,2) NOT NULL,
   create_time      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   image_time       TIMESTAMP,
