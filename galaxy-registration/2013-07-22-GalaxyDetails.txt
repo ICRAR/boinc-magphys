@@ -1,0 +1,30 @@
+# Program   Filename    Redshift    Galaxy  Type    Sigma   Priority    Run_Id
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_ARP220.fits   0.018126    ARP220  S?  /home/ec2-user/galaxies/POGSSNR_SDSSonly_ARP220.fits    1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_MESSIER060.fits   0.003726    MESSIER060  E2  /home/ec2-user/galaxies/POGSSNR_SDSSonly_MESSIER060.fits    1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_MESSIER105.fits   0.003039    MESSIER105  E1  /home/ec2-user/galaxies/POGSSNR_SDSSonly_MESSIER105.fits    1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC0315.fits  0.016485    NGC0315 cD  /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC0315.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC0855.fits  0.001975    NGC0855 E   /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC0855.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC1052.fits  0.005037    NGC1052 E4  /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC1052.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC3077.fits  0.000047    NGC3077 I0 pec  /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC3077.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC3801.fits  0.011064    NGC3801 S0? /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC3801.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4013.fits  0.002773    NGC4013 Sb  /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4013.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4125.fits  0.004523    NGC4125 E6 pec  /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4125.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4217.fits  0.003426    NGC4217 Sb  /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4217.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4261.fits  0.007465    NGC4261 E2-3    /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4261.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4278.fits  0.002165    NGC4278 E1-2    /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4278.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4283.fits  0.003282    NGC4283 E0  /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4283.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4636.fits  0.003129    NGC4636 E0-1    /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4636.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC5775.fits  0.005607    NGC5775 SBc?    /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC5775.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC5813.fits  0.006578    NGC5813 E1-2    /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC5813.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC5846.fits  0.005717    NGC5846 E0-1    /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC5846.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC7673.fits  0.011368    NGC7673 SAc? pec    /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC7673.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_UGC01214.fits 0.017179    UGC01214    'SAB0(rs)'    /home/ec2-user/galaxies/POGSSNR_SDSSonly_UGC01214.fits  1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_MESSIER100.fits   0.00524 MESSIER100  'SAB(s)bc'    /home/ec2-user/galaxies/POGSSNR_SDSSonly_MESSIER100.fits    1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC2681.fits  0.002308    NGC2681 'SAB(rs)0'    /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC2681.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC3384.fits  0.002348    NGC3384 'SB0(s)'  /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC3384.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC3631.fits  0.003856    NGC3631 'SA(s)c'  /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC3631.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC3683.fits  0.005724    NGC3683 'SB(s)c?' /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC3683.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC3898.fits  0.003923    NGC3898 'SA(s)ab' /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC3898.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4157.fits  0.002583    NGC4157 'SAB(s)b?'    /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4157.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4264.fits  0.008446    NGC4264 'SB0(rs)' /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4264.fits   1   2
+./register_fits_file.py /home/ec2-user/galaxies/POGS_SDSSonly_NGC4477.fits  0.00452 NGC4477 'SB0(s)?' /home/ec2-user/galaxies/POGSSNR_SDSSonly_NGC4477.fits   1   2
