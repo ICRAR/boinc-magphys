@@ -37,7 +37,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import argparse
 from archive.archive_boinc_stats_mod import process_ami, process_boinc
@@ -49,9 +48,14 @@ args = vars(parser.parse_args())
 
 
 if args['option'] == 'boinc':
+    LOG.info('PYTHONPATH = {0}'.format(sys.path))
     # We're running from the BOINC server
     process_boinc()
 else:
     # We're running from a specially created AMI
-    if pass_sanity_checks():
-        process_ami()
+    logging_file_handler = logging.FileHandler('')
+    LOG.addHandler(logging_file_handler)
+    LOG.info('PYTHONPATH = {0}'.format(sys.path))
+
+    if pass_sanity_checks(logging_file_handler):
+        process_ami(logging_file_handler)
