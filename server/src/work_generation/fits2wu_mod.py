@@ -670,15 +670,24 @@ class Fit2Wu:
         insert = FITS_HEADER.insert()
         header = self._hdu_list[0].header
         index = 0
+        ctype1 = None
+        ctype2 = None
         for keyword in header:
             # The new version of PyFits supports comments
             value = header[index]
             comment = header.comments[index]
             self._connection.execute(insert.values(galaxy_id=self._galaxy_id, keyword=keyword, value=value, comment=comment))
 
-            if keyword == 'RA_CENT':
+            # Record the ctype so we can get the RA and DEC
+            if keyword == 'CTYPE1':
+                ctype1 = value
+            elif keyword == 'CTYPE2':
+                ctype2 = value
+
+            # Record the RA and DEC if we can
+            if keyword == 'RA_CENT' or (ctype1 == 'RA---TAN' and keyword == 'CRVAL1'):
                 self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(ra_cent=float(value)))
-            elif keyword == 'DEC_CENT':
+            elif keyword == 'DEC_CENT' or (ctype2 == 'DEC---TAN' and keyword == 'CRVAL2'):
                 self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent=float(value)))
 
             index += 1
