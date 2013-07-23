@@ -126,4 +126,6 @@ for galaxy in connection.execute(select([GALAXY]).where(or_(GALAXY.c.ra_cent == 
     (found, ra, dec) = get_ra_dec(name)
     if found:
         LOG.info('Updating {0} to RA: {1}, DEC: {2}'.format(name, ra, dec))
-        #connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).values(ra_cent=ra, dec_cent=dec))
+        connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).values(ra_cent=ra, dec_cent=dec))
+
+connection.close()
