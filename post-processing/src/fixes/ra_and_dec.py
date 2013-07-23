@@ -104,6 +104,17 @@ def get_ra_dec(name):
         LOG.info('VOTable data collected from NED for {0}'.format(name))
         return True, float(ra_eqj2000), float(dec_eqj2000)
     except Exception:
+        pass
+
+    # Try Hyperleda
+    try:
+        url = 'http://leda.univ-lyon1.fr/G.cgi?n=113&c=o&o=' + name + '&a=x&z=d'
+        table = getVOTable(url, 0)
+        ra_eqj2000 = table.array['alpha'][0]
+        dec_eqj2000 = table.array['delta'][0]
+        LOG.info('VOTable data collected from Hyperleda for {0}'.format(name))
+        return True, float(ra_eqj2000), float(dec_eqj2000)
+    except Exception:
         LOG.exception('ERROR: Getting VO data for {0}'.format(name))
         return False, 0.0, 0.0
 
@@ -114,5 +125,5 @@ for galaxy in connection.execute(select([GALAXY]).where(or_(GALAXY.c.ra_cent == 
 
     (found, ra, dec) = get_ra_dec(name)
     if found:
-        LOG.info('Updating {0} to RA: {1}, DEC: {2}', name, ra, dec)
+        LOG.info('Updating {0} to RA: {1}, DEC: {2}'.format(name, ra, dec))
         #connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).values(ra_cent=ra, dec_cent=dec))
