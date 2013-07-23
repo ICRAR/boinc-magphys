@@ -40,7 +40,7 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import tempfile
 import urllib2
-from astropy.io.vo import parse_single_table
+from astropy.io.votable.table import parse_single_table
 from sqlalchemy import create_engine, select, or_
 import warnings
 from config import DB_LOGIN
