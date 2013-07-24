@@ -47,7 +47,7 @@ def get_files_bucket():
     return 'icrar.{0}.files'.format(POGS_PROJECT_NAME)
 
 
-def get_glacier_archive_bucket():
+def get_archive_bucket():
     """
     Return the name of the bucket to hold sed files
 
@@ -56,14 +56,23 @@ def get_glacier_archive_bucket():
     return 'icrar.{0}.archive'.format(POGS_PROJECT_NAME)
 
 
-def get_boinc_archive_key(key1, key2):
+def get_stats_archive_key(key1, key2):
     """
     Return the key to the S3 element
     :param key1:
     :param key2:
     :return:
     """
-    return 'boinc/{0}/{1}'.format(key1, key2)
+    return 'stats/{0}/{1}'.format(key1, key2)
+
+
+def get_log_archive_key(key1, key2):
+    """
+    Return the key to the S3 element
+    :param key:
+    :return:
+    """
+    return 'logs/{0}/{1}'.format(key1, key2)
 
 
 def get_galaxy_file_name(galaxy_name, run_id, galaxy_id):

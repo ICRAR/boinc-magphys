@@ -51,7 +51,7 @@ from config import DB_LOGIN, POGS_TMP
 from image import fitsimage
 from database.database_support_core import AREA, GALAXY, PIXEL_RESULT
 from PIL import Image
-from utils.s3_helper import get_s3_connection, get_bucket, add_file_to_bucket
+from utils.s3_helper import S3Helper
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
 parser.add_argument('names', nargs='*', help='optional the name of the galaxies to produce')
@@ -139,8 +139,8 @@ FIRE_B = [0, 7, 15, 22, 30, 38, 45, 53, 61, 65, 69, 74, 78,
 
 fits_image = fitsimage.FitsImage(connection)
 galaxy_count = 0
-s3_connection = get_s3_connection()
-bucket = get_bucket(s3_connection, get_galaxy_image_bucket())
+s3helper = S3Helper()
+bucket = s3helper.get_bucket(get_galaxy_image_bucket())
 for galaxy in connection.execute(query):
     LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
     array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(PNG_IMAGE_NAMES)), dtype=numpy.float)
@@ -227,10 +227,10 @@ for galaxy in connection.execute(query):
 
         file_name = '{0}/image.png'.format(POGS_TMP)
         image.save(file_name)
-        add_file_to_bucket(bucket,
-                           get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]),
-                                              name),
-                           file_name)
+        s3helper.add_file_to_bucket(bucket,
+                                    get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]),
+                                                       name),
+                                    file_name)
 
 
 LOG.info('Built images for %d galaxies', galaxy_count)

@@ -35,8 +35,8 @@ from sqlalchemy import create_engine, select, func
 import time
 from config import DB_LOGIN
 from database.database_support_core import REGISTER
-from utils.name_builder import get_glacier_archive_bucket
-from utils.s3_helper import get_s3_connection, get_bucket
+from utils.name_builder import get_archive_bucket
+from utils.s3_helper import S3Helper
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -78,7 +78,7 @@ class EC2Metadata:
                 s.connect((addr, port))
                 s.close()
                 return True
-            except socket.error, e:
+            except socket.error:
                 time.sleep(1)
 
         return False
@@ -102,7 +102,7 @@ class EC2Metadata:
 
         if metaopt == 'public-keys':
             data = self._get('meta-data/public-keys')
-            keyids = [ line.split('=')[0] for line in data.splitlines() ]
+            keyids = [line.split('=')[0] for line in data.splitlines()]
 
             public_keys = []
             for keyid in keyids:
@@ -149,8 +149,8 @@ def access_s3():
     :return:
     """
     try:
-        s3_connection = get_s3_connection()
-        bucket = get_bucket(s3_connection, get_glacier_archive_bucket())
+        s3helper = S3Helper()
+        bucket = s3helper.get_bucket(get_archive_bucket())
         LOG.info('Access S3 bucket name: {0}'.format(bucket.name))
     except Exception:
         LOG.exception('check_database_connection')
@@ -205,4 +205,3 @@ def pass_sanity_checks(logging_file_handler):
 
     # If we get here we're good
     return True
-

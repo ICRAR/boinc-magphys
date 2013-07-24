@@ -35,7 +35,7 @@ from sqlalchemy.sql.expression import and_
 from config import POGS_TMP
 from database.database_support_core import IMAGE_FILTERS_USED, FILTER, AREA, AREA_USER
 from utils.name_builder import get_colour_image_key, get_thumbnail_colour_image_key
-from utils.s3_helper import add_file_to_bucket
+from utils.s3_helper import S3Helper
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -240,7 +240,7 @@ class ImageBuilder:
         LOG.info('Saving an image to {0}'.format(image_file_key))
         file_name = '{0}/image.png'.format(POGS_TMP)
         self._image.save(file_name)
-        add_file_to_bucket(self._bucket, image_file_key, file_name)
+        S3Helper.add_file_to_bucket(self._bucket, image_file_key, file_name)
 
 
 class FitsImage:

@@ -51,6 +51,13 @@ if exists(config_file_name):
     ARC_DELETE_DELAY = config['delete_delay']
     ARC_BOINC_STATISTICS_DELAY = config['boinc_statistics_delay']
 
+    ############### AWS Settings ###############
+    AWS_AMI_ID = config['ami_id']
+    AWS_INSTANCE_TYPE = config['instance_type']
+    AWS_KEY_NAME = config['key_name']
+    AWS_SECURITY_GROUPS = config['security_groups']
+    AWS_SUBNET_IDS = config['subnet_ids']
+
     ############### Global Settings ###############
     POGS_TMP = config['tmp']
     POGS_PROJECT_NAME = config['project_name']

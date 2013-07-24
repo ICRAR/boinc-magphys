@@ -26,29 +26,65 @@
 Helper functions for EC2
 """
 import logging
+import random
 import boto
+import time
+from config import AWS_AMI_ID, AWS_INSTANCE_TYPE, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-def get_ec2_connection():
-    """
-    Get an EC2 connection
-    :return:
-    """
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    return boto.connect_ec2()
+
+class EC2Helper:
+    def __init__(self):
+        """
+        Get an EC2 connection
+        :return:
+        """
+        # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
+        self.ec2_connection = boto.connect_ec2()
+
+    def get_all_instances(self, boinc_value):
+        """
+        Get any instances that are running with the specified BOINC tag
+
+        :param boinc_value: the tag value we are looking for
+        :return: list of instances
+        """
+        return self.ec2_connection.get_all_instances(filters={'tag:BOINC': boinc_value})
+
+    def run_instance(self, user_data, boinc_value):
+        """
+        Run up an instance
+
+        :param user_data:
+        :return:
+        """
+        # Get the public IP address we'll need
+        allocation = self.ec2_connection.allocate_address('vpc')
+
+        random.seed()
+        index = random.randint(0, len(AWS_SUBNET_IDS) - 1)
+        subnet_id = AWS_SUBNET_IDS[index]
+        LOG.info('Running instance: ami: {0}, boinc_value: {1}, subnet_id: {2}'.format(AWS_AMI_ID, boinc_value, subnet_id))
+        reservations = self.ec2_connection.run_instances(AWS_AMI_ID,
+                                                         instance_type=AWS_INSTANCE_TYPE,
+                                                         instance_initiated_shutdown_behavior='terminate',
+                                                         subnet_id=subnet_id,
+                                                         key_name=AWS_KEY_NAME,
+                                                         security_group_ids=AWS_SECURITY_GROUPS,
+                                                         user_data=user_data)
+        instance = reservations.instances[0]
+        if not self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
+            LOG.error('Could not associate the IP to the instance {0}'.format(instance.id))
+        self.ec2_connection.create_tags([instance.id], {'BOINC': '{0}'.format(boinc_value)})
 
 
-def get_all_instances(ec2_connection, boinc_value):
-    """
-    Get any instances that are running with the specified BOINC tag
-
-    :param ec2_connection:
-    :param boinc_value: the tag value we are looking for
-    :return: list of instances
-    """
-    return ec2_connection.get_all_instances(filters={'tag:BOINC': boinc_value})
-
-def run_instance():
-    ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, subnet_id=env.subnet_id, key_name=KEY_NAME_VPC, security_group_ids=SECURITY_GROUPS_VPC)
+def boinc_instance_running(self, boinc_value):
+        """
+        Is an instance running with this tag?
+        :param boinc_value:
+        :return:
+        """
+        instances = self.get_all_instances(boinc_value)
+        return len(instances) > 0
