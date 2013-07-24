@@ -162,7 +162,7 @@ def remove_files_folder(old_name, run_id, galaxy_id, bucket):
     :param galaxy_id:
     :return:
     """
-    remove_folder(bucket, get_galaxy_file_name(old_name, run_id, galaxy_id))
+    remove_folder(bucket, get_galaxy_file_name(old_name, run_id, galaxy_id) + '/')
 
 
 def remove_galaxy_images_folder(old_name, run_id, galaxy_id, bucket):
@@ -173,7 +173,7 @@ def remove_galaxy_images_folder(old_name, run_id, galaxy_id, bucket):
     :param galaxy_id:
     :return:
     """
-    remove_folder(bucket, get_galaxy_file_name(old_name, run_id, galaxy_id))
+    remove_folder(bucket, get_galaxy_file_name(old_name, run_id, galaxy_id) + '/')
 
 
 def fix_galaxy(galaxy, bucket_files, bucket_galaxy_image):
