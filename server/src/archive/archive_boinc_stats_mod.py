@@ -48,7 +48,7 @@ sleep 10s
 if [ -d '/home/ec2-user/boinc-magphys/server' ]
 then
     # We are root so we have to run this via sudo to get access to the ec2-user details
-    sudo -u ec2-user 'python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami &> {0}'
+    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami &> {0}'
 fi
 
 # All done terminate
