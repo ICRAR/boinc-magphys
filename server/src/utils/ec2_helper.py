@@ -99,9 +99,11 @@ class EC2Helper:
         Allocate a Public IP
         :return:
         """
-        metadata = get_instance_metadata()
+        LOG.info('Getting metadata')
+        metadata = get_instance_metadata(timeout=10)
 
         # Get the public IP address we'll need
+        LOG.info('Allocating a VPC public IP address')
         allocation = self.ec2_connection.allocate_address('vpc')
         if not self.ec2_connection.associate_address(public_ip=None, instance_id=metadata['instance-id'], allocation_id=allocation.allocation_id):
             LOG.error('Could not associate the IP to the instance {0}'.format(metadata['instance-id']))
