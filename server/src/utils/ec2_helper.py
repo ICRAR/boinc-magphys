@@ -105,7 +105,9 @@ class EC2Helper:
         # Get the public IP address we'll need
         LOG.info('Allocating a VPC public IP address')
         allocation = self.ec2_connection.allocate_address('vpc')
-        if not self.ec2_connection.associate_address(public_ip=None, instance_id=metadata['instance-id'], allocation_id=allocation.allocation_id):
+        if self.ec2_connection.associate_address(public_ip=None, instance_id=metadata['instance-id'], allocation_id=allocation.allocation_id):
+            LOG.info('Allocated a VPC public IP address')
+        else:
             LOG.error('Could not associate the IP to the instance {0}'.format(metadata['instance-id']))
             return allocation, False
 
