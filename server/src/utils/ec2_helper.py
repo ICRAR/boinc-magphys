@@ -73,16 +73,18 @@ class EC2Helper:
                                                          security_group_ids=AWS_SECURITY_GROUPS,
                                                          user_data=user_data)
         instance = reservations.instances[0]
-        time.sleep(10)
+        time.sleep(5)
+        while not instance.update() == 'running':
+            time.sleep(1)
+        self.ec2_connection.create_tags([instance.id],
+                                        {'BOINC': '{0}'.format(boinc_value),
+                                         'Name': 'pogs-{0}'.format(boinc_value),
+                                         'Created By': 'pogs'})
         allocation = self.ec2_connection.allocate_address('vpc')
         if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
             LOG.info('Allocated a VPC public IP address')
         else:
             LOG.error('Could not associate the IP to the instance {0}'.format(instance.id))
-        self.ec2_connection.create_tags([instance.id],
-                                        {'BOINC': '{0}'.format(boinc_value),
-                                         'Name': 'pogs-{0}'.format(boinc_value),
-                                         'Created By': 'pogs'})
 
     def boinc_instance_running(self, boinc_value):
         """
