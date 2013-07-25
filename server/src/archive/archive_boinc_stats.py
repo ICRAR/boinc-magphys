@@ -44,7 +44,6 @@ from utils.s3_helper import S3Helper
 from archive.archive_boinc_stats_mod import process_ami, process_boinc
 from utils.name_builder import get_archive_bucket, get_log_archive_key
 from utils.sanity_checks import pass_sanity_checks
-from utils.ec2_helper import EC2Helper
 
 parser = argparse.ArgumentParser('Archive BOINC statistics to S3')
 parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
@@ -60,22 +59,17 @@ if args['option'] == 'boinc':
 else:
     # We're running from a specially created AMI
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
+    LOG.info('About to perform sanity checks')
+    if pass_sanity_checks():
+        process_ami()
+    else:
+        LOG.error('Failed to pass sanity tests')
 
-    # Allocate a public IP address to myself
-    ec2_helper = EC2Helper()
-    (allocation, allocation_ok) = ec2_helper.allocate_public_ip()
-
-    if allocation_ok:
-        if pass_sanity_checks():
-            process_ami()
-        else:
-            LOG.error('Failed to pass sanity tests')
-
-        # Try copying the log file to S3
-        try:
-            s3helper = S3Helper()
-            bucket = s3helper.get_bucket(get_archive_bucket())
-            s3helper.add_file_to_bucket(bucket, get_log_archive_key('archive_boinc_stats', filename), full_filename, True)
-            os.remove(full_filename)
-        except:
-            pass
+    # Try copying the log file to S3
+    try:
+        s3helper = S3Helper()
+        bucket = s3helper.get_bucket(get_archive_bucket())
+        s3helper.add_file_to_bucket(bucket, get_log_archive_key('archive_boinc_stats', filename), full_filename, True)
+        os.remove(full_filename)
+    except:
+        pass

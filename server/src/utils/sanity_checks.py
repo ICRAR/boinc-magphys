@@ -32,6 +32,7 @@ import logging
 import socket
 from boto.utils import get_instance_metadata
 from sqlalchemy import create_engine, select, func
+import time
 from config import DB_LOGIN
 from database.database_support_core import REGISTER
 from utils.name_builder import get_archive_bucket
@@ -116,7 +117,16 @@ def pass_sanity_checks():
     if not check_database_connection():
         return False
 
-    if not public_ip():
+    # The IP address might take some time to arrive
+    have_public_ip = False
+    for i in range(10):
+        if public_ip():
+            have_public_ip = True
+            break
+        else:
+            time.sleep(5)
+
+    if not have_public_ip:
         return False
 
     if not access_s3():

@@ -74,6 +74,11 @@ class EC2Helper:
                                                          user_data=user_data)
         instance = reservations.instances[0]
         time.sleep(10)
+        allocation = self.ec2_connection.allocate_address('vpc')
+        if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
+            LOG.info('Allocated a VPC public IP address')
+        else:
+            LOG.error('Could not associate the IP to the instance {0}'.format(instance.id))
         self.ec2_connection.create_tags([instance.id],
                                         {'BOINC': '{0}'.format(boinc_value),
                                          'Name': 'pogs-{0}'.format(boinc_value),
@@ -93,22 +98,3 @@ class EC2Helper:
                 if instance.state == 'pending' or instance.state == 'running':
                     count += 1
         return count > 0
-
-    def allocate_public_ip(self):
-        """
-        Allocate a Public IP
-        :return:
-        """
-        LOG.info('Getting metadata')
-        metadata = get_instance_metadata(timeout=10)
-
-        # Get the public IP address we'll need
-        LOG.info('Allocating a VPC public IP address')
-        allocation = self.ec2_connection.allocate_address('vpc')
-        if self.ec2_connection.associate_address(public_ip=None, instance_id=metadata['instance-id'], allocation_id=allocation.allocation_id):
-            LOG.info('Allocated a VPC public IP address')
-        else:
-            LOG.error('Could not associate the IP to the instance {0}'.format(metadata['instance-id']))
-            return allocation, False
-
-        return allocation, True
