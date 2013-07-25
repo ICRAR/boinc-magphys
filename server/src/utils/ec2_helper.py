@@ -87,11 +87,12 @@ class EC2Helper:
         :param boinc_value:
         :return:
         """
-        instances = self.get_all_instances(boinc_value)
+        reservations = self.get_all_instances(boinc_value)
         count = 0
-        for instance in instances:
-            LOG.info('instance: {0}, state: {1}'.format(instance.id, instance.state))
-            count += 1
+        for reservation in reservations:
+            for instance in reservation.instance:
+                LOG.info('instance: {0}, state: {1}'.format(instance.id, instance.state))
+                count += 1
         return count > 0
 
     def allocate_public_ip(self):
