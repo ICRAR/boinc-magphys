@@ -51,7 +51,7 @@ parser.add_argument('option', choices=['boinc','ami'], help='are we running on t
 args = vars(parser.parse_args())
 
 filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-full_filename = '/tmp/archive_boinc_stats{0}'.format(filename)
+full_filename = '/home/ec2-user/logs_ami/archive_boinc_stats{0}'.format(filename)
 
 if args['option'] == 'boinc':
     LOG.info('PYTHONPATH = {0}'.format(sys.path))

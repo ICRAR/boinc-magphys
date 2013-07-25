@@ -43,12 +43,12 @@ USER_DATA = '''#!/bin/bash
 
 # Sleep for a while to let everything settle down
 sleep 10s
-whoami > /tmp/whoami.log
 
 # Has the NFS mounted properly?
 if [ -d '/home/ec2-user/boinc-magphys/server' ]
 then
-    python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami &> {0}
+    # We are root so we have to run this via sudo to get access to the ec2-user details
+    sudo -u ec2-user python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami &> {0}
 fi
 
 # All done terminate
