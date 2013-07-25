@@ -90,7 +90,7 @@ def public_ip():
     found_public_ip = False
     try:
         metadata = get_instance_metadata()
-        for key, value in metadata:
+        for key, value in metadata.iteritems():
             if not value:
                 value = "unavailable"
 
