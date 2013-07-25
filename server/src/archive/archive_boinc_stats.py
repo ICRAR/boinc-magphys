@@ -42,6 +42,7 @@ import argparse
 import datetime
 from utils.s3_helper import S3Helper
 from archive.archive_boinc_stats_mod import process_ami, process_boinc
+from utils.ec2_helper import EC2Helper
 from utils.name_builder import get_archive_bucket, get_log_archive_key
 from utils.sanity_checks import pass_sanity_checks
 
@@ -73,3 +74,6 @@ else:
         os.remove(full_filename)
     except:
         pass
+
+    ec2_helper = EC2Helper()
+    ec2_helper.release_public_ip()

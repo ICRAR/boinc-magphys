@@ -104,3 +104,27 @@ class EC2Helper:
                 if instance.state == 'pending' or instance.state == 'running':
                     count += 1
         return count > 0
+
+    def release_public_ip(self, boinc_value):
+        """
+        Release the public IP
+
+        :return:
+        """
+        association_id, allocation_id = self.get_allocation_id(boinc_value)
+
+        if allocation_id is not None and association_id is not None:
+            self.ec2_connection.disassociate_address(association_id=association_id)
+            self.ec2_connection.release_address(allocation_id=allocation_id)
+
+    def get_allocation_id(self, boinc_value):
+        """
+        Get the allocation id
+        :return:
+        """
+        metadata = get_instance_metadata()
+        for address in self.ec2_connection.get_all_addresses(filters={'tag:BOINC': boinc_value}):
+            if address.public_ip == metadata['public-ipv4']:
+                return address.association_id, address.allocation_id
+
+        return None, None
