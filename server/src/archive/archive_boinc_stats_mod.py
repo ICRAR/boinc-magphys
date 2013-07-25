@@ -47,12 +47,13 @@ sleep 10s
 # Has the NFS mounted properly?
 if [ -d '/home/ec2-user/boinc-magphys/server' ]
 then
-    python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py
+    python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami
 fi
 
 # All done terminate
 #shutdown -h
 '''
+
 
 def process_boinc():
     """
