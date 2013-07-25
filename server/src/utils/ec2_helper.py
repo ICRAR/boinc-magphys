@@ -92,7 +92,8 @@ class EC2Helper:
         for reservation in reservations:
             for instance in reservation.instances:
                 LOG.info('instance: {0}, state: {1}'.format(instance.id, instance.state))
-                count += 1
+                if instance.state == 'pending' or instance.state == 'running':
+                    count += 1
         return count > 0
 
     def allocate_public_ip(self):
