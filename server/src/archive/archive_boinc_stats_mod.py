@@ -52,7 +52,7 @@ then
 fi
 
 # All done terminate
-#shutdown -h
+shutdown -h
 '''
 
 

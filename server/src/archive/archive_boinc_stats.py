@@ -68,12 +68,13 @@ else:
 
     # Try copying the log file to S3
     try:
+        LOG.info('About to copy the log file')
         s3helper = S3Helper()
         bucket = s3helper.get_bucket(get_archive_bucket())
         s3helper.add_file_to_bucket(bucket, get_log_archive_key('archive_boinc_stats', filename), full_filename, True)
         os.remove(full_filename)
     except:
-        pass
+        LOG.error('Failed to copy the log file')
 
     ec2_helper = EC2Helper()
     ec2_helper.release_public_ip()
