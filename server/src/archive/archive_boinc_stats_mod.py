@@ -43,6 +43,7 @@ USER_DATA = '''#!/bin/bash
 
 # Sleep for a while to let everything settle down
 sleep 10s
+whoami > /tmp/whoami.log
 
 # Has the NFS mounted properly?
 if [ -d '/home/ec2-user/boinc-magphys/server' ]
