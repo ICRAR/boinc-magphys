@@ -108,12 +108,11 @@ def public_ip():
     return found_public_ip
 
 
-def pass_sanity_checks(logging_file_handler):
+def pass_sanity_checks():
     """
     Do we pass the sanity checks
     :return: True if we pass the sanity checks
     """
-    LOG.addHandler(logging_file_handler)
     if not check_database_connection():
         return False
 

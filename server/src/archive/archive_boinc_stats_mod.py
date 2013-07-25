@@ -47,8 +47,7 @@ sleep 10s
 # Has the NFS mounted properly?
 if [ -d '/home/ec2-user/boinc-magphys/server' ]
 then
-
-    python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami
+    python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami &> {0}
 fi
 
 # All done terminate
@@ -56,7 +55,7 @@ fi
 '''
 
 
-def process_boinc():
+def process_boinc(full_filename):
     """
     We're running the process on the BOINC server.
 
@@ -70,7 +69,7 @@ def process_boinc():
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
-        ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
+        ec2_helper.run_instance(USER_DATA.format(full_filename), BOINC_VALUE)
 
 
 def move_files_to_s3(s3helper, directory_name):
@@ -84,14 +83,13 @@ def move_files_to_s3(s3helper, directory_name):
     os.removedirs(directory_name)
 
 
-def process_ami(logging_file_handler):
+def process_ami():
     """
     We're running on the AMI instance - so actually do the work
 
     Find the files and move them to S3
     :return:
     """
-    LOG.addHandler(logging_file_handler)
     delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=float(ARC_BOINC_STATISTICS_DELAY))
     LOG.info('delete_delay_ago: {0}'.format(delete_delay_ago))
     s3helper = S3Helper()

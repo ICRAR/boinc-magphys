@@ -50,32 +50,29 @@ parser = argparse.ArgumentParser('Archive BOINC statistics to S3')
 parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
 args = vars(parser.parse_args())
 
+filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+full_filename = '/home/ec2-user/logs_ami/archive_boinc_stats{0}'.format(filename)
 
 if args['option'] == 'boinc':
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     # We're running from the BOINC server
-    process_boinc()
+    process_boinc(full_filename)
 else:
     # We're running from a specially created AMI
-    filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-    full_filename = '/home/ec2-user/logs_ami/{0}'.format(filename)
-    logging_file_handler = logging.FileHandler(full_filename)
-    LOG.addHandler(logging_file_handler)
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
     # Allocate a public IP address to myself
-    ec2_helper = EC2Helper(logging_file_handler)
+    ec2_helper = EC2Helper()
     (allocation, allocation_ok) = ec2_helper.allocate_public_ip()
 
     if allocation_ok:
-        if pass_sanity_checks(logging_file_handler):
-            process_ami(logging_file_handler)
+        if pass_sanity_checks():
+            process_ami()
         else:
             LOG.error('Failed to pass sanity tests')
 
         # Try copying the log file to S3
         try:
-            logging_file_handler.close()
             s3helper = S3Helper()
             bucket = s3helper.get_bucket(get_archive_bucket())
             s3helper.add_file_to_bucket(bucket, get_log_archive_key('archive_boinc_stats', filename), full_filename, True)

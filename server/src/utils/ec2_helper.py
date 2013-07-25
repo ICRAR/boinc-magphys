@@ -37,13 +37,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 
 class EC2Helper:
-    def __init__(self, logging_file_handler=None):
+    def __init__(self):
         """
         Get an EC2 connection
         :return:
         """
-        if logging_file_handler is not None:
-            LOG.addHandler(logging_file_handler)
         # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
         self.ec2_connection = boto.connect_ec2()
 
