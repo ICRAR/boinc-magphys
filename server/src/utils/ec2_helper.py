@@ -88,8 +88,11 @@ class EC2Helper:
         :return:
         """
         instances = self.get_all_instances(boinc_value)
-        LOG.info('instances: {0}'.format(instances))
-        return len(instances) > 0
+        count = 0
+        for instance in instances:
+            LOG.info('instance: {0}, state: {1}'.format(instance.id, instance.state))
+            count += 1
+        return count > 0
 
     def allocate_public_ip(self):
         """
