@@ -90,18 +90,15 @@ def public_ip():
     found_public_ip = False
     try:
         metadata = get_instance_metadata()
-        for key, value in metadata.iteritems():
-            if value is None:
-                value = "unavailable"
-
+        for key, value in metadata.items():
             LOG.info("{0}: {1}".format(key, value))
 
-            if key == 'public-ipv4':
-                try:
-                    socket.inet_aton(value)
-                    found_public_ip = True
-                except socket.error:
-                    found_public_ip = False
+        if metadata['public-ipv4'] is not None:
+            try:
+                socket.inet_aton(metadata['public-ipv4'])
+                found_public_ip = True
+            except socket.error:
+                found_public_ip = False
 
     except Exception:
         LOG.exception('check_database_connection')
