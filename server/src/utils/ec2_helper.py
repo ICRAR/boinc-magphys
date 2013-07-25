@@ -79,12 +79,13 @@ class EC2Helper:
                                         {'BOINC': '{0}'.format(boinc_value),
                                          'Name': 'pogs-{0}'.format(boinc_value),
                                          'Created By': 'pogs'})
+
+        LOG.info('Allocating a VPC public IP address')
+        allocation = self.ec2_connection.allocate_address('vpc')
         while not instance.update() == 'running':
             LOG.info('Not running yet')
             time.sleep(1)
 
-        LOG.info('Allocating a VPC public IP address')
-        allocation = self.ec2_connection.allocate_address('vpc')
         if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
             LOG.info('Allocated a VPC public IP address')
         else:
