@@ -29,6 +29,7 @@ Archive the stats stored in .../html/stats_archive to S3
 import logging
 import os
 import sys
+from utils.ec2_helper import EC2Helper
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -62,17 +63,22 @@ else:
     LOG.addHandler(logging_file_handler)
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-    if pass_sanity_checks(logging_file_handler):
-        process_ami(logging_file_handler)
-    else:
-        LOG.error('Failed to pass sanity tests')
+    # Allocate a public IP address to myself
+    ec2_helper = EC2Helper(logging_file_handler)
+    (allocation, allocation_ok) = ec2_helper.allocate_public_ip()
 
-    # Try copying the log file to S3
-    try:
-        logging_file_handler.close()
-        s3helper = S3Helper()
-        bucket = s3helper.get_bucket(get_archive_bucket())
-        s3helper.add_file_to_bucket(bucket, get_log_archive_key('archive_boinc_stats', filename), full_filename, True)
-        os.remove(full_filename)
-    except:
-        pass
+    if allocation_ok:
+        if pass_sanity_checks(logging_file_handler):
+            process_ami(logging_file_handler)
+        else:
+            LOG.error('Failed to pass sanity tests')
+
+        # Try copying the log file to S3
+        try:
+            logging_file_handler.close()
+            s3helper = S3Helper()
+            bucket = s3helper.get_bucket(get_archive_bucket())
+            s3helper.add_file_to_bucket(bucket, get_log_archive_key('archive_boinc_stats', filename), full_filename, True)
+            os.remove(full_filename)
+        except:
+            pass

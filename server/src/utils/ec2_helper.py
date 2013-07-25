@@ -28,6 +28,8 @@ Helper functions for EC2
 import logging
 import random
 import boto
+import time
+from boto.utils import get_instance_metadata
 from config import AWS_AMI_ID, AWS_INSTANCE_TYPE, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS
 
 LOG = logging.getLogger(__name__)
@@ -61,9 +63,6 @@ class EC2Helper:
         :param user_data:
         :return:
         """
-        # Get the public IP address we'll need
-        allocation = self.ec2_connection.allocate_address('vpc')
-
         random.seed()
         index = random.randint(0, len(AWS_SUBNET_IDS) - 1)
         subnet_id = AWS_SUBNET_IDS[index]
@@ -76,11 +75,11 @@ class EC2Helper:
                                                          security_group_ids=AWS_SECURITY_GROUPS,
                                                          user_data=user_data)
         instance = reservations.instances[0]
-        if not self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
-            LOG.error('Could not associate the IP to the instance {0}'.format(instance.id))
-        self.ec2_connection.create_tags([instance.id], {'BOINC': '{0}'.format(boinc_value)})
-        self.ec2_connection.create_tags([instance.id], {'Name': '{0}'.format(boinc_value)})
-
+        time.sleep(10)
+        self.ec2_connection.create_tags([instance.id],
+                                        {'BOINC': '{0}'.format(boinc_value),
+                                         'Name': 'pogs-{0}'.format(boinc_value),
+                                         'Created By': 'pogs'})
 
     def boinc_instance_running(self, boinc_value):
         """
@@ -90,3 +89,18 @@ class EC2Helper:
         """
         instances = self.get_all_instances(boinc_value)
         return len(instances) > 0
+
+    def allocate_public_ip(self):
+        """
+        Allocate a Public IP
+        :return:
+        """
+        metadata = get_instance_metadata()
+
+        # Get the public IP address we'll need
+        allocation = self.ec2_connection.allocate_address('vpc')
+        if not self.ec2_connection.associate_address(public_ip=None, instance_id=metadata['instance-id'], allocation_id=allocation.allocation_id):
+            LOG.error('Could not associate the IP to the instance {0}'.format(metadata['instance-id']))
+            return allocation, False
+
+        return allocation, True
