@@ -40,10 +40,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 BOINC_VALUE = 'archive_data'
 
 USER_DATA = '''#!/bin/bash
-NFS CHECK
 
-python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py
-shutdown -h
+# Sleep for a while to let everything settle down
+sleep 10s
+
+# Has the NFS mounted properly?
+if [ -d '/home/ec2-user/boinc-magphys/server' ]
+then
+    python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py
+fi
+
+# All done terminate
+#shutdown -h
 '''
 
 def process_boinc():
@@ -60,7 +68,7 @@ def process_boinc():
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
-        ec2_helper.run_instance(USER_DATA)
+        ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
 
 
 def move_files_to_s3(s3helper, directory_name):

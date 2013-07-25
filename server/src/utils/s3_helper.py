@@ -34,11 +34,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 
 class S3Helper:
-    def __init__(self):
+    def __init__(self, logging_file_handler=None):
         """
         Get an S3 connection
         :return:
         """
+        LOG.addHandler(logging_file_handler)
         self.s3_connection = boto.connect_s3()
 
     def get_bucket(self, bucket_name):

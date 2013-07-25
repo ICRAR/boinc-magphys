@@ -28,7 +28,6 @@ Helper functions for EC2
 import logging
 import random
 import boto
-import time
 from config import AWS_AMI_ID, AWS_INSTANCE_TYPE, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS
 
 LOG = logging.getLogger(__name__)
@@ -36,11 +35,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC
 
 
 class EC2Helper:
-    def __init__(self):
+    def __init__(self, logging_file_handler=None):
         """
         Get an EC2 connection
         :return:
         """
+        if logging_file_handler is not None:
+            LOG.addHandler(logging_file_handler)
         # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
         self.ec2_connection = boto.connect_ec2()
 
@@ -78,9 +79,10 @@ class EC2Helper:
         if not self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
             LOG.error('Could not associate the IP to the instance {0}'.format(instance.id))
         self.ec2_connection.create_tags([instance.id], {'BOINC': '{0}'.format(boinc_value)})
+        self.ec2_connection.create_tags([instance.id], {'Name': '{0}'.format(boinc_value)})
 
 
-def boinc_instance_running(self, boinc_value):
+    def boinc_instance_running(self, boinc_value):
         """
         Is an instance running with this tag?
         :param boinc_value:
