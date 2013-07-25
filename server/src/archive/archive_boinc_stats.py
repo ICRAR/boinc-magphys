@@ -29,7 +29,6 @@ Archive the stats stored in .../html/stats_archive to S3
 import logging
 import os
 import sys
-from utils.ec2_helper import EC2Helper
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -45,6 +44,7 @@ from utils.s3_helper import S3Helper
 from archive.archive_boinc_stats_mod import process_ami, process_boinc
 from utils.name_builder import get_archive_bucket, get_log_archive_key
 from utils.sanity_checks import pass_sanity_checks
+from utils.ec2_helper import EC2Helper
 
 parser = argparse.ArgumentParser('Archive BOINC statistics to S3')
 parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
