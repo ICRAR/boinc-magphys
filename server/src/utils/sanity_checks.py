@@ -91,7 +91,7 @@ def public_ip():
     try:
         metadata = get_instance_metadata()
         for key, value in metadata.iteritems():
-            if not value:
+            if value is None:
                 value = "unavailable"
 
             LOG.info("{0}: {1}".format(key, value))

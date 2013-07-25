@@ -90,6 +90,7 @@ class EC2Helper:
             LOG.info('Allocated a VPC public IP address')
         else:
             LOG.error('Could not associate the IP to the instance {0}'.format(instance.id))
+            self.ec2_connection.release_address(allocation_id=allocation.allocation_id)
 
     def boinc_instance_running(self, boinc_value):
         """
