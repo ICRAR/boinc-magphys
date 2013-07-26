@@ -80,7 +80,6 @@ def store_files(hdf5_dir):
     try:
         s3helper = S3Helper()
         bucket_name = get_files_bucket()
-        bucket = s3helper.get_bucket(bucket_name)
 
         for file_name in glob.glob(files):
             size = os.path.getsize(file_name)
@@ -92,7 +91,7 @@ def store_files(hdf5_dir):
                 LOG.info('Bucket:    %s', bucket_name)
                 LOG.info('Key:       %s', key)
 
-                s3helper.add_file_to_bucket(bucket, key, file_name)
+                s3helper.add_file_to_bucket(bucket_name, key, file_name)
                 file_count += 1
                 os.remove(file_name)
                 connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=STORED, status_time=datetime.datetime.now()))

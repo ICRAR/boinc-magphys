@@ -140,7 +140,7 @@ FIRE_B = [0, 7, 15, 22, 30, 38, 45, 53, 61, 65, 69, 74, 78,
 fits_image = fitsimage.FitsImage(connection)
 galaxy_count = 0
 s3helper = S3Helper()
-bucket = s3helper.get_bucket(get_galaxy_image_bucket())
+bucket_name = get_galaxy_image_bucket()
 for galaxy in connection.execute(query):
     LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
     array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(PNG_IMAGE_NAMES)), dtype=numpy.float)
@@ -227,7 +227,7 @@ for galaxy in connection.execute(query):
 
         file_name = '{0}/image.png'.format(POGS_TMP)
         image.save(file_name)
-        s3helper.add_file_to_bucket(bucket,
+        s3helper.add_file_to_bucket(bucket_name,
                                     get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]),
                                                        name),
                                     file_name)

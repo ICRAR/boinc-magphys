@@ -68,11 +68,11 @@ class ImageBuilder:
 
     _centre = 0.6
 
-    def __init__(self, bucket, image_number, image_file_key, thumbnail_file_key, red_filter, green_filter, blue_filter, width, height, centre, connection, galaxy_id):
+    def __init__(self, bucket_name, image_number, image_file_key, thumbnail_file_key, red_filter, green_filter, blue_filter, width, height, centre, connection, galaxy_id):
         """
         Initialise the builder
 
-        :param bucket:
+        :param bucket_name:
         :param image_number:
         :param image_file_key:
         :param thumbnail_file_key:
@@ -86,7 +86,7 @@ class ImageBuilder:
         :param galaxy_id:
         :return:
         """
-        self._bucket = bucket
+        self._bucket_name = bucket_name
         self._image_file_key = image_file_key
         self._thumbnail_file_key = thumbnail_file_key
         self._red_filter = red_filter
@@ -240,7 +240,7 @@ class ImageBuilder:
         LOG.info('Saving an image to {0}'.format(image_file_key))
         file_name = '{0}/image.png'.format(POGS_TMP)
         self._image.save(file_name)
-        S3Helper.add_file_to_bucket(self._bucket, image_file_key, file_name)
+        S3Helper.add_file_to_bucket(self._bucket_name, image_file_key, file_name)
 
 
 class FitsImage:
@@ -251,7 +251,7 @@ class FitsImage:
         self.sigma = None
         self._connection = connection
 
-    def build_image(self, fits_file_name, image_key_stub, galaxy_id, bucket):
+    def build_image(self, fits_file_name, image_key_stub, galaxy_id, bucket_name):
         """
         Build Three Colour Images, and optionally black and white and white and black images for each image.
         :param fits_file_name:
@@ -260,7 +260,7 @@ class FitsImage:
         :param bucket:
         """
         # Use the new asinh algorithm.
-        self._build_Image_Asinh(fits_file_name, image_key_stub, self.centre, galaxy_id, bucket)
+        self._build_Image_Asinh(fits_file_name, image_key_stub, self.centre, galaxy_id, bucket_name)
 
     def _get_image_filters(self, hdulist):
         """
@@ -298,7 +298,7 @@ class FitsImage:
 
         return image1_filters, image2_filters, image3_filters, image4_filters
 
-    def _build_Image_Asinh(self, fits_file_name, galaxy_key_stub, centre, galaxy_id, bucket):
+    def _build_Image_Asinh(self, fits_file_name, galaxy_key_stub, centre, galaxy_id, bucket_name):
         """
         Build Three Colour Images using the asinh() function.
         :param fits_file_name:
@@ -316,7 +316,7 @@ class FitsImage:
         (image1_filters, image2_filters, image3_filters, image4_filters) = self._get_image_filters(hdulist)
 
         # Create Three Colour Images
-        image1 = ImageBuilder(bucket,
+        image1 = ImageBuilder(bucket_name,
                               1,
                               get_colour_image_key(galaxy_key_stub, 1),
                               get_thumbnail_colour_image_key(galaxy_key_stub, 1),
@@ -328,7 +328,7 @@ class FitsImage:
                               centre,
                               self._connection,
                               galaxy_id)  # i, r, g
-        image2 = ImageBuilder(bucket,
+        image2 = ImageBuilder(bucket_name,
                               2,
                               get_colour_image_key(galaxy_key_stub, 2),
                               None,
@@ -340,7 +340,7 @@ class FitsImage:
                               centre,
                               self._connection,
                               galaxy_id)  # r, g, NUV
-        image3 = ImageBuilder(bucket,
+        image3 = ImageBuilder(bucket_name,
                               3,
                               get_colour_image_key(galaxy_key_stub, 3),
                               None,
@@ -352,7 +352,7 @@ class FitsImage:
                               centre,
                               self._connection,
                               galaxy_id)  # 3.6, g, NUV
-        image4 = ImageBuilder(bucket,
+        image4 = ImageBuilder(bucket_name,
                               4,
                               get_colour_image_key(galaxy_key_stub, 4),
                               None,

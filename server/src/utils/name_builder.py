@@ -69,7 +69,8 @@ def get_stats_archive_key(key1, key2):
 def get_log_archive_key(key1, key2):
     """
     Return the key to the S3 element
-    :param key:
+    :param key1:
+    :param key2:
     :return:
     """
     return 'logs/{0}/{1}'.format(key1, key2)

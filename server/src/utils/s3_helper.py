@@ -41,7 +41,7 @@ class S3Helper:
         """
         self.s3_connection = boto.connect_s3()
 
-    def get_bucket(self, bucket_name):
+    def _get_bucket(self, bucket_name):
         """
         Get a S3 bucket
 
@@ -50,29 +50,29 @@ class S3Helper:
         """
         return self.s3_connection.get_bucket(bucket_name)
 
-    @staticmethod
-    def add_file_to_bucket(bucket, key_name, filename, reduced_redundancy=False):
+    def add_file_to_bucket(self, bucket_name, key_name, filename, reduced_redundancy=False):
         """
         Add file to a bucket
 
-        :param bucket:
+        :param bucket_name:
         :param key_name:
         :param filename:
         """
+        bucket = self._get_bucket(bucket_name)
         key = Key(bucket)
         key.key = key_name
         key.set_contents_from_filename(filename, reduced_redundancy=reduced_redundancy)
 
-    @staticmethod
-    def get_file_from_bucket(bucket, key_name, file_name):
+    def get_file_from_bucket(self, bucket_name, key_name, file_name):
         """
         Get a file from S3 into a local file
 
-        :param bucket:
+        :param bucket_name:
         :param key_name:
         :param file_name:
         :return:
         """
+        bucket = self._get_bucket(bucket_name)
         key = Key(bucket)
         key.key = key_name
         key.get_contents_to_filename(file_name)

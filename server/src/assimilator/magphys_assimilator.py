@@ -250,8 +250,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
                             # Copy the file to S3
                             s3helper = S3Helper()
-                            bucket = s3helper.get_bucket(get_files_bucket())
-                            s3helper.add_file_to_bucket(bucket,
+                            s3helper.add_file_to_bucket(get_files_bucket(),
                                                         get_key_sed(self._galaxy_name, self._run_id, self._galaxy_id, self._area_id),
                                                         out_file,
                                                         reduced_redundancy=True)
