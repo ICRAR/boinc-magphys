@@ -2,12 +2,11 @@
 
 """
 import h5py
-import logging
+from utils.logging_helper import config_logger
 import numpy
 import time
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 FILENAME = '/tmp/test.hdf5'
 DIM = 200
@@ -15,6 +14,7 @@ data_type_pixel_histogram = numpy.dtype([
     ('x_axis', float),
     ('hist_value', float),
 ])
+
 
 def write():
     start_time = time.time()

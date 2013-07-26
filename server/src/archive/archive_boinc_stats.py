@@ -26,12 +26,8 @@
 """
 Archive the stats stored in .../html/stats_archive to S3
 """
-import logging
 import os
 import sys
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
@@ -40,25 +36,28 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 
 import argparse
 import datetime
+from utils.logging_helper import config_logger, add_file_handler_to_root
 from utils.s3_helper import S3Helper
 from archive.archive_boinc_stats_mod import process_ami, process_boinc
 from utils.ec2_helper import EC2Helper
 from utils.name_builder import get_archive_bucket, get_log_archive_key
 from utils.sanity_checks import pass_sanity_checks
 
+LOG = config_logger(__name__)
+
 parser = argparse.ArgumentParser('Archive BOINC statistics to S3')
 parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
 args = vars(parser.parse_args())
 
-filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-full_filename = '/home/ec2-user/logs_ami/archive_boinc_stats{0}'.format(filename)
-
 if args['option'] == 'boinc':
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     # We're running from the BOINC server
-    process_boinc(full_filename)
+    process_boinc()
 else:
     # We're running from a specially created AMI
+    filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    full_filename = '/home/ec2-user/logs_ami/archive_boinc_stats_{0}.log'.format()
+    add_file_handler_to_root(full_filename)
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')
     if pass_sanity_checks():

@@ -26,16 +26,15 @@
 The code to archive the BOINC statistics
 """
 import glob
-import logging
 import os
 import datetime
+from utils.logging_helper import config_logger
 from config import POGS_BOINC_PROJECT_ROOT, ARC_BOINC_STATISTICS_DELAY
 from utils.ec2_helper import EC2Helper
 from utils.name_builder import get_archive_bucket, get_stats_archive_key
 from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 BOINC_VALUE = 'archive_data'
 
@@ -48,7 +47,7 @@ sleep 10s
 if [ -d '/home/ec2-user/boinc-magphys/server' ]
 then
     # We are root so we have to run this via sudo to get access to the ec2-user details
-    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami &> {0}'
+    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami'
 fi
 
 # All done terminate
@@ -56,7 +55,7 @@ shutdown -h now
 '''
 
 
-def process_boinc(full_filename):
+def process_boinc():
     """
     We're running the process on the BOINC server.
 
@@ -70,7 +69,7 @@ def process_boinc(full_filename):
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
-        ec2_helper.run_instance(USER_DATA.format(full_filename), BOINC_VALUE)
+        ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
 
 
 def move_files_to_s3(s3helper, directory_name):

@@ -1,4 +1,3 @@
-#! /usr/bin/env python2.7
 #
 #    (c) UWA, The University of Western Australia
 #    M468/35 Stirling Hwy

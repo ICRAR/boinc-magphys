@@ -25,20 +25,19 @@
 """
 Image generation
 """
-import logging
 import pyfits
 import math
 import numpy
 from PIL import Image
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
+from utils.logging_helper import config_logger
 from config import POGS_TMP
 from database.database_support_core import IMAGE_FILTERS_USED, FILTER, AREA, AREA_USER
 from utils.name_builder import get_colour_image_key, get_thumbnail_colour_image_key
 from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 
 class ImageBuilder:

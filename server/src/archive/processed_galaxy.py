@@ -26,26 +26,25 @@
 """
 Look at the running galaxies and see if they are done
 """
-import logging
 import os
 import sys
-import datetime
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
+import datetime
+from utils.logging_helper import config_logger
 from archive.processed_galaxy_mod import sort_data, finish_processing
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import select
 from config import BOINC_DB_LOGIN, DB_LOGIN, PROCESSED, COMPUTING
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import GALAXY
+
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 # Get the work units still being processed
 ENGINE = create_engine(BOINC_DB_LOGIN)

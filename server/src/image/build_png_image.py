@@ -28,22 +28,18 @@ Build a PNG image from the data in the database
 """
 import os
 import sys
-import logging
-from utils.name_builder import get_galaxy_image_bucket, get_build_png_name, get_galaxy_file_name
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '../')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import argparse
 import math
 import numpy
 import datetime
+from utils.logging_helper import config_logger
+from utils.name_builder import get_galaxy_image_bucket, get_build_png_name, get_galaxy_file_name
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import and_
@@ -52,6 +48,9 @@ from image import fitsimage
 from database.database_support_core import AREA, GALAXY, PIXEL_RESULT
 from PIL import Image
 from utils.s3_helper import S3Helper
+
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 parser = argparse.ArgumentParser('Build images from the POGS results')
 parser.add_argument('names', nargs='*', help='optional the name of the galaxies to produce')

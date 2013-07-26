@@ -28,7 +28,7 @@ Convert a FITS file ready to be converted into Work Units
 """
 from __future__ import print_function
 import hashlib
-import logging
+from utils.logging_helper import config_logger
 import os
 import json
 import shutil
@@ -44,8 +44,8 @@ from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
 from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = POGS_BOINC_PROJECT_ROOT + '/bin'

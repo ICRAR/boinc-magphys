@@ -25,12 +25,11 @@
 """
 A helper for putting files into S3 and getting them out again
 """
-import logging
 import boto
 from boto.s3.key import Key
+from utils.logging_helper import config_logger
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 
 class S3Helper:

@@ -29,19 +29,18 @@ Job to recalculate the number of pixels processed by each user.
 
 import os
 import sys
-import logging
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
+from utils.logging_helper import config_logger
 from config import DB_LOGIN
 from sqlalchemy import create_engine
+
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()

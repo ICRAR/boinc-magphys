@@ -27,19 +27,18 @@ Module used to write data to an HDF5 file
 """
 import gzip
 import h5py
-import logging
 import math
 import numpy
 import os
 import time
+from utils.logging_helper import config_logger
 from sqlalchemy.sql.expression import select, func
 from config import MIN_HIST_VALUE
 from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT
 from utils.name_builder import get_files_bucket
 from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 OUTPUT_FORMAT_1_00 = 'Version 1.00'
 OUTPUT_FORMAT_1_01 = 'Version 1.01'

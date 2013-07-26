@@ -27,28 +27,27 @@
 Convert a FITS file ready to be converted into Work Units
 """
 from __future__ import print_function
-import argparse
-import logging
 import os
 import sys
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
+import argparse
 from Boinc import configxml
 from datetime import datetime
+from utils.logging_helper import config_logger
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import and_, func, select
 from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import REGISTER
 from work_generation.fits2wu_mod import Fit2Wu, MIN_QUORUM
+
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--register', type=int, help='the registration id of a galaxy')

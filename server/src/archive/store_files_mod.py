@@ -26,18 +26,17 @@
 
 """
 import glob
-import logging
 import os
 import datetime
 
 from sqlalchemy import create_engine
+from utils.logging_helper import config_logger
 from config import DB_LOGIN, STORED
 from database.database_support_core import GALAXY
 from utils.name_builder import get_files_bucket
 from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 
 def get_galaxy_id_and_name(hdf5_file_name):

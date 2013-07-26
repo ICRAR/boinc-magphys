@@ -25,15 +25,14 @@
 """
 Helper functions for EC2
 """
-import logging
 import random
 import boto
 import time
 from boto.utils import get_instance_metadata
+from utils.logging_helper import config_logger
 from config import AWS_AMI_ID, AWS_INSTANCE_TYPE, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 
 class EC2Helper:

@@ -28,12 +28,12 @@ Check the characteristics of the fits file
 """
 import argparse
 import glob
-import logging
+from utils.logging_helper import config_logger
 import os
 import pyfits
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file_names', nargs='+', help='the files to be checked')

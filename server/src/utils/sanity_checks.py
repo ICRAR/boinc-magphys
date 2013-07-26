@@ -28,8 +28,8 @@ The bash script should check to make sure the NFS is working as this code is on 
 
 This module contains the code to do this
 """
-import logging
 import socket
+from utils.logging_helper import config_logger
 from boto.utils import get_instance_metadata
 from sqlalchemy import create_engine, select, func
 import time
@@ -38,8 +38,7 @@ from database.database_support_core import REGISTER
 from utils.name_builder import get_archive_bucket
 from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 
 def check_database_connection():
