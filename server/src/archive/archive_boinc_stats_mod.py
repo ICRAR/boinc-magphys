@@ -51,7 +51,7 @@ then
 fi
 
 # All done terminate
-shutdown -h now
+#shutdown -h now
 '''
 
 
