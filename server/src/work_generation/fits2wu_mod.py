@@ -45,7 +45,6 @@ from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, ge
 from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = POGS_BOINC_PROJECT_ROOT + '/bin'

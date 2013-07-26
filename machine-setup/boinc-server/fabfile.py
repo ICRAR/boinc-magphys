@@ -781,8 +781,9 @@ def start_pogs():
         run('fab --set project_name={0} start_daemons'.format(env.project_name))
 
     # Setup the crontab job to keep things ticking
-    run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
-    run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
+    run('''echo 'MAILTO=""
+PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src
+echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'''.format(env.project_name))
     run('crontab /tmp/crontab.txt')
 
     # Setup the logrotation
