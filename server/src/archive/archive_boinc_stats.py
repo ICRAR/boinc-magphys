@@ -56,7 +56,7 @@ if args['option'] == 'boinc':
 else:
     # We're running from a specially created AMI
     filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-    full_filename = '/home/ec2-user/logs_ami/archive_boinc_stats_{0}.log'.format()
+    full_filename = '/home/ec2-user/logs_ami/archive_boinc_stats_{0}'.format(filename)
     add_file_handler_to_root(full_filename)
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')
