@@ -394,6 +394,8 @@ project_name = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.set
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/* /home/ec2-user/projects/{0}/html/user/'.format(env.project_name))
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/hr_info.txt /home/ec2-user/projects/{0}/hr_info.txt'.format(env.project_name))
+    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/hr_info.txt /home/ec2-user/projects/{0}/hr_info.txt'.format(env.project_name))
+    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/project_files.xml /home/ec2-user/projects/{0}/project_files.xml'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_archive'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_tmp'.format(env.project_name))
 
