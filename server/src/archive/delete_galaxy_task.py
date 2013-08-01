@@ -26,26 +26,25 @@
 """
 Delete a galaxy and all it's related data.
 """
-import logging
 import os
 import sys
 import datetime
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import argparse
+from utils.logging_helper import config_logger
 from archive.delete_galaxy_mod import delete_galaxy
 from config import DB_LOGIN, STORED, ARC_DELETE_DELAY
 from sqlalchemy import create_engine, and_
 from sqlalchemy.sql import select
 from database.database_support_core import GALAXY
+
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 # Get the arguments
 parser = argparse.ArgumentParser('Delete Galaxies that have been stored')

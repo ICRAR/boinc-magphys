@@ -55,7 +55,8 @@ AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
 KEY_NAME_VPC = 'icrar_theskynet_public_prod'
 SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
-SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for the VPC
+PROD_SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for the VPC
+TEST_SECURITY_GROUPS_VPC = ['sg-dd33e0b2', 'sg-9408dbfb']  # Security group for the VPC
 PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
 PIP_PACKAGES = 'sqlalchemy Numpy pyfits pil fabric configobj MySQL-python boto astropy'
 YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel '
@@ -182,8 +183,10 @@ def start_ami_instance(ami_id, instance_name):
 
     if env.subnet_id == '':
         reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
+    elif env.subnet_id == 'subnet-85af9fea':
+        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, subnet_id=env.subnet_id, key_name=KEY_NAME_VPC, security_group_ids=PROD_SECURITY_GROUPS_VPC)
     else:
-        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, subnet_id=env.subnet_id, key_name=KEY_NAME_VPC, security_group_ids=SECURITY_GROUPS_VPC)
+        reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, subnet_id=env.subnet_id, key_name=KEY_NAME_VPC, security_group_ids=TEST_SECURITY_GROUPS_VPC)
 
     instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
@@ -300,16 +303,12 @@ def pogs_install(with_db):
         # Add them to the sudoers
         sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
-    if env.nfs_server != '':
-        nfs_mkdir('archive')
-        nfs_mkdir('archive/to_store')
-        nfs_mkdir('boinc-magphys')
-        nfs_mkdir('galaxies')
-        nfs_mkdir('projects')
-
-    else:
-        run('mkdir /home/ec2-user/galaxies')
-        run('mkdir -p /home/ec2-user/archive/to_store')
+    nfs_mkdir('archive')
+    nfs_mkdir('boinc-magphys')
+    nfs_mkdir('galaxies')
+    nfs_mkdir('projects')
+    nfs_mkdir('logs_ami')
+    run('mkdir -p /home/ec2-user/archive/to_store')
 
     # Clone our code
     if env.branch == '':
@@ -345,11 +344,12 @@ aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(env.aws_access_ke
         with cd('/home/ec2-user/boinc/tools'):
             run('./make_project -v --no_query --url_base http://{0} --db_user root {1}'.format(env.hosts[0], env.project_name))
 
-        run('''echo 'databaseUserid = "root"
+        run('''echo '# DB Settings
+databaseUserid = "root"
 databasePassword = ""
 databaseHostname = "localhost"
 databaseName = "magphys"
-boincDatabaseName = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/database.settings'''.format(env.project_name))
+boincDatabaseName = "{0}"' > /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.project_name))
 
     else:
         # Setup the database for recording WU's
@@ -365,9 +365,9 @@ databaseUserid = "{0}"
 databasePassword = "{1}"
 databaseHostname = "{2}"
 databaseName = "magphys"
-boincDatabaseName = "{3}"
+boincDatabaseName = "{3}"' > /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.db_username, env.db_password, env.db_host_name, env.project_name))
 
-# Work Generation settings
+    run('''echo '# Work Generation settings
 min_pixels_per_file = "15"
 row_height = "7"
 threshold = "1000"
@@ -378,15 +378,23 @@ report_deadline = "7"
 delete_delay = "5"
 boinc_statistics_delay = "2"
 
+# AWS settings
+ami_id = "XXX"
+instance_type = "m1.small"
+key_name = "XXX"
+security_groups = "XXX","YYY"
+subnet_ids = "XXX","YYY"
+
 # POGS Settings
 tmp = "/tmp"
-boinc_project_root = "/home/ec2-user/projects/{3}"
-project_name = "{3}"' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.db_username, env.db_password, env.db_host_name, env.project_name))
+boinc_project_root = "/home/ec2-user/projects/{0}"
+project_name = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.project_name))
 
     # Copy the config files
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/* /home/ec2-user/projects/{0}/html/user/'.format(env.project_name))
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/hr_info.txt /home/ec2-user/projects/{0}/hr_info.txt'.format(env.project_name))
+    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/project_files.xml /home/ec2-user/projects/{0}/project_files.xml'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_archive'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_tmp'.format(env.project_name))
 
@@ -609,8 +617,7 @@ def boinc_build_ami():
     time.sleep(5)
 
     # Do we need to mount the NFS system?
-    if env.nfs_server != '':
-        mount_nfs()
+    mount_nfs()
     boinc_install()
 
     # Save the instance as an AMI
@@ -740,6 +747,9 @@ def boinc_final_messages():
 
 You need to do the following manual steps:
 
+AWS:
+1) Add the ami details to the pogs.settings
+
 SSH
 1) Connect to each of the servers from the other to ensure they can connect
 
@@ -772,8 +782,9 @@ def start_pogs():
         run('fab --set project_name={0} start_daemons'.format(env.project_name))
 
     # Setup the crontab job to keep things ticking
-    run('echo "PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src" >> /tmp/crontab.txt')
-    run('echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'.format(env.project_name))
+    run('''echo 'MAILTO=""
+PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src
+echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'''.format(env.project_name))
     run('crontab /tmp/crontab.txt')
 
     # Setup the logrotation

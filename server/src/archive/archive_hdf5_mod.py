@@ -27,19 +27,18 @@ Module used to write data to an HDF5 file
 """
 import gzip
 import h5py
-import logging
 import math
 import numpy
 import os
 import time
+from utils.logging_helper import config_logger
 from sqlalchemy.sql.expression import select, func
 from config import MIN_HIST_VALUE
 from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT
 from utils.name_builder import get_files_bucket
-from utils.s3_helper import get_s3_connection, get_bucket
+from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 OUTPUT_FORMAT_1_00 = 'Version 1.00'
 OUTPUT_FORMAT_1_01 = 'Version 1.01'
@@ -113,7 +112,7 @@ data_type_fits_header1_01 = numpy.dtype([
     ('keyword', h5py.special_dtype(vlen=str)),
     ('value',   h5py.special_dtype(vlen=str)),
     ('comment', h5py.special_dtype(vlen=str)),
-    ])
+])
 data_type_image_filter = numpy.dtype([
     ('image_number',    long),
     ('filter_id_red',   long),
@@ -249,8 +248,8 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     block_index = 0
     histogram_data = histogram_group.create_dataset('block_1', (BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
 
-    s3_connection = get_s3_connection()
-    bucket = get_bucket(s3_connection, get_files_bucket())
+    s3helper = S3Helper()
+    bucket = s3helper.get_bucket(get_files_bucket())
     for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
         # Ignore the key
         if key.key.endswith('/'):

@@ -24,14 +24,10 @@
 #    MA 02111-1307  USA
 #
 """
-Archive the stats stored in .../html/stats_archive to S3
+Archive the stats stored in .../html/stats_archive to S3 if they are old enough
 """
-import logging
 import os
 import sys
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
@@ -39,13 +35,18 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
+from utils.logging_helper import config_logger, add_file_handler_to_root
+from utils.s3_helper import S3Helper
 from archive.archive_boinc_stats_mod import process_ami, process_boinc
+from utils.ec2_helper import EC2Helper
+from utils.name_builder import get_archive_bucket, get_log_archive_key, get_ami_log_file
 from utils.sanity_checks import pass_sanity_checks
+
+LOG = config_logger(__name__)
 
 parser = argparse.ArgumentParser('Archive BOINC statistics to S3')
 parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
 args = vars(parser.parse_args())
-
 
 if args['option'] == 'boinc':
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
@@ -53,9 +54,23 @@ if args['option'] == 'boinc':
     process_boinc()
 else:
     # We're running from a specially created AMI
-    logging_file_handler = logging.FileHandler('')
-    LOG.addHandler(logging_file_handler)
+    filename, full_filename = get_ami_log_file('archive_boinc_stats')
+    add_file_handler_to_root(full_filename)
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
+    LOG.info('About to perform sanity checks')
+    if pass_sanity_checks():
+        process_ami()
+    else:
+        LOG.error('Failed to pass sanity tests')
 
-    if pass_sanity_checks(logging_file_handler):
-        process_ami(logging_file_handler)
+    # Try copying the log file to S3
+    try:
+        LOG.info('About to copy the log file')
+        s3helper = S3Helper()
+        s3helper.add_file_to_bucket(get_archive_bucket(), get_log_archive_key('archive_boinc_stats', filename), full_filename, True)
+        os.remove(full_filename)
+    except:
+        LOG.exception('Failed to copy the log file')
+
+    ec2_helper = EC2Helper()
+    ec2_helper.release_public_ip()

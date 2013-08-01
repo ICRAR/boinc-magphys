@@ -35,7 +35,7 @@ import urllib
 import subprocess
 from database.database_support_core import GALAXY
 from utils.name_builder import get_galaxy_image_bucket, get_files_bucket, get_galaxy_file_name, get_key_fits, get_thumbnail_colour_image_key, get_colour_image_key, get_build_png_name, get_key_hdf5
-from utils.s3_helper import get_bucket, get_s3_connection, add_file_to_bucket
+from utils.s3_helper import S3Helper
 from V2_00 import DRY_RUN
 
 LOG = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ def get_name_version(full_file_name):
     return None, None, None
 
 
-def migrate_image_files(connection, image_bucket, file_bucket):
+def migrate_image_files(connection, image_bucket_name, file_bucket_name, s3helper):
     for file_name in glob.glob('/home/ec2-user/galaxyImages/*/*'):
         (name, version, extension) = get_name_version(file_name)
 
@@ -95,27 +95,27 @@ def migrate_image_files(connection, image_bucket, file_bucket):
         galaxy = connection.execute(select([GALAXY]).where(and_(GALAXY.c.name == name, GALAXY.c.version_number == version))).first()
         if galaxy is not None:
             if extension == '.fits':
-                add_file_to_bucket1(file_bucket, get_key_fits(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), file_name)
+                add_file_to_bucket1(file_bucket_name, get_key_fits(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), file_name, s3helper)
             else:
                 galaxy_key = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
                 if file_name.endswith('_tn_colour_1.png'):
-                    add_file_to_bucket1(image_bucket, get_thumbnail_colour_image_key(galaxy_key, 1), file_name)
+                    add_file_to_bucket1(image_bucket_name, get_thumbnail_colour_image_key(galaxy_key, 1), file_name, s3helper)
                 elif file_name.endswith('_colour_1.png'):
-                    add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 1), file_name)
+                    add_file_to_bucket1(image_bucket_name, get_colour_image_key(galaxy_key, 1), file_name, s3helper)
                 elif file_name.endswith('_colour_2.png'):
-                    add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 2), file_name)
+                    add_file_to_bucket1(image_bucket_name, get_colour_image_key(galaxy_key, 2), file_name, s3helper)
                 elif file_name.endswith('_colour_3.png'):
-                    add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 3), file_name)
+                    add_file_to_bucket1(image_bucket_name, get_colour_image_key(galaxy_key, 3), file_name, s3helper)
                 elif file_name.endswith('_colour_4.png'):
-                    add_file_to_bucket1(image_bucket, get_colour_image_key(galaxy_key, 4), file_name)
+                    add_file_to_bucket1(image_bucket_name, get_colour_image_key(galaxy_key, 4), file_name, s3helper)
                 elif file_name.endswith('_mu.png'):
-                    add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'mu'), file_name)
+                    add_file_to_bucket1(image_bucket_name, get_build_png_name(galaxy_key, 'mu'), file_name, s3helper)
                 elif file_name.endswith('_m.png'):
-                    add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'm'), file_name)
+                    add_file_to_bucket1(image_bucket_name, get_build_png_name(galaxy_key, 'm'), file_name, s3helper)
                 elif file_name.endswith('_ldust.png'):
-                    add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'ldust'), file_name)
+                    add_file_to_bucket1(image_bucket_name, get_build_png_name(galaxy_key, 'ldust'), file_name, s3helper)
                 elif file_name.endswith('_sfr.png'):
-                    add_file_to_bucket1(image_bucket, get_build_png_name(galaxy_key, 'sfr'), file_name)
+                    add_file_to_bucket1(image_bucket_name, get_build_png_name(galaxy_key, 'sfr'), file_name, s3helper)
 
 
 def get_temp_file(extension):
@@ -146,15 +146,15 @@ def check_results(output, path_name):
     return output
 
 
-def add_file_to_bucket1(file_bucket, key, path_name):
+def add_file_to_bucket1(file_bucket_name, key, path_name, s3helper):
     if DRY_RUN:
-        LOG.info('DRY_RUN: bucket: {0}, key: {1}, file: {2}'.format(file_bucket, key, path_name))
+        LOG.info('DRY_RUN: bucket: {0}, key: {1}, file: {2}'.format(file_bucket_name, key, path_name))
     else:
-        LOG.info('bucket: {0}, key: {1}, file: {2}'.format(file_bucket, key, path_name))
-        add_file_to_bucket(file_bucket, key, path_name)
+        LOG.info('bucket: {0}, key: {1}, file: {2}'.format(file_bucket_name, key, path_name))
+        s3helper.add_file_to_bucket(file_bucket_name, key, path_name)
 
 
-def migrate_hdf5_files(connection, file_bucket):
+def migrate_hdf5_files(connection, file_bucket_name, s3helper):
     for galaxy in connection.execute(select([GALAXY])):
         # Get the hdf5 file
         if galaxy[GALAXY.c.version_number] > 1:
@@ -167,7 +167,7 @@ def migrate_hdf5_files(connection, file_bucket):
         try:
             output = subprocess.check_output(shlex.split(command_string), stderr=subprocess.STDOUT)
             if check_results(output, path_name):
-                add_file_to_bucket1(file_bucket, get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), path_name)
+                add_file_to_bucket1(file_bucket_name, get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), path_name, s3helper)
             else:
                 LOG.error('Big error with {0}'.format(ngas_file_name))
         except subprocess.CalledProcessError as e:
@@ -181,9 +181,7 @@ def migrate_files(connection):
     """
     LOG.info('Migrating the files')
 
-    s3_connection = get_s3_connection()
-    image_bucket = get_bucket(s3_connection, get_galaxy_image_bucket())
-    file_bucket = get_bucket(s3_connection, get_files_bucket())
+    s3helper = S3Helper()
 
-    migrate_image_files(connection, image_bucket, file_bucket)
-    migrate_hdf5_files(connection, file_bucket)
+    migrate_image_files(connection, get_galaxy_image_bucket(), get_files_bucket(), s3helper)
+    migrate_hdf5_files(connection, get_files_bucket(), s3helper)

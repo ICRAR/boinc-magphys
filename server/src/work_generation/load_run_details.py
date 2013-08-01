@@ -27,15 +27,16 @@
 Load the run details into the database
 """
 import argparse
-import logging
+from utils.logging_helper import config_logger
 import os
+import sys
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select, func
 from config import DB_LOGIN
 from database.database_support_core import RUN, FILTER, RUN_FILTER
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')

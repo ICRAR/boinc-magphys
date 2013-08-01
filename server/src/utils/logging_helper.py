@@ -1,4 +1,3 @@
-#! /usr/bin/env python2.7
 #
 #    (c) UWA, The University of Western Australia
 #    M468/35 Stirling Hwy
@@ -24,30 +23,33 @@
 #    MA 02111-1307  USA
 #
 """
-Store the files to NGAS
+Configure a logger
 """
-import os
-import sys
+import logging
 
-# Setup the Python Path as we may be running this via ssh
-base_path = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
-sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
+# Set up the root logger as the project likes it
+logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-import argparse
-from utils.logging_helper import config_logger
-from archive.store_files_mod import store_files
-from utils.readable_dir import ReadableDir
 
-LOG = config_logger(__name__)
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
+def config_logger(name):
+    """
+    Get a logger
 
-parser = argparse.ArgumentParser('Copy files into S3')
-parser.add_argument('-d','--dir', action=ReadableDir, nargs=1, help='where the HDF5 files are')
-args = vars(parser.parse_args())
+    :param name:
+    :return:
+    """
+    logger = logging.getLogger(name)
 
-DIR = args['dir']
+    return logger
 
-file_count = store_files(DIR)
 
-LOG.info('All Done. Stored %d files.', file_count)
+def add_file_handler_to_root(file_name):
+    """
+    Added a file logger to the root
+
+    :param file_name:
+    :return:
+    """
+    file_handler = logging.FileHandler(file_name)
+    root_logger = logging.getLogger()
+    root_logger.addHandler(file_handler)

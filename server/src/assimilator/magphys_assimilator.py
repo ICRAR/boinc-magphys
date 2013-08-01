@@ -29,29 +29,28 @@ The Assimilator for the MagPhys code
 
 import os
 import sys
-import logging
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import time
 import assimilator
 import boinc_path_config
 import gzip, traceback, datetime
 from Boinc import boinc_db
+from utils.logging_helper import config_logger
 from assimilator_utils import is_gzip
 from config import DB_LOGIN
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
 from database.database_support_core import PARAMETER_NAME, PIXEL_RESULT, AREA, AREA_USER, GALAXY
 from utils.name_builder import get_files_bucket, get_key_sed
-from utils.s3_helper import get_s3_connection, get_bucket, add_file_to_bucket
+from utils.s3_helper import S3Helper
+
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 ENGINE = create_engine(DB_LOGIN)
 
@@ -249,12 +248,11 @@ class MagphysAssimilator(assimilator.Assimilator):
                                 connection.execute(insert, area_id=self._area_id, userid=user_id)
 
                             # Copy the file to S3
-                            s3_connection = get_s3_connection()
-                            bucket = get_bucket(s3_connection, get_files_bucket())
-                            add_file_to_bucket(bucket,
-                                               get_key_sed(self._galaxy_name, self._run_id, self._galaxy_id, self._area_id),
-                                               out_file,
-                                               reduced_redundancy=True)
+                            s3helper = S3Helper()
+                            s3helper.add_file_to_bucket(get_files_bucket(),
+                                                        get_key_sed(self._galaxy_name, self._run_id, self._galaxy_id, self._area_id),
+                                                        out_file,
+                                                        reduced_redundancy=True)
 
                         time_taken = '{0:.2f}'.format(time.time() - start)
                         self.logDebug("Saving %d results for workunit %d in %s seconds\n", resultCount, wu.id, time_taken)

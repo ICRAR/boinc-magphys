@@ -29,19 +29,14 @@ and to remove the rows from "credited_job" table once they have been assigned to
 """
 import os
 import sys
-import logging
-
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 import boinc_path_config
-
+from utils.logging_helper import config_logger
 from Boinc import database, configxml, db_base
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select
@@ -49,6 +44,8 @@ from config import DB_LOGIN
 from sqlalchemy import and_
 from database.database_support_core import AREA_USER, AREA
 
+LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 class AssignCredit:
     def __init__(self):

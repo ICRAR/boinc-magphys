@@ -26,28 +26,33 @@
 The code to archive the BOINC statistics
 """
 import glob
-import logging
 import os
 import datetime
+import shutil
+from utils.logging_helper import config_logger
 from config import POGS_BOINC_PROJECT_ROOT, ARC_BOINC_STATISTICS_DELAY
-from utils.ec2_helper import get_ec2_connection, get_all_instances
-from utils.name_builder import get_glacier_archive_bucket, get_boinc_archive_key
-from utils.s3_helper import add_file_to_bucket
+from utils.ec2_helper import EC2Helper
+from utils.name_builder import get_archive_bucket, get_stats_archive_key
+from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
-ARCHIVE_DATA = 'archive_data'
+BOINC_VALUE = 'archive_data'
+USER_DATA = '''#!/bin/bash
 
-def instance_running(ec2_connection):
-    """
-    Do we have an instance running
+# Sleep for a while to let everything settle down
+sleep 10s
 
-    :param ec2_connection:
-    :return:
-    """
-    instances = get_all_instances(ec2_connection, ARCHIVE_DATA)
-    return len(instances) > 0
+# Has the NFS mounted properly?
+if [ -d '/home/ec2-user/boinc-magphys/server' ]
+then
+    # We are root so we have to run this via sudo to get access to the ec2-user details
+    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami'
+fi
+
+# All done terminate
+shutdown -h now
+'''
 
 
 def process_boinc():
@@ -58,39 +63,50 @@ def process_boinc():
     :return:
     """
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_connection = get_ec2_connection()
+    ec2_helper = EC2Helper()
 
-    if instance_running(ec2_connection):
+    if ec2_helper.boinc_instance_running(BOINC_VALUE):
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
-        run_instance(ec2_connection)
+        ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
 
 
-def move_files_to_s3(directory_name):
+def correct(directory_name):
+    """
+    Correct the directory name so it has 0's in front of single digit numbers
+    :param directory_name:
+    :return:
+    """
+    add_zeros = lambda string: '{0:02d}'.format(int(string))
+    elements = directory_name.split('_')
+    return '{0}_{1}_{2}_{3}_{4}_{5}_{6}'.format(elements[0], elements[1], add_zeros(elements[2]), add_zeros(elements[3]), add_zeros(elements[4]), add_zeros(elements[5]), add_zeros(elements[6]))
+
+
+def move_files_to_s3(s3helper, directory_name):
     for file_name in glob.glob(os.path.join(directory_name, '*')):
-        bucket = get_glacier_archive_bucket()
         (root_directory_name, tail_directory_name) = os.path.split(directory_name)
         (root_file_name, tail_file_name) = os.path.split(file_name)
-        key = get_boinc_archive_key(tail_directory_name, tail_file_name)
-        add_file_to_bucket(bucket, key, file_name)
+        key = get_stats_archive_key(correct(tail_directory_name), tail_file_name)
+        LOG.info('Adding {0} to {1}'.format(file_name, key))
+        s3helper.add_file_to_bucket(get_archive_bucket(), key, file_name)
 
-    os.removedirs(directory_name)
+    shutil.rmtree(directory_name, ignore_errors=True)
 
 
-def process_ami(logging_file_handler):
+def process_ami():
     """
     We're running on the AMI instance - so actually do the work
 
     Find the files and move them to S3
     :return:
     """
-    LOG.addHandler(logging_file_handler)
     delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=float(ARC_BOINC_STATISTICS_DELAY))
     LOG.info('delete_delay_ago: {0}'.format(delete_delay_ago))
+    s3helper = S3Helper()
     for directory_name in glob.glob(os.path.join(POGS_BOINC_PROJECT_ROOT, 'html/stats_archive/*')):
         if os.path.isdir(directory_name):
             directory_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(directory_name))
             LOG.info('directory: {0}, mtime: {1}'.format(directory_name, directory_mtime))
             if directory_mtime < delete_delay_ago:
-                move_files_to_s3(directory_name)
+                move_files_to_s3(s3helper, directory_name)

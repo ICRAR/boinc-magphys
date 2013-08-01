@@ -25,18 +25,17 @@
 """
 Functions used to delete a galaxy
 """
-import logging
 import time
 from boto.s3.key import Key
 import datetime
 from sqlalchemy.sql import select, func
+from utils.logging_helper import config_logger
 from config import DELETED
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT
 from utils.name_builder import get_files_bucket, get_galaxy_file_name
-from utils.s3_helper import get_s3_connection, get_bucket
+from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 
 def delete_galaxy(connection, galaxy_ids):
@@ -61,8 +60,8 @@ def delete_galaxy(connection, galaxy_ids):
                     counter += 1
 
                 # Now empty the bucket
-                s3_connection = get_s3_connection()
-                bucket = get_bucket(s3_connection, get_files_bucket())
+                s3helper = S3Helper()
+                bucket = s3helper.get_bucket(get_files_bucket())
                 galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
                 for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
                     # Ignore the key

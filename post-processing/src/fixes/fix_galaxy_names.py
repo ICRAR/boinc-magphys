@@ -43,12 +43,13 @@ from boto.s3.key import Key
 from config import DB_LOGIN
 from sqlalchemy import create_engine, select
 from database.database_support_core import GALAXY
-from utils.s3_helper import get_s3_connection, get_bucket
+from utils.s3_helper import S3Helper
 from utils.name_builder import get_files_bucket, get_galaxy_image_bucket, get_galaxy_file_name
 
 # Connect to the database - the login string is set in the database package
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
+
 
 def needs_fixing(name):
     """
@@ -203,9 +204,9 @@ def fix_galaxy(galaxy, bucket_files, bucket_galaxy_image):
 
 
 for galaxy in connection.execute(select([GALAXY])):
-    s3_connection = get_s3_connection()
-    bucket_files = get_bucket(s3_connection, get_files_bucket())
-    bucket_galaxy_image = get_bucket(s3_connection, get_galaxy_image_bucket())
+    s3helper = S3Helper()
+    bucket_files = s3helper.get_bucket(get_files_bucket())
+    bucket_galaxy_image = s3helper.get_bucket(get_galaxy_image_bucket())
 
     if needs_fixing(galaxy[GALAXY.c.name]):
         fix_galaxy(galaxy, bucket_files, bucket_galaxy_image)

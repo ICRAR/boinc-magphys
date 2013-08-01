@@ -28,7 +28,7 @@ Convert a FITS file ready to be converted into Work Units
 """
 from __future__ import print_function
 import hashlib
-import logging
+from utils.logging_helper import config_logger
 import os
 import json
 import shutil
@@ -42,10 +42,9 @@ from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROO
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN
 from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
-from utils.s3_helper import add_file_to_bucket, get_bucket, get_s3_connection
+from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = POGS_BOINC_PROJECT_ROOT + '/bin'
@@ -195,15 +194,15 @@ class Fit2Wu:
 
         LOG.info('Building the images')
         galaxy_file_name = get_galaxy_file_name(self._galaxy_name, self._run_id, self._galaxy_id)
-        s3_connection = get_s3_connection()
-        bucket = get_bucket(s3_connection, get_galaxy_image_bucket())
+        s3helper = S3Helper()
         image = FitsImage(self._connection)
-        image.build_image(self._filename, galaxy_file_name, self._galaxy_id, bucket)
+        image.build_image(self._filename, galaxy_file_name, self._galaxy_id, get_galaxy_image_bucket())
 
         # Copy the fits file to S3 - renamed to make it unique
-        add_file_to_bucket(get_bucket(s3_connection, get_files_bucket()), get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
+        bucket_name = get_files_bucket()
+        s3helper.add_file_to_bucket(bucket_name, get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
         if self._sigma_filename is not None:
-            add_file_to_bucket(get_bucket(s3_connection, get_files_bucket()), get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
+            s3helper.add_file_to_bucket(bucket_name, get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
 
         return self._work_units_added, self._pixel_count
 

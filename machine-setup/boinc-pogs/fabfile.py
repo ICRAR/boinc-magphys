@@ -39,7 +39,7 @@ from fabric.operations import local, prompt
 from fabric.state import env
 import socket
 from common.FileEditor import FileEditor
-from boto.s3.lifecycle import Transition, Rule, Lifecycle
+from boto.s3.lifecycle import Transition, Rule, Lifecycle, Expiration
 
 APP_NAME = "magphys_wrapper"
 PLATFORMS = ["windows_x86_64", "windows_intelx86", "x86_64-apple-darwin", "x86_64-pc-linux-gnu", "i686-pc-linux-gnu", "arm-android-linux-gnu"]
@@ -234,6 +234,12 @@ def edit_files():
       <output> archive_hdf5_galaxy.out </output>
     </task>
     <task>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py boinc </cmd>
+      <period> 12 hours </period>
+      <disabled> 0 </disabled>
+      <output> archive_boinc_stats.out </output>
+    </task>
+    <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/processed_galaxy.py </cmd>
       <period> 4 hours </period>
       <disabled> 0 </disabled>
@@ -388,7 +394,9 @@ def create_s3():
     file_bucket = 'icrar.{0}.archive'.format(env.project_name)
     bucket = s3.create_bucket(file_bucket)
     to_glacier = Transition(days=10, storage_class='GLACIER')
-    rule = Rule('ruleid', status='Enabled', transition=to_glacier)
+    rule1 = Rule('rule01', status='Enabled', prefix='stats/', transition=to_glacier)
+    rule2 = Rule('rule02', status='Enabled', prefix='logs/', expiration=Expiration(days=20))
     lifecycle = Lifecycle()
-    lifecycle.append(rule)
+    lifecycle.append(rule1)
+    lifecycle.append(rule2)
     bucket.configure_lifecycle(lifecycle)

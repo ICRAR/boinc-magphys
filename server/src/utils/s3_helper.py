@@ -25,55 +25,53 @@
 """
 A helper for putting files into S3 and getting them out again
 """
-import logging
 import boto
 from boto.s3.key import Key
+from utils.logging_helper import config_logger
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
-
-
-def get_s3_connection():
-    """
-    Get an S3 connection
-    :return:
-    """
-    return boto.connect_s3()
+LOG = config_logger(__name__)
 
 
-def get_bucket(s3_connection, bucket_name):
-    """
-    Get a S3 bucket
+class S3Helper:
+    def __init__(self):
+        """
+        Get an S3 connection
+        :return:
+        """
+        self.s3_connection = boto.connect_s3()
 
-    :param s3_connection:
-    :param bucket_name:
-    :return:
-    """
-    return s3_connection.get_bucket(bucket_name)
+    def get_bucket(self, bucket_name):
+        """
+        Get a S3 bucket
 
+        :param bucket_name:
+        :return:
+        """
+        return self.s3_connection.get_bucket(bucket_name)
 
-def add_file_to_bucket(bucket, key_name, filename, reduced_redundancy=False):
-    """
-    Add file to a bucket
+    def add_file_to_bucket(self, bucket_name, key_name, filename, reduced_redundancy=False):
+        """
+        Add file to a bucket
 
-    :param bucket:
-    :param key_name:
-    :param filename:
-    """
-    key = Key(bucket)
-    key.key = key_name
-    key.set_contents_from_filename(filename, reduced_redundancy=reduced_redundancy)
+        :param bucket_name:
+        :param key_name:
+        :param filename:
+        """
+        bucket = self.get_bucket(bucket_name)
+        key = Key(bucket)
+        key.key = key_name
+        key.set_contents_from_filename(filename, reduced_redundancy=reduced_redundancy)
 
+    def get_file_from_bucket(self, bucket_name, key_name, file_name):
+        """
+        Get a file from S3 into a local file
 
-def get_file_from_bucket(bucket, key_name, file_name):
-    """
-    Get a file from S3 into a local file
-
-    :param bucket:
-    :param key_name:
-    :param file_name:
-    :return:
-    """
-    key = Key(bucket)
-    key.key = key_name
-    key.get_contents_to_filename(file_name)
+        :param bucket_name:
+        :param key_name:
+        :param file_name:
+        :return:
+        """
+        bucket = self.get_bucket(bucket_name)
+        key = Key(bucket)
+        key.key = key_name
+        key.get_contents_to_filename(file_name)

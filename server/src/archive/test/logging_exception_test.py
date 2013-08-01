@@ -25,15 +25,16 @@
 """
 Testing the logging of exception
 """
-import logging
+from utils.logging_helper import config_logger
 import sys
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
+
 
 def throws():
     LOG.info('In throws()')
     raise RuntimeError('this is the error message')
+
 
 def main():
     LOG.info('In main')

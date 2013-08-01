@@ -26,18 +26,17 @@
 
 """
 import glob
-import logging
 import os
 import datetime
 
 from sqlalchemy import create_engine
+from utils.logging_helper import config_logger
 from config import DB_LOGIN, STORED
 from database.database_support_core import GALAXY
 from utils.name_builder import get_files_bucket
-from utils.s3_helper import get_s3_connection, get_bucket, add_file_to_bucket
+from utils.s3_helper import S3Helper
 
-LOG = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
+LOG = config_logger(__name__)
 
 
 def get_galaxy_id_and_name(hdf5_file_name):
@@ -78,9 +77,8 @@ def store_files(hdf5_dir):
     file_count = 0
 
     try:
-        s3_connection = get_s3_connection()
+        s3helper = S3Helper()
         bucket_name = get_files_bucket()
-        bucket = get_bucket(s3_connection, bucket_name)
 
         for file_name in glob.glob(files):
             size = os.path.getsize(file_name)
@@ -92,7 +90,7 @@ def store_files(hdf5_dir):
                 LOG.info('Bucket:    %s', bucket_name)
                 LOG.info('Key:       %s', key)
 
-                add_file_to_bucket(bucket, key, file_name)
+                s3helper.add_file_to_bucket(bucket_name, key, file_name)
                 file_count += 1
                 os.remove(file_name)
                 connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=STORED, status_time=datetime.datetime.now()))

@@ -1,4 +1,3 @@
-#! /usr/bin/env python2.7
 #
 #    (c) UWA, The University of Western Australia
 #    M468/35 Stirling Hwy
@@ -26,6 +25,7 @@
 """
 The various name builders used in the project
 """
+import datetime
 from config import POGS_PROJECT_NAME
 
 
@@ -47,7 +47,7 @@ def get_files_bucket():
     return 'icrar.{0}.files'.format(POGS_PROJECT_NAME)
 
 
-def get_glacier_archive_bucket():
+def get_archive_bucket():
     """
     Return the name of the bucket to hold sed files
 
@@ -56,14 +56,24 @@ def get_glacier_archive_bucket():
     return 'icrar.{0}.archive'.format(POGS_PROJECT_NAME)
 
 
-def get_boinc_archive_key(key1, key2):
+def get_stats_archive_key(key1, key2):
     """
     Return the key to the S3 element
     :param key1:
     :param key2:
     :return:
     """
-    return 'boinc/{0}/{1}'.format(key1, key2)
+    return 'stats/{0}/{1}'.format(key1, key2)
+
+
+def get_log_archive_key(key1, key2):
+    """
+    Return the key to the S3 element
+    :param key1:
+    :param key2:
+    :return:
+    """
+    return 'logs/{0}/{1}'.format(key1, key2)
 
 
 def get_galaxy_file_name(galaxy_name, run_id, galaxy_id):
@@ -154,3 +164,9 @@ def get_build_png_name(galaxy_key_prefix, parameter):
     :return:
     """
     return galaxy_key_prefix + "/" + parameter + ".png"
+
+
+def get_ami_log_file(name):
+    filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    full_filename = '/home/ec2-user/logs_ami/{0}_{1}'.format(name, filename)
+    return filename, full_filename
