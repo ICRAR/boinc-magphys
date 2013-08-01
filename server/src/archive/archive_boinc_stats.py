@@ -24,7 +24,7 @@
 #    MA 02111-1307  USA
 #
 """
-Archive the stats stored in .../html/stats_archive to S3
+Archive the stats stored in .../html/stats_archive to S3 if they are old enough
 """
 import os
 import sys
