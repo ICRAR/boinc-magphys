@@ -76,6 +76,7 @@ def move_files_to_s3(s3helper, directory_name):
         (root_directory_name, tail_directory_name) = os.path.split(directory_name)
         (root_file_name, tail_file_name) = os.path.split(file_name)
         key = get_stats_archive_key(tail_directory_name, tail_file_name)
+        LOG.info('Adding {0} to {1}'.format(file_name, key))
         s3helper.add_file_to_bucket(get_archive_bucket(), key, file_name)
 
     #os.removedirs(directory_name)
