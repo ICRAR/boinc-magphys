@@ -37,7 +37,6 @@ from utils.s3_helper import S3Helper
 LOG = config_logger(__name__)
 
 BOINC_VALUE = 'archive_data'
-
 USER_DATA = '''#!/bin/bash
 
 # Sleep for a while to let everything settle down
@@ -51,7 +50,7 @@ then
 fi
 
 # All done terminate
-#shutdown -h now
+shutdown -h now
 '''
 
 

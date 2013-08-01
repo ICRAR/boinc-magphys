@@ -35,12 +35,11 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
-import datetime
 from utils.logging_helper import config_logger, add_file_handler_to_root
 from utils.s3_helper import S3Helper
 from archive.archive_boinc_stats_mod import process_ami, process_boinc
 from utils.ec2_helper import EC2Helper
-from utils.name_builder import get_archive_bucket, get_log_archive_key
+from utils.name_builder import get_archive_bucket, get_log_archive_key, get_ami_log_file
 from utils.sanity_checks import pass_sanity_checks
 
 LOG = config_logger(__name__)
@@ -55,8 +54,7 @@ if args['option'] == 'boinc':
     process_boinc()
 else:
     # We're running from a specially created AMI
-    filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-    full_filename = '/home/ec2-user/logs_ami/archive_boinc_stats_{0}'.format(filename)
+    filename, full_filename = get_ami_log_file('archive_boinc_stats')
     add_file_handler_to_root(full_filename)
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')

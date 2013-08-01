@@ -231,5 +231,4 @@ for galaxy in connection.execute(query):
                                                        name),
                                     file_name)
 
-
 LOG.info('Built images for %d galaxies', galaxy_count)

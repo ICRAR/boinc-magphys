@@ -25,6 +25,7 @@
 """
 The various name builders used in the project
 """
+import datetime
 from config import POGS_PROJECT_NAME
 
 
@@ -163,3 +164,9 @@ def get_build_png_name(galaxy_key_prefix, parameter):
     :return:
     """
     return galaxy_key_prefix + "/" + parameter + ".png"
+
+
+def get_ami_log_file(name):
+    filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    full_filename = '/home/ec2-user/logs_ami/{0}_{1}'.format(name, filename)
+    return filename, full_filename

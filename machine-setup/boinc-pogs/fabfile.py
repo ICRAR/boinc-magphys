@@ -234,6 +234,12 @@ def edit_files():
       <output> archive_hdf5_galaxy.out </output>
     </task>
     <task>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py boinc </cmd>
+      <period> 12 hours </period>
+      <disabled> 0 </disabled>
+      <output> archive_boinc_stats.out </output>
+    </task>
+    <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/processed_galaxy.py </cmd>
       <period> 4 hours </period>
       <disabled> 0 </disabled>
