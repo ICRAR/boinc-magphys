@@ -68,7 +68,7 @@ else:
         LOG.info('About to copy the log file')
         s3helper = S3Helper()
         s3helper.add_file_to_bucket(get_archive_bucket(), get_log_archive_key('archive_boinc_stats', filename), full_filename, True)
-        #os.remove(full_filename)
+        os.remove(full_filename)
     except:
         LOG.exception('Failed to copy the log file')
 

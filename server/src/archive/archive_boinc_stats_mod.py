@@ -28,6 +28,7 @@ The code to archive the BOINC statistics
 import glob
 import os
 import datetime
+import shutil
 from utils.logging_helper import config_logger
 from config import POGS_BOINC_PROJECT_ROOT, ARC_BOINC_STATISTICS_DELAY
 from utils.ec2_helper import EC2Helper
@@ -79,7 +80,7 @@ def move_files_to_s3(s3helper, directory_name):
         LOG.info('Adding {0} to {1}'.format(file_name, key))
         s3helper.add_file_to_bucket(get_archive_bucket(), key, file_name)
 
-    #os.removedirs(directory_name)
+    shutil.rmtree(directory_name, ignore_errors=True)
 
 
 def process_ami():
