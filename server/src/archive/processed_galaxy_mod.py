@@ -25,8 +25,15 @@
 """
 The function used to process a galaxy
 """
+from sqlalchemy import select
+from database.database_support_core import AREA
 
-def sort_data(current_jobs):
+
+def build_key(galaxy_name, galaxy_id):
+    return '{0}_{1}'.format(galaxy_name, galaxy_id)
+
+
+def sort_data(connection, current_jobs):
     """
     Sort the list of jobs
     :param current_jobs:
@@ -37,24 +44,28 @@ def sort_data(current_jobs):
         index = job_name.index('_area')
         galaxy_name = job_name[0:index]
 
-        areas = return_data.get(galaxy_name)
+        index1 = job_name.index('_', index + 5)
+        area_number = job_name[index + 5: index1]
+
+        area = connection.execute(select([AREA]).where(AREA.c.area_id == area_number))
+
+        key = build_key(galaxy_name, area[AREA.c.galaxy_id])
+        areas = return_data.get(key)
         if areas is None:
             areas = []
-            return_data[galaxy_name] = areas
+            return_data[key] = areas
 
-        index1 = job_name.index('_', index + 5)
-        area_number = job_name[index + 5 : index1]
         areas.append(area_number)
 
     return return_data
 
 
-def finish_processing(galaxy_name, sorted_data):
+def finish_processing(galaxy_name, galaxy_id, sorted_data):
     """
     Have we finished processing yet
+    :param galaxy_id:
     :param galaxy_name:
     :param sorted_data:
     :return:
     """
-    return sorted_data.get(galaxy_name) is None
-
+    return sorted_data.get(build_key(galaxy_name, galaxy_id)) is None
