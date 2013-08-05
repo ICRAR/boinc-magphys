@@ -47,7 +47,7 @@ def sort_data(connection, current_jobs):
         index1 = job_name.index('_', index + 5)
         area_number = job_name[index + 5: index1]
 
-        area = connection.execute(select([AREA]).where(AREA.c.area_id == area_number))
+        area = connection.execute(select([AREA]).where(AREA.c.area_id == area_number)).first()
 
         key = build_key(galaxy_name, area[AREA.c.galaxy_id])
         areas = return_data.get(key)
