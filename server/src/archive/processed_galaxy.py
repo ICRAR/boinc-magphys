@@ -54,19 +54,19 @@ for result in connection.execute(select([RESULT]).where(RESULT.c.server_state !=
     current_jobs.append(result[RESULT.c.name])
 connection.close()
 
-sorted_data = sort_data(current_jobs)
-for key in sorted(sorted_data.iterkeys()):
-    LOG.info('{0}: {1} results'.format(key, len(sorted_data[key])))
-
 # Connect to the database - the login string is set in the database package
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
+
+sorted_data = sort_data(connection, current_jobs)
+for key in sorted(sorted_data.iterkeys()):
+    LOG.info('{0}: {1} results'.format(key, len(sorted_data[key])))
 
 try:
     # Get the galaxies we know are still processing
     processed = []
     for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == COMPUTING)):
-        if finish_processing(galaxy[GALAXY.c.name], sorted_data):
+        if finish_processing(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], sorted_data):
             processed.append(galaxy[GALAXY.c.galaxy_id])
             LOG.info('%d %s has completed', galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.name])
 
