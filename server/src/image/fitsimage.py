@@ -166,7 +166,7 @@ class ImageBuilder:
         else:
             return True
 
-    def save_image(self):
+    def save_image(self, s3helper):
         """
         Save the image
         :return:
@@ -223,13 +223,13 @@ class ImageBuilder:
                     blue_value_range[blue] += 1
                     self._image.putpixel((x, self._height - y - 1), (red, green, blue))
 
-        self._save_to_s3(self._image_file_key)
+        self._save_to_s3(self._image_file_key, s3helper)
 
         if self._thumbnail_file_key:
             self._image = self._image.resize((80, 80), Image.ANTIALIAS)
-            self._save_to_s3(self._thumbnail_file_key)
+            self._save_to_s3(self._thumbnail_file_key, s3helper)
 
-    def _save_to_s3(self, image_file_key):
+    def _save_to_s3(self, image_file_key, s3Helper):
         """
         Save the image to an S3 bucket
 
@@ -239,7 +239,7 @@ class ImageBuilder:
         LOG.info('Saving an image to {0}'.format(image_file_key))
         file_name = '{0}/image.png'.format(POGS_TMP)
         self._image.save(file_name)
-        S3Helper.add_file_to_bucket(self._bucket_name, image_file_key, file_name)
+        s3Helper.add_file_to_bucket(self._bucket_name, image_file_key, file_name)
 
 
 class FitsImage:
@@ -370,9 +370,10 @@ class FitsImage:
             for image in images:
                 image.set_data(filter_band, hdu.data)
 
+        s3helper = S3Helper()
         for image in images:
             if image.is_valid():
-                image.save_image()
+                image.save_image(s3helper)
             else:
                 print 'not valid'
 
