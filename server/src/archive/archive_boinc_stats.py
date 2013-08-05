@@ -74,3 +74,5 @@ else:
 
     ec2_helper = EC2Helper()
     ec2_helper.release_public_ip()
+
+LOG.INFO('All done')
