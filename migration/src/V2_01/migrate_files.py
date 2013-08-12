@@ -77,7 +77,7 @@ def get_galaxy_number(bad_galaxy_name):
     """
     Get the galaxy number
     """
-    elements = bad_galaxy_name.split('_')
+    elements = bad_galaxy_name.split('__')
     galaxy_number = int(elements[2])
     return galaxy_number
 
