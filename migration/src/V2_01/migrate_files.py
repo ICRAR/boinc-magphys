@@ -32,9 +32,11 @@ import tempfile
 from sqlalchemy import select
 import urllib
 import subprocess
+from V2_01.old_galaxy_data import MAP_OLD_GALAXY_DATA, NAME
 from database.database_support_core import GALAXY
 from utils.name_builder import get_files_bucket, get_key_hdf5
 from utils.s3_helper import S3Helper
+
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -91,10 +93,11 @@ def migrate_hdf5_files(bad_galaxies, connection, file_bucket_name, s3helper):
         galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_number)).first()
 
         # Get the hdf5 file
+        old_galaxy = MAP_OLD_GALAXY_DATA[galaxy_number]
         if galaxy[GALAXY.c.version_number] > 1:
-            ngas_file_name = '{0}_V{1}.hdf5'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.version_number])
+            ngas_file_name = '{0}_V{1}.hdf5'.format(old_galaxy[NAME], galaxy[GALAXY.c.version_number])
         else:
-            ngas_file_name = '{0}.hdf5'.format(galaxy[GALAXY.c.name])
+            ngas_file_name = '{0}.hdf5'.format(old_galaxy[NAME])
         path_name = get_temp_file('hdf5')
         command_string = 'wget -O {0} http://cortex.ivec.org:7780/RETRIEVE?file_id={1}&processing=ngamsMWACortexStageDppi'.format(path_name, urllib.quote(ngas_file_name, ''))
         print(command_string)
