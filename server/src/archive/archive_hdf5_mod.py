@@ -313,7 +313,7 @@ def area_in_block1(block_x, block_y, area_details):
     block_bottom_y = block_top_y + MAX_X_Y_BLOCK - 1
     LOG.info('x1: {0}, y1: {1}, x2: {2}, y2: {3} - btx: {4}, bty: {5}, bbx: {6}, bby: {7}'.format(x1, y1, x2, y2, block_top_x, block_top_y, block_bottom_x, block_bottom_y))
 
-    return (x1 <= block_top_x <= x2 or x1 <= block_bottom_x <= x2) and (y1 <= block_top_y <= y2 or y1 <= block_bottom_y <= y2)
+    return (block_top_x <= x1 <= block_bottom_x or block_top_x <= x2 <= block_bottom_x) and (block_top_y <= y1 <= block_bottom_y or block_top_y <= y2 <= block_bottom_y)
 
 
 def area_in_block(connection, key, block_x, block_y, map_area_ids):
