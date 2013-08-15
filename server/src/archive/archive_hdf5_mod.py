@@ -484,7 +484,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 skip_this_pixel = False
                                 pixel_count += 1
                             else:
-                                LOG.info('Skipping pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
+                                LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
                                 skip_this_pixel = True
                         elif skip_this_pixel:
                             # Do nothing as we're skipping this pixel
