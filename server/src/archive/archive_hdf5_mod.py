@@ -471,7 +471,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             (raw_x, raw_y, area_id) = get_pixel_result(connection, pxresult_id)
                             # The pixel could be out of this block as the cutting up is not uniform
                             if pixel_in_block(raw_x, raw_y, block_x, block_y):
-                                LOG.info('Processing file {0}'.format(key.key))
                                 # correct x & y for this block
                                 x = raw_x - (block_x * MAX_X_Y_BLOCK)
                                 y = raw_y - (block_y * MAX_X_Y_BLOCK)
@@ -639,7 +638,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
             group.create_dataset('pixels_{0}_{1}'.format(block_x, block_y), data=data, compression='gzip')
 
-    LOG.info('histogram_blocks: {0}, x_blocks: {1}, y_blocks: {2}'.format(histogram_block_id))
+    LOG.info('histogram_blocks: {0}, x_blocks: {1}, y_blocks: {2}'.format(histogram_block_id, block_x, block_y))
 
     return pixel_count
 
