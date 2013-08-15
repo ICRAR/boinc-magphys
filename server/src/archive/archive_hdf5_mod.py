@@ -286,29 +286,31 @@ def area_in_block1(block_x, block_y, area_details):
     :param block_y:
     :param area_details:
     :return:
-    >>> area_in_block1(0, 0, ([0,0], [10,10]))
+    >>> area_in_block1(0, 0, [0, 0, 10, 10])
     True
-    >>> area_in_block1(0, 0, ([1020,1020], [1030,1030]))
+    >>> area_in_block1(0, 0, [1020, 1020, 1030, 1030])
     True
-    >>> area_in_block1(0, 1, ([1020,1020], [1030,1030]))
+    >>> area_in_block1(0, 1, [1020, 1020, 1030, 1030])
     True
-    >>> area_in_block1(1, 0, ([1020,1020], [1030,1030]))
+    >>> area_in_block1(1, 0, [1020, 1020, 1030, 1030])
     True
-    >>> area_in_block1(1, 1, ([1020,1020], [1030,1030]))
+    >>> area_in_block1(1, 1, [1020, 1020, 1030, 1030])
     True
-    >>> area_in_block1(2, 1, ([1020,1020], [1030,1030]))
+    >>> area_in_block1(2, 1, [1020, 1020, 1030, 1030])
     False
-    >>> area_in_block1(1, 2, ([1020,1020], [1030,1030]))
+    >>> area_in_block1(1, 2, [1020, 1020, 1030, 1030])
     False
-    >>> area_in_block1(2, 2, ([1020,1020], [1030,1030]))
+    >>> area_in_block1(2, 2, [1020, 1020, 1030, 1030])
     False
     """
-    top = area_details[0]
-    bottom = area_details[1]
-    return pixel_in_block(top[0], top[1], block_x, block_y) or \
-        pixel_in_block(bottom[0], bottom[1], block_x, block_y) or \
-        pixel_in_block(top[0], bottom[1], block_x, block_y) or \
-        pixel_in_block(bottom[0], top[1], block_x, block_y)
+    x1 = area_details[0]
+    y1 = area_details[1]
+    x2 = area_details[2]
+    y2 = area_details[3]
+    return pixel_in_block(x1, y1, block_x, block_y) or \
+        pixel_in_block(x1, y2, block_x, block_y) or \
+        pixel_in_block(x2, y1, block_x, block_y) or \
+        pixel_in_block(x2, y2, block_x, block_y)
 
 
 def area_in_block(connection, key, block_x, block_y, map_area_ids):
@@ -326,7 +328,7 @@ def area_in_block(connection, key, block_x, block_y, map_area_ids):
     area_details = map_area_ids.get(area_id)
     if area_details is None:
         area = connection.execute(select([AREA]).where(AREA.c.area_id == area_id)).first()
-        area_details = ([area[AREA.c.top_x], area[AREA.c.top_y]], [area[AREA.c.bottom_x], area[AREA.c.bottom_y]])
+        area_details = [area[AREA.c.top_x], area[AREA.c.top_y], area[AREA.c.bottom_x], area[AREA.c.bottom_y]]
         map_area_ids[area_id] = area_details
 
     # We have to be careful as an area could straddle a boundary so some bits will be in it and others won't
