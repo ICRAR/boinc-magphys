@@ -111,7 +111,7 @@ def migrate_hdf5_files(bad_galaxies, connection, file_bucket_name, s3helper):
         except subprocess.CalledProcessError as e:
             LOG.exception('Big error')
             raise
-
+        os.remove(path_name)
 
 def find_bad_hdf5_files(s3helper, files_bucket):
     list_bad_files = []
