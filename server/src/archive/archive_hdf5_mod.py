@@ -314,7 +314,7 @@ def area_intersects_block1(block_x, block_y, area_details):
     LOG.info('x1: {0}, y1: {1}, x2: {2}, y2: {3} - btx: {4}, bty: {5}, bbx: {6}, bby: {7}'.format(x1, y1, x2, y2, block_top_x, block_top_y, block_bottom_x, block_bottom_y))
 
     separate = x2 < block_top_x or x1 > block_bottom_x or y1 < block_bottom_y or y2 > block_top_y
-    return separate
+    return not separate
 
 
 def area_intersects_block(connection, key, block_x, block_y, map_area_ids):
