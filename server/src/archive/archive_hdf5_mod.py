@@ -307,10 +307,12 @@ def area_in_block1(block_x, block_y, area_details):
     y1 = area_details[1]
     x2 = area_details[2]
     y2 = area_details[3]
-    return pixel_in_block(x1, y1, block_x, block_y) or \
-        pixel_in_block(x1, y2, block_x, block_y) or \
-        pixel_in_block(x2, y1, block_x, block_y) or \
-        pixel_in_block(x2, y2, block_x, block_y)
+    block_top_x = block_x * MAX_X_Y_BLOCK
+    block_top_y = block_y * MAX_X_Y_BLOCK
+    block_bottom_x = block_top_x + MAX_X_Y_BLOCK - 1
+    block_bottom_y = block_top_y + MAX_X_Y_BLOCK - 1
+
+    return (x1 <= block_top_x <= x2 or x1 <= block_bottom_x <= x2) and (y1 <= block_top_y <= y2 or y1 <= block_bottom_y <= y2)
 
 
 def area_in_block(connection, key, block_x, block_y, map_area_ids):
