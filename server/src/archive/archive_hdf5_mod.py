@@ -279,28 +279,28 @@ def get_size(block, dimension):
     return dimension - (block * MAX_X_Y_BLOCK)
 
 
-def area_in_block1(block_x, block_y, area_details):
+def area_intersects_block1(block_x, block_y, area_details):
     """
     Is the area in this block
     :param block_x:
     :param block_y:
     :param area_details:
     :return:
-    >>> area_in_block1(0, 0, [0, 0, 10, 10])
+    >>> area_intersects_block1(0, 0, [0, 0, 10, 10])
     True
-    >>> area_in_block1(0, 0, [1020, 1020, 1030, 1030])
+    >>> area_intersects_block1(0, 0, [1020, 1020, 1030, 1030])
     True
-    >>> area_in_block1(0, 1, [1020, 1020, 1030, 1030])
+    >>> area_intersects_block1(0, 1, [1020, 1020, 1030, 1030])
     True
-    >>> area_in_block1(1, 0, [1020, 1020, 1030, 1030])
+    >>> area_intersects_block1(1, 0, [1020, 1020, 1030, 1030])
     True
-    >>> area_in_block1(1, 1, [1020, 1020, 1030, 1030])
+    >>> area_intersects_block1(1, 1, [1020, 1020, 1030, 1030])
     True
-    >>> area_in_block1(2, 1, [1020, 1020, 1030, 1030])
+    >>> area_intersects_block1(2, 1, [1020, 1020, 1030, 1030])
     False
-    >>> area_in_block1(1, 2, [1020, 1020, 1030, 1030])
+    >>> area_intersects_block1(1, 2, [1020, 1020, 1030, 1030])
     False
-    >>> area_in_block1(2, 2, [1020, 1020, 1030, 1030])
+    >>> area_intersects_block1(2, 2, [1020, 1020, 1030, 1030])
     False
     """
     x1 = area_details[0]
@@ -313,10 +313,11 @@ def area_in_block1(block_x, block_y, area_details):
     block_bottom_y = block_top_y + MAX_X_Y_BLOCK - 1
     LOG.info('x1: {0}, y1: {1}, x2: {2}, y2: {3} - btx: {4}, bty: {5}, bbx: {6}, bby: {7}'.format(x1, y1, x2, y2, block_top_x, block_top_y, block_bottom_x, block_bottom_y))
 
-    return (block_top_x <= x1 <= block_bottom_x or block_top_x <= x2 <= block_bottom_x) and (block_top_y <= y1 <= block_bottom_y or block_top_y <= y2 <= block_bottom_y)
+    separate = x2 < block_top_x or x1 > block_bottom_x or y1 < block_bottom_y or y2 > block_top_y
+    return separate
 
 
-def area_in_block(connection, key, block_x, block_y, map_area_ids):
+def area_intersects_block(connection, key, block_x, block_y, map_area_ids):
     """
     Is this area in the block we're working on?
     :param connection:
@@ -335,7 +336,7 @@ def area_in_block(connection, key, block_x, block_y, map_area_ids):
         map_area_ids[area_id] = area_details
 
     # We have to be careful as an area could straddle a boundary so some bits will be in it and others won't
-    return area_in_block1(block_x, block_y, area_details)
+    return area_intersects_block1(block_x, block_y, area_details)
 
 
 def pixel_in_block(raw_x, raw_y, block_x, block_y):
@@ -435,7 +436,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 if key.key.endswith('/'):
                     continue
 
-                if not area_in_block(connection, key.key, block_x, block_y, map_areas):
+                if not area_intersects_block(connection, key.key, block_x, block_y, map_areas):
                     LOG.info('Skipping {0}'.format(key.key))
                     continue
 
