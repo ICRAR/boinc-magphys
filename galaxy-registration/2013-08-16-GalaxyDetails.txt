@@ -1,0 +1,1844 @@
+# Program   Filename    Redshift    Galaxy  Type    Sigma   Priority    Run_Id
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_2MFGC00176.fits    0.0330  2MFGC00176  's' /home/ec2-user/galaxies/POGSSNR_PS1only_2MFGC00176.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_AM2357-270NED01.fits   0.0590  AM2357-270NED01 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_AM2357-270NED01.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ARP256NED01.fits   0.0270  ARP256NED01 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ARP256NED01.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ARP256NED02.fits   0.0270  ARP256NED02 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ARP256NED02.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_CGCG408-029.fits   0.0380  CGCG408-029 's' /home/ec2-user/galaxies/POGSSNR_PS1only_CGCG408-029.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_CGCG500-042.fits   0.0200  CGCG500-042 's' /home/ec2-user/galaxies/POGSSNR_PS1only_CGCG500-042.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_CSRG0049.fits  0.0490  CSRG0049    's' /home/ec2-user/galaxies/POGSSNR_PS1only_CSRG0049.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G001.fits   0.0260  ESO409-G001 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G001.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G001.fits   0.0260  ESO409-G001 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G001.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G003.fits   0.0280  ESO409-G003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G003.fits   0.0280  ESO409-G003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G004.fits   0.0320  ESO409-G004 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G004.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G005.fits   0.0610  ESO409-G005 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G005.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G010.fits   0.0640  ESO409-G010 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G010.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G011.fits   0.0270  ESO409-G011 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G011.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G011.fits   0.0270  ESO409-G011 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G011.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G017.fits   0.0270  ESO409-G017 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G017.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G024.fits   0.0000  ESO409-G024 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G024.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-G025.fits   0.0620  ESO409-G025 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-G025.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-IG021NED01.fits 0.0600  ESO409-IG021NED01   'e' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-IG021NED01.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO409-IG027NED01.fits 0.0000  ESO409-IG027NED01   's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO409-IG027NED01.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G003.fits   0.0450  ESO410-G003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G004.fits   0.0250  ESO410-G004 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G004.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G010.fits   0.0000  ESO410-G010 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G010.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G011.fits   0.0350  ESO410-G011 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G011.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G012.fits   0.0050  ESO410-G012 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G012.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G013.fits   0.0240  ESO410-G013 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G013.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G015.fits   0.0240  ESO410-G015 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G015.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G015.fits   0.0240  ESO410-G015 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G015.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G015.fits   0.0240  ESO410-G015 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G015.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G017.fits   0.0060  ESO410-G017 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G017.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G024.fits   0.0350  ESO410-G024 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G024.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G024.fits   0.0350  ESO410-G024 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G024.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G026.fits   0.0360  ESO410-G026 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G026.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO410-G027.fits   0.0240  ESO410-G027 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO410-G027.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO411-G002.fits   0.0120  ESO411-G002 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO411-G002.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO411-G003.fits   0.0230  ESO411-G003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO411-G003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO472-G014.fits   0.0270  ESO472-G014 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO472-G014.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO472-G015.fits   0.0020  ESO472-G015 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO472-G015.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO472-G017.fits   0.0340  ESO472-G017 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO472-G017.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO472-G018.fits   0.0350  ESO472-G018 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO472-G018.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO472-G018.fits   0.0350  ESO472-G018 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO472-G018.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO472-G019.fits   0.0340  ESO472-G019 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO472-G019.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO472-G020.fits   0.0340  ESO472-G020 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO472-G020.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G003.fits   0.0560  ESO473-G003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G004.fits   0.0260  ESO473-G004 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G004.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G005.fits   0.0650  ESO473-G005 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G005.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G007.fits   0.0640  ESO473-G007 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G007.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G009.fits   0.0200  ESO473-G009 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G009.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G009.fits   0.0200  ESO473-G009 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G009.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G009.fits   0.0200  ESO473-G009 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G009.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G011.fits   0.0330  ESO473-G011 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G011.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G012.fits   0.0250  ESO473-G012 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G012.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G012.fits   0.0250  ESO473-G012 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G012.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G013.fits   0.0570  ESO473-G013 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G013.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G014.fits   0.0710  ESO473-G014 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G014.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G014.fits   0.0710  ESO473-G014 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G014.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G016.fits   0.0260  ESO473-G016 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G016.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G017.fits   0.0200  ESO473-G017 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G017.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G018.fits   0.0330  ESO473-G018 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G018.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G019.fits   0.0000  ESO473-G019 'i' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G019.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G024.fits   0.0020  ESO473-G024 'i' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G024.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G027.fits   0.0610  ESO473-G027 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G027.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO473-G028.fits   0.0540  ESO473-G028 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO473-G028.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO474-G003.fits   0.0640  ESO474-G003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO474-G003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO538-G017.fits   0.0260  ESO538-G017 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO538-G017.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO538-G020.fits   0.0660  ESO538-G020 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO538-G020.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO538-G020.fits   0.0660  ESO538-G020 'i' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO538-G020.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO538-G021.fits   0.0100  ESO538-G021 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO538-G021.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO538-G021.fits   0.0100  ESO538-G021 'i' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO538-G021.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO538-G022.fits   0.0340  ESO538-G022 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO538-G022.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO538-G023.fits   0.0650  ESO538-G023 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO538-G023.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO538-G025.fits   0.0260  ESO538-G025 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO538-G025.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO538-G025.fits   0.0260  ESO538-G025 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO538-G025.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G001.fits   0.0000  ESO539-G001 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G001.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G002.fits   0.0270  ESO539-G002 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G002.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G003.fits   0.0270  ESO539-G003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G005.fits   0.0110  ESO539-G005 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G005.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G006.fits   0.0260  ESO539-G006 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G006.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G008.fits   0.0250  ESO539-G008 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G008.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G009.fits   0.0250  ESO539-G009 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G009.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G010.fits   0.0530  ESO539-G010 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G010.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G011.fits   0.0530  ESO539-G011 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G011.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G011.fits   0.0530  ESO539-G011 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G011.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G012.fits   0.0250  ESO539-G012 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G012.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO539-G014.fits   0.0240  ESO539-G014 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO539-G014.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO540-G001.fits   0.0270  ESO540-G001 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO540-G001.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO540-G002.fits   0.0230  ESO540-G002 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO540-G002.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO540-G003.fits   0.0110  ESO540-G003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO540-G003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO540-G004.fits   0.0600  ESO540-G004 'i' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO540-G004.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO540-G005.fits   0.0200  ESO540-G005 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO540-G005.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO540-G009.fits   0.0130  ESO540-G009 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO540-G009.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO540-G010.fits   0.0130  ESO540-G010 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO540-G010.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_ESO540-G011.fits   0.0000  ESO540-G011 's' /home/ec2-user/galaxies/POGSSNR_PS1only_ESO540-G011.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC0013.fits    0.0190  IC0013  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC0013.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC0031.fits    0.0320  IC0031  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC0031.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC0034.fits    0.0180  IC0034  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC0034.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC0035.fits    0.0150  IC0035  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC0035.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC0040.fits    0.0180  IC0040  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC0040.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1528.fits    0.0130  IC1528  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1528.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1529.fits    0.0230  IC1529  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1529.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1534.fits    0.0170  IC1534  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1534.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1535.fits    0.0170  IC1535  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1535.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1540.fits    0.0190  IC1540  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1540.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1544.fits    0.0190  IC1544  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1544.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1551.fits    0.0430  IC1551  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1551.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1553.fits    0.0100  IC1553  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1553.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1553.fits    0.0100  IC1553  'i' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1553.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1561.fits    0.0130  IC1561  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1561.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1562.fits    0.0130  IC1562  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1562.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1564.fits    0.0180  IC1564  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1564.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC1565.fits    0.0380  IC1565  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC1565.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC5375.fits    0.0310  IC5375  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC5375.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC5376.fits    0.0170  IC5376  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC5376.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC5377.fits    0.0040  IC5377  'i' /home/ec2-user/galaxies/POGSSNR_PS1only_IC5377.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_IC5381.fits    0.0370  IC5381  's' /home/ec2-user/galaxies/POGSSNR_PS1only_IC5381.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-01-016.fits 0.0220  MCG-01-01-016   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-01-016.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-01-024.fits 0.0220  MCG-01-01-024   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-01-024.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-01-030.fits 0.0290  MCG-01-01-030   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-01-030.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-01-036.fits 0.0390  MCG-01-01-036   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-01-036.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-01-042.fits 0.0130  MCG-01-01-042   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-01-042.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-01-052.fits 0.0180  MCG-01-01-052   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-01-052.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-01-053.fits 0.0370  MCG-01-01-053   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-01-053.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-01-064.fits 0.0130  MCG-01-01-064   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-01-064.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-01-066.fits 0.0200  MCG-01-01-066   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-01-066.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-001.fits 0.0120  MCG-01-02-001   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-001.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-005.fits 0.0210  MCG-01-02-005   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-005.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-006.fits 0.0150  MCG-01-02-006   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-006.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-011.fits 0.0180  MCG-01-02-011   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-011.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-014.fits 0.0130  MCG-01-02-014   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-014.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-021.fits 0.0260  MCG-01-02-021   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-021.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-023.fits 0.0260  MCG-01-02-023   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-023.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-025.fits 0.0210  MCG-01-02-025   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-025.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-028.fits 0.0210  MCG-01-02-028   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-028.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-030.fits 0.0120  MCG-01-02-030   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-030.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-031.fits 0.0200  MCG-01-02-031   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-031.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-038.fits 0.0170  MCG-01-02-038   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-038.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-01-02-039.fits 0.0180  MCG-01-02-039   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-01-02-039.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-01-014.fits 0.0380  MCG-02-01-014   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-01-014.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-01-022.fits 0.0200  MCG-02-01-022   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-01-022.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-01-028.fits 0.0300  MCG-02-01-028   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-01-028.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-01-050.fits 0.0230  MCG-02-01-050   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-01-050.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-01-050.fits 0.0230  MCG-02-01-050   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-01-050.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-01-050.fits 0.0230  MCG-02-01-050   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-01-050.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-002.fits 0.0120  MCG-02-02-002   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-002.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-007.fits 0.0190  MCG-02-02-007   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-007.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-008.fits 0.0000  MCG-02-02-008   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-008.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-012.fits 0.0540  MCG-02-02-012   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-012.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-030.fits 0.0120  MCG-02-02-030   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-030.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-033.fits 0.0180  MCG-02-02-033   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-033.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-038.fits 0.0120  MCG-02-02-038   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-038.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-039.fits 0.0110  MCG-02-02-039   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-039.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-040.fits 0.0120  MCG-02-02-040   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-040.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-049.fits 0.0130  MCG-02-02-049   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-049.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-051.fits 0.0210  MCG-02-02-051   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-051.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-058.fits 0.0270  MCG-02-02-058   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-058.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-068.fits 0.0220  MCG-02-02-068   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-068.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-02-02-073.fits 0.0170  MCG-02-02-073   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-02-02-073.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-03-01-018.fits 0.0340  MCG-03-01-018   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-03-01-018.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-03-02-013.fits 0.0110  MCG-03-02-013   's' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-03-02-013.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-04-02-003.fits 0.0020  MCG-04-02-003   'i' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-04-02-003.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_MCG-04-02-003.fits 0.0020  MCG-04-02-003   'e' /home/ec2-user/galaxies/POGSSNR_PS1only_MCG-04-02-003.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0002.fits   0.0250  NGC0002 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0002.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0003.fits   0.0130  NGC0003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0005.fits   0.0170  NGC0005 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0005.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0006.fits   0.0170  NGC0006 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0006.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0006.fits   0.0170  NGC0006 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0006.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0007.fits   0.0050  NGC0007 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0007.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0009.fits   0.0150  NGC0009 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0009.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0011.fits   0.0150  NGC0011 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0011.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0012.fits   0.0130  NGC0012 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0012.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0013.fits   0.0160  NGC0013 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0013.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0014.fits   0.0030  NGC0014 'i' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0014.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0015.fits   0.0210  NGC0015 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0015.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0016.fits   0.0100  NGC0016 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0016.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0019.fits   0.0160  NGC0019 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0019.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0021.fits   0.0160  NGC0021 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0021.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0022.fits   0.0280  NGC0022 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0022.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0023.fits   0.0150  NGC0023 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0023.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0026.fits   0.0150  NGC0026 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0026.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0027.fits   0.0230  NGC0027 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0027.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0036.fits   0.0200  NGC0036 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0036.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0038.fits   0.0270  NGC0038 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0038.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0042.fits   0.0200  NGC0042 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0042.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0042.fits   0.0200  NGC0042 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0042.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0043.fits   0.0160  NGC0043 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0043.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0047.fits   0.0190  NGC0047 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0047.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0048.fits   0.0060  NGC0048 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0048.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0049.fits   0.0160  NGC0049 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0049.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0050.fits   0.0190  NGC0050 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0050.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0051.fits   0.0180  NGC0051 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0051.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0051.fits   0.0180  NGC0051 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0051.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0051.fits   0.0180  NGC0051 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0051.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0052.fits   0.0180  NGC0052 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0052.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0054.fits   0.0180  NGC0054 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0054.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0057.fits   0.0180  NGC0057 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0057.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0059.fits   0.0010  NGC0059 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0059.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0059.fits   0.0010  NGC0059 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0059.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0060.fits   0.0390  NGC0060 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0060.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0061A.fits  0.0270  NGC0061A    's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0061A.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0062.fits   0.0220  NGC0062 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0062.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0063.fits   0.0040  NGC0063 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0063.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0064.fits   0.0240  NGC0064 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0064.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0065.fits   0.0240  NGC0065 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0065.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0065.fits   0.0240  NGC0065 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0065.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0066.fits   0.0250  NGC0066 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0066.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0068.fits   0.0190  NGC0068 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0068.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0070.fits   0.0240  NGC0070 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0070.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0071.fits   0.0220  NGC0071 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0071.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0071.fits   0.0220  NGC0071 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0071.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0072.fits   0.0240  NGC0072 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0072.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0073.fits   0.0260  NGC0073 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0073.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0075.fits   0.0190  NGC0075 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0075.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0076.fits   0.0240  NGC0076 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0076.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0077.fits   0.0630  NGC0077 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0077.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0078A.fits  0.0170  NGC0078A    's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0078A.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0078A.fits  0.0170  NGC0078A    's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0078A.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0078A.fits  0.0170  NGC0078A    's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0078A.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0080.fits   0.0190  NGC0080 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0080.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0083.fits   0.0210  NGC0083 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0083.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0090.fits   0.0180  NGC0090 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0090.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0093.fits   0.0180  NGC0093 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0093.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0095.fits   0.0180  NGC0095 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0095.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0097.fits   0.0160  NGC0097 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0097.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0099.fits   0.0180  NGC0099 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0099.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0108.fits   0.0160  NGC0108 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0108.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0109.fits   0.0180  NGC0109 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0109.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0112.fits   0.0210  NGC0112 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0112.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0113.fits   0.0150  NGC0113 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0113.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0120.fits   0.0130  NGC0120 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0120.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0124.fits   0.0140  NGC0124 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0124.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0125.fits   0.0180  NGC0125 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0125.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0128.fits   0.0140  NGC0128 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0128.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0132.fits   0.0180  NGC0132 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0132.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0137.fits   0.0180  NGC0137 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0137.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0138.fits   0.0400  NGC0138 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0138.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0140.fits   0.0210  NGC0140 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0140.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0142.fits   0.0270  NGC0142 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0142.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0143.fits   0.0270  NGC0143 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0143.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0145.fits   0.0140  NGC0145 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0145.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0149.fits   0.0160  NGC0149 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0149.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0151.fits   0.0130  NGC0151 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0151.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0155.fits   0.0210  NGC0155 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0155.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0160.fits   0.0180  NGC0160 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0160.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0160.fits   0.0180  NGC0160 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0160.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0161.fits   0.0200  NGC0161 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0161.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0163.fits   0.0200  NGC0163 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0163.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0165.fits   0.0200  NGC0165 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0165.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0167.fits   0.0130  NGC0167 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0167.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0168.fits   0.0130  NGC0168 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0168.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0168.fits   0.0130  NGC0168 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0168.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0169.fits   0.0150  NGC0169 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0169.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0171.fits   0.0130  NGC0171 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0171.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0172.fits   0.0100  NGC0172 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0172.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0172.fits   0.0100  NGC0172 'i' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0172.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0174.fits   0.0120  NGC0174 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0174.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0174.fits   0.0120  NGC0174 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0174.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0174.fits   0.0120  NGC0174 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0174.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0177.fits   0.0130  NGC0177 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0177.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0178.fits   0.0050  NGC0178 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0178.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0180.fits   0.0180  NGC0180 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0180.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0182.fits   0.0180  NGC0182 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0182.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0183.fits   0.0180  NGC0183 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0183.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0186.fits   0.0160  NGC0186 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0186.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0186.fits   0.0160  NGC0186 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0186.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0186.fits   0.0160  NGC0186 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0186.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0187.fits   0.0130  NGC0187 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0187.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0191.fits   0.0200  NGC0191 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0191.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0192.fits   0.0140  NGC0192 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0192.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0193.fits   0.0150  NGC0193 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0193.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0194.fits   0.0170  NGC0194 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0194.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0195.fits   0.0160  NGC0195 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0195.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0196.fits   0.0140  NGC0196 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0196.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0198.fits   0.0180  NGC0198 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0198.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0199.fits   0.0150  NGC0199 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0199.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0200.fits   0.0170  NGC0200 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0200.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0201.fits   0.0150  NGC0201 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0201.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC0209.fits   0.0130  NGC0209 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC0209.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7802.fits   0.0180  NGC7802 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7802.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7803.fits   0.0180  NGC7803 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7803.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7803.fits   0.0180  NGC7803 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7803.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7803.fits   0.0180  NGC7803 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7803.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7805.fits   0.0160  NGC7805 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7805.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7806.fits   0.0160  NGC7806 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7806.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7810.fits   0.0180  NGC7810 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7810.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7816.fits   0.0170  NGC7816 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7816.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7818.fits   0.0210  NGC7818 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7818.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7819.fits   0.0170  NGC7819 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7819.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7820.fits   0.0100  NGC7820 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7820.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7820.fits   0.0100  NGC7820 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7820.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7820.fits   0.0100  NGC7820 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7820.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7821.fits   0.0250  NGC7821 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7821.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7824.fits   0.0200  NGC7824 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7824.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7827.fits   0.0180  NGC7827 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7827.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7831.fits   0.0170  NGC7831 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7831.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7832.fits   0.0210  NGC7832 'e' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7832.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_NGC7834.fits   0.0170  NGC7834 's' /home/ec2-user/galaxies/POGSSNR_PS1only_NGC7834.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00002.fits  0.0000  UGC00002    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00002.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00003.fits  0.0260  UGC00003    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00003.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00004.fits  0.0290  UGC00004    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00004.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00005.fits  0.0240  UGC00005    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00005.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00010.fits  0.0400  UGC00010    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00010.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00013.fits  0.0260  UGC00013    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00013.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00013.fits  0.0260  UGC00013    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00013.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00013.fits  0.0260  UGC00013    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00013.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00015.fits  0.0390  UGC00015    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00015.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00017.fits  0.0030  UGC00017    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00017.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00022.fits  0.0000  UGC00022    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00022.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00023.fits  0.0260  UGC00023    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00023.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00025.fits  0.0170  UGC00025    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00025.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00027.fits  0.0100  UGC00027    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00027.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00029.fits  0.0290  UGC00029    'e' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00029.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00030.fits  0.0160  UGC00030    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00030.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00031.fits  0.0030  UGC00031    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00031.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00033.fits  0.0180  UGC00033    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00033.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00033.fits  0.0180  UGC00033    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00033.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00033.fits  0.0180  UGC00033    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00033.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00035.fits  0.0100  UGC00035    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00035.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00036.fits  0.0210  UGC00036    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00036.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00037.fits  0.0190  UGC00037    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00037.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00039.fits  0.0320  UGC00039    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00039.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00040.fits  0.0250  UGC00040    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00040.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00041.fits  0.0220  UGC00041    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00041.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00047.fits  0.0030  UGC00047    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00047.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00048.fits  0.0140  UGC00048    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00048.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00052.fits  0.0180  UGC00052    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00052.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00054.fits  0.0140  UGC00054    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00054.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00055.fits  0.0080  UGC00055    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00055.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00061.fits  0.0180  UGC00061    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00061.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00066.fits  0.0210  UGC00066    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00066.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00067.fits  0.0400  UGC00067    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00067.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00071.fits  0.0270  UGC00071    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00071.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00072.fits  0.0400  UGC00072    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00072.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00076.fits  0.0150  UGC00076    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00076.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00079.fits  0.0140  UGC00079    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00079.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00081.fits  0.0220  UGC00081    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00081.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00085.fits  0.0170  UGC00085    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00085.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00087.fits  0.0280  UGC00087    'e' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00087.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00088.fits  0.0130  UGC00088    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00088.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00088.fits  0.0130  UGC00088    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00088.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00088.fits  0.0130  UGC00088    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00088.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00090.fits  0.0030  UGC00090    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00090.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00091.fits  0.0270  UGC00091    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00091.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00092.fits  0.0270  UGC00092    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00092.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00093.fits  0.0170  UGC00093    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00093.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00095.fits  0.0260  UGC00095    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00095.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00097.fits  0.0000  UGC00097    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00097.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00099.fits  0.0060  UGC00099    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00099.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00101.fits  0.0340  UGC00101    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00101.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00102.fits  0.0230  UGC00102    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00102.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00103.fits  0.0000  UGC00103    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00103.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00105.fits  0.0270  UGC00105    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00105.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00107.fits  0.0250  UGC00107    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00107.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00110.fits  0.0150  UGC00110    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00110.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00111.fits  0.0210  UGC00111    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00111.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00112.fits  0.0170  UGC00112    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00112.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00113.fits  0.0250  UGC00113    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00113.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00117.fits  0.0160  UGC00117    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00117.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00119.fits  0.0070  UGC00119    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00119.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00121.fits  0.0150  UGC00121    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00121.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00122.fits  0.0030  UGC00122    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00122.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00124.fits  0.0240  UGC00124    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00124.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00126.fits  0.0340  UGC00126    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00126.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00127.fits  0.0160  UGC00127    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00127.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00128.fits  0.0150  UGC00128    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00128.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00132.fits  0.0060  UGC00132    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00132.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00134.fits  0.0030  UGC00134    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00134.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00135.fits  0.0190  UGC00135    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00135.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00137.fits  0.0000  UGC00137    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00137.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00139.fits  0.0130  UGC00139    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00139.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00141.fits  0.0230  UGC00141    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00141.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00141.fits  0.0230  UGC00141    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00141.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00141.fits  0.0230  UGC00141    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00141.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00142.fits  0.0420  UGC00142    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00142.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00143.fits  0.0440  UGC00143    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00143.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00144.fits  0.0190  UGC00144    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00144.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00146.fits  0.0250  UGC00146    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00146.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00147.fits  0.0220  UGC00147    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00147.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00147.fits  0.0220  UGC00147    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00147.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00147.fits  0.0220  UGC00147    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00147.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00148.fits  0.0140  UGC00148    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00148.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00151.fits  0.0170  UGC00151    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00151.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00152.fits  0.0160  UGC00152    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00152.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00153.fits  0.0150  UGC00153    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00153.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00154.fits  0.0140  UGC00154    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00154.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00155.fits  0.0130  UGC00155    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00155.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00156.fits  0.0040  UGC00156    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00156.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00157.fits  0.0300  UGC00157    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00157.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00158.fits  0.0170  UGC00158    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00158.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00159.fits  0.0030  UGC00159    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00159.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00160.fits  0.0160  UGC00160    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00160.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00161.fits  0.0190  UGC00161    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00161.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00162.fits  0.0000  UGC00162    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00162.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00163.fits  0.0190  UGC00163    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00163.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00164.fits  0.0180  UGC00164    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00164.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00165.fits  0.0200  UGC00165    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00165.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00166.fits  0.0160  UGC00166    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00166.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00168.fits  0.0180  UGC00168    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00168.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00169.fits  0.0180  UGC00169    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00169.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00171.fits  0.0180  UGC00171    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00171.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00175.fits  0.0180  UGC00175    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00175.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00178.fits  0.0170  UGC00178    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00178.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00179.fits  0.0150  UGC00179    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00179.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00180.fits  0.0370  UGC00180    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00180.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00181.fits  0.0180  UGC00181    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00181.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00183.fits  0.0170  UGC00183    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00183.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00187.fits  0.0180  UGC00187    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00187.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00188.fits  0.0260  UGC00188    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00188.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00191.fits  0.0040  UGC00191    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00191.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00196.fits  0.0170  UGC00196    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00196.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00197.fits  0.0260  UGC00197    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00197.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00200.fits  0.0170  UGC00200    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00200.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00201.fits  0.0390  UGC00201    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00201.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00202.fits  0.0310  UGC00202    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00202.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00210.fits  0.0150  UGC00210    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00210.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00211.fits  0.0190  UGC00211    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00211.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00212.fits  0.0160  UGC00212    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00212.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00213.fits  0.0500  UGC00213    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00213.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00215.fits  0.0240  UGC00215    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00215.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00217.fits  0.0160  UGC00217    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00217.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00220.fits  0.0400  UGC00220    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00220.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00223.fits  0.0190  UGC00223    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00223.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00225.fits  0.0180  UGC00225    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00225.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00226.fits  0.0180  UGC00226    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00226.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00228.fits  0.0190  UGC00228    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00228.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00234.fits  0.0160  UGC00234    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00234.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00235.fits  0.0000  UGC00235    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00235.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00235.fits  0.0000  UGC00235    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00235.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00235.fits  0.0000  UGC00235    'e' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00235.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00237.fits  0.0290  UGC00237    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00237.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00238.fits  0.0230  UGC00238    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00238.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00239.fits  0.0000  UGC00239    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00239.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00240.fits  0.0290  UGC00240    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00240.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00242.fits  0.0150  UGC00242    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00242.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00243.fits  0.0170  UGC00243    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00243.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00244.fits  0.0150  UGC00244    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00244.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00245.fits  0.0390  UGC00245    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00245.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00248NED02.fits 0.0340  UGC00248NED02   's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00248NED02.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00249.fits  0.0180  UGC00249    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00249.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00250.fits  0.0420  UGC00250    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00250.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00253.fits  0.0380  UGC00253    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00253.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00254.fits  0.0380  UGC00254    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00254.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00256.fits  0.0170  UGC00256    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00256.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00258.fits  0.0000  UGC00258    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00258.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00261.fits  0.0240  UGC00261    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00261.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00263.fits  0.0560  UGC00263    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00263.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00263.fits  0.0560  UGC00263    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00263.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00266.fits  0.0390  UGC00266    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00266.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00269.fits  0.0000  UGC00269    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00269.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00270.fits  0.0160  UGC00270    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00270.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00272.fits  0.0130  UGC00272    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00272.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00273.fits  0.0190  UGC00273    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00273.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00275.fits  0.0150  UGC00275    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00275.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00276.fits  0.0210  UGC00276    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00276.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00277.fits  0.0150  UGC00277    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00277.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00278.fits  0.0320  UGC00278    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00278.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00279.fits  0.0210  UGC00279    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00279.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00281.fits  0.0140  UGC00281    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00281.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00282.fits  0.0140  UGC00282    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00282.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00283.fits  0.0130  UGC00283    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00283.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00284.fits  0.0160  UGC00284    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00284.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00285.fits  0.0070  UGC00285    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00285.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00287.fits  0.0190  UGC00287    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00287.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00288.fits  0.0010  UGC00288    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00288.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00289.fits  0.0800  UGC00289    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00289.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00290.fits  0.0030  UGC00290    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00290.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00294.fits  0.0210  UGC00294    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00294.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00295.fits  0.0590  UGC00295    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00295.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00298.fits  0.0000  UGC00298    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00298.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00299.fits  0.0210  UGC00299    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00299.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00300.fits  0.0040  UGC00300    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00300.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00303.fits  0.0190  UGC00303    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00303.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00305.fits  0.0330  UGC00305    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00305.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00306.fits  0.0000  UGC00306    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00306.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00307.fits  0.0000  UGC00307    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00307.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00310.fits  0.0160  UGC00310    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00310.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00312.fits  0.0150  UGC00312    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00312.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00313.fits  0.0070  UGC00313    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00313.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00314.fits  0.0140  UGC00314    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00314.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00316.fits  0.0380  UGC00316    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00316.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00318.fits  0.0000  UGC00318    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00318.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00319.fits  0.0210  UGC00319    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00319.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00320.fits  0.0080  UGC00320    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00320.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00321.fits  0.0160  UGC00321    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00321.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00324.fits  0.0000  UGC00324    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00324.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00327.fits  0.0180  UGC00327    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00327.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00329.fits  0.0150  UGC00329    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00329.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00330.fits  0.0200  UGC00330    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00330.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00333.fits  0.0170  UGC00333    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00333.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00334.fits  0.0150  UGC00334    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00334.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00336.fits  0.0190  UGC00336    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00336.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00337.fits  0.0180  UGC00337    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00337.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00338.fits  0.0200  UGC00338    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00338.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00341.fits  0.0000  UGC00341    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00341.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00342.fits  0.0210  UGC00342    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00342.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00343.fits  0.0170  UGC00343    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00343.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00343.fits  0.0170  UGC00343    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00343.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00344.fits  0.0190  UGC00344    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00344.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00345.fits  0.0140  UGC00345    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00345.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00346.fits  0.0200  UGC00346    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00346.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00347.fits  0.0170  UGC00347    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00347.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00348.fits  0.0140  UGC00348    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00348.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00349.fits  0.0210  UGC00349    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00349.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00350.fits  0.0390  UGC00350    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00350.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00350.fits  0.0390  UGC00350    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00350.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00350.fits  0.0390  UGC00350    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00350.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00352.fits  0.0170  UGC00352    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00352.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00353.fits  0.0170  UGC00353    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00353.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00355.fits  0.0210  UGC00355    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00355.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00357.fits  0.0310  UGC00357    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00357.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00358.fits  0.0180  UGC00358    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00358.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00359.fits  0.0160  UGC00359    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00359.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00360.fits  0.0320  UGC00360    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00360.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00362.fits  0.0200  UGC00362    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00362.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00363.fits  0.0000  UGC00363    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00363.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00364.fits  0.0300  UGC00364    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00364.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00367.fits  0.0320  UGC00367    'e' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00367.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00368.fits  0.0000  UGC00368    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00368.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00370.fits  0.0150  UGC00370    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00370.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00371.fits  0.0180  UGC00371    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00371.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00372.fits  0.0180  UGC00372    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00372.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00373.fits  0.0400  UGC00373    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00373.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00376.fits  0.0160  UGC00376    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00376.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00377.fits  0.0180  UGC00377    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00377.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00379.fits  0.0170  UGC00379    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00379.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00384.fits  0.0160  UGC00384    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00384.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00385.fits  0.0370  UGC00385    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00385.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00386.fits  0.0180  UGC00386    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00386.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00388.fits  0.0180  UGC00388    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00388.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00391.fits  0.0000  UGC00391    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00391.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00393.fits  0.0180  UGC00393    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00393.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00394.fits  0.0190  UGC00394    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00394.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00398.fits  0.0150  UGC00398    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00398.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00402.fits  0.0180  UGC00402    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00402.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00403.fits  0.0350  UGC00403    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00403.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00404.fits  0.0350  UGC00404    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00404.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00404.fits  0.0350  UGC00404    'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00404.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00411.fits  0.0160  UGC00411    'e' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00411.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00416.fits  0.0160  UGC00416    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00416.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00418.fits  0.0150  UGC00418    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00418.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC00422.fits  0.0150  UGC00422    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC00422.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12889.fits  0.0170  UGC12889    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12889.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12890.fits  0.0390  UGC12890    'e' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12890.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12893.fits  0.0040  UGC12893    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12893.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12896.fits  0.0260  UGC12896    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12896.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12897.fits  0.0290  UGC12897    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12897.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12899.fits  0.0290  UGC12899    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12899.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12899.fits  0.0290  UGC12899    'e' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12899.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12900.fits  0.0230  UGC12900    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12900.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12901.fits  0.0230  UGC12901    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12901.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12903.fits  0.0490  UGC12903    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12903.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12904.fits  0.0420  UGC12904    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12904.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12910.fits  0.0130  UGC12910    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12910.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12913.fits  0.0210  UGC12913    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12913.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12914.fits  0.0150  UGC12914    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12914.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12915.fits  0.0140  UGC12915    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12915.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12916.fits  0.0210  UGC12916    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12916.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12917.fits  0.0450  UGC12917    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12917.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGC12920.fits  0.0250  UGC12920    's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGC12920.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGCA001.fits   0.0130  UGCA001 's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGCA001.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGCA003.fits   0.0050  UGCA003 's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGCA003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGCA003.fits   0.0050  UGCA003 'i' /home/ec2-user/galaxies/POGSSNR_PS1only_UGCA003.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_UGCA005.fits   0.0110  UGCA005 's' /home/ec2-user/galaxies/POGSSNR_PS1only_UGCA005.fits    0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_VIIIZw494NOTES01.fits  0.0380  VIIIZw494NOTES01    'e' /home/ec2-user/galaxies/POGSSNR_PS1only_VIIIZw494NOTES01.fits   0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_VV166f.fits    0.0220  VV166f  'e' /home/ec2-user/galaxies/POGSSNR_PS1only_VV166f.fits 0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_VV548.fits 0.0160  VV548   's' /home/ec2-user/galaxies/POGSSNR_PS1only_VV548.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_VV570.fits 0.0170  VV570   's' /home/ec2-user/galaxies/POGSSNR_PS1only_VV570.fits  0   1
+./register_fits_file.py /home/ec2-user/galaxies/POGS_PS1only_VV721.fits 0.0270  VV721   's' /home/ec2-user/galaxies/POGSSNR_PS1only_VV721.fits  0   1
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            

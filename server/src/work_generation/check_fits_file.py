@@ -28,9 +28,10 @@ Check the characteristics of the fits file
 """
 import argparse
 import glob
-from utils.logging_helper import config_logger
+import sys
 import os
 import pyfits
+from utils.logging_helper import config_logger
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
