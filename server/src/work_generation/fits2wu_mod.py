@@ -671,6 +671,8 @@ class Fit2Wu:
         index = 0
         ctype1 = None
         ctype2 = None
+        ra_deg_found = False
+        dec_deg_found = False
         for keyword in header:
             # The new version of PyFits supports comments
             value = header[index]
@@ -684,9 +686,16 @@ class Fit2Wu:
                 ctype2 = value
 
             # Record the RA and DEC if we can
-            if keyword == 'RA_CENT' or (ctype1 == 'RA---TAN' and keyword == 'CRVAL1'):
-                self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(ra_cent=float(value)))
-            elif keyword == 'DEC_CENT' or (ctype2 == 'DEC--TAN' and keyword == 'CRVAL2'):
-                self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent=float(value)))
+            if not ra_deg_found:
+                if keyword == 'RA_CENT' or (ctype1 == 'RA---TAN' and keyword == 'CRVAL1') or keyword == 'RA_DEG':
+                    self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(ra_cent=float(value)))
+                if keyword == 'RA_DEG':
+                    ra_deg_found = True
+
+            if not dec_deg_found:
+                if keyword == 'DEC_CENT' or (ctype2 == 'DEC--TAN' and keyword == 'CRVAL2') or keyword == 'DEC_DEG':
+                    self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent=float(value)))
+                if keyword == 'DEC_DEG':
+                    dec_deg_found = True
 
             index += 1
