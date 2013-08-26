@@ -28,21 +28,19 @@ Plot data about usage from the BOINC stats
 """
 import logging
 import argparse
-from tools.usage_mod import get_usage_data
-from utils.readable_dir import ReadableDir
+from plots.usage_mod import plot_file_size_histogram
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-parser = argparse.ArgumentParser('Get usage data from theSkyNet POGS data ')
-parser.add_argument('-d','--dir', action=ReadableDir, nargs=1, help='where the stats files are')
-parser.add_argument('file', nargs='*', help='the file to hold the usage data')
+parser = argparse.ArgumentParser('Plot graphs of usage from theSkyNet POGS data ')
+parser.add_argument('file', nargs='*', help='the file to plot to')
 args = vars(parser.parse_args())
 
 if len(args['file']) != 1:
     parser.print_help()
     exit(1)
 
-get_usage_data(args['dir'], args['file'][0])
+plot_file_size_histogram(args['file'][0])
 
 LOG.info('All Done.')

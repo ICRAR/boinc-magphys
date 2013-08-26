@@ -28,13 +28,13 @@ Plot data about usage from the BOINC stats
 """
 import logging
 import argparse
-from tools.usage_mod import plot_usage_data
+from plots.usage_mod import plot_usage_data
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
 parser = argparse.ArgumentParser('Plot graphs of usage from theSkyNet POGS data ')
-parser.add_argument('file', nargs='*', help='the file to extract the usage data to plot from')
+parser.add_argument('file', nargs='*', help='the file to stop the plot in')
 args = vars(parser.parse_args())
 
 if len(args['file']) != 1:
