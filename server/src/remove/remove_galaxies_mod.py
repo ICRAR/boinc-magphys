@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -25,13 +25,18 @@
 """
 Functions used to delete a galaxy
 """
+from database.database_support_core import PIXEL_RESULT, IMAGE_FILTERS_USED, AREA, FITS_HEADER, GALAXY
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket
 from utils.s3_helper import S3Helper
 from boto.s3.key import Key
 
 
-def remove_database_entries(connection, galaxy_name, run_id, galaxy_id):
-    pass
+def remove_database_entries(connection, galaxy_id):
+    connection.execute(PIXEL_RESULT.delete().where(PIXEL_RESULT.c.galaxy_id == galaxy_id))
+    connection.execute(IMAGE_FILTERS_USED.delete().where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id))
+    connection.execute(AREA.delete().where(AREA.c.galaxy_id == galaxy_id))
+    connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy_id))
+    connection.execute(GALAXY.delete().where(GALAXY.c.galaxy_id == galaxy_id))
 
 
 def remove_files_with_key(bucket, galaxy_name, run_id, galaxy_id):

@@ -5,7 +5,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -190,7 +190,6 @@ class Fit2Wu:
 
         # Now break up the galaxy into chunks
         self._break_up_galaxy()
-        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
 
         LOG.info('Building the images')
         galaxy_file_name = get_galaxy_file_name(self._galaxy_name, self._run_id, self._galaxy_id)
@@ -204,6 +203,9 @@ class Fit2Wu:
         if self._sigma_filename is not None:
             s3helper.add_file_to_bucket(bucket_name, get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
 
+        # Store the pixel count as the last thing to stop the original_image_checker going off
+        # too soon for BIG galaxies
+        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
         return self._work_units_added, self._pixel_count
 
     def _break_up_galaxy(self):

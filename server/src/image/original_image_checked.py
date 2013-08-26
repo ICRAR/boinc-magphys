@@ -24,7 +24,7 @@
 #    MA 02111-1307  USA
 #
 """
-Archive the stats stored in .../html/stats_archive to S3 if they are old enough
+Look through the database looking for image files that are missing
 """
 import os
 import sys
@@ -32,35 +32,35 @@ import sys
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
-sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
 from utils.logging_helper import config_logger, add_file_handler_to_root
 from utils.s3_helper import S3Helper
-from archive.archive_boinc_stats_mod import process_ami, process_boinc
 from utils.ec2_helper import EC2Helper
 from utils.name_builder import get_archive_bucket, get_log_archive_key, get_ami_log_file
 from utils.sanity_checks import pass_sanity_checks
+from image.original_image_checked_mod import original_image_checked_boinc, original_image_checked_ami
+
 
 LOG = config_logger(__name__)
 
-parser = argparse.ArgumentParser('Archive BOINC statistics to S3')
+parser = argparse.ArgumentParser('Checking the original images have been created on S3 correctly')
 parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
 args = vars(parser.parse_args())
 
 if args['option'] == 'boinc':
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     # We're running from the BOINC server
-    process_boinc()
+    original_image_checked_boinc()
 else:
     # We're running from a specially created AMI
-    log_name = 'archive_boinc_stats'
+    log_name = 'original_image_checked'
     filename, full_filename = get_ami_log_file(log_name)
     add_file_handler_to_root(full_filename)
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')
     if pass_sanity_checks():
-        process_ami()
+        original_image_checked_ami()
     else:
         LOG.error('Failed to pass sanity tests')
 

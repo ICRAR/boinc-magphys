@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -105,6 +105,7 @@ GALAXY = Table('galaxy',
                Column('pixels_processed', Integer),
                Column('status_id', Integer, ForeignKey('galaxy_status.galaxy_status_id')),
                Column('status_time', TIMESTAMP),
+               Column('original_image_checked', TIMESTAMP),
 )
 
 GALAXY_STATUS = Table('galaxy_status',

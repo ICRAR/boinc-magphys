@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -67,7 +67,6 @@ def get_done_dates():
     """
     Are there stats record in the data base?
 
-    :param date:
     :return:
     """
     done_dates = set()
@@ -80,7 +79,6 @@ def get_data(output_directory):
     """
     Get the stats from the S3 archive and build the csv files
     :param output_directory: where to store the files
-    :param max_id: the maximum user id
     :return:
     """
     done_dates = get_done_dates()
@@ -223,7 +221,7 @@ def plot_individual_data_stack(file_name):
 
     # Now plot it
     LOG.info('Printing')
-    pdf_pages = PdfPages('{0}.pdf'.format(file_name))
+    pdf_pages = PdfPages(file_name)
     pyplot.xlabel('Date')
     pyplot.ylabel('Users')
     pyplot.xticks(rotation=30)
@@ -303,7 +301,7 @@ def plot_individual_data(file_name):
 
     # Now plot it
     LOG.info('Printing')
-    pdf_pages = PdfPages('{0}.pdf'.format(file_name))
+    pdf_pages = PdfPages(file_name)
     ax = pyplot.axes()
     divider = make_axes_locatable(ax)
     ax_cb = divider.new_horizontal(size="5%", pad=0.05)
@@ -420,7 +418,7 @@ def plot_file_size_histogram(file_name):
     # plus the sum of the width for each entry equal 1.0.
     margin = 0.05
     width = (1. - 2. * margin) / 3
-    pdf_pages = PdfPages('{0}'.format(file_name))
+    pdf_pages = PdfPages(file_name)
     rects = [0,0,0]
     colours = ['r', 'b', 'g']
     for row in range(0, 3):
@@ -498,36 +496,3 @@ def get_hdf5_size_data():
                 row_data.append(key_size_mb)
 
     return data
-
-
-def plot_file_size_line(pdf_file_name):
-    """
-    Plot the file size histogram
-
-    :param pdf_file_name:
-    :return:
-    """
-    data = get_hdf5_size_data()
-
-    LOG.info('Printing')
-    pdf_pages = PdfPages('{0}'.format(pdf_file_name))
-    # Print the data
-    markers = {11: 'o', 5: 'D', 6: '+'}
-    colours = {11: 'r', 5: 'g', 6: 'b'}
-    for key, value in data.iteritems():
-        x = []
-        y = []
-        for values in value:
-            x.append(values[2] / 1000.0)
-            y.append(values[1])
-        pyplot.scatter(x, y, marker=markers[key], c=colours[key], label='{0} filters'.format(key))
-
-    pyplot.xlabel('Pixels (K)')
-    pyplot.ylabel('Size (MB)')
-    pyplot.xlim(0,)
-    pyplot.ylim(0,)
-    pyplot.grid(True)
-    pyplot.legend(loc=2)
-    pyplot.tight_layout()
-    pdf_pages.savefig()
-    pdf_pages.close()

@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -51,6 +51,11 @@ if exists(config_file_name):
     ARC_DELETE_DELAY = config['delete_delay']
     ARC_BOINC_STATISTICS_DELAY = config['boinc_statistics_delay']
 
+    ############### Global Settings ###############
+    POGS_TMP = config['tmp']
+    POGS_PROJECT_NAME = config['project_name']
+    POGS_BOINC_PROJECT_ROOT = config['boinc_project_root']
+
     ############### AWS Settings ###############
     AWS_AMI_ID = config['ami_id']
     AWS_INSTANCE_TYPE = config['instance_type']
@@ -58,10 +63,11 @@ if exists(config_file_name):
     AWS_SECURITY_GROUPS = config['security_groups']
     AWS_SUBNET_IDS = config['subnet_ids']
 
-    ############### Global Settings ###############
-    POGS_TMP = config['tmp']
-    POGS_PROJECT_NAME = config['project_name']
-    POGS_BOINC_PROJECT_ROOT = config['boinc_project_root']
+    AWS_M1_SMALL_DICT = config['m1.small']
+
+    AWS_SUBNET_DICT = {}
+    for subnet_id in AWS_SUBNET_IDS:
+        AWS_SUBNET_DICT[subnet_id] = config[subnet_id]
 
 ############### Archive Settings ###############
 
@@ -74,3 +80,6 @@ PROCESSED = 1
 ARCHIVED = 2
 STORED = 3
 DELETED = 4
+
+############### AWS Instances we use ###############
+M1_SMALL = 'm1.small'

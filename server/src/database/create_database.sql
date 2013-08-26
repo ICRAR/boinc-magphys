@@ -100,31 +100,33 @@ CREATE TABLE register (
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE galaxy (
-  galaxy_id        BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  run_id           BIGINT UNSIGNED NOT NULL,
-  name             VARCHAR(128) NOT NULL,
-  dimension_x      INTEGER UNSIGNED NOT NULL,
-  dimension_y      INTEGER UNSIGNED NOT NULL,
-  dimension_z      INTEGER UNSIGNED NOT NULL,
-  redshift         DECIMAL(10, 7) NOT NULL,
-  sigma            DECIMAL(3,2) NOT NULL,
-  create_time      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  image_time       TIMESTAMP,
-  version_number   INTEGER UNSIGNED NOT NULL DEFAULT 1,
-  galaxy_type      VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
-  ra_cent          FLOAT,
-  dec_cent         FLOAT,
-  pixel_count      INTEGER,
-  pixels_processed INTEGER,
-  status_id        SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-  status_time      TIMESTAMP,
+  galaxy_id              BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  run_id                 BIGINT UNSIGNED NOT NULL,
+  name                   VARCHAR(128) NOT NULL,
+  dimension_x            INTEGER UNSIGNED NOT NULL,
+  dimension_y            INTEGER UNSIGNED NOT NULL,
+  dimension_z            INTEGER UNSIGNED NOT NULL,
+  redshift               DECIMAL(10, 7) NOT NULL,
+  sigma                  DECIMAL(3,2) NOT NULL,
+  create_time            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  image_time             TIMESTAMP,
+  version_number         INTEGER UNSIGNED NOT NULL DEFAULT 1,
+  galaxy_type            VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
+  ra_cent                FLOAT,
+  dec_cent               FLOAT,
+  pixel_count            INTEGER,
+  pixels_processed       INTEGER,
+  status_id              SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  status_time            TIMESTAMP,
+  original_image_checked TIMESTAMP,
 
   FOREIGN KEY (run_id) REFERENCES run(run_id),
   FOREIGN KEY (status_id) REFERENCES galaxy_status(galaxy_status_id),
 
   INDEX (run_id),
   INDEX (name),
-  INDEX (status_id)
+  INDEX (status_id),
+  INDEX (original_image_checked)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE fits_header (

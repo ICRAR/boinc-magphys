@@ -5,7 +5,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -32,7 +32,6 @@ import sys
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
-sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
 from utils.logging_helper import config_logger
@@ -66,4 +65,4 @@ for galaxy_id_str in galaxy_ids:
         LOG.info('Archiving Galaxy with galaxy_id of %d - %s', galaxy_id1, galaxy[GALAXY.c.name])
 
     remove_s3_files(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
-    remove_database_entries(connection, galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+    remove_database_entries(connection, galaxy[GALAXY.c.galaxy_id])

@@ -5,7 +5,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -160,8 +160,6 @@ for galaxy in connection.execute(query):
             array[row__y, row__x, 2] = row[PIXEL_RESULT.c.ldust]
             # the SFR is a log
             array[row__y, row__x, 3] = math.pow(10, row[PIXEL_RESULT.c.sfr])
-
-    name_count = 0
 
     transaction = connection.begin()
     connection.execute(GALAXY.update()
