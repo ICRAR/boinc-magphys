@@ -152,14 +152,17 @@ for galaxy in connection.execute(query):
         row__x = row[PIXEL_RESULT.c.x]
         row__y = row[PIXEL_RESULT.c.y]
         pixel_count += 1
-        if row[PIXEL_RESULT.c.workunit_id] is not None:
+        if row[PIXEL_RESULT.c.mu] is not None and row[PIXEL_RESULT.c.m] is not None and row[PIXEL_RESULT.c.ldust] is not None and row[PIXEL_RESULT.c.sfr] is not None:
             pixels_processed += 1
 
-            array[row__y, row__x, 0] = row[PIXEL_RESULT.c.mu]
-            array[row__y, row__x, 1] = row[PIXEL_RESULT.c.m]
-            array[row__y, row__x, 2] = row[PIXEL_RESULT.c.ldust]
-            # the SFR is a log
-            array[row__y, row__x, 3] = math.pow(10, row[PIXEL_RESULT.c.sfr])
+            try:
+                array[row__y, row__x, 0] = row[PIXEL_RESULT.c.mu]
+                array[row__y, row__x, 1] = row[PIXEL_RESULT.c.m]
+                array[row__y, row__x, 2] = row[PIXEL_RESULT.c.ldust]
+                # the SFR is a log
+                array[row__y, row__x, 3] = math.pow(10, row[PIXEL_RESULT.c.sfr])
+            except TypeError:
+                LOG.error('Error at x: {0}, y: {1}'.format(row__x, row__y))
 
     transaction = connection.begin()
     connection.execute(GALAXY.update()
