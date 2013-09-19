@@ -112,8 +112,9 @@ else:
                     (work_units_added, pixel_count) = fit2wu.process_file(registration)
                     # One WU = MIN_QUORUM Results
                     files_processed += (work_units_added * MIN_QUORUM)
-                    os.remove(registration[REGISTER.c.filename])
-                    if registration.sigma_filename is not None:
+                    if os.path.exists(registration[REGISTER.c.filename]):
+                        os.remove(registration[REGISTER.c.filename])
+                    if registration.sigma_filename is not None and os.path.exists(registration.sigma_filename):
                         os.remove(registration[REGISTER.c.sigma_filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
 
