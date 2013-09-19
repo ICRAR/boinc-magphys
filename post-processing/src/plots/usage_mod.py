@@ -25,6 +25,7 @@
 """
 Plot module data about usage from the BOINC stats
 """
+from collections import OrderedDict
 import glob
 import os
 import gzip
@@ -55,7 +56,7 @@ START_BIN_INDIVIDUAL = 0.001
 BINS_FILE_SIZE = 7
 
 # If the database doesn't exist create it
-PLOT_DB = '/tmp/pogs/plot.db'
+PLOT_DB = '/Users/kevinvinsen/Documents/Data/pogs/plot.db'
 SQLITE_DB = 'sqlite:///%s' % PLOT_DB
 
 sqlite = create_engine(SQLITE_DB)
@@ -496,3 +497,123 @@ def get_hdf5_size_data():
                 row_data.append(key_size_mb)
 
     return data
+
+
+def plot_os_data_stack(file_name, map_of_os):
+    """
+    Produce a stacked histogram based on OS
+    :return:
+    """
+    sizes = {}
+    max_stack_size = 0
+    for key, value in map_of_os.iteritems():
+        count = 0
+        stack_size = 0
+        for item in value:
+            count += item[1]
+            stack_size += 1
+
+        sizes[key] = count
+        max_stack_size = max(max_stack_size, stack_size)
+
+    order_dict = OrderedDict(sorted(sizes.items(), key=lambda t: t[1]))
+    items = order_dict.items()
+    items.reverse()
+
+    shape = (len(items), max_stack_size)
+    my_data = numpy.zeros(shape)
+
+    x = 0
+    x_ticks = []
+    for os_group in items:
+        os_name = os_group[0]
+        x_ticks.append(os_name)
+        y = 0
+        for values in map_of_os[os_name]:
+            my_data[x, y] = values[1]
+            y += 1
+
+        x += 1
+
+    LOG.info('Printing')
+    pdf_pages = PdfPages(file_name)
+    indexes = numpy.arange(len(items))
+    width = 0.6
+    bottoms = numpy.zeros(len(items))
+    colours = ['r', 'b', 'g', 'y', 'c', 'm']
+    for y in range(0, max_stack_size):
+        line = my_data[:, y]
+        pyplot.bar(indexes, line, width=width, bottom=bottoms, color=colours[y % len(colours)])
+
+        bottoms += line
+
+    for os_group_id in indexes:
+        os_group = items[os_group_id]
+        count = os_group[1]
+        pyplot.text(os_group_id + width / 2, bottoms[os_group_id] + 100, '{0}'.format(count), horizontalalignment='center')
+
+    pyplot.ylim(ymin=0.1, ymax=10000)
+    pyplot.ylabel('Count')
+    pyplot.xlabel('Operating System')
+    pyplot.xticks(indexes + width / 2, x_ticks)
+    ax = pyplot.axes()
+    ax.yaxis.grid(True)
+    labels = []
+    for location in ax.yaxis.get_ticklocs():
+        if location < 0:
+            labels.append('')
+        else:
+            labels.append("{0}".format(int(location)))
+
+    ax.yaxis.set_ticklabels(labels)
+
+    # make sure everything fits
+    pyplot.tight_layout()
+    pdf_pages.savefig()
+    pdf_pages.close()
+
+
+def process_filter_data(text):
+    """
+    Break the filter curve text into arrays
+    :param text:
+    :return:
+    """
+    lines = text.split('\n')
+    x = []
+    y = []
+    for line in lines[1:]:
+        items = line.split()
+        x.append(float(items[0]))
+        y.append(float(items[1]))
+
+    return x, y
+
+def plot_filter_curves(file_name, filter_data):
+    """
+    Print the filter curves
+
+    :param file_name:
+    :param filter_data:
+    :return:
+    """
+    # Process the data
+    LOG.info('Printing')
+    pdf_pages = PdfPages(file_name)
+
+    for data in filter_data:
+        (name, text) = data
+        x, y = process_filter_data(text)
+
+        pyplot.plot(x, y, label=name)
+
+    # Label Axis
+    pyplot.xlabel(r'Wavelength $\AA$($\lambda$)')
+    pyplot.ylabel('Flux F(v)')
+    pyplot.xscale('log')
+
+    # make sure everything fits
+    pyplot.legend(fontsize='small')
+    pyplot.tight_layout()
+    pdf_pages.savefig()
+    pdf_pages.close()
