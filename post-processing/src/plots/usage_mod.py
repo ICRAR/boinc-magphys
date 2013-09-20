@@ -573,6 +573,44 @@ def plot_os_data_stack(file_name, map_of_os):
     pdf_pages.close()
 
 
+def plot_cores(file_name, cores):
+    """
+    Produce a stacked histogram based on OS
+    :return:
+    """
+    LOG.info('Printing')
+    pdf_pages = PdfPages(file_name)
+    width = 0.6
+    indexes = numpy.arange(len(cores))
+    data = []
+    x_ticks = []
+    for items in cores:
+        x_ticks.append(items[0])
+        data.append(items[1])
+
+    pyplot.bar(indexes, data, width=width, log=True)
+    pyplot.ylabel('Count')
+    pyplot.xlabel('Cores')
+    pyplot.xticks(indexes + width / 2, x_ticks, rotation=90)
+    pyplot.ylim(ymin=0.1, ymax=10000)
+    ax = pyplot.axes()
+    ax.yaxis.grid(True)
+
+    labels = []
+    for location in ax.yaxis.get_ticklocs():
+        if location < 0:
+            labels.append('')
+        else:
+            labels.append("{0}".format(int(location)))
+
+    ax.yaxis.set_ticklabels(labels)
+
+    # make sure everything fits
+    pyplot.tight_layout()
+    pdf_pages.savefig()
+    pdf_pages.close()
+
+
 def process_filter_data(text):
     """
     Break the filter curve text into arrays
@@ -588,6 +626,7 @@ def process_filter_data(text):
         y.append(float(items[1]))
 
     return x, y
+
 
 def plot_filter_curves(file_name, filter_data):
     """
