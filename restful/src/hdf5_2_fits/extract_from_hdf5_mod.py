@@ -32,34 +32,36 @@ from datetime import datetime
 
 OUTPUT_FORMAT_1_00 = 'Version 1.00'
 OUTPUT_FORMAT_1_01 = 'Version 1.01'
+OUTPUT_FORMAT_1_02 = 'Version 1.02'
+OUTPUT_FORMAT_1_03 = 'Version 1.03'
 
 FEATURES = {
-  'best_fit'         : 0,
-  'percentile_50'    : 1,
-  'highest_prob_bin' : 2,
-  'percentile_2_5'   : 3,
-  'percentile_16'    : 4,
-  'percentile_84'    : 5,
-  'percentile_97_5'  : 6,
+    'best_fit': 0,
+    'percentile_50': 1,
+    'highest_prob_bin': 2,
+    'percentile_2_5': 3,
+    'percentile_16': 4,
+    'percentile_84': 5,
+    'percentile_97_5': 6,
 }
 
 LAYERS = {
-  'f_mu_sfh'     : 0 ,
-  'f_mu_ir'      : 1 ,
-  'mu_parameter' : 2 ,
-  'tau_v'        : 3 ,
-  'ssfr_0_1gyr'  : 4 ,
-  'm_stars'      : 5 ,
-  'l_dust'       : 6 ,
-  't_c_ism'      : 7 ,
-  't_w_bc'       : 8 ,
-  'xi_c_tot'     : 9 ,
-  'xi_pah_tot'   : 10,
-  'xi_mir_tot'   : 11,
-  'xi_w_tot'     : 12,
-  'tau_v_ism'    : 13,
-  'm_dust'       : 14,
-  'sfr_0_1gyr'   : 15,
+    'f_mu_sfh': 0,
+    'f_mu_ir': 1,
+    'mu_parameter': 2,
+    'tau_v': 3,
+    'ssfr_0_1gyr': 4,
+    'm_stars': 5,
+    'l_dust': 6,
+    't_c_ism': 7,
+    't_w_bc': 8,
+    'xi_c_tot': 9,
+    'xi_pah_tot': 10,
+    'xi_mir_tot': 11,
+    'xi_w_tot': 12,
+    'tau_v_ism': 13,
+    'm_dust': 14,
+    'sfr_0_1gyr': 15,
 }
 
 
@@ -83,6 +85,7 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_data)
     data.fill(numpy.NaN)
 
     for x in range(dimension_x):
+        #TODO: Deal with split
         data[:, x] = pixel_data[x, :, layer_index, feature_index]
 
     utc_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%m:%S')

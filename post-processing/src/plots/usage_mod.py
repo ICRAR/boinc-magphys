@@ -347,7 +347,7 @@ def plot_usage_data(file_name):
     registered_users = []
     for entry in connection.execute(select([USAGE]).order_by(USAGE.c.date)):
         date.append(entry[USAGE.c.date])
-        gflops.append(entry[USAGE.c.gflops])
+        gflops.append(entry[USAGE.c.gflops] / 1.3)
         active_users.append(entry[USAGE.c.active_users])
         registered_users.append(entry[USAGE.c.registered_users])
 
