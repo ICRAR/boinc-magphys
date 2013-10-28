@@ -30,7 +30,6 @@ from __future__ import print_function
 import os
 import sys
 
-
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
@@ -42,7 +41,7 @@ import shutil
 import time
 import datetime
 from utils.logging_helper import config_logger
-from archive.archive_hdf5_mod import store_fits_header, store_area, store_image_filters, store_area_user, store_pixels
+from archive.archive_hdf5_mod import store_fits_header, store_area, store_image_filters, store_area_user, store_pixels, OUTPUT_FORMAT_1_03
 from config import DB_LOGIN, ARCHIVED, PROCESSED
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
@@ -50,11 +49,6 @@ from database.database_support_core import GALAXY, PARAMETER_NAME
 from utils.writeable_dir import WriteableDir
 from sqlalchemy.sql.expression import and_
 from utils.name_builder import get_galaxy_file_name
-
-OUTPUT_FORMAT_1_00 = 'Version 1.00'
-OUTPUT_FORMAT_1_01 = 'Version 1.01'
-OUTPUT_FORMAT_1_02 = 'Version 1.02'
-OUTPUT_FORMAT_1_03 = 'Version 1.03'
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))

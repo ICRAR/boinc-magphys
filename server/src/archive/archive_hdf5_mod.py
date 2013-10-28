@@ -40,6 +40,11 @@ from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
 
+OUTPUT_FORMAT_1_00 = 'Version 1.00'
+OUTPUT_FORMAT_1_01 = 'Version 1.01'
+OUTPUT_FORMAT_1_02 = 'Version 1.02'
+OUTPUT_FORMAT_1_03 = 'Version 1.03'
+
 PARAMETER_TYPES = ['f_mu (SFH)',
                    'f_mu (IR)',
                    'mu parameter',
