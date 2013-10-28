@@ -37,7 +37,7 @@
 // {F77}
 // {F77} c     ===========================================================================
 // {F77} c     Author : Kevin Vinsen
-// {F77} c    Date : 29th May 2012
+// {F77} c	  Date : 29th May 2012
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Added minor changes to allow the code to run from the command line and not
 // {F77} c     to perform the normalisation against the models. Instead it writes the
@@ -46,376 +46,308 @@
 // {F77} c     general public to download the 3 large .bin files
 // {F77} c     ===========================================================================
 // {F77}
-
-// OpenCL implementation specific.
-#if defined(USE_OPENCL)
-#define __CL_ENABLE_EXCEPTIONS
-// Number of models to batch for kernel thread work.
-#define CLMAX 1000000
-// C++ binding header.
-#include <CL/cl.hpp>
-// We only use the vector class for OpenCL implementation
-// at present.
-#include <vector>
-
-// Identifier struct. Used to identify kernel thread to
-// a sfh and ir model combination.
-typedef struct clid {
-    int i_sfh;
-    int i_ir;
-} clid_t;
-
-// Model struct in which kernel thread writes.
-typedef struct clmodel {
-    double a;
-    double chi2;
-    double chi2_opt;
-    double chi2_ir;
-    double prob;
-    int ibin_psfh;
-    int ibin_pir;
-    int ibin_pmu;
-    int ibin_ptv;
-    int ibin_ptvism;
-    int ibin_pssfr;
-    int ibin_psfr;
-    int ibin_pa;
-    int ibin_pldust;
-    int ibin_ptbg1;
-    int ibin_ptbg2;
-    int ibin_pism;
-    int ibin_pxi1;
-    int ibin_pxi2;
-    int ibin_pxi3;
-    int ibin_pmd;
-} clmodel_t;
-
-// Struct to define arrays of indexes and models
-// used by kernel threads.
-typedef struct clmod {
-    double i_fmu_sfh;
-    double i_mu;
-    double i_tauv;
-    double i_tvism;
-    double i_lssfr;
-    double i_fmu_ir;
-    double i_fmu_ism;
-    double i_tbg1;
-    double i_tbg2;
-    double i_xi1;
-    double i_xi2;
-    double i_xi3;
-    double lssfr;
-    double logldust;
-    double mdust;
-    double ldust;
-    double lmdust;
-} clmod_t;
-
-// Struct containing var constants read by kernel
-// threads.
-typedef struct clvar {
-    int nbin_fmu;
-    int nbin_mu;
-    int nbin_tv;
-    int nbin_sfr;
-    int nbin_a;
-    int nbin_ld;
-    int nbin_fmu_ism;
-    int nbin_tbg1;
-    int nbin_tbg2;
-    int nbin_xi;
-    int nbin_md;
-    double a_max;
-    double a_min;
-    double sfr_max;
-    double sfr_min;
-    double ld_max;
-    double ld_min;
-    double md_max;
-    double md_min;
-    int nfilt;
-    int nfilt_sfh;
-    int nfilt_mix;
-    int i_gal;
-
-} clvar_t;
-
-// Array of identifier and model structs.
-static clid_t h_clids[CLMAX];
-static clmodel_t h_clmodels[CLMAX];
-
-#endif
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
-#include <cstring>
-
-#define NMAX 50
-#define GALMAX 5000
-#define NMOD 50001
-#define NPROP_SFH 24
-#define NPROP_IR 8
-#define NZMAX 5000
-#define NBINMAX1 3000
-#define NBINMAX2 300
-#define MIN_HPBV 0.00001
-
-
-//Function prototypes for old FORTRAN functions.
-double get_cosmol_c(double h,double omega,double omega_lambda,double* q);
-double get_funl(double x);
-void get_midpnt(double (*func)(double),double a,double b,double* s,double n);
-double get_dl(double h,double q,double z);
-void sort2(double arr1[],double arr2[], int left, int right);
-void get_histgrid(double dv,double vmin,double vmax,int* nbin,double vout[]);
-void get_percentiles(int n,double par[],double probability[],double percentile[]);
-void degrade_hist(double delta,double min,double max,int nbin1,int * nbin2,double hist1[], double hist2[],double prob1[],double prob2[]);
-double get_hpbv(double hist1[],double hist2[],int nbin);
-
-void get_fexp3(char dstr[]);
-void get_fsci(char dstr[]);
-
-double round_nup(double n, int p);
-
-// TODO : Bad! Get rid of this eventually.
-static double omega0;
-
-using namespace std;
-
-
-int main(int argc, char *argv[]){
-
-// Windows specific instruction
-#if defined(WIN32)
-    //Required as windows default is 3 digit exponent.
-    _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
-
 // {F77}       implicit none
 // {F77}       integer isave,i,j,k,i_gal,io,largo
-   int isave,i,j,k,i_gal;
 // {F77}       integer nmax,galmax,nmod
 // {F77}       parameter(nmax=50,galmax=5000) !nmax: maxium number of photometric points/filters
 // {F77}       integer n_obs,n_models,ibin  !galmax: maximum number of galaxies in one input file
-   static int n_obs,n_models,ibin;
 // {F77}       integer kfilt_sfh(nmax),kfilt_ir(nmax),nfilt_sfh,nfilt_ir,nfilt_mix
-   static int nfilt_sfh,nfilt_ir,nfilt_mix;
 // {F77}       integer nprop_sfh,nprop_ir
 // {F77}       integer n_sfh,n_ir,i_ir,i_sfh,ir_sav,sfh_sav
-   static int n_sfh,n_ir,i_ir,i_sfh,ir_sav,sfh_sav;
 // {F77}       integer nfilt,filt_id(nmax),fit(nmax),ifilt
-   static int nfilt,filt_id[NMAX],fit[NMAX],ifilt;
 // {F77}       parameter(nmod=50001,nprop_sfh=24,nprop_ir=8)
 // {F77}       character*12 filt_name(nmax)
-   static char filt_name[NMAX][12];
 // {F77}       character*100 outfile1,outfile2
-   static char outfile1[100];
 // {F77}       character*500 filter_header
 // {F77}       character*30 gal_name(galmax),aux_name
-   static char gal_name[GALMAX][30],aux_name[30];
 // {F77}       character*6 numz
-//  static char numz[7];
 // {F77}       character optlib*34,irlib*26
-   static char optlib[35],irlib[27];
 // {F77}       character filters*80,obs*80
-   static char filters[81],obs[81];
 // {F77} c     redshift libs
 // {F77}       integer nz,nzmax
-   static int nz;
 // {F77}       parameter(nzmax=5000)
 // {F77}       real*8 zlib(nzmax),diffz(nzmax)
-   static double zlib[NZMAX],diffz[NZMAX];
 // {F77} c     observations, filters, etc.
 // {F77}       real*8 w(galmax,nmax),redshift(galmax),dist(galmax)
-   static double w[NMAX][GALMAX],redshift[GALMAX],dist[GALMAX];
 // {F77}       real*8 flux_obs(galmax,nmax),sigma(galmax,nmax),aux
-   static double flux_obs[NMAX][GALMAX],sigma[NMAX][GALMAX],aux;
 // {F77}       real*8 flux_sfh(nmod,nmax),ssfr(nmod)
-   static double flux_sfh[NMAX][NMOD],ssfr[NMOD];
 // {F77}       real*8 lambda_eff(nmax),lambda_rest(nmax)
-   static double lambda_eff[NMAX],lambda_rest[NMAX];
 // {F77} c     model libraries, parameters, etc.
 // {F77}       integer n_flux,indx(nmod)
-   static int n_flux,indx[NMOD];
 // {F77}       real*8 fprop_sfh(nmod,nprop_sfh),fmu_sfh(nmod)
-   static double fprop_sfh[NPROP_SFH][NMOD],fmu_sfh[NMOD];
 // {F77}       real*8 fprop_ir(nmod,nprop_ir),fmu_ir(nmod)
-   static double fprop_ir[NPROP_IR][NMOD],fmu_ir[NMOD];
 // {F77}       real*8 ldust(nmod),mstr1(nmod),logldust(nmod),lssfr(nmod)
-   static double ldust[NMOD],mstr1[NMOD],logldust[NMOD],lssfr[NMOD];
 // {F77}       real*8 flux_ir(nmod,nmax),tvism(nmod),tauv(nmod),mu(nmod)
-   static double flux_ir[NMAX][NMOD],tvism[NMOD],tauv[NMOD],mu[NMOD];
 // {F77}       real*8 tbg1(nmod),tbg2(nmod),xi1(nmod),xi2(nmod),xi3(nmod)
-   static double tbg1[NMOD],tbg2[NMOD],xi1[NMOD],xi2[NMOD],xi3[NMOD];
 // {F77}       real*8 fmu_ism(nmod),mdust(nmod),lmdust(nmod)
-   static double fmu_ism[NMOD],mdust[NMOD],lmdust[NMOD];
+// {F77}
+// {F77} czz added parameters
+// {F77}       real*8 z_zmet(nmod),z_lzmet(nmod)
+// {F77}       real*8 z_tform(nmod),z_gamma(nmod),z_tlastb(nmod),z_agem(nmod),z_ager(nmod)
+// {F77}       real*8 z_ltform(nmod),z_lgamma(nmod),z_ltlastb(nmod),z_lagem(nmod),z_lager(nmod)
+// {F77}       real*8 z_sfr16(nmod),z_sfr17(nmod),z_sfr18(nmod),z_sfr19(nmod),z_sfr29(nmod)
+// {F77}       real*8 z_lsfr16(nmod),z_lsfr17(nmod),z_lsfr18(nmod),z_lsfr19(nmod),z_lsfr29(nmod)
+// {F77}       real*8 z_fb16(nmod),z_fb17(nmod),z_fb18(nmod),z_fb19(nmod),z_fb29(nmod)
+// {F77}       real*8 z_lfb16(nmod),z_lfb17(nmod),z_lfb18(nmod),z_lfb19(nmod),z_lfb29(nmod)
+// {F77} czz added parameters end
+// {F77}
 // {F77} c     chi2, scaling factors, etc.
 // {F77}       real*8 flux_mod(nmax)
-   static double flux_mod[NMAX];
 // {F77}       real*8 chi2,chi2_sav,chi2_new,df
-   static double chi2,chi2_sav,chi2_new,df;
-// {F77}       real*8 a,num,den,a_sav
-   static double a,num,den,a_sav;
+// {F77}       real*8 a,num,den,a_sav,chi2_nd
 // {F77}       real*8 ptot,prob,chi2_new_opt,chi2_new_ir
-   static double ptot,prob,chi2_new_opt,chi2_new_ir;
 // {F77}       real*8 chi2_opt,chi2_ir,chi2_sav_opt,chi2_sav_ir
-   static double chi2_opt,chi2_ir,chi2_sav_opt,chi2_sav_ir;
 // {F77} c     histograms
 // {F77}       real*8 fmu_min,fmu_max,dfmu
-   static double fmu_min,fmu_max,dfmu;
 // {F77}       real*8 ssfr_min,ssfr_max,dssfr
-   static double ssfr_min,ssfr_max,dssfr;
+// {F77} czz added parameters
+// {F77}       real*8 z_zmet_min,z_zmet_max,z_dzmet
+// {F77}       real*8 z_ltform_min,z_ltform_max,z_dltform
+// {F77}       real*8 z_lgamma_min,z_lgamma_max,z_dlgamma
+// {F77}       real*8 z_ltlastb_min,z_ltlastb_max,z_dltlastb
+// {F77}       real*8 z_lagem_min,z_lagem_max,z_dlagem
+// {F77}       real*8 z_lager_min,z_lager_max,z_dlager
+// {F77}       real*8 z_lsfr16_min,z_lsfr16_max,z_dlsfr16
+// {F77}       real*8 z_lsfr17_min,z_lsfr17_max,z_dlsfr17
+// {F77}       real*8 z_lsfr18_min,z_lsfr18_max,z_dlsfr18
+// {F77}       real*8 z_lsfr19_min,z_lsfr19_max,z_dlsfr19
+// {F77}       real*8 z_lsfr29_min,z_lsfr29_max,z_dlsfr29
+// {F77}       real*8 z_lfb16_min,z_lfb16_max,z_dlfb16
+// {F77}       real*8 z_lfb17_min,z_lfb17_max,z_dlfb17
+// {F77}       real*8 z_lfb18_min,z_lfb18_max,z_dlfb18
+// {F77}       real*8 z_lfb19_min,z_lfb19_max,z_dlfb19
+// {F77}       real*8 z_lfb29_min,z_lfb29_max,z_dlfb29
+// {F77} czz added parameters end
 // {F77}       real*8 fmuism_min,fmuism_max,dfmu_ism
-   static double fmuism_min,fmuism_max,dfmu_ism;
 // {F77}       real*8 mu_min,mu_max,dmu
-   static double mu_min,mu_max,dmu;
 // {F77}       real*8 tv_min,tv_max,dtv,dtvism
-   static double tv_min,tv_max,dtv,dtvism;
 // {F77}       real*8 sfr_min,sfr_max,dsfr
-   static double sfr_min,sfr_max,dsfr;
 // {F77}       real*8 a_min,a_max,da
-   static double a_min,a_max,da;
 // {F77}       real*8 md_min,md_max,dmd
-   static double md_min,md_max,dmd;
 // {F77}       real*8 ld_min,ld_max,dldust
-   static double ld_min,ld_max,dldust;
 // {F77}       real*8 tbg1_min,tbg1_max,dtbg,tbg2_min,tbg2_max
-   static double tbg1_min,tbg1_max,dtbg,tbg2_min,tbg2_max;
 // {F77}       real*8 xi_min,xi_max,dxi
-   static double xi_min,xi_max,dxi;
 // {F77}       real*8 pct_sfr(5),pct_fmu_sfh(5),pct_fmu_ir(5)
-   static double pct_sfr[5],pct_fmu_sfh[5],pct_fmu_ir[5];
 // {F77}       real*8 pct_mu(5),pct_tv(5),pct_mstr(5)
-   static double pct_mu[5],pct_tv[5],pct_mstr[5];
 // {F77}       real*8 pct_ssfr(5),pct_ld(5),pct_tbg2(5)
-   static double pct_ssfr[5],pct_ld[5],pct_tbg2[5];
+// {F77} czz added parameters
+// {F77}       real*8 z_pct_zmet(5)
+// {F77}       real*8 z_pct_ltform(5)
+// {F77}       real*8 z_pct_lgamma(5)
+// {F77}       real*8 z_pct_ltlastb(5)
+// {F77}       real*8 z_pct_lagem(5)
+// {F77}       real*8 z_pct_lager(5)
+// {F77}       real*8 z_pct_lsfr16(5)
+// {F77}       real*8 z_pct_lsfr17(5)
+// {F77}       real*8 z_pct_lsfr18(5)
+// {F77}       real*8 z_pct_lsfr19(5)
+// {F77}       real*8 z_pct_lsfr29(5)
+// {F77}       real*8 z_pct_lfb16(5)
+// {F77}       real*8 z_pct_lfb17(5)
+// {F77}       real*8 z_pct_lfb18(5)
+// {F77}       real*8 z_pct_lfb19(5)
+// {F77}       real*8 z_pct_lfb29(5)
+// {F77} czz added parameters end
 // {F77}       real*8 pct_tbg1(5),pct_xi1(5),pct_xi2(5)
-   static double pct_tbg1[5],pct_xi1[5],pct_xi2[5];
 // {F77}       real*8 pct_xi3(5),pct_tvism(5),pct_ism(5),pct_md(5)
-   static double pct_xi3[5],pct_tvism[5],pct_ism[5],pct_md[5];
 // {F77}       integer nbinmax1,nbinmax2
 // {F77} c theSkyNet parameter (nbinmax1=1500,nbinmax2=150)
 // {F77}       parameter (nbinmax1=3000,nbinmax2=300)
 // {F77}       real*8 psfh2(nbinmax2),pir2(nbinmax2),pmu2(nbinmax2)
-   static double psfh2[NBINMAX2],pir2[NBINMAX2],pmu2[NBINMAX2];
 // {F77}       real*8 ptv2(nbinmax2),pxi2_2(nbinmax2),pssfr2(nbinmax2)
-   static double ptv2[NBINMAX2],pxi2_2[NBINMAX2],pssfr2[NBINMAX2];
+// {F77} czz added parameters
+// {F77}       real*8 z_pzmet2(nbinmax2)
+// {F77}       real*8 z_pltform2(nbinmax2)
+// {F77}       real*8 z_plgamma2(nbinmax2)
+// {F77}       real*8 z_pltlastb2(nbinmax2)
+// {F77}       real*8 z_plagem2(nbinmax2)
+// {F77}       real*8 z_plager2(nbinmax2)
+// {F77}       real*8 z_plsfr162(nbinmax2)
+// {F77}       real*8 z_plsfr172(nbinmax2)
+// {F77}       real*8 z_plsfr182(nbinmax2)
+// {F77}       real*8 z_plsfr192(nbinmax2)
+// {F77}       real*8 z_plsfr292(nbinmax2)
+// {F77}       real*8 z_plfb162(nbinmax2)
+// {F77}       real*8 z_plfb172(nbinmax2)
+// {F77}       real*8 z_plfb182(nbinmax2)
+// {F77}       real*8 z_plfb192(nbinmax2)
+// {F77}       real*8 z_plfb292(nbinmax2)
+// {F77} czz added parameters end
 // {F77}       real*8 pa2(nbinmax2),pldust2(nbinmax2)
-   static double pa2[NBINMAX2],pldust2[NBINMAX2];
 // {F77}       real*8 ptbg1_2(nbinmax2),ptbg2_2(nbinmax2),pxi1_2(nbinmax2)
-   static double ptbg1_2[NBINMAX2],ptbg2_2[NBINMAX2],pxi1_2[NBINMAX2];
 // {F77}       real*8 ptvism2(nbinmax2),pism2(nbinmax2),pxi3_2(nbinmax2)
-   static double ptvism2[NBINMAX2],pism2[NBINMAX2],pxi3_2[NBINMAX2];
 // {F77}       real*8 fmuism2_hist(nbinmax2),md2_hist(nbinmax2)
-   static double fmuism2_hist[NBINMAX2],md2_hist[NBINMAX2];
 // {F77}       real*8 ssfr2_hist(nbinmax2),psfr2(nbinmax2),pmd_2(nbinmax2)
-   static double ssfr2_hist[NBINMAX2],psfr2[NBINMAX2],pmd_2[NBINMAX2];
+// {F77} czz added parameters
+// {F77}       real*8 z_zmet2_hist(nbinmax2)
+// {F77}       real*8 z_ltform2_hist(nbinmax2)
+// {F77}       real*8 z_lgamma2_hist(nbinmax2)
+// {F77}       real*8 z_ltlastb2_hist(nbinmax2)
+// {F77}       real*8 z_lagem2_hist(nbinmax2)
+// {F77}       real*8 z_lager2_hist(nbinmax2)
+// {F77}       real*8 z_lsfr162_hist(nbinmax2)
+// {F77}       real*8 z_lsfr172_hist(nbinmax2)
+// {F77}       real*8 z_lsfr182_hist(nbinmax2)
+// {F77}       real*8 z_lsfr192_hist(nbinmax2)
+// {F77}       real*8 z_lsfr292_hist(nbinmax2)
+// {F77}       real*8 z_lfb162_hist(nbinmax2)
+// {F77}       real*8 z_lfb172_hist(nbinmax2)
+// {F77}       real*8 z_lfb182_hist(nbinmax2)
+// {F77}       real*8 z_lfb192_hist(nbinmax2)
+// {F77}       real*8 z_lfb292_hist(nbinmax2)
+// {F77} czz added parameters end
 // {F77}       real*8 fmu2_hist(nbinmax2),mu2_hist(nbinmax2),tv2_hist(nbinmax2)
-   static double fmu2_hist[NBINMAX2],mu2_hist[NBINMAX2],tv2_hist[NBINMAX2];
-
 // {F77}       real*8 sfr2_hist(nbinmax2),a2_hist(nbinmax2),ld2_hist(nbinmax2)
-   static double sfr2_hist[NBINMAX2],a2_hist[NBINMAX2],ld2_hist[NBINMAX2];
 // {F77}       real*8 tbg1_2_hist(nbinmax2),tbg2_2_hist(nbinmax2),xi2_hist(nbinmax2)
-   static double tbg1_2_hist[NBINMAX2],tbg2_2_hist[NBINMAX2],xi2_hist[NBINMAX2];
 // {F77}       real*8 tvism2_hist(nbinmax2)
-   static double tvism2_hist[NBINMAX2];
 // {F77} c theSkyNet
 // {F77} c     The highest probability bin values
 // {F77}        real*8 hpbv, get_hpbv
-   static double hpbv;
 // {F77}        real*8 min_hpbv
 // {F77}        parameter(min_hpbv = 0.00001)
 // {F77} c theSkyNet
 // {F77}       integer nbin_fmu,nbin_mu,nbin_tv,nbin_a,nbin2_tvism
-   static int nbin_fmu,nbin_mu,nbin_tv,nbin_a,nbin2_tvism;
 // {F77}       integer nbin_tbg1,nbin_tbg2,nbin_xi,nbin_sfr,nbin_ld
-   static int nbin_tbg1,nbin_tbg2,nbin_xi,nbin_sfr,nbin_ld;
 // {F77}       integer nbin2_fmu,nbin2_mu,nbin2_tv,nbin2_a,nbin_fmu_ism
-   static int nbin2_fmu,nbin2_mu,nbin2_tv,nbin2_a,nbin_fmu_ism;
 // {F77}       integer nbin2_fmu_ism,nbin_md,nbin2_md,nbin_ssfr,nbin2_ssfr
-   static int nbin2_fmu_ism,nbin_md,nbin2_md,nbin_ssfr,nbin2_ssfr;
+// {F77} czz added parameters
+// {F77}       integer z_nbin_zmet,z_nbin2_zmet
+// {F77}       integer z_nbin_ltform,z_nbin2_ltform
+// {F77}       integer z_nbin_lgamma,z_nbin2_lgamma
+// {F77}       integer z_nbin_ltlastb,z_nbin2_ltlastb
+// {F77}       integer z_nbin_lagem,z_nbin2_lagem
+// {F77}       integer z_nbin_lager,z_nbin2_lager
+// {F77}       integer z_nbin_lsfr16,z_nbin2_lsfr16
+// {F77}       integer z_nbin_lsfr17,z_nbin2_lsfr17
+// {F77}       integer z_nbin_lsfr18,z_nbin2_lsfr18
+// {F77}       integer z_nbin_lsfr19,z_nbin2_lsfr19
+// {F77}       integer z_nbin_lsfr29,z_nbin2_lsfr29
+// {F77}       integer z_nbin_lfb16,z_nbin2_lfb16
+// {F77}       integer z_nbin_lfb17,z_nbin2_lfb17
+// {F77}       integer z_nbin_lfb18,z_nbin2_lfb18
+// {F77}       integer z_nbin_lfb19,z_nbin2_lfb19
+// {F77}       integer z_nbin_lfb29,z_nbin2_lfb29
+// {F77} czz added parameters end
 // {F77}       integer nbin2_tbg1,nbin2_tbg2,nbin2_xi,nbin2_sfr,nbin2_ld
-   static int nbin2_tbg1,nbin2_tbg2,nbin2_xi,nbin2_sfr,nbin2_ld;
 // {F77}       real*8 fmu_hist(nbinmax1),psfh(nbinmax1),pism(nbinmax1)
-   static double fmu_hist[NBINMAX1],psfh[NBINMAX1],pism[NBINMAX1];
 // {F77}       real*8 pir(nbinmax1),ptbg1(nbinmax1)
-   static double pir[NBINMAX1],ptbg1[NBINMAX1];
 // {F77}       real*8 mu_hist(nbinmax1),pmu(nbinmax1),ptbg2(nbinmax1)
-   static double mu_hist[NBINMAX1],pmu[NBINMAX1],ptbg2[NBINMAX1];
 // {F77}       real*8 tv_hist(nbinmax1),ptv(nbinmax1),ptvism(nbinmax1)
-   static double tv_hist[NBINMAX1],ptv[NBINMAX1],ptvism[NBINMAX1];
 // {F77}       real*8 sfr_hist(nbinmax1),psfr(nbinmax1),fmuism_hist(nbinmax1)
-   static double sfr_hist[NBINMAX1],psfr[NBINMAX1],fmuism_hist[NBINMAX1];
 // {F77}       real*8 pssfr(nbinmax1),a_hist(nbinmax1),pa(nbinmax1)
-   static double pssfr[NBINMAX1],a_hist[NBINMAX1],pa[NBINMAX1];
+// {F77} czz added parameters
+// {F77}       real*8 z_pzmet(nbinmax1)
+// {F77}       real*8 z_pltform(nbinmax1)
+// {F77}       real*8 z_plgamma(nbinmax1)
+// {F77}       real*8 z_pltlastb(nbinmax1)
+// {F77}       real*8 z_plagem(nbinmax1)
+// {F77}       real*8 z_plager(nbinmax1)
+// {F77}       real*8 z_plsfr16(nbinmax1)
+// {F77}       real*8 z_plsfr17(nbinmax1)
+// {F77}       real*8 z_plsfr18(nbinmax1)
+// {F77}       real*8 z_plsfr19(nbinmax1)
+// {F77}       real*8 z_plsfr29(nbinmax1)
+// {F77}       real*8 z_plfb16(nbinmax1)
+// {F77}       real*8 z_plfb17(nbinmax1)
+// {F77}       real*8 z_plfb18(nbinmax1)
+// {F77}       real*8 z_plfb19(nbinmax1)
+// {F77}       real*8 z_plfb29(nbinmax1)
+// {F77} czz added parameters end
 // {F77}       real*8 ld_hist(nbinmax1),pldust(nbinmax1)
-   static double ld_hist[NBINMAX1],pldust[NBINMAX1];
 // {F77}       real*8 tbg1_hist(nbinmax1),tbg2_hist(nbinmax1)
-   static double tbg1_hist[NBINMAX1],tbg2_hist[NBINMAX1];
 // {F77}       real*8 ssfr_hist(nbinmax1),xi_hist(nbinmax1),pxi1(nbinmax1)
-   static double ssfr_hist[NBINMAX1],xi_hist[NBINMAX1],pxi1[NBINMAX1];
+// {F77} czz added parameters
+// {F77}       real*8 z_zmet_hist(nbinmax1)
+// {F77}       real*8 z_ltform_hist(nbinmax1)
+// {F77}       real*8 z_lgamma_hist(nbinmax1)
+// {F77}       real*8 z_ltlastb_hist(nbinmax1)
+// {F77}       real*8 z_lagem_hist(nbinmax1)
+// {F77}       real*8 z_lager_hist(nbinmax1)
+// {F77}       real*8 z_lsfr16_hist(nbinmax1)
+// {F77}       real*8 z_lsfr17_hist(nbinmax1)
+// {F77}       real*8 z_lsfr18_hist(nbinmax1)
+// {F77}       real*8 z_lsfr19_hist(nbinmax1)
+// {F77}       real*8 z_lsfr29_hist(nbinmax1)
+// {F77}       real*8 z_lfb16_hist(nbinmax1)
+// {F77}       real*8 z_lfb17_hist(nbinmax1)
+// {F77}       real*8 z_lfb18_hist(nbinmax1)
+// {F77}       real*8 z_lfb19_hist(nbinmax1)
+// {F77}       real*8 z_lfb29_hist(nbinmax1)
+// {F77} czz added parameters end
 // {F77}       real*8 pxi2(nbinmax1),pxi3(nbinmax1)
-   static double pxi2[NBINMAX1],pxi3[NBINMAX1];
 // {F77}       real*8 md_hist(nbinmax1),pmd(nbinmax1)
-   static double md_hist[NBINMAX1],pmd[NBINMAX1];
 // {F77}       real*8 i_fmu_sfh(nmod),i_fmu_ir(nmod)
-   static double i_fmu_sfh[NMOD],i_fmu_ir[NMOD];
 // {F77}       real*8 i_mu(nmod),i_tauv(nmod),i_tvism(nmod)
-   static double i_mu[NMOD],i_tauv[NMOD],i_tvism[NMOD];
 // {F77}       real*8 i_lssfr(nmod),i_fmu_ism(nmod)
-   static double i_lssfr[NMOD],i_fmu_ism[NMOD];
+// {F77} czz added parameters
+// {F77}       real*8 z_i_lzmet(nmod)
+// {F77}       real*8 z_i_zmet(nmod)
+// {F77}       real*8 z_i_ltform(nmod)
+// {F77}       real*8 z_i_lgamma(nmod)
+// {F77}       real*8 z_i_ltlastb(nmod)
+// {F77}       real*8 z_i_lagem(nmod)
+// {F77}       real*8 z_i_lager(nmod)
+// {F77}       real*8 z_i_lsfr16(nmod)
+// {F77}       real*8 z_i_lsfr17(nmod)
+// {F77}       real*8 z_i_lsfr18(nmod)
+// {F77}       real*8 z_i_lsfr19(nmod)
+// {F77}       real*8 z_i_lsfr29(nmod)
+// {F77}       real*8 z_i_lfb16(nmod)
+// {F77}       real*8 z_i_lfb17(nmod)
+// {F77}       real*8 z_i_lfb18(nmod)
+// {F77}       real*8 z_i_lfb19(nmod)
+// {F77}       real*8 z_i_lfb29(nmod)
+// {F77} czz added parameters end
 // {F77}       real*8 i_tbg1(nmod),i_xi1(nmod),i_xi2(nmod),i_xi3(nmod)
-   static double i_tbg1[NMOD],i_xi1[NMOD],i_xi2[NMOD],i_xi3[NMOD];
 // {F77}       real*8 i_tbg2(nmod)
-   static double i_tbg2[NMOD];
 // {F77} c     cosmological parameters
 // {F77}       real*8 h,omega,omega_lambda,clambda,q
-   static double h,omega,omega_lambda,q;
 // {F77}       real*8 cosmol_c,dl
 // {F77} c     histogram parameters: min,max,bin width
 // {F77}       data fmu_min/0./,fmu_max/1.0005/,dfmu/0.001/
-    fmu_min=0,fmu_max=1.0005,dfmu=0.001;
 // {F77}       data fmuism_min/0./,fmuism_max/1.0005/,dfmu_ism/0.001/
-    fmuism_min=0,fmuism_max=1.0005,dfmu_ism=0.001;
 // {F77}       data mu_min/0./,mu_max/1.0005/,dmu/0.001/
-    mu_min=0,mu_max=1.0005,dmu=0.001;
 // {F77}       data tv_min/0./,tv_max/6.0025/,dtv/0.005/
-    tv_min=0,tv_max=6.0025,dtv=0.005;
 // {F77}       data ssfr_min/-13./,ssfr_max/-5.9975/,dssfr/0.05/
-    ssfr_min=-13,ssfr_max=-5.9975,dssfr=0.05;
-// {F77} c theSkyNet data sfr_min/-3./,sfr_max/3.5005/,dsfr/0.005/
-// {F77} c theSkyNet data a_min/7./,a_max/13.0025/,da/0.005/
-// {F77} c theSkyNet data ld_min/7./,ld_max/13.0025/,dldust/0.005/
+// {F77} czz added parameters
+// {F77}       data z_zmet_min/0./,z_zmet_max/2./,z_dzmet/0.01/   ! CZZ CHECK THESE VALUES
+// {F77}       data z_ltform_min/8.0/,z_ltform_max/10.0/,z_dltform/0.005/
+// {F77}       data z_lgamma_min/0.0/,z_lgamma_max/1.0/,z_dlgamma/0.005/
+// {F77}       data z_ltlastb_min/8.0/,z_ltlastb_max/10.0/,z_dltlastb/0.005/
+// {F77}       data z_lagem_min/8.0/,z_lagem_max/10.0/,z_dlagem/0.005/
+// {F77}       data z_lager_min/8.0/,z_lager_max/10.0/,z_dlager/0.005/
+// {F77}       data z_lsfr16_min/-13.0/,z_lsfr16_max/-7.5/,z_dlsfr16/0.005/
+// {F77}       data z_lsfr17_min/-13.0/,z_lsfr17_max/-7.5/,z_dlsfr17/0.005/
+// {F77}       data z_lsfr18_min/-13.0/,z_lsfr18_max/-7.5/,z_dlsfr18/0.005/
+// {F77}       data z_lsfr19_min/-13.0/,z_lsfr19_max/-7.5/,z_dlsfr19/0.005/
+// {F77}       data z_lsfr29_min/-13.0/,z_lsfr29_max/-7.5/,z_dlsfr29/0.005/
+// {F77}       data z_lfb16_min/0.0/,z_lfb16_max/1.0/,z_dlfb16/0.001/
+// {F77}       data z_lfb17_min/0.0/,z_lfb17_max/1.0/,z_dlfb17/0.001/
+// {F77}       data z_lfb18_min/0.0/,z_lfb18_max/1.0/,z_dlfb18/0.001/
+// {F77}       data z_lfb19_min/0.0/,z_lfb19_max/1.0/,z_dlfb19/0.001/
+// {F77}       data z_lfb29_min/0.0/,z_lfb29_max/1.0/,z_dlfb29/0.001/
+// {F77} czz added parameters end
 // {F77}       data sfr_min/-8./,sfr_max/3.5005/,dsfr/0.005/
-    sfr_min=-8,sfr_max=3.5005,dsfr=0.005;
 // {F77}       data a_min/2./,a_max/13.0025/,da/0.005/
-    a_min=2,a_max=13.0025,da=0.005;
 // {F77}       data ld_min/2./,ld_max/13.0025/,dldust/0.005/
-    ld_min=2,ld_max=13.0025,dldust=0.005;
 // {F77}       data tbg1_min/30./,tbg1_max/60.0125/,dtbg/0.025/
-    tbg1_min=30,tbg1_max=60.0125,dtbg=0.025;
 // {F77}       data tbg2_min/15./,tbg2_max/25.0125/
-    tbg2_min=15,tbg2_max=25.0125;
 // {F77}       data xi_min/0./,xi_max/1.0001/,dxi/0.001/
-    xi_min=0,xi_max=1.0001,dxi=0.001;
 // {F77} c theSkyNet data md_min/3./,md_max/9./,dmd/0.005/
 // {F77}       data md_min/-2./,md_max/9./,dmd/0.005/
-    md_min=-2,md_max=9,dmd=0.005;
 // {F77} c     cosmology
 // {F77}       data h/70./,omega/0.30/,omega_lambda/0.70/
-    h=70,omega=0.30,omega_lambda=0.70;
 // {F77}       data isave/0/
-    isave=0;
-
 // {F77} c     save parameters
 // {F77}       save flux_ir,flux_sfh,fmu_ir,fmu_sfh
 // {F77}       save mstr1,ssfr,ldust,mu,tauv,fmu_ism
 // {F77}       save lssfr,logldust,tvism
+// {F77} czz added parameters
+// {F77}       save z_zmet,z_lzmet
+// {F77}       save z_ltform,z_lgamma,z_ltlastb,z_lagem,z_lager
+// {F77}       save z_lsfr16,z_lsfr17,z_lsfr18,z_lsfr19,z_lsfr29
+// {F77}       save z_lfb16,z_lfb17,z_lfb18,z_lfb19,z_lfb29
+// {F77} czz added parameters end
 // {F77}       save tbg1,tbg2,xi1,xi2,xi3
 // {F77}       save flux_obs,sigma,dist
 // {F77}       save mdust
@@ -427,7 +359,6 @@ int main(int argc, char *argv[]){
 // {F77}       integer numargs
 // {F77}       character*80 arg
 // {F77}       logical skynet
-    static bool skynet;
 // {F77}       integer ios
 // {F77}       character*100 buffer1, buffer2
 // {F77}       logical found_old_entry
@@ -435,32 +366,18 @@ int main(int argc, char *argv[]){
 // {F77}
 // {F77}       numargs = iargc ( )
 // {F77}       if (numargs .eq. 0) then
-// TODO - Remove. Temporary just so doesn't get used uninitialized.
-   i_gal = 0;
-   if(argc == 1){
 // {F77} c     Do nothing as this is the normal model
 // {F77}           skynet = .FALSE.
-        skynet = false;
 // {F77}       else if (numargs .eq. 3) then
-   } else if(argc == 4){
 // {F77}           skynet = .TRUE.
-        skynet = true;
 // {F77}           call getarg ( 1, arg )
 // {F77}           read( arg, *) i_gal
-// We subtract 1 from i_gal to suit C standard array indexing.
-        i_gal = atoi(argv[1])-1;
 // {F77}           call getarg( 2, filters)
-        strcpy(filters,argv[2]);
 // {F77}           call getarg( 3, obs)
-        strcpy(obs,argv[3]);
 // {F77}       else
-    } else{
 // {F77}         write(*,*) "Requires arguments: pixel to fit, filters file, observations file"
-        cout << "Requires arguments: pixel to fit, filters file, observations file" << endl;
 // {F77} 		call EXIT(-1)
-        exit(-1);
 // {F77} 	  endif
-    }
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77}
@@ -470,17 +387,8 @@ int main(int argc, char *argv[]){
 // {F77}
 // {F77} c     READ FILTER FILE: "filters.dat"
 // {F77}       if (skynet .eqv. .FALSE.) then
-// {F77}           call getenv('USER_FILTERS',filters)
+// {F77}       call getenv('USER_FILTERS',filters)
 // {F77}       endif
-    char * env;
-    if(!skynet){
-        env = getenv("USER_FILTERS");
-        if(env){
-            strcpy(filters,env);
-        } else {
-            exit(-1);
-        }
-    }
 // {F77}       close(22)
 // {F77}       open(22,file=filters,status='old')
 // {F77}       do i=1,1
@@ -494,42 +402,17 @@ int main(int argc, char *argv[]){
 // {F77}       enddo
 // {F77}       nfilt=ifilt-1
 // {F77}       close(22)
-    ifstream infs;
-    infs.open(filters);
-    if(!infs.is_open()){
-        cerr << "Error opening filters file: " << filters << endl;
-        exit(-1);
-    }
-    stringstream ss;
-    nfilt=0;
-    string line;
-    while(getline(infs,line)){
-        if(line[0] != '#'){
-            ss.str("");
-            ss.clear();
-            ss << line;
-            ss >> filt_name[nfilt] >> lambda_eff[nfilt] >> filt_id[nfilt] >> fit[nfilt];
-            nfilt++;
-        }
-    }
-    infs.close();
 // {F77}
 // {F77} c     READ FILE WITH OBSERVATIONS:
 // {F77}       if (skynet .eqv. .FALSE.) then
-// {F77}           call getenv('USER_OBS',obs)
+// {F77}       call getenv('USER_OBS',obs)
 // {F77}       endif
-    if(!skynet){
-        env = getenv("USER_OBS");
-        if(env){
-            strcpy(obs,env);
-        }
-    }
 // {F77}       close(20)
 // {F77}       open(20,file=obs,status='old')
 // {F77}       do i=1,1
 // {F77}          read(20,*)
 // {F77}       enddo
-// {F77}       io=0stringstream format
+// {F77}       io=0
 // {F77}       n_obs=0
 // {F77}       do while(io.eq.0)
 // {F77}          n_obs=n_obs+1
@@ -538,26 +421,6 @@ int main(int argc, char *argv[]){
 // {F77}       enddo
 // {F77}       n_obs=n_obs-1
 // {F77}       close(20)
-    infs.open(obs);
-    if(!infs.is_open()){
-        cerr << "Error opening observations file: " << obs << endl;
-        exit(-1);
-    }
-    n_obs=0;
-    while(getline(infs,line)){
-        if(line[0] != '#'){
-           ss.str("");
-           ss.clear();
-           ss << line;
-           ss >> gal_name[n_obs] >> redshift[n_obs];
-           for(k=0; k < nfilt; k++){
-                ss >> flux_obs[k][n_obs] >> sigma[k][n_obs];
-           }
-           n_obs++;
-        }
-    }
-    infs.close();
-
 // {F77}
 // {F77} c     READ FILE WITH REDSHIFTS OF THE MODEL LIBRARIES
 // {F77}       close(24)
@@ -571,42 +434,18 @@ int main(int argc, char *argv[]){
 // {F77}          nz=nz-1
 // {F77}       close(24)
 // {F77}
-    infs.open("zlibs.dat");
-    if(!infs.is_open()){
-        cerr << "Error opening zlibs.dat" << endl;
-        exit(-1);
-    }
-    nz=0;
-    while(getline(infs,line)){
-        if(line[0] != '#'){
-           ss.str("");
-           ss.clear();
-           ss << line;
-           ss >> i >> zlib[nz];
-           nz++;
-        }
-    }
-    infs.close();
 // {F77} c     CHOOSE GALAXY TO FIT (enter corresponding i)
 // {F77}       if (skynet .eqv. .FALSE.) then
-// {F77}           write (6,'(x,a,$)') 'Choose galaxy - enter i_gal: '
-// {F77}           read (5,*) i_gal
+// {F77}       write (6,'(x,a,$)') 'Choose galaxy - enter i_gal: '
+// {F77}       read (5,*) i_gal
 // {F77}       endif
 // {F77}       write(*,*) i_gal, n_obs
-    if(!skynet){
-        // TODO: Take input
-    }
-    cout << i_gal+1 << "\t" << n_obs << endl;
 // {F77}
 // {F77} c     Do we have the observation
 // {F77}       if (i_gal .gt. n_obs) then
 // {F77}          write(*,*) 'Observation does not exist'
 // {F77}          call EXIT(0)
 // {F77}       endif
-    if(i_gal+1 > n_obs){
-        cerr << "Observation does not exist" << endl;
-        exit(-1);
-    }
 // {F77}
 // {F77} c     WHAT OBSERVATIONS DO YOU WANT TO FIT?
 // {F77} c     fit(ifilt)=1: fit flux from filter ifilt
@@ -617,12 +456,6 @@ int main(int argc, char *argv[]){
 // {F77}             sigma(i_gal,ifilt)=-99.
 // {F77}          endif
 // {F77}       enddo
-    for(ifilt=0; ifilt < nfilt; ifilt++){
-        if(fit[ifilt] == 0){
-            flux_obs[ifilt][i_gal]=-99;
-            sigma[ifilt][i_gal]=-99;
-        }
-    }
 // {F77}
 // {F77} c     Count number of non-zero fluxes (i.e. detections) to fit
 // {F77}       n_flux=0
@@ -631,35 +464,21 @@ int main(int argc, char *argv[]){
 // {F77}             n_flux=n_flux+1
 // {F77}          endif
 // {F77}       enddo
-    n_flux=0;
-    for(k=0; k < nfilt; k++){
-        if(flux_obs[k][i_gal] > 0){
-            n_flux++;
-        }
-    }
 // {F77}
 // {F77} c theSkyNet
 // {F77}          write(*,*) 'n_flux =',n_flux
 // {F77}       if (n_flux < 4) then
 // {F77}          call EXIT(0)
 // {F77}       endif
-    cout << "n_flux = " << n_flux << endl;
-    if(n_flux < 4){
-        exit(-1);
-    }
 // {F77} c theSkyNet
 // {F77}
 // {F77} c     COMPUTE LUMINOSITY DISTANCE from z given cosmology
 // {F77} c     Obtain cosmological constant and q
 // {F77}       clambda=cosmol_c(h,omega,omega_lambda,q)
-    // Not using return value of this.
-    get_cosmol_c(h,omega,omega_lambda,&q);
 // {F77}
 // {F77} c     Compute distance in Mpc from the redshifts z
 // {F77}       dist(i_gal)=dl(h,q,redshift(i_gal))
 // {F77}       dist(i_gal)=dist(i_gal)*3.086e+24/dsqrt(1.+redshift(i_gal))
-    dist[i_gal]=get_dl(h,q,redshift[i_gal]);
-    dist[i_gal]=dist[i_gal]*(3.086e+24)/sqrt(1+redshift[i_gal]);
 // {F77}
 // {F77}
 // {F77} c     OUTPUT FILES
@@ -669,45 +488,22 @@ int main(int argc, char *argv[]){
 // {F77}       close(31)
 // {F77} c     ---------------------------------------------------------------------------
 // {F77}       if (skynet .eqv. .FALSE.) then
-// {F77} 	      outfile1=aux_name(1:largo(aux_name))//'.fit'
-// {F77} 	      outfile2=aux_name(1:largo(aux_name))//'.sed'
-// {F77} 	      open (31, file=outfile1, status='unknown')
+// {F77}       outfile1=aux_name(1:largo(aux_name))//'.fit'
+// {F77}       outfile2=aux_name(1:largo(aux_name))//'.sed'
+// {F77}       open (31, file=outfile1, status='unknown')
 // {F77} c     ---------------------------------------------------------------------------
 // {F77}       else
 // {F77}           write(outfile1, '(I0,a)') i_gal, '.fit'
 // {F77}           open (31, file=outfile1, status='unknown')
 // {F77}           write(31, *) '####### ',gal_name(i_gal)
 // {F77}       endif
-    strcpy(aux_name,gal_name[i_gal]);
-    FILE * fitfp;
-    fitfp = NULL;
-    if (!skynet){
-        // TODO : Handle manual
-    } else {
-        sprintf(outfile1, "%d.fit",i_gal+1);
-        fitfp = fopen(outfile1,"w");
-        if(!fitfp){
-            cerr << "Could not open fit file: " << outfile1 << endl;
-        }
-        fprintf(fitfp," ####### %s",gal_name[i_gal]);
-        //We need to iterate the length of the char array like fortran seems to be doing.
-        for(i=strlen(gal_name[i_gal]); i<30; i++){
-            fprintf(fitfp," ");
-        }
-        fprintf(fitfp,"\n");
-
-    }
 // {F77}
 // {F77} c     Choose libraries according to the redshift of the source
 // {F77} c     Find zlib(i) closest of the galaxie's redshift
 // {F77}       do i=1,nz
 // {F77}          diffz(i)=abs(zlib(i)-redshift(i_gal))
 // {F77}       enddo
-    for(i=0; i<nz; i++){
-        diffz[i]=fabs(zlib[i]-redshift[i_gal]);
-    }
 // {F77}       call sort2(nz,diffz,zlib)
-    sort2(diffz,zlib,0,nz-1);
 // {F77} c     diff(1): minimum difference
 // {F77} c     zlib(1): library z we use for this galaxy
 // {F77} c              (if diffz(1) not gt 0.005)
@@ -715,26 +511,14 @@ int main(int argc, char *argv[]){
 // {F77}          write(*,*) 'No model library at this galaxy redshift...'
 // {F77}          stop
 // {F77}       endif
-    if(diffz[0] > 0.005 && fmod(redshift[i_gal]*1000,10) != 5){
-        cerr << "No model library at this galaxy redshift..." << endl;
-        exit(-1);
-    }
 // {F77}
 // {F77}       write(numz,'(f6.4)') zlib(1)
 // {F77}       optlib = 'starformhist_cb07_z'//numz//'.lbr'
 // {F77}       irlib = 'infrared_dce08_z'//numz//'.lbr'
 // {F77}
 // {F77}       write(*,*) 'z= ',redshift(i_gal)
-// {F77}       write(*,*) 'optlib=',optlib
+// {F77}       write(*,*) 'optilib=',optlib
 // {F77}       write(*,*) 'irlib=',irlib
-
-//  snprintf(numz, 6, "%f.4",zlib[0]);
-    snprintf(optlib, 35, "starformhist_cb07_z%6.4f.lbr",zlib[0]);
-    snprintf(irlib, 27, "infrared_dce08_z%6.4f.lbr",zlib[0]);
-
-    cout << "z = " << redshift[i_gal] << endl;
-    cout << "optlib = " << optlib << endl;
-    cout << "irlib = " << irlib <<endl;
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     What part of the SED are the filters sampling at the redshift of the galaxy?
@@ -763,21 +547,6 @@ int main(int argc, char *argv[]){
 // {F77}
 // {F77}          write(*,*) '   '
 // {F77}          write(*,*) 'At this redshift: '
-    nfilt_sfh = nfilt_ir = nfilt_mix = 0;
-    for(i=0; i<nfilt; i++){
-        lambda_rest[i] = lambda_eff[i]/(1+redshift[i_gal]);
-        if(lambda_rest[i] < 10){
-            nfilt_sfh++;
-        }
-        if(lambda_rest[i] > 2.5){
-            nfilt_ir++;
-        }
-        if (lambda_rest[i] > 2.5 && lambda_rest[i] <= 10){
-            nfilt_mix++;
-        }
-    }
-    cout << "   " << endl;
-    cout << "At this redshift: " << endl;
 // {F77}
 // {F77}          do k=1,nfilt_sfh-nfilt_mix
 // {F77}             write(*,*) 'purely stellar... ',filt_name(k)
@@ -788,16 +557,6 @@ int main(int argc, char *argv[]){
 // {F77}          do k=nfilt_sfh+1,nfilt
 // {F77}             write(*,*) 'purely dust... ',filt_name(k)
 // {F77}          enddo
-    for(k=0; k < (nfilt_sfh-nfilt_mix); k++){
-        cout << "purely stellar... " << filt_name[k] << endl;
-    }
-
-    for(k=nfilt_sfh-nfilt_mix; k < nfilt_sfh; k++){
-        cout << "mix stars+dust... " << filt_name[k] << endl;
-    }
-    for(k=nfilt_sfh; k < nfilt; k++){
-        cout << "purely dust... " << filt_name[k] << endl;
-    }
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     MODELS: read libraries of models with parameters + AB mags at z
@@ -809,7 +568,6 @@ int main(int argc, char *argv[]){
 // {F77}
 // {F77}          if (isave.eq.0) then
 // {F77}             io=0
-    if(isave == 0){
 // {F77}
 // {F77} c     READ OPTLIB
 // {F77}             close(21)
@@ -834,6 +592,44 @@ int main(int argc, char *argv[]){
 // {F77}                   tauv(i_sfh)=fprop_sfh(i_sfh,4)                ! optical V-band depth tauV (CF00 model)
 // {F77}                   ssfr(i_sfh)=fprop_sfh(i_sfh,10)/mstr1(i_sfh)  ! recent SSFR_0.01Gyr / stellar mass
 // {F77}                   lssfr(i_sfh)=dlog10(ssfr(i_sfh))              ! log(SSFR_0.01Gyr)
+// {F77} czz added parameters
+// {F77}                   z_zmet(i_sfh)=fprop_sfh(i_sfh,3)              ! metalicity
+// {F77}                   z_lzmet(i_sfh)=dlog10(z_zmet(i_sfh))          ! log(metalicity)
+// {F77}
+// {F77}                   z_tform(i_sfh)=fprop_sfh(i_sfh,1)             ! age of the oldest stars (yr)
+// {F77}                   z_gamma(i_sfh)=fprop_sfh(i_sfh,2)             ! star formation timescale (Gyr^-1)
+// {F77}                   z_tlastb(i_sfh)=fprop_sfh(i_sfh,13)           ! time since the last burst of SF
+// {F77}                   z_agem(i_sfh)=fprop_sfh(i_sfh,19)             ! mass-weighted age
+// {F77}                   z_ager(i_sfh)=fprop_sfh(i_sfh,20)             ! r-band light-weighted age
+// {F77}                   z_sfr16(i_sfh)=fprop_sfh(i_sfh,8)             ! SFR(1e6)
+// {F77}                   z_sfr17(i_sfh)=fprop_sfh(i_sfh,9)             ! SFR(1e7)
+// {F77}                   z_sfr18(i_sfh)=fprop_sfh(i_sfh,10)            ! SFR(1e8)
+// {F77}                   z_sfr19(i_sfh)=fprop_sfh(i_sfh,11)            ! SFR(1e9)
+// {F77}                   z_sfr29(i_sfh)=fprop_sfh(i_sfh,12)            ! SFR(2e9)
+// {F77}                   z_fb16(i_sfh)=fprop_sfh(i_sfh,14)             ! fraction of stellar mass formed over the last 1e6 yr
+// {F77}                   z_fb17(i_sfh)=fprop_sfh(i_sfh,15)             ! fraction of stellar mass formed over the last 1e7 yr
+// {F77}                   z_fb18(i_sfh)=fprop_sfh(i_sfh,16)             ! fraction of stellar mass formed over the last 1e8 yr
+// {F77}                   z_fb19(i_sfh)=fprop_sfh(i_sfh,17)             ! fraction of stellar mass formed over the last 1e9 yr
+// {F77}                   z_fb29(i_sfh)=fprop_sfh(i_sfh,18)             ! fraction of stellar mass formed over the last 2e9 yr
+// {F77}
+// {F77}                   z_ltform(i_sfh)=dlog10(z_tform(i_sfh))
+// {F77}                   z_lgamma(i_sfh)=z_gamma(i_sfh)
+// {F77}                   z_ltlastb(i_sfh)=dlog10(z_tlastb(i_sfh))
+// {F77}                   z_lagem(i_sfh)=dlog10(z_agem(i_sfh))
+// {F77}                   z_lager(i_sfh)=dlog10(z_ager(i_sfh))
+// {F77}                   z_lsfr16(i_sfh)=dlog10(z_sfr16(i_sfh))
+// {F77}                   z_lsfr17(i_sfh)=dlog10(z_sfr17(i_sfh))
+// {F77}                   z_lsfr18(i_sfh)=dlog10(z_sfr18(i_sfh))
+// {F77}                   z_lsfr19(i_sfh)=dlog10(z_sfr19(i_sfh))
+// {F77}                   z_lsfr29(i_sfh)=dlog10(z_sfr29(i_sfh))
+// {F77}                   z_lfb16(i_sfh)=z_fb16(i_sfh)
+// {F77}                   z_lfb17(i_sfh)=z_fb17(i_sfh)
+// {F77}                   z_lfb18(i_sfh)=z_fb18(i_sfh)
+// {F77}                   z_lfb19(i_sfh)=z_fb19(i_sfh)
+// {F77}                   z_lfb29(i_sfh)=z_fb29(i_sfh)
+// {F77}
+// {F77} c		  print *,i_sfh,z_zmet(i_sfh),z_lzmet(i_sfh),mstr1(i_sfh)
+// {F77} czz added parameters end
 // {F77}                   tvism(i_sfh)=mu(i_sfh)*tauv(i_sfh)            ! mu*tauV=V-band optical depth for ISM
 // {F77} c     .lbr contains absolute AB magnitudes -> convert to fluxes Fnu in Lo/Hz
 // {F77} c     Convert all magnitudes to Lo/Hz (except H lines luminosity: in Lo)
@@ -849,51 +645,6 @@ int main(int argc, char *argv[]){
 // {F77}             enddo
 // {F77}             close(21)
 // {F77}             n_sfh=i_sfh-1
-        infs.open(optlib);
-        if(!infs.is_open()){
-            cerr << "Failed to open SFH library: " << optlib << endl;
-            exit(-1);
-        }
-        cout << "Reading SFH library..." << endl;
-        n_sfh=0;
-        int i_line=0;
-        while(getline(infs,line)){
-            i_line++;
-            if(line[0] != '#'){
-               ss.str("");
-               ss.clear();
-               ss << line;
-               ss >> indx[n_sfh];
-               // Simulate FORTRAM starformhist bug.
-               if(i_line > 2){
-                    for(j=0; j < NPROP_SFH; j++){
-                            ss >> fprop_sfh[j][n_sfh];
-                    }
-                    for(j=0; j < nfilt_sfh; j++){
-                            ss >> flux_sfh[j][n_sfh];
-                    }
-
-                    // We need to subtract array index by 1 due to fortran difference.
-                    fmu_sfh[n_sfh]=fprop_sfh[22-1][n_sfh];
-                    mstr1[n_sfh]=fprop_sfh[6-1][n_sfh];
-                    ldust[n_sfh]=fprop_sfh[21-1][n_sfh]/mstr1[n_sfh];
-                    logldust[n_sfh]=log10(ldust[n_sfh]);
-                    mu[n_sfh]=fprop_sfh[5-1][n_sfh];
-                    tauv[n_sfh]=fprop_sfh[4-1][n_sfh];
-                    ssfr[n_sfh]=fprop_sfh[10-1][n_sfh]/mstr1[n_sfh];
-                    lssfr[n_sfh]=log10(ssfr[n_sfh]);
-                    tvism[n_sfh]=mu[n_sfh]*tauv[n_sfh];
-
-                    for(k=0; k < nfilt_sfh; k++){
-                        flux_sfh[k][n_sfh]=3.117336e+6*pow(10,-0.4*(flux_sfh[k][n_sfh]+48.6));
-                        flux_sfh[k][n_sfh]=flux_sfh[k][n_sfh]/mstr1[n_sfh];
-                        flux_sfh[k][n_sfh]=flux_sfh[k][n_sfh]/(1+redshift[i_gal]);
-                    }
-                    n_sfh++;
-               }
-            }
-        }
-        infs.close();
 // {F77}
 // {F77} c     READ IRLIB
 // {F77}             close(20)
@@ -936,54 +687,8 @@ int main(int argc, char *argv[]){
 // {F77}  201        format(0p7f12.3,1pe12.3,1p14e12.3,1p3e12.3)
 // {F77}             close(20)
 // {F77}             n_ir=i_ir-1
-        infs.open(irlib);
-        if(!infs.is_open()){
-            cerr << "Failed to open IR dust emission library: " << irlib << endl;
-            exit(-1);
-        }
-        cout << "Reading IR dust emission library..." << endl;
-        n_ir=0;
-        while(getline(infs,line)){
-            if(line[0] != '#'){
-               ss.str("");
-               ss.clear();
-               ss << line;
-               for(j=0; j < NPROP_IR; j++){
-                    ss >> fprop_ir[j][n_ir];
-               }
-               for(j=0; j < nfilt_ir; j++){
-                    ss >> flux_ir[j][n_ir];
-               }
-
-               // We need to subtract array index by 1 due to fortran difference.
-               fmu_ir[n_ir]=fprop_ir[1-1][n_ir];
-               fmu_ism[n_ir]=fprop_ir[2-1][n_ir];
-               tbg2[n_ir]=fprop_ir[4-1][n_ir];
-               tbg1[n_ir]=fprop_ir[3-1][n_ir];
-               xi1[n_ir]=fprop_ir[5-1][n_ir];
-               xi2[n_ir]=fprop_ir[6-1][n_ir];
-               xi3[n_ir]=fprop_ir[7-1][n_ir];
-               mdust[n_ir]=fprop_ir[8-1][n_ir];
-
-               for(k=0; k < nfilt_ir; k++){
-                 flux_ir[k][n_ir]=3.117336e+6*pow(10,-0.4*(flux_ir[k][n_ir]+48.6));
-                 flux_ir[k][n_ir]=flux_ir[k][n_ir]/(1+redshift[i_gal]);
-               }
-
-               xi1[n_ir]=xi1[n_ir]*(1-fmu_ir[n_ir])+0.550*(1-fmu_ism[n_ir])*fmu_ir[n_ir];
-               xi2[n_ir]=xi2[n_ir]*(1-fmu_ir[n_ir])+0.275*(1-fmu_ism[n_ir])*fmu_ir[n_ir];
-               xi3[n_ir]=xi3[n_ir]*(1-fmu_ir[n_ir])+0.175*(1-fmu_ism[n_ir])*fmu_ir[n_ir];
-               fmu_ism[n_ir]=fmu_ism[n_ir]*fmu_ir[n_ir];
-
-               n_ir++;
-            }
-        }
-        infs.close();
 // {F77}             isave=1
 // {F77}          endif
-        isave=1;
-    }
-
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     COMPARISON BETWEEN MODELS AND OBSERVATIONS:
@@ -1001,13 +706,17 @@ int main(int argc, char *argv[]){
 // {F77}
 // {F77} c     Observed fluxes: Jy -> Lsun/Hz
 // {F77}          do k=1,nfilt
-// {F77}             if (flux_obs(i_gal,k).gt.0) then
+// {F77}             if (flux_obs(i_gal,k).gt.0.and.sigma(i_gal,k).gt.0.) then
 // {F77}                flux_obs(i_gal,k)=flux_obs(i_gal,k)*1.e-23
 // {F77}      +              *3.283608731e-33*(dist(i_gal)**2)
 // {F77}                sigma(i_gal,k)=sigma(i_gal,k)*1.e-23
 // {F77}      +              *3.283608731e-33*(dist(i_gal)**2)
 // {F77}             endif
-// {F77}             if (sigma(i_gal,k).lt.0.05*flux_obs(i_gal,k)) then
+// {F77}             if (flux_obs(i_gal,k).le.0.and.sigma(i_gal,k).gt.0.) then
+// {F77}                sigma(i_gal,k)=sigma(i_gal,k)*1.e-23
+// {F77}      +              *3.283608731e-33*(dist(i_gal)**2)
+// {F77}             endif
+// {F77}             if (flux_obs(i_gal,k).gt.0.and.sigma(i_gal,k).lt.0.05*flux_obs(i_gal,k)) then
 // {F77}                sigma(i_gal,k)=0.05*flux_obs(i_gal,k)
 // {F77}             endif
 // {F77}          enddo
@@ -1017,21 +726,6 @@ int main(int argc, char *argv[]){
 // {F77}                w(i_gal,k) = 1.0 / (sigma(i_gal,k)**2)
 // {F77}             endif
 // {F77}          enddo
-    for(k=0; k<nfilt; k++){
-        if (flux_obs[k][i_gal] > 0){
-            flux_obs[k][i_gal]=flux_obs[k][i_gal]*1.0e-23*3.283608731e-33*pow(dist[i_gal],2);
-            sigma[k][i_gal]=sigma[k][i_gal]*1.0e-23*3.283608731e-33*pow(dist[i_gal],2);
-        }
-        if (sigma[k][i_gal] < 0.05*flux_obs[k][i_gal]){
-            sigma[k][i_gal]=0.05*flux_obs[k][i_gal];
-        }
-    }
-    for(k=0; k<nfilt; k++){
-        if (sigma[k][i_gal] > 0.0){
-            w[k][i_gal] = 1.0/(pow(sigma[k][i_gal],2));
-        }
-    }
-
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Initialize variables:
@@ -1042,13 +736,6 @@ int main(int argc, char *argv[]){
 // {F77}          do k=1,nfilt
 // {F77}             flux_mod(k)=0.
 // {F77}          enddo
-    n_models=0;
-    chi2_sav=1.0e30;
-    ptot=0;
-    prob=0;
-    for(k=0; k<nfilt; k++){
-        flux_mod[k]=0;
-    }
 // {F77}
 // {F77} c theSkyNet do i=1,1500
 // {F77}          do i=1,3000
@@ -1058,6 +745,25 @@ int main(int argc, char *argv[]){
 // {F77}             ptv(i)=0.
 // {F77}             ptvism(i)=0.
 // {F77}             pssfr(i)=0.
+// {F77} czz added parameters
+// {F77}             z_pzmet(i)=0.
+// {F77}             z_pltform(i)=0.
+// {F77}             z_plgamma(i)=0.
+// {F77}             z_pltlastb(i)=0.
+// {F77}             z_plagem(i)=0.
+// {F77}             z_plager(i)=0.
+// {F77}             z_plsfr16(i)=0.
+// {F77}             z_plsfr17(i)=0.
+// {F77}             z_plsfr18(i)=0.
+// {F77}             z_plsfr19(i)=0.
+// {F77}             z_plsfr29(i)=0.
+// {F77}             z_plfb16(i)=0.
+// {F77}             z_plfb17(i)=0.
+// {F77}             z_plfb18(i)=0.
+// {F77}             z_plfb19(i)=0.
+// {F77}             z_plfb29(i)=0.
+// {F77} czz added parameters end
+// {F77}
 // {F77}             psfr(i)=0.
 // {F77}             pa(i)=0.
 // {F77}             pldust(i)=0.
@@ -1069,26 +775,6 @@ int main(int argc, char *argv[]){
 // {F77}             pxi3(i)=0.
 // {F77}             pmd(i)=0.
 // {F77}          enddo
-    for(i=0; i<3000; i++){
-        psfh[i]=0;
-        pir[i]=0;
-        pmu[i]=0;
-        ptv[i]=0;
-        ptvism[i]=0;
-        pssfr[i]=0;
-        psfr[i]=0;
-        pa[i]=0;
-        pldust[i]=0;
-        ptbg1[i]=0;
-        ptbg2[i]=0;
-        pism[i]=0;
-        pxi1[i]=0;
-        pxi2[i]=0;
-        pxi3[i]=0;
-        pmd[i]=0;
-
-    }
-
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Compute histogram grids of the parameter likelihood distributions before
@@ -1101,41 +787,48 @@ int main(int argc, char *argv[]){
 // {F77}
 // {F77} c     f_mu (SFH) & f_mu (IR)
 // {F77}          call get_histgrid(dfmu,fmu_min,fmu_max,nbin_fmu,fmu_hist)
-    get_histgrid(dfmu,fmu_min,fmu_max,&nbin_fmu,fmu_hist);
 // {F77} c     mu parameter
 // {F77}          call get_histgrid(dmu,mu_min,mu_max,nbin_mu,mu_hist)
-    get_histgrid(dmu,mu_min,mu_max,&nbin_mu,mu_hist);
 // {F77} c     tauv (dust optical depth)
 // {F77}          call get_histgrid(dtv,tv_min,tv_max,nbin_tv,tv_hist)
-    get_histgrid(dtv,tv_min,tv_max,&nbin_tv,tv_hist);
 // {F77} c     sSFR
 // {F77}          call get_histgrid(dssfr,ssfr_min,ssfr_max,nbin_ssfr,ssfr_hist)
-    get_histgrid(dssfr,ssfr_min,ssfr_max,&nbin_ssfr,ssfr_hist);
+// {F77} czz added parameters
+// {F77} c     metalicity
+// {F77}          call get_histgrid(z_dzmet,z_zmet_min,z_zmet_max,z_nbin_zmet,z_zmet_hist)
+// {F77}          call get_histgrid(z_dltform,z_ltform_min,z_ltform_max,z_nbin_ltform,z_ltform_hist)
+// {F77}          call get_histgrid(z_dlgamma,z_lgamma_min,z_lgamma_max,z_nbin_lgamma,z_lgamma_hist)
+// {F77}          call get_histgrid(z_dltlastb,z_ltlastb_min,z_ltlastb_max,z_nbin_ltlastb,z_ltlastb_hist)
+// {F77}          call get_histgrid(z_dlagem,z_lagem_min,z_lagem_max,z_nbin_lagem,z_lagem_hist)
+// {F77}          call get_histgrid(z_dlager,z_lager_min,z_lager_max,z_nbin_lager,z_lager_hist)
+// {F77}          call get_histgrid(z_dlsfr16,z_lsfr16_min,z_lsfr16_max,z_nbin_lsfr16,z_lsfr16_hist)
+// {F77}          call get_histgrid(z_dlsfr17,z_lsfr17_min,z_lsfr17_max,z_nbin_lsfr17,z_lsfr17_hist)
+// {F77}          call get_histgrid(z_dlsfr18,z_lsfr18_min,z_lsfr18_max,z_nbin_lsfr18,z_lsfr18_hist)
+// {F77}          call get_histgrid(z_dlsfr19,z_lsfr19_min,z_lsfr19_max,z_nbin_lsfr19,z_lsfr19_hist)
+// {F77}          call get_histgrid(z_dlsfr29,z_lsfr29_min,z_lsfr29_max,z_nbin_lsfr29,z_lsfr29_hist)
+// {F77}          call get_histgrid(z_dlfb16,z_lfb16_min,z_lfb16_max,z_nbin_lfb16,z_lfb16_hist)
+// {F77}          call get_histgrid(z_dlfb17,z_lfb17_min,z_lfb17_max,z_nbin_lfb17,z_lfb17_hist)
+// {F77}          call get_histgrid(z_dlfb18,z_lfb18_min,z_lfb18_max,z_nbin_lfb18,z_lfb18_hist)
+// {F77}          call get_histgrid(z_dlfb19,z_lfb19_min,z_lfb19_max,z_nbin_lfb19,z_lfb19_hist)
+// {F77}          call get_histgrid(z_dlfb29,z_lfb29_min,z_lfb29_max,z_nbin_lfb29,z_lfb29_hist)
+// {F77} czz added parameters end
 // {F77} c     SFR
 // {F77}          call get_histgrid(dsfr,sfr_min,sfr_max,nbin_sfr,sfr_hist)
-    get_histgrid(dsfr,sfr_min,sfr_max,&nbin_sfr,sfr_hist);
 // {F77} c     Mstars
 // {F77}          call get_histgrid(da,a_min,a_max,nbin_a,a_hist)
-    get_histgrid(da,a_min,a_max,&nbin_a,a_hist);
 // {F77} c     Ldust
 // {F77}          call get_histgrid(dldust,ld_min,ld_max,nbin_ld,ld_hist)
-    get_histgrid(dldust,ld_min,ld_max,&nbin_ld,ld_hist);
 // {F77} c     fmu_ism
 // {F77}          call get_histgrid(dfmu_ism,fmuism_min,fmuism_max,nbin_fmu_ism,
 // {F77}      +        fmuism_hist)
-    get_histgrid(dfmu_ism,fmuism_min,fmuism_max,&nbin_fmu_ism,fmuism_hist);
 // {F77} c     T_BGs (ISM)
 // {F77}          call get_histgrid(dtbg,tbg1_min,tbg1_max,nbin_tbg1,tbg1_hist)
-    get_histgrid(dtbg,tbg1_min,tbg1_max,&nbin_tbg1,tbg1_hist);
 // {F77} c     T_BGs (BC)
 // {F77}          call get_histgrid(dtbg,tbg2_min,tbg2_max,nbin_tbg2,tbg2_hist)
-    get_histgrid(dtbg,tbg2_min,tbg2_max,&nbin_tbg2,tbg2_hist);
 // {F77} c     xi's (PAHs, VSGs, BGs)
 // {F77}          call get_histgrid(dxi,xi_min,xi_max,nbin_xi,xi_hist)
-    get_histgrid(dxi,xi_min,xi_max,&nbin_xi,xi_hist);
 // {F77} c     Mdust
 // {F77}          call get_histgrid(dmd,md_min,md_max,nbin_md,md_hist)
-    get_histgrid(dmd,md_min,md_max,&nbin_md,md_hist);
 // {F77}
 // {F77} c     Compute histogram indexes for each parameter value
 // {F77} c     [makes code faster -- implemented by the Nottingham people]
@@ -1157,27 +850,106 @@ int main(int argc, char *argv[]){
 // {F77}             endif
 // {F77}             aux=((lssfr(i_sfh)-ssfr_min)/(ssfr_max-ssfr_min))* nbin_ssfr
 // {F77}             i_lssfr(i_sfh) = 1 + dint(aux)
+// {F77}
+// {F77} czz added parameters
+// {F77} czzworking
+// {F77}             aux=((z_zmet(i_sfh)-z_zmet_min)/(z_zmet_max-z_zmet_min))*z_nbin_zmet
+// {F77}             z_i_zmet(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_ltform(i_sfh).lt.z_ltform_min) then
+// {F77}                z_ltform(i_sfh)=z_ltform_min
+// {F77}             endif
+// {F77}             aux=((z_ltform(i_sfh)-z_ltform_min)/(z_ltform_max-z_ltform_min))*z_nbin_ltform
+// {F77}             z_i_ltform(i_sfh)=1+dint(aux)
+// {F77}
+// {F77} c            if (z_lgamma(i_sfh).lt.z_lgamma_min) then
+// {F77} c               z_lgamma(i_sfh)=z_lgamma_min
+// {F77} c            endif
+// {F77}             aux=((z_lgamma(i_sfh)-z_lgamma_min)/(z_lgamma_max-z_lgamma_min))*z_nbin_lgamma
+// {F77}             z_i_lgamma(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_ltlastb(i_sfh).lt.z_ltlastb_min) then
+// {F77}                z_ltlastb(i_sfh)=z_ltlastb_min
+// {F77}             endif
+// {F77}             aux=((z_ltlastb(i_sfh)-z_ltlastb_min)/(z_ltlastb_max-z_ltlastb_min))*z_nbin_ltlastb
+// {F77}             z_i_ltlastb(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lagem(i_sfh).lt.z_lagem_min) then
+// {F77}                z_lagem(i_sfh)=z_lagem_min
+// {F77}             endif
+// {F77}             aux=((z_lagem(i_sfh)-z_lagem_min)/(z_lagem_max-z_lagem_min))*z_nbin_lagem
+// {F77}             z_i_lagem(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lager(i_sfh).lt.z_lager_min) then
+// {F77}                z_lager(i_sfh)=z_lager_min
+// {F77}             endif
+// {F77}             aux=((z_lager(i_sfh)-z_lager_min)/(z_lager_max-z_lager_min))*z_nbin_lager
+// {F77}             z_i_lager(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lsfr16(i_sfh).lt.z_lsfr16_min) then
+// {F77}                z_lsfr16(i_sfh)=z_lsfr16_min
+// {F77}             endif
+// {F77}             aux=((z_lsfr16(i_sfh)-z_lsfr16_min)/(z_lsfr16_max-z_lsfr16_min))*z_nbin_lsfr16
+// {F77}             z_i_lsfr16(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lsfr17(i_sfh).lt.z_lsfr17_min) then
+// {F77}                z_lsfr17(i_sfh)=z_lsfr17_min
+// {F77}             endif
+// {F77}             aux=((z_lsfr17(i_sfh)-z_lsfr17_min)/(z_lsfr17_max-z_lsfr17_min))*z_nbin_lsfr17
+// {F77}             z_i_lsfr17(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lsfr18(i_sfh).lt.z_lsfr18_min) then
+// {F77}                z_lsfr18(i_sfh)=z_lsfr18_min
+// {F77}             endif
+// {F77}             aux=((z_lsfr18(i_sfh)-z_lsfr18_min)/(z_lsfr18_max-z_lsfr18_min))*z_nbin_lsfr18
+// {F77}             z_i_lsfr18(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lsfr19(i_sfh).lt.z_lsfr19_min) then
+// {F77}                z_lsfr19(i_sfh)=z_lsfr19_min
+// {F77}             endif
+// {F77}             aux=((z_lsfr19(i_sfh)-z_lsfr19_min)/(z_lsfr19_max-z_lsfr19_min))*z_nbin_lsfr19
+// {F77}             z_i_lsfr19(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lsfr29(i_sfh).lt.z_lsfr29_min) then
+// {F77}                z_lsfr29(i_sfh)=z_lsfr29_min
+// {F77}             endif
+// {F77}             aux=((z_lsfr29(i_sfh)-z_lsfr29_min)/(z_lsfr29_max-z_lsfr29_min))*z_nbin_lsfr29
+// {F77}             z_i_lsfr29(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lfb16(i_sfh).lt.z_lfb16_min) then
+// {F77}                z_lfb16(i_sfh)=z_lfb16_min
+// {F77}             endif
+// {F77}             aux=((z_lfb16(i_sfh)-z_lfb16_min)/(z_lfb16_max-z_lfb16_min))*z_nbin_lfb16
+// {F77}             z_i_lfb16(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lfb17(i_sfh).lt.z_lfb17_min) then
+// {F77}                z_lfb17(i_sfh)=z_lfb17_min
+// {F77}             endif
+// {F77}             aux=((z_lfb17(i_sfh)-z_lfb17_min)/(z_lfb17_max-z_lfb17_min))*z_nbin_lfb17
+// {F77}             z_i_lfb17(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lfb18(i_sfh).lt.z_lfb18_min) then
+// {F77}                z_lfb18(i_sfh)=z_lfb18_min
+// {F77}             endif
+// {F77}             aux=((z_lfb18(i_sfh)-z_lfb18_min)/(z_lfb18_max-z_lfb18_min))*z_nbin_lfb18
+// {F77}             z_i_lfb18(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}             if (z_lfb19(i_sfh).lt.z_lfb19_min) then
+// {F77}                z_lfb19(i_sfh)=z_lfb19_min
+// {F77}             endif
+// {F77}             aux=((z_lfb19(i_sfh)-z_lfb19_min)/(z_lfb19_max-z_lfb19_min))*z_nbin_lfb19
+// {F77}             z_i_lfb19(i_sfh)=1+dint(aux)
+// {F77}
+// {F77}
+// {F77}             if (z_lfb29(i_sfh).lt.z_lfb29_min) then
+// {F77}                z_lfb29(i_sfh)=z_lfb29_min
+// {F77}             endif
+// {F77}             aux=((z_lfb29(i_sfh)-z_lfb29_min)/(z_lfb29_max-z_lfb29_min))*z_nbin_lfb29
+// {F77}             z_i_lfb29(i_sfh)=1+dint(aux)
+// {F77}
+// {F77} czz added parameters end
+// {F77}
 // {F77}          enddo
-    for(i_sfh=0; i_sfh<n_sfh; i_sfh++){
-        aux=((fmu_sfh[i_sfh]-fmu_min)/(fmu_max-fmu_min)) * nbin_fmu;
-        i_fmu_sfh[i_sfh] = (int)(aux);
-
-        aux =((mu[i_sfh]-mu_min)/(mu_max-mu_min)) * nbin_mu;
-        i_mu[i_sfh] = (int)(aux);
-
-        aux=((tauv[i_sfh]-tv_min)/(tv_max-tv_min)) * nbin_tv;
-        i_tauv[i_sfh] = (int)(aux);
-
-        aux=((tvism[i_sfh]-tv_min)/(tv_max-tv_min)) * nbin_tv;
-        i_tvism[i_sfh] = (int)(aux);
-
-        if (lssfr[i_sfh] < ssfr_min){
-            lssfr[i_sfh]=ssfr_min;
-        }
-
-        aux=((lssfr[i_sfh]-ssfr_min)/(ssfr_max-ssfr_min)) * nbin_ssfr;
-        i_lssfr[i_sfh] = (int)(aux);
-    }
 // {F77}
 // {F77}          do i_ir=1, n_ir
 // {F77}             aux=((fmu_ir(i_ir)-fmu_min)/(fmu_max-fmu_min)) * nbin_fmu
@@ -1202,31 +974,6 @@ int main(int argc, char *argv[]){
 // {F77}             i_xi3(i_ir) = 1+dint(aux)
 // {F77}          enddo
 // {F77}
-
-    for(i_ir=0; i_ir<n_ir; i_ir++){
-        aux=((fmu_ir[i_ir]-fmu_min)/(fmu_max-fmu_min)) * nbin_fmu;
-        i_fmu_ir[i_ir] = (int)(aux);
-
-        aux=((fmu_ism[i_ir]-fmuism_min)/(fmuism_max-fmuism_min))*nbin_fmu_ism;
-        i_fmu_ism[i_ir] = (int)(aux);
-
-        aux=((tbg1[i_ir]-tbg1_min)/(tbg1_max-tbg1_min))* nbin_tbg1;
-        i_tbg1[i_ir] = (int)(aux);
-
-        aux=((tbg2[i_ir]-tbg2_min)/(tbg2_max-tbg2_min))* nbin_tbg2;
-        i_tbg2[i_ir] = (int)(aux);
-
-        aux=((xi1[i_ir]-xi_min)/(xi_max-xi_min)) * nbin_xi;
-        i_xi1[i_ir] = (int)(aux);
-
-        aux=((xi2[i_ir]-xi_min)/(xi_max-xi_min)) * nbin_xi;
-        i_xi2[i_ir] = (int)(aux);
-
-        aux=((xi3[i_ir]-xi_min)/(xi_max-xi_min)) * nbin_xi;
-        i_xi3[i_ir] = (int)(aux);
-    }
-
-
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     HERE STARTS THE ACTUAL FIT
 // {F77} c
@@ -1249,232 +996,8 @@ int main(int argc, char *argv[]){
 // {F77} c     and build high-resolution histogram of each PDF
 // {F77} c     ---------------------------------------------------------------------------
 // {F77}          write(*,*) 'Starting fit.......'
+// {F77}       print *,'n_sfh=',n_sfh
 // {F77}          DO i_sfh=1,n_sfh
-    cout << "Starting fit......." << endl;
-    df=0.15;
-
-// OpenCL implementation of fitting process.
-#if defined(USE_OPENCL)
-
-    // Build struct array of models and indexes of length NMOD that will be used
-    // in the kernel threads. Cleaner than passing individual arrays.
-    std::vector<clmod_t> h_clmods;
-    for(i=0; i<NMOD; i++){
-       clmod_t clmod;
-       clmod.i_fmu_sfh = i_fmu_sfh[i];
-       clmod.i_mu = i_mu[i];
-       clmod.i_tauv = i_tauv[i];
-       clmod.i_tvism = i_tvism[i];
-       clmod.i_lssfr = i_lssfr[i];
-       clmod.i_fmu_ir = i_fmu_ir[i];
-       clmod.i_fmu_ism = i_fmu_ism[i];
-       clmod.i_tbg1 = i_tbg1[i];
-       clmod.i_tbg2 = i_tbg2[i];
-       clmod.i_xi1 = i_xi1[i];
-       clmod.i_xi2 = i_xi2[i];
-       clmod.i_xi3 = i_xi3[i];
-       clmod.lssfr = lssfr[i];
-       clmod.logldust = logldust[i];
-       clmod.mdust = mdust[i];
-       clmod.ldust = ldust[i];
-       clmod.lmdust = lmdust[i];
-       h_clmods.push_back(clmod);
-    }
-
-    // Push constants into struct that kernel threads will use.
-    clvar_t h_clvar;
-    h_clvar.nbin_fmu = nbin_fmu;
-    h_clvar.nbin_mu = nbin_mu;
-    h_clvar.nbin_tv = nbin_tv;
-    h_clvar.nbin_sfr = nbin_sfr;
-    h_clvar.nbin_a = nbin_a;
-    h_clvar.nbin_ld = nbin_ld;
-    h_clvar.nbin_fmu_ism = nbin_fmu_ism;
-    h_clvar.nbin_tbg1 = nbin_tbg1;
-    h_clvar.nbin_tbg2 = nbin_tbg2;
-    h_clvar.nbin_xi = nbin_xi;
-    h_clvar.nbin_md = nbin_md;
-    h_clvar.a_max = a_max;
-    h_clvar.a_min = a_min;
-    h_clvar.sfr_max = sfr_max;
-    h_clvar.sfr_min = sfr_min;
-    h_clvar.ld_max = ld_max;
-    h_clvar.ld_min = ld_min;
-    h_clvar.md_max = md_max;
-    h_clvar.md_min = md_min;
-    h_clvar.nfilt = nfilt;
-    h_clvar.nfilt_sfh = nfilt_sfh;
-    h_clvar.nfilt_mix = nfilt_mix;
-    h_clvar.i_gal = i_gal;
-
-    // Catch all OpenCL errors and exit if one is thrown.
-    try{
-        // Read platforms and select first OpenCL device
-        std::vector<cl::Platform> platforms;
-        cl::Platform::get(&platforms);
-        if(platforms.size() == 0){
-            return EXIT_FAILURE;
-        }
-        cl::Platform platform = platforms[0];
-        cl_context_properties cps[3] = {CL_CONTEXT_PLATFORM,(cl_context_properties)(platform)(),0};
-        cl::Context context(CL_DEVICE_TYPE_GPU,cps);
-        std::vector<cl::Device> devices;
-        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
-        if(devices.size() == 0){
-            return EXIT_FAILURE;
-        }
-        cl::Device device = devices[0];
-
-        // Create a command queue for first device.
-        cl::CommandQueue queue(cl::CommandQueue(context,device));
-
-        // Read in kernel program from file.
-        std::ifstream sourceFile("fit_sed_skynet.cl");
-        std::string sourceCode(
-            std::istreambuf_iterator<char>(sourceFile),
-            (std::istreambuf_iterator<char>()));
-        cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(), sourceCode.length()+1));
-        cl::Program fit_program = cl::Program(context, source);
-
-        // Attempt to build kernel program. Echo build error if unsuccesful.
-        try{
-            fit_program.build(devices);
-        } catch(cl::Error error){
-            cerr << fit_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) << endl;
-        }
-
-        // Buffer necessary object space onto device memory.
-        cl::Buffer d_clids=cl::Buffer(context, CL_MEM_READ_ONLY, CLMAX*sizeof(clid_t));
-        cl::Buffer d_clmodels=cl::Buffer(context, CL_MEM_READ_WRITE, CLMAX*sizeof(clmodel_t));
-        cl::Buffer d_clmods(context, CL_MEM_READ_ONLY, h_clmods.size()*sizeof(clmod_t));
-        cl::Buffer d_clvar(context, CL_MEM_READ_ONLY, sizeof(clvar_t));
-        cl::Buffer d_flux_obs(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
-        cl::Buffer d_flux_sfh(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
-        cl::Buffer d_flux_ir(context, CL_MEM_READ_ONLY,NMAX*NMOD*sizeof(double));
-        cl::Buffer d_w(context, CL_MEM_READ_ONLY,NMAX*GALMAX*sizeof(double));
-
-        // Write static objects into reserved device memory.
-        queue.enqueueWriteBuffer(d_clmods, CL_TRUE, 0, h_clmods.size()*sizeof(clmod_t), &h_clmods[0]);
-        queue.enqueueWriteBuffer(d_clvar, CL_TRUE, 0, sizeof(clvar_t), &h_clvar);
-        queue.enqueueWriteBuffer(d_flux_obs, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), flux_obs);
-        queue.enqueueWriteBuffer(d_flux_sfh, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_sfh);
-        queue.enqueueWriteBuffer(d_flux_ir, CL_TRUE, 0, NMAX*NMOD*sizeof(double), flux_ir);
-        queue.enqueueWriteBuffer(d_w, CL_TRUE, 0, NMAX*GALMAX*sizeof(double), w);
-
-        // Prepare kernel program.
-        cl::Kernel kernel(fit_program, "fit");
-
-        // Parse kernel program arguments that will not change.
-        kernel.setArg(1, d_clids);
-        kernel.setArg(2, d_clmodels);
-        kernel.setArg(3, d_clmods);
-        kernel.setArg(4, d_clvar);
-        kernel.setArg(5, d_flux_obs);
-        kernel.setArg(6, d_flux_sfh);
-        kernel.setArg(7, d_flux_ir);
-        kernel.setArg(8, d_w);
-
-        // Set local workload size.
-        cl::NDRange localSize(64);
-
-        // Event that will be used for getting response.
-        cl::Event event;
-
-        i_sfh=0;
-        i_ir=0;
-        while(i_sfh<n_sfh){
-            int i_m = 0;
-            // Batch up models to process (up to CLMAX).
-            while(i_sfh<n_sfh && i_m<CLMAX){
-                while(i_ir<n_ir && i_m<CLMAX){
-                   if(fabs(fmu_sfh[i_sfh]-fmu_ir[i_ir]) <= df){
-                        h_clids[i_m].i_sfh=i_sfh;
-                        h_clids[i_m].i_ir=i_ir;
-                        i_m++;
-                   }
-                   i_ir++;
-                }
-                if(i_ir==n_ir){
-                    i_sfh++;
-                    i_ir=0;
-                }
-            }
-            n_models+=i_m;
-
-            // Write identifier struct array to device. This will change on a per batch basis.
-            queue.enqueueWriteBuffer(d_clids, CL_TRUE, 0, i_m*sizeof(clid_t), h_clids);
-
-            // Parse kernel program arguments that will change.
-            kernel.setArg(0, i_m);
-
-            // Set global workload size. This depends on number models.
-            cl::NDRange globalSize((int)(ceil(i_m/(double)64)*64));
-
-            // Start the work and wait for response.
-            queue.enqueueNDRangeKernel(
-                kernel,
-                cl::NullRange,
-                globalSize,
-                localSize,
-                NULL,
-                &event);
-            event.wait();
-
-            // Read processed model data back from device memory.
-            queue.enqueueReadBuffer(d_clmodels, CL_TRUE, 0, i_m*sizeof(clmodel_t), h_clmodels);
-
-            // Sequential loop for cumulative shared values.
-            //
-            // TODO - Parallelize!
-            for(i=0; i<i_m; i++){
-                clid_t id = h_clids[i];
-                clmodel_t m = h_clmodels[i];
-
-                ptot += m.prob;
-                chi2_new=m.chi2;
-                chi2_new_opt=m.chi2_opt;
-                chi2_new_ir=m.chi2_ir;
-                if(chi2_new < chi2_sav){
-                    chi2_sav=chi2_new;
-                    sfh_sav=id.i_sfh;
-                    ir_sav=id.i_ir;
-                    a_sav=m.a;
-                    chi2_sav_opt=chi2_new_opt;
-                    chi2_sav_ir=chi2_new_ir;
-                }
-                psfh[m.ibin_psfh]=psfh[m.ibin_psfh]+m.prob;
-                pir[m.ibin_pir]=pir[m.ibin_pir]+m.prob;
-                pmu[m.ibin_pmu]=pmu[m.ibin_pmu]+m.prob;
-                ptv[m.ibin_ptv]=ptv[m.ibin_ptv]+m.prob;
-                ptvism[m.ibin_ptvism]=ptvism[m.ibin_ptvism]+m.prob;
-                pssfr[m.ibin_pssfr]=pssfr[m.ibin_pssfr]+m.prob;
-                pa[m.ibin_pa]=pa[m.ibin_pa]+m.prob;
-                psfr[m.ibin_psfr]=psfr[m.ibin_psfr]+m.prob;
-                pldust[m.ibin_pldust]=pldust[m.ibin_pldust]+m.prob;
-                pism[m.ibin_pism]=pism[m.ibin_pism]+m.prob;
-                ptbg1[m.ibin_ptbg1]=ptbg1[m.ibin_ptbg1]+m.prob;
-                ptbg2[m.ibin_ptbg2]=ptbg2[m.ibin_ptbg2]+m.prob;
-                pxi1[m.ibin_pxi1]=pxi1[m.ibin_pxi1]+m.prob;
-                pxi2[m.ibin_pxi2]=pxi2[m.ibin_pxi2]+m.prob;
-                pxi3[m.ibin_pxi3]=pxi3[m.ibin_pxi3]+m.prob;
-                pmd[m.ibin_pmd]=pmd[m.ibin_pmd]+m.prob;
-            }
-            // To show progress in stdout.
-            cout << "\r";
-            cout << "Progress.... " << (int)(((float)i_sfh/(float)n_sfh)*100) << "%";
-            if(i_sfh == n_sfh){
-                cout << endl;
-            }
-            cout.flush();
-        }
-    } catch(cl::Error error){
-        cerr << "OpenCL error: " <<  error.what() << "(" << error.err() << ")" << endl;
-        return EXIT_FAILURE;
-    }
-
-// The non-OpenCL fitting process.
-#else
-    for(i_sfh=0; i_sfh < n_sfh; i_sfh++){
 // {F77} c     Check progress of the fit...
 // {F77}             if (i_sfh.eq.(n_sfh/4)) then
 // {F77}                write (*,*) '25% done...', i_sfh, " / ", n_sfh, " opt. models"
@@ -1485,115 +1008,74 @@ int main(int argc, char *argv[]){
 // {F77}             else if (i_sfh/n_sfh.eq.1) then
 // {F77}                write (*,*) '100% done...', n_sfh, " opt. models - fit finished"
 // {F77}             endif
-        if ((i_sfh+1) == (n_sfh/4)){
-            cout << " 25% done... " << i_sfh+1 << "/" << n_sfh << " opt. models" << endl;
-        } else if((i_sfh+1) == (n_sfh/2)){
-            cout << " 50% done... " << i_sfh+1 << "/" << n_sfh << " opt. models" << endl;
-        } else if((i_sfh+1) == (3*n_sfh/4)){
-            cout << " 75% done... " << i_sfh+1 << "/" << n_sfh << " opt. models" << endl;
-        } else if((i_sfh+1)/n_sfh == 1){
-            cout << "100% done... " << n_sfh << " opt. models - fit finished" << endl;
-        }
-
 // {F77}
 // {F77}             df=0.15             !fmu_opt=fmu_ir +/- dfmu
-       // Moved out of loop
-       //  df=0.15;
 // {F77}
 // {F77} c     Search for the IR models with f_mu within the range set by df
-// {F77}             DO i_ir=1,n_ir
-            for(i_ir=0; i_ir<n_ir; i_ir++){
+// {F77}             DO i_ir=1,25000!n_ir
 // {F77}
 // {F77}                num=0.
 // {F77}                den=0.
 // {F77}                chi2=0.
 // {F77}                chi2_opt=0.
 // {F77}                chi2_ir=0.
-                num=0;
-                den=0;
-                chi2=0;
-                chi2_opt=0;
-                chi2_ir=0;
+// {F77}                chi2_nd=0.
 // {F77}
 // {F77}                if (abs(fmu_sfh(i_sfh)-fmu_ir(i_ir)).le.df) then
-                    if(fabs(fmu_sfh[i_sfh]-fmu_ir[i_ir]) <= df){
 // {F77}
 // {F77}                   n_models=n_models+1 !to keep track of total number of combinations
-                        n_models=n_models+1;
 // {F77}
 // {F77} c     Build the model flux array by adding SFH & IR
 // {F77}                   do k=1,nfilt_sfh-nfilt_mix
 // {F77}                      flux_mod(k)=flux_sfh(i_sfh,k)
 // {F77}                   enddo
-                        for(k=0; k < nfilt_sfh-nfilt_mix; k++){
-                            flux_mod[k]=flux_sfh[k][i_sfh];
-                        }
 // {F77}                   do k=nfilt_sfh-nfilt_mix+1,nfilt_sfh
 // {F77}                      flux_mod(k)=flux_sfh(i_sfh,k)+
 // {F77}      +                    ldust(i_sfh)*flux_ir(i_ir,k-nfilt_sfh+nfilt_mix) !k-(nfilt_sfh-nfilt_mix)
 // {F77}                   enddo
-                        for(k=nfilt_sfh-nfilt_mix; k<nfilt_sfh; k++){
-                            flux_mod[k]=flux_sfh[k][i_sfh]+ldust[i_sfh]*flux_ir[k-nfilt_sfh+nfilt_mix][i_ir];
-                        }
 // {F77}                   do k=nfilt_sfh+1,nfilt
 // {F77}                      flux_mod(k)=ldust(i_sfh)*flux_ir(i_ir,k-nfilt_sfh+nfilt_mix)
 // {F77}                   enddo
-                        for(k=nfilt_sfh; k<nfilt; k++){
-                            flux_mod[k]=ldust[i_sfh]*flux_ir[k-nfilt_sfh+nfilt_mix][i_ir];
-                        }
 // {F77} c     Compute scaling factor "a" - this is the number that minimizes chi^2
 // {F77}                   do k=1,nfilt
-// {F77}                      if (flux_obs(i_gal,k).gt.0) then
+// {F77}                      if (flux_obs(i_gal,k).gt.0.and.sigma(i_gal,k).gt.0.) then
 // {F77}                         num=num+(flux_mod(k)*flux_obs(i_gal,k)*w(i_gal,k))
 // {F77}                         den=den+((flux_mod(k)**2)*w(i_gal,k))
 // {F77}                      endif
 // {F77}                   enddo
 // {F77}                   a=num/den
-                        for(k=0; k<nfilt; k++){
-                            if(flux_obs[k][i_gal] > 0) {
-                                num=num+(flux_mod[k]*flux_obs[k][i_gal]*w[k][i_gal]);
-                                den=den+(pow(flux_mod[k],2)*w[k][i_gal]);
-                            }
-                        }
-                        a=num/den;
 // {F77} c     Compute chi^2 goodness-of-fit
 // {F77}                   do k=1,nfilt_sfh
-// {F77}                      if (flux_obs(i_gal,k).gt.0) then
+// {F77}                      if (flux_obs(i_gal,k).gt.0.and.sigma(i_gal,k).gt.0.) then
 // {F77}                         chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
 // {F77}      +                       **2)*w(i_gal,k))
 // {F77}                         chi2_opt=chi2
 // {F77}                      endif
+// {F77}                      if (flux_obs(i_gal,k).lt.0.and.sigma(i_gal,k).gt.0.) then
+// {F77}                         chi2_nd=chi2_nd+2*dlog(0.5*(1.
+// {F77}      +                       +derf((sigma(i_gal,k)-a*flux_mod(k))/(sigma(i_gal,k)*sqrt(2.)))))
+// {F77}                         endif
 // {F77}                   enddo
-                        for(k=0;k<nfilt_sfh;k++){
-                            if(flux_obs[k][i_gal] > 0){
-                                chi2=chi2+((pow(flux_obs[k][i_gal]-(a*flux_mod[k]),2))*w[k][i_gal]);
-                                chi2_opt=chi2;
-                            }
-                        }
 // {F77}
 // {F77}                   if (chi2.lt.600.) then
 // {F77}                      do k=nfilt_sfh+1,nfilt
-// {F77}                         if (flux_obs(i_gal,k).gt.0) then
+// {F77}                         if (flux_obs(i_gal,k).gt.0.and.sigma(i_gal,k).gt.0.) then
 // {F77}                            chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
 // {F77}      +                          **2)*w(i_gal,k))
 // {F77}                            chi2_ir=chi2_ir+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
 // {F77}      +                          **2)*w(i_gal,k))
 // {F77}                         endif
+// {F77}                      if (flux_obs(i_gal,k).lt.0.and.sigma(i_gal,k).gt.0.) then
+// {F77}                         chi2_nd=chi2_nd+2*dlog(0.5*(1.
+// {F77}      +                       +derf((sigma(i_gal,k)-a*flux_mod(k))/(sigma(i_gal,k)*sqrt(2.)))))
+// {F77}                         endif
 // {F77}                      enddo
 // {F77}                   endif
-                        if(chi2 < 600){
-                            for(k=nfilt_sfh;k<nfilt;k++){
-                                if (flux_obs[k][i_gal] > 0){
-                                    chi2=chi2+((pow(flux_obs[k][i_gal]-(a*flux_mod[k]),2))*w[k][i_gal]);
-                                    chi2_ir=chi2_ir+((pow(flux_obs[k][i_gal]-(a*flux_mod[k]),2))*w[k][i_gal]);
-                                }
-                            }
-                        }
+// {F77}
+// {F77}                   chi2=chi2-chi2_nd
 // {F77} c     Probability
 // {F77}                   prob=dexp(-0.5*chi2)
 // {F77}                   ptot=ptot+prob
-                        prob=exp(-0.5*chi2);
-                        ptot=ptot+prob;
 // {F77} c     Best fit model
 // {F77}                   chi2_new=chi2
 // {F77}                   chi2_new_opt=chi2_opt
@@ -1606,18 +1088,6 @@ int main(int argc, char *argv[]){
 // {F77}                      chi2_sav_opt=chi2_new_opt
 // {F77}                      chi2_sav_ir=chi2_new_ir
 // {F77}                   endif
-
-                        chi2_new=chi2;
-                        chi2_new_opt=chi2_opt;
-                        chi2_new_ir=chi2_ir;
-                        if(chi2_new < chi2_sav){
-                            chi2_sav=chi2_new;
-                            sfh_sav=i_sfh;
-                            ir_sav=i_ir;
-                            a_sav=a;
-                            chi2_sav_opt=chi2_new_opt;
-                            chi2_sav_ir=chi2_new_ir;
-                        }
 // {F77}
 // {F77} c     MARGINAL PROBABILITY DENSITY FUNCTIONS
 // {F77} c     Locate each value on the corresponding histogram bin
@@ -1629,137 +1099,151 @@ int main(int argc, char *argv[]){
 // {F77}                   ibin= i_fmu_sfh(i_sfh)
 // {F77}                   ibin = max(1,min(ibin,nbin_fmu))
 // {F77}                   psfh(ibin)=psfh(ibin)+prob
-                        ibin=i_fmu_sfh[i_sfh];
-                        ibin=max(0,min(ibin,nbin_fmu-1));
-                        psfh[ibin]=psfh[ibin]+prob;
 // {F77} c     f_mu (IR)
 // {F77}                   ibin = i_fmu_ir(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_fmu))
 // {F77}                   pir(ibin)=pir(ibin)+prob
-                        ibin=i_fmu_ir[i_ir];
-                        ibin = max(0,min(ibin,nbin_fmu-1));
-                        pir[ibin]=pir[ibin]+prob;
 // {F77} c     mu
 // {F77}                   ibin= i_mu(i_sfh)
 // {F77}                   ibin = max(1,min(ibin,nbin_mu))
 // {F77}                   pmu(ibin)=pmu(ibin)+prob
-                        ibin=i_mu[i_sfh];
-                        ibin=max(0,min(ibin,nbin_mu-1));
-                        pmu[ibin]=pmu[ibin]+prob;
 // {F77} c     tauV
 // {F77}                   ibin= i_tauv(i_sfh)
 // {F77}                   ibin = max(1,min(ibin,nbin_tv))
 // {F77}                   ptv(ibin)=ptv(ibin)+prob
-                        ibin=i_tauv[i_sfh];
-                        ibin=max(0,min(ibin,nbin_tv-1));
-                        ptv[ibin]=ptv[ibin]+prob;
 // {F77} c     tvism
 // {F77}                   ibin= i_tvism(i_sfh)
 // {F77}                   ibin = max(1,min(ibin,nbin_tv))
 // {F77}                   ptvism(ibin)=ptvism(ibin)+prob
-                        ibin=i_tvism[i_sfh];
-                        ibin=max(0,min(ibin,nbin_tv-1));
-                        ptvism[ibin]=ptvism[ibin]+prob;
 // {F77} c     sSFR_0.1Gyr
 // {F77}                   ibin= i_lssfr(i_sfh)
-// {F77}                   ibin = max(1,min(ibin,nbin_sfr))
+// {F77} CZZ typo? use next line                 ibin = max(1,min(ibin,nbin_sfr))
+// {F77}                   ibin = max(1,min(ibin,nbin_ssfr))
 // {F77}                   pssfr(ibin)=pssfr(ibin)+prob
-                        ibin=i_lssfr[i_sfh];
-                        ibin=max(0,min(ibin,nbin_sfr-1));
-                        pssfr[ibin]=pssfr[ibin]+prob;
+// {F77}
+// {F77} czz added parameters
+// {F77} c     metalicity
+// {F77}                   ibin = z_i_zmet(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_zmet))
+// {F77}                   z_pzmet(ibin)=z_pzmet(ibin)+prob
+// {F77} c tform
+// {F77}                   ibin = z_i_ltform(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_ltform))
+// {F77}                   z_pltform(ibin)=z_pltform(ibin)+prob
+// {F77}
+// {F77}                   ibin = z_i_lgamma(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lgamma))
+// {F77}                   z_plgamma(ibin)=z_plgamma(ibin)+prob
+// {F77}
+// {F77}                   ibin = z_i_ltlastb(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_ltlastb))
+// {F77}                   z_pltlastb(ibin)=z_pltlastb(ibin)+prob
+// {F77}
+// {F77}                   ibin = z_i_lagem(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lagem))
+// {F77}                   z_plagem(ibin)=z_plagem(ibin)+prob
+// {F77}
+// {F77}                   ibin = z_i_lager(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lager))
+// {F77}                   z_plager(ibin)=z_plager(ibin)+prob
+// {F77}
+// {F77}                   ibin = z_i_lsfr16(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lsfr16))
+// {F77}                   z_plsfr16(ibin)=z_plsfr16(ibin)+prob
+// {F77}
+// {F77}                   ibin = z_i_lsfr17(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lsfr17))
+// {F77}                   z_plsfr17(ibin)=z_plsfr17(ibin)+prob
+// {F77}
+// {F77}
+// {F77}                   ibin = z_i_lsfr18(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lsfr18))
+// {F77}                   z_plsfr18(ibin)=z_plsfr18(ibin)+prob
+// {F77}
+// {F77}                   ibin = z_i_lsfr19(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lsfr19))
+// {F77}                   z_plsfr19(ibin)=z_plsfr19(ibin)+prob
+// {F77}
+// {F77}
+// {F77}                   ibin = z_i_lsfr29(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lsfr29))
+// {F77}                   z_plsfr29(ibin)=z_plsfr29(ibin)+prob
+// {F77}
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lfb16))
+// {F77}                   z_plfb16(ibin)=z_plfb16(ibin)+prob
+// {F77}
+// {F77}                   ibin = z_i_lfb17(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lfb17))
+// {F77}                   z_plfb17(ibin)=z_plfb17(ibin)+prob
+// {F77}
+// {F77}
+// {F77}                   ibin = z_i_lfb18(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lfb18))
+// {F77}                   z_plfb18(ibin)=z_plfb18(ibin)+prob
+// {F77}
+// {F77}                   ibin = z_i_lfb19(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lfb19))
+// {F77}                   z_plfb19(ibin)=z_plfb19(ibin)+prob
+// {F77}
+// {F77}
+// {F77}                   ibin = z_i_lfb29(i_sfh)
+// {F77}                   ibin = max(1,min(ibin,z_nbin_lfb29))
+// {F77}                   z_plfb29(ibin)=z_plfb29(ibin)+prob
+// {F77}
+// {F77} czz added parameters end
+// {F77}
 // {F77} c     Mstar
 // {F77}                   a=dlog10(a)
 // {F77}                   aux=((a-a_min)/(a_max-a_min)) * nbin_a
 // {F77}                   ibin=1+dint(aux)
 // {F77}                   ibin = max(1,min(ibin,nbin_a))
 // {F77}                   pa(ibin)=pa(ibin)+prob
-                        a=log10(a);
-                        aux=((a-a_min)/(a_max-a_min)) * nbin_a;
-                        ibin=(int)(aux);
-                        ibin=max(0,min(ibin,nbin_a-1));
-                        pa[ibin]=pa[ibin]+prob;
 // {F77} c     SFR_0.1Gyr
 // {F77}                   aux=((lssfr(i_sfh)+a-sfr_min)/(sfr_max-sfr_min))
 // {F77}      +                 * nbin_sfr
 // {F77}                   ibin= 1+dint(aux)
 // {F77}                   ibin = max(1,min(ibin,nbin_sfr))
 // {F77}                   psfr(ibin)=psfr(ibin)+prob
-                        aux=((lssfr[i_sfh]+a-sfr_min)/(sfr_max-sfr_min))* nbin_sfr;
-                        ibin=(int)(aux);
-                        ibin=max(0,min(ibin,nbin_sfr-1));
-                        psfr[ibin]=psfr[ibin]+prob;
 // {F77} c     Ldust
 // {F77}                   aux=((logldust(i_sfh)+a-ld_min)/(ld_max-ld_min))
 // {F77}      +                 * nbin_ld
 // {F77}                   ibin=1+dint(aux)
 // {F77}                   ibin = max(1,min(ibin,nbin_ld))
 // {F77}                   pldust(ibin)=pldust(ibin)+prob
-                        aux=((logldust[i_sfh]+a-ld_min)/(ld_max-ld_min))* nbin_ld;
-                        ibin=(int)(aux);
-                        ibin=max(0,min(ibin,nbin_ld-1));
-                        pldust[ibin]=pldust[ibin]+prob;
-
 // {F77} c     xi_C^tot
 // {F77}                   ibin= i_fmu_ism(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_fmu_ism))
 // {F77}                   pism(ibin)=pism(ibin)+prob
-                       ibin=i_fmu_ism[i_ir];
-                       ibin=max(0,min(ibin,nbin_fmu_ism-1));
-                       pism[ibin]=pism[ibin]+prob;
 // {F77} c     T_C^ISM
 // {F77}                   ibin= i_tbg1(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_tbg1))
 // {F77}                   ptbg1(ibin)=ptbg1(ibin)+prob
-                       ibin=i_tbg1[i_ir];
-                       ibin=max(0,min(ibin,nbin_tbg1-1));
-                       ptbg1[ibin]=ptbg1[ibin]+prob;
 // {F77} c     T_W^BC
 // {F77}                   ibin= i_tbg2(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_tbg2))
 // {F77}                   ptbg2(ibin)=ptbg2(ibin)+prob
-                       ibin=i_tbg2[i_ir];
-                       ibin=max(0,min(ibin,nbin_tbg2-1));
-                       ptbg2[ibin]=ptbg2[ibin]+prob;
 // {F77} c     xi_PAH^tot
 // {F77}                   ibin= i_xi1(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_xi))
 // {F77}                   pxi1(ibin)=pxi1(ibin)+prob
-                       ibin=i_xi1[i_ir];
-                       ibin=max(0,min(ibin,nbin_xi-1));
-                       pxi1[ibin]=pxi1[ibin]+prob;
 // {F77} c     xi_MIR^tot
 // {F77}                   ibin= i_xi2(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_xi))
 // {F77}                   pxi2(ibin)=pxi2(ibin)+prob
-                       ibin=i_xi2[i_ir];
-                       ibin=max(0,min(ibin,nbin_xi-1));
-                       pxi2[ibin]=pxi2[ibin]+prob;
 // {F77} c     xi_W^tot
 // {F77}                   ibin= i_xi3(i_ir)
 // {F77}                   ibin = max(1,min(ibin,nbin_xi))
 // {F77}                   pxi3(ibin)=pxi3(ibin)+prob
-                       ibin=i_xi3[i_ir];
-                       ibin=max(0,min(ibin,nbin_xi-1));
-                       pxi3[ibin]=pxi3[ibin]+prob;
 // {F77} c     Mdust
 // {F77}                   lmdust(i_ir)=dlog10(mdust(i_ir)*ldust(i_sfh)*10.0**a)
 // {F77}                   aux=((lmdust(i_ir)-md_min)/(md_max-md_min))*nbin_md
 // {F77}                   ibin=1+dint(aux)
 // {F77}                   ibin = max(1,min(ibin,nbin_md))
 // {F77}                   pmd(ibin)=pmd(ibin)+prob
-                       lmdust[i_ir]=log10(mdust[i_ir]*ldust[i_sfh]*pow(10,a));
-                       aux=((lmdust[i_ir]-md_min)/(md_max-md_min))*nbin_md;
-                       ibin=(int)(aux);
-                       ibin=max(0,min(ibin,nbin_md-1));
-                       pmd[ibin]=pmd[ibin]+prob;
 // {F77}
 // {F77}                endif            !df condition
 // {F77}             ENDDO               !loop in i_ir
 // {F77}          ENDDO                  !loop in i_sfh
-                    }
-            }
-    }
-#endif
 // {F77}
 // {F77} c     Chi2-weighted models: normalize to total probability ptot
 // {F77}          write(*,*) 'Number of random SFH models:       ', n_sfh
@@ -1769,13 +1253,6 @@ int main(int argc, char *argv[]){
 // {F77}          write(*,*) 'ptot= ',ptot
 // {F77}          write(*,*) 'chi2_optical= ',chi2_sav_opt
 // {F77}          write(*,*) 'chi2_infrared= ',chi2_sav_ir
-    cout << "      Number of random SFH models: " << n_sfh << endl;
-    cout << "Number of IR dust emission models: " << n_ir << endl;
-    cout << "                      Value of df: " << df << endl;
-    cout << "           Total number of models: " << n_models << endl;
-    cout << "                             ptot: " << ptot << endl;
-    cout << "                     chi2_optical: " << chi2_sav_opt << endl;
-    cout << "                    chi2_infrared: " << chi2_sav_ir << endl;
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Compute percentiles of the (normalized) likelihood distributions
@@ -1789,6 +1266,25 @@ int main(int argc, char *argv[]){
 // {F77}             ptvism(i)=ptvism(i)/ptot
 // {F77}             psfr(i)=psfr(i)/ptot
 // {F77}             pssfr(i)=pssfr(i)/ptot
+// {F77} czz added parameters
+// {F77}             z_pzmet(i)=z_pzmet(i)/ptot
+// {F77}             z_pltform(i)=z_pltform(i)/ptot
+// {F77}             z_plgamma(i)=z_plgamma(i)/ptot
+// {F77}             z_pltlastb(i)=z_pltlastb(i)/ptot
+// {F77}             z_plagem(i)=z_plagem(i)/ptot
+// {F77}             z_plager(i)=z_plager(i)/ptot
+// {F77}             z_plsfr16(i)=z_plsfr16(i)/ptot
+// {F77}             z_plsfr17(i)=z_plsfr17(i)/ptot
+// {F77}             z_plsfr18(i)=z_plsfr18(i)/ptot
+// {F77}             z_plsfr19(i)=z_plsfr19(i)/ptot
+// {F77}             z_plsfr29(i)=z_plsfr29(i)/ptot
+// {F77}             z_plfb16(i)=z_plfb16(i)/ptot
+// {F77}             z_plfb17(i)=z_plfb17(i)/ptot
+// {F77}             z_plfb18(i)=z_plfb18(i)/ptot
+// {F77}             z_plfb19(i)=z_plfb19(i)/ptot
+// {F77}             z_plfb29(i)=z_plfb29(i)/ptot
+// {F77} czz added parameters end
+// {F77}
 // {F77}             pa(i)=pa(i)/ptot
 // {F77}             pldust(i)=pldust(i)/ptot
 // {F77}             pism(i)=pism(i)/ptot
@@ -1799,24 +1295,6 @@ int main(int argc, char *argv[]){
 // {F77}             pxi3(i)=pxi3(i)/ptot
 // {F77}             pmd(i)=pmd(i)/ptot
 // {F77}          enddo
-    for(i=0; i<3000; i++){
-        psfh[i]=psfh[i]/ptot;
-        pir[i]=pir[i]/ptot;
-        pmu[i]=pmu[i]/ptot;
-        ptv[i]=ptv[i]/ptot;
-        ptvism[i]=ptvism[i]/ptot;
-        psfr[i]=psfr[i]/ptot;
-        pssfr[i]=pssfr[i]/ptot;
-        pa[i]=pa[i]/ptot;
-        pldust[i]=pldust[i]/ptot;
-        pism[i]=pism[i]/ptot;
-        ptbg1[i]=ptbg1[i]/ptot;
-        ptbg2[i]=ptbg2[i]/ptot;
-        pxi1[i]=pxi1[i]/ptot;
-        pxi2[i]=pxi2[i]/ptot;
-        pxi3[i]=pxi3[i]/ptot;
-        pmd[i]=pmd[i]/ptot;
-    }
 // {F77}
 // {F77}          call get_percentiles(nbin_fmu,fmu_hist,psfh,pct_fmu_sfh)
 // {F77}          call get_percentiles(nbin_fmu,fmu_hist,pir,pct_fmu_ir)
@@ -1824,6 +1302,24 @@ int main(int argc, char *argv[]){
 // {F77}          call get_percentiles(nbin_tv,tv_hist,ptv,pct_tv)
 // {F77}          call get_percentiles(nbin_tv,tv_hist,ptvism,pct_tvism)
 // {F77}          call get_percentiles(nbin_ssfr,ssfr_hist,pssfr,pct_ssfr)
+// {F77} czz added parameters
+// {F77}          call get_percentiles(z_nbin_zmet,z_zmet_hist,z_pzmet,z_pct_zmet)
+// {F77}          call get_percentiles(z_nbin_ltform,z_ltform_hist,z_pltform,z_pct_ltform)
+// {F77}          call get_percentiles(z_nbin_lgamma,z_lgamma_hist,z_plgamma,z_pct_lgamma)
+// {F77}          call get_percentiles(z_nbin_ltlastb,z_ltlastb_hist,z_pltlastb,z_pct_ltlastb)
+// {F77}          call get_percentiles(z_nbin_lagem,z_lagem_hist,z_plagem,z_pct_lagem)
+// {F77}          call get_percentiles(z_nbin_lager,z_lager_hist,z_plager,z_pct_lager)
+// {F77}          call get_percentiles(z_nbin_lsfr16,z_lsfr16_hist,z_plsfr16,z_pct_lsfr16)
+// {F77}          call get_percentiles(z_nbin_lsfr17,z_lsfr17_hist,z_plsfr17,z_pct_lsfr17)
+// {F77}          call get_percentiles(z_nbin_lsfr18,z_lsfr18_hist,z_plsfr18,z_pct_lsfr18)
+// {F77}          call get_percentiles(z_nbin_lsfr19,z_lsfr19_hist,z_plsfr19,z_pct_lsfr19)
+// {F77}          call get_percentiles(z_nbin_lsfr29,z_lsfr29_hist,z_plsfr29,z_pct_lsfr29)
+// {F77}          call get_percentiles(z_nbin_lfb16,z_lfb16_hist,z_plfb16,z_pct_lfb16)
+// {F77}          call get_percentiles(z_nbin_lfb17,z_lfb17_hist,z_plfb17,z_pct_lfb17)
+// {F77}          call get_percentiles(z_nbin_lfb18,z_lfb18_hist,z_plfb18,z_pct_lfb18)
+// {F77}          call get_percentiles(z_nbin_lfb19,z_lfb19_hist,z_plfb19,z_pct_lfb19)
+// {F77}          call get_percentiles(z_nbin_lfb29,z_lfb29_hist,z_plfb29,z_pct_lfb29)
+// {F77} czz added parameters end
 // {F77}          call get_percentiles(nbin_sfr,sfr_hist,psfr,pct_sfr)
 // {F77}          call get_percentiles(nbin_a,a_hist,pa,pct_mstr)
 // {F77}          call get_percentiles(nbin_ld,ld_hist,pldust,pct_ld)
@@ -1834,34 +1330,36 @@ int main(int argc, char *argv[]){
 // {F77}          call get_percentiles(nbin_xi,xi_hist,pxi2,pct_xi2)
 // {F77}          call get_percentiles(nbin_xi,xi_hist,pxi3,pct_xi3)
 // {F77}          call get_percentiles(nbin_md,md_hist,pmd,pct_md)
-    get_percentiles(nbin_fmu,fmu_hist,psfh,pct_fmu_sfh);
-    get_percentiles(nbin_fmu,fmu_hist,pir,pct_fmu_ir);
-    get_percentiles(nbin_mu,mu_hist,pmu,pct_mu);
-    get_percentiles(nbin_tv,tv_hist,ptv,pct_tv);
-    get_percentiles(nbin_tv,tv_hist,ptvism,pct_tvism);
-    get_percentiles(nbin_ssfr,ssfr_hist,pssfr,pct_ssfr);
-    get_percentiles(nbin_sfr,sfr_hist,psfr,pct_sfr);
-    get_percentiles(nbin_a,a_hist,pa,pct_mstr);
-    get_percentiles(nbin_ld,ld_hist,pldust,pct_ld);
-    get_percentiles(nbin_fmu_ism,fmuism_hist,pism,pct_ism);
-    get_percentiles(nbin_tbg1,tbg1_hist,ptbg1,pct_tbg1);
-    get_percentiles(nbin_tbg2,tbg2_hist,ptbg2,pct_tbg2);
-    get_percentiles(nbin_xi,xi_hist,pxi1,pct_xi1);
-    get_percentiles(nbin_xi,xi_hist,pxi2,pct_xi2);
-    get_percentiles(nbin_xi,xi_hist,pxi3,pct_xi3);
-    get_percentiles(nbin_md,md_hist,pmd,pct_md);
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Degrade the resolution od the likelihood distribution histograms
-// {F77} c     from 3000 max bins to 100 max bins for storing in output file + plotting
+// {F77} c     from 3000 max bins to 300 max bins for storing in output file + plotting
 // {F77} c     ---------------------------------------------------------------------------
-// {F77}          do i=1,100
+// {F77}          do i=1,300
 // {F77}             psfh2(i)=0.
 // {F77}             pir2(i)=0.
 // {F77}             pmu2(i)=0.
 // {F77}             ptv2(i)=0.
 // {F77}             ptvism2(i)=0.
 // {F77}             pssfr2(i)=0.
+// {F77} czz added parameters
+// {F77}             z_pzmet2(i)=0.
+// {F77}             z_pltform2(i)=0.
+// {F77}             z_plgamma2(i)=0.
+// {F77}             z_pltlastb2(i)=0.
+// {F77}             z_plagem2(i)=0.
+// {F77}             z_plager2(i)=0.
+// {F77}             z_plsfr162(i)=0.
+// {F77}             z_plsfr172(i)=0.
+// {F77}             z_plsfr182(i)=0.
+// {F77}             z_plsfr192(i)=0.
+// {F77}             z_plsfr292(i)=0.
+// {F77}             z_plfb162(i)=0.
+// {F77}             z_plfb172(i)=0.
+// {F77}             z_plfb182(i)=0.
+// {F77}             z_plfb192(i)=0.
+// {F77}             z_plfb292(i)=0.
+// {F77} czz added parameters end
 // {F77}             psfr2(i)=0.
 // {F77}             pa2(i)=0.
 // {F77}             pldust2(i)=0.
@@ -1873,24 +1371,6 @@ int main(int argc, char *argv[]){
 // {F77}             pxi3_2(i)=0.
 // {F77}             pmd_2(i)=0.
 // {F77}          enddo
-    for(i=0;i<100;i++){
-        psfh2[i]=0;
-        pir2[i]=0;
-        pmu2[i]=0;
-        ptv2[i]=0;
-        ptvism2[i]=0;
-        pssfr2[i]=0;
-        psfr2[i]=0;
-        pa2[i]=0;
-        pldust2[i]=0;
-        pism2[i]=0;
-        ptbg1_2[i]=0;
-        ptbg2_2[i]=0;
-        pxi1_2[i]=0;
-        pxi2_2[i]=0;
-        pxi3_2[i]=0;
-        pmd_2[i]=0;
-    }
 // {F77}
 // {F77} c     New histogram parameters
 // {F77}          dfmu=0.05
@@ -1906,28 +1386,31 @@ int main(int argc, char *argv[]){
 // {F77}          dssfr=0.10
 // {F77}          ssfr_min=-13.0
 // {F77}          ssfr_max=-6.0
+// {F77} czz added parameters
+// {F77}          z_dzmet=0.05         ! CZZ CHECK THESE VALUES
+// {F77}          z_zmet_min=0.
+// {F77}          z_zmet_max=2.
+// {F77}          z_dltform=0.1
+// {F77}          z_dlgamma=0.1
+// {F77}          z_dltlastb=0.1
+// {F77}          z_dlagem=0.1
+// {F77}          z_dlager=0.1
+// {F77}          z_dlsfr16=0.1
+// {F77}          z_dlsfr17=0.1
+// {F77}          z_dlsfr18=0.1
+// {F77}          z_dlsfr19=0.1
+// {F77}          z_dlsfr29=0.1
+// {F77}          z_dlfb16=0.05
+// {F77}          z_dlfb17=0.05
+// {F77}          z_dlfb18=0.05
+// {F77}          z_dlfb19=0.05
+// {F77}          z_dlfb29=0.05
+// {F77} czz added parameters end
 // {F77}          dsfr=0.10
-    dfmu=0.05;
-    fmu_min=0;
-    fmu_max=1;
-    dfmu_ism=0.05;
-    fmuism_min=0;
-    fmuism_max=1;
-    dtv=0.125;
-    dtvism=0.075;
-    tv_min=0;
-    tv_max=6;
-    dssfr=0.10;
-    ssfr_min=-13.0;
-    ssfr_max=-6.0;
-    dsfr=0.10;
 // {F77} c theSkyNet sfr_min=-3.
 // {F77}          sfr_min=-8.
 // {F77}          sfr_max=3.
 // {F77}          da=0.10
-    sfr_min=-8;
-    sfr_max=3;
-    da=0.10;
 // {F77} c theSkyNet a_min=7.0
 // {F77}          a_min=2.0
 // {F77}          a_max=13.0
@@ -1938,20 +1421,9 @@ int main(int argc, char *argv[]){
 // {F77}          tbg1_max=60.
 // {F77}          dxi=0.05
 // {F77}          dmd=0.10
-    a_min=2.0;
-    a_max=13.0;
-    dtbg=1;
-    tbg2_min=15;
-    tbg2_max=25;
-    tbg1_min=30;
-    tbg1_max=60;
-    dxi=0.05;
-    dmd=0.10;
 // {F77} c theSkyNet md_min=3.
 // {F77}          md_min=-2.
 // {F77}          md_max=9.
-    md_min=-2;
-    md_max=9;
 // {F77}
 // {F77}          call degrade_hist(dfmu,fmu_min,fmu_max,nbin_fmu,nbin2_fmu,
 // {F77}      +        fmu_hist,fmu2_hist,psfh,psfh2)
@@ -1965,6 +1437,40 @@ int main(int argc, char *argv[]){
 // {F77}      +        tv_hist,tvism2_hist,ptvism,ptvism2)
 // {F77}          call degrade_hist(dssfr,ssfr_min,ssfr_max,nbin_ssfr,nbin2_ssfr,
 // {F77}      +        ssfr_hist,ssfr2_hist,pssfr,pssfr2)
+// {F77} czz added parameters
+// {F77}          call degrade_hist(z_dzmet,z_zmet_min,z_zmet_max,z_nbin_zmet,z_nbin2_zmet,
+// {F77}      +        z_zmet_hist,z_zmet2_hist,z_pzmet,z_pzmet2)
+// {F77}          call degrade_hist(z_dltform,z_ltform_min,z_ltform_max,z_nbin_ltform,z_nbin2_ltform,
+// {F77}      +        z_ltform_hist,z_ltform2_hist,z_pltform,z_pltform2)
+// {F77}          call degrade_hist(z_dlgamma,z_lgamma_min,z_lgamma_max,z_nbin_lgamma,z_nbin2_lgamma,
+// {F77}      +        z_lgamma_hist,z_lgamma2_hist,z_plgamma,z_plgamma2)
+// {F77}          call degrade_hist(z_dltlastb,z_ltlastb_min,z_ltlastb_max,z_nbin_ltlastb,z_nbin2_ltlastb,
+// {F77}      +        z_ltlastb_hist,z_ltlastb2_hist,z_pltlastb,z_pltlastb2)
+// {F77}          call degrade_hist(z_dlagem,z_lagem_min,z_lagem_max,z_nbin_lagem,z_nbin2_lagem,
+// {F77}      +        z_lagem_hist,z_lagem2_hist,z_plagem,z_plagem2)
+// {F77}          call degrade_hist(z_dlager,z_lager_min,z_lager_max,z_nbin_lager,z_nbin2_lager,
+// {F77}      +        z_lager_hist,z_lager2_hist,z_plager,z_plager2)
+// {F77}          call degrade_hist(z_dlsfr16,z_lsfr16_min,z_lsfr16_max,z_nbin_lsfr16,z_nbin2_lsfr16,
+// {F77}      +        z_lsfr16_hist,z_lsfr162_hist,z_plsfr16,z_plsfr162)
+// {F77}          call degrade_hist(z_dlsfr17,z_lsfr17_min,z_lsfr17_max,z_nbin_lsfr17,z_nbin2_lsfr17,
+// {F77}      +        z_lsfr17_hist,z_lsfr172_hist,z_plsfr17,z_plsfr172)
+// {F77}          call degrade_hist(z_dlsfr18,z_lsfr18_min,z_lsfr18_max,z_nbin_lsfr18,z_nbin2_lsfr18,
+// {F77}      +        z_lsfr18_hist,z_lsfr182_hist,z_plsfr18,z_plsfr182)
+// {F77}          call degrade_hist(z_dlsfr19,z_lsfr19_min,z_lsfr19_max,z_nbin_lsfr19,z_nbin2_lsfr19,
+// {F77}      +        z_lsfr19_hist,z_lsfr192_hist,z_plsfr19,z_plsfr192)
+// {F77}          call degrade_hist(z_dlsfr29,z_lsfr29_min,z_lsfr29_max,z_nbin_lsfr29,z_nbin2_lsfr29,
+// {F77}      +        z_lsfr29_hist,z_lsfr292_hist,z_plsfr29,z_plsfr292)
+// {F77}          call degrade_hist(z_dlfb16,z_lfb16_min,z_lfb16_max,z_nbin_lfb16,z_nbin2_lfb16,
+// {F77}      +        z_lfb16_hist,z_lfb162_hist,z_plfb16,z_plfb162)
+// {F77}          call degrade_hist(z_dlfb17,z_lfb17_min,z_lfb17_max,z_nbin_lfb17,z_nbin2_lfb17,
+// {F77}      +        z_lfb17_hist,z_lfb172_hist,z_plfb17,z_plfb172)
+// {F77}          call degrade_hist(z_dlfb18,z_lfb18_min,z_lfb18_max,z_nbin_lfb18,z_nbin2_lfb18,
+// {F77}      +        z_lfb18_hist,z_lfb182_hist,z_plfb18,z_plfb182)
+// {F77}          call degrade_hist(z_dlfb19,z_lfb19_min,z_lfb19_max,z_nbin_lfb19,z_nbin2_lfb19,
+// {F77}      +        z_lfb19_hist,z_lfb192_hist,z_plfb19,z_plfb192)
+// {F77}          call degrade_hist(z_dlfb29,z_lfb29_min,z_lfb29_max,z_nbin_lfb29,z_nbin2_lfb29,
+// {F77}      +        z_lfb29_hist,z_lfb292_hist,z_plfb29,z_plfb292)
+// {F77} czz added parameters end
 // {F77}          call degrade_hist(dsfr,sfr_min,sfr_max,nbin_sfr,nbin2_sfr,
 // {F77}      +        sfr_hist,sfr2_hist,psfr,psfr2)
 // {F77}          call degrade_hist(da,a_min,a_max,nbin_a,nbin2_a,a_hist,
@@ -1988,58 +1494,19 @@ int main(int argc, char *argv[]){
 // {F77}      +        xi_hist,xi2_hist,pxi3,pxi3_2)
 // {F77}          call degrade_hist(dmd,md_min,md_max,nbin_md,nbin2_md,
 // {F77}      +        md_hist,md2_hist,pmd,pmd_2)
-    degrade_hist(dfmu,fmu_min,fmu_max,nbin_fmu,&nbin2_fmu,fmu_hist,fmu2_hist,psfh,psfh2);
-    degrade_hist(dfmu,fmu_min,fmu_max,nbin_fmu,&nbin2_fmu,fmu_hist,fmu2_hist,pir,pir2);
-    degrade_hist(dfmu,fmu_min,fmu_max,nbin_mu,&nbin2_mu,mu_hist,mu2_hist,pmu,pmu2);
-    degrade_hist(dtv,tv_min,tv_max,nbin_tv,&nbin2_tv,tv_hist,tv2_hist,ptv,ptv2);
-    degrade_hist(dtvism,tv_min,tv_max,nbin_tv,&nbin2_tvism,tv_hist,tvism2_hist,ptvism,ptvism2);
-    degrade_hist(dssfr,ssfr_min,ssfr_max,nbin_ssfr,&nbin2_ssfr,ssfr_hist,ssfr2_hist,pssfr,pssfr2);
-    degrade_hist(dsfr,sfr_min,sfr_max,nbin_sfr,&nbin2_sfr,sfr_hist,sfr2_hist,psfr,psfr2);
-    degrade_hist(da,a_min,a_max,nbin_a,&nbin2_a,a_hist,a2_hist,pa,pa2);
-    degrade_hist(da,a_min,a_max,nbin_ld,&nbin2_ld,ld_hist,ld2_hist,pldust,pldust2);
-    degrade_hist(dfmu_ism,fmuism_min,fmuism_max,nbin_fmu_ism,&nbin2_fmu_ism,fmuism_hist,fmuism2_hist,pism,pism2);
-    degrade_hist(dtbg,tbg1_min,tbg1_max,nbin_tbg1,&nbin2_tbg1,tbg1_hist,tbg1_2_hist,ptbg1,ptbg1_2);
-    degrade_hist(dtbg,tbg2_min,tbg2_max,nbin_tbg2,&nbin2_tbg2,tbg2_hist,tbg2_2_hist,ptbg2,ptbg2_2);
-    degrade_hist(dxi,fmu_min,fmu_max,nbin_xi,&nbin2_xi,xi_hist,xi2_hist,pxi1,pxi1_2);
-    degrade_hist(dxi,fmu_min,fmu_max,nbin_xi,&nbin2_xi,xi_hist,xi2_hist,pxi2,pxi2_2);
-    degrade_hist(dxi,fmu_min,fmu_max,nbin_xi,&nbin2_xi,xi_hist,xi2_hist,pxi3,pxi3_2);
-    degrade_hist(dmd,md_min,md_max,nbin_md,&nbin2_md,md_hist,md2_hist,pmd,pmd_2);
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77} c     Store fit results in .fit output file
 // {F77} c     ---------------------------------------------------------------------------
-    // Buffer we will use for massaging numbers in FORTRAN format.
-    char dbuf[20];
 // {F77}          write(31,702)
 // {F77}  702     format('# OBSERVED FLUXES (and errors):')
-    fprintf(fitfp,"# OBSERVED FLUXES (and errors):\n");
 // {F77}          write(filter_header,*) (filt_name(k),k=1,nfilt)
 // {F77}          write(31,*) '#  '//filter_header(1:largo(filter_header))
-    fprintf(fitfp," #   ");
-    for(k=0;k<nfilt;k++){
-        if(k != nfilt-1){
-            fprintf(fitfp,"%-12s",filt_name[k]);
-        }else{
-            fprintf(fitfp,"%s",filt_name[k]);
-        }
-    }
-    fprintf(fitfp,"\n");
 // {F77}
 // {F77}          write(31,701) (flux_obs(i_gal,k),k=1,nfilt)
 // {F77}          write(31,701) (sigma(i_gal,k),k=1,nfilt)
 // {F77}          write(31,703)
 // {F77}  703     format('#')
-   for(k=0;k<nfilt;k++){
-       fprintf(fitfp,"%12.3E",flux_obs[k][i_gal]);
-   }
-   fprintf(fitfp,"\n");
-   for(k=0;k<nfilt;k++){
-       fprintf(fitfp,"%12.3E",sigma[k][i_gal]);
-   }
-   fprintf(fitfp,"\n");
-   fprintf(fitfp,"#\n");
-
-
 // {F77}
 // {F77}          write(31,800)
 // {F77}  800     format('# ... Results of fitting the fluxes to the model.....')
@@ -2050,25 +1517,13 @@ int main(int argc, char *argv[]){
 // {F77}      +        '.......Mdust.....SFR')
 // {F77}  803     format(0p4f10.3,1p3e12.3,0p2f10.1,0p5f10.3,1p2e12.3)
 // {F77}
-   fprintf(fitfp,"# ... Results of fitting the fluxes to the model.....\n");
 // {F77}          write(31,703)
-   fprintf(fitfp,"#\n");
 // {F77}          write(31,804)
 // {F77}  804     format('# BEST FIT MODEL: (i_sfh, i_ir, chi2, redshift)')
-   fprintf(fitfp,"# BEST FIT MODEL: (i_sfh, i_ir, chi2, redshift)\n");
 // {F77}          write(31,311) indx(sfh_sav),ir_sav,chi2_sav/n_flux,
 // {F77}      +        redshift(i_gal)
 // {F77}  311     format(2i10,0pf10.3,0pf12.6)
-    // Adding 1 to ir_sav to get total number
-
-   fprintf(fitfp,"%10i%10i%10.3f%12.6f\n",indx[sfh_sav],ir_sav+1,chi2_sav/n_flux,redshift[i_gal]);
 // {F77}          write(31,802)
-   fprintf(fitfp,"#.fmu(SFH)...fmu(IR)........mu......tauv");;
-   fprintf(fitfp,"........sSFR..........M*.......Ldust");
-   fprintf(fitfp,"......T_W^BC.....T_C^ISM....xi_C^tot");
-   fprintf(fitfp,"..xi_PAH^tot..xi_MIR^tot....xi_W^tot.....tvism");
-   fprintf(fitfp,".......Mdust.....SFR");
-   fprintf(fitfp,"\n");
 // {F77}          write(31,803) fmu_sfh(sfh_sav),fmu_ir(ir_sav),mu(sfh_sav),
 // {F77}      +        tauv(sfh_sav),ssfr(sfh_sav),a_sav,
 // {F77}      +        ldust(sfh_sav)*a_sav,tbg1(ir_sav),tbg2(ir_sav),
@@ -2076,68 +1531,28 @@ int main(int argc, char *argv[]){
 // {F77}      +        xi2(ir_sav),xi3(ir_sav),
 // {F77}      +        tvism(sfh_sav),mdust(ir_sav)*a_sav*ldust(sfh_sav),
 // {F77}      +        ssfr(sfh_sav)*a_sav
+// {F77} czz added parameters
+// {F77} CZZ set format???
+// {F77} c         write(31)  z_zmet(sfh_sav),z_ltform(sfh_sav),z_lgamma(sfh_sav),
+// {F77} c     +        z_ltlastb(sfh_sav), z_lagem(sfh_sav), z_lager(sfh_sav), z_lsfr16(sfh_sav),
+// {F77} c     +        z_lsfr17(sfh_sav), z_lsfr18(sfh_sav), z_lsfr19(sfh_sav), z_lsfr29(sfh_sav),
+// {F77} c     +        z_lfb16(sfh_sav), z_lfb17(sfh_sav), z_lfb18(sfh_sav), z_lfb19(sfh_sav), z_lfb29(sfh_sav)
+// {F77} czz added parameters end
 // {F77}
-   // TODO - Reimplement this solution to get around IEEE round-to-nearest-even problem.
-   fprintf(fitfp,"%10.3f%10.3f%10.3f%10.3f",
-            round_nup(fmu_sfh[sfh_sav],3),
-            round_nup(fmu_ir[ir_sav],3),
-            round_nup(mu[sfh_sav],3),
-            round_nup(tauv[sfh_sav],3)
-          );
-   fprintf(fitfp,"%12.3E%12.3E%12.3E",
-            ssfr[sfh_sav],
-            a_sav,
-            ldust[sfh_sav]*a_sav
-          );
-   fprintf(fitfp,"%10.1f%10.1f%10.3f%10.3f%10.3f%10.3f%10.3f",
-            round_nup(tbg1[ir_sav],1),
-            round_nup(tbg2[ir_sav],1),
-            round_nup(fmu_ism[ir_sav],3),
-            round_nup(xi1[ir_sav],3),
-            round_nup(xi2[ir_sav],3),
-            round_nup(xi3[ir_sav],3),
-            round_nup(tvism[sfh_sav],3)
-          );
-   fprintf(fitfp,"%12.3E%12.3E",
-           mdust[ir_sav]*a_sav*ldust[sfh_sav],
-           ssfr[sfh_sav]*a_sav
-          );
-   fprintf(fitfp,"\n");
+// {F77}
 // {F77}          write(31,*) '#  '//filter_header(1:largo(filter_header))
-    fprintf(fitfp," #   ");
-    for(k=0;k<nfilt;k++){
-        if(k != nfilt-1){
-            fprintf(fitfp,"%-12s",filt_name[k]);
-        }else{
-            fprintf(fitfp,"%s",filt_name[k]);
-        }
-    }
-    fprintf(fitfp,"\n");
 // {F77}          write(31,701) (a_sav*flux_sfh(sfh_sav,k),k=1,nfilt_sfh-nfilt_mix),
 // {F77}      +        (a_sav*(flux_sfh(sfh_sav,k)
 // {F77}      +        +flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav)),
 // {F77}      +        k=nfilt_sfh-nfilt_mix+1,nfilt_sfh),
 // {F77}      +        (a_sav*flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav),
 // {F77}      +        k=nfilt_sfh+1,nfilt)
-    for(k=0;k<nfilt_sfh-nfilt_mix;k++){
-       fprintf(fitfp,"%12.3E",a_sav*flux_sfh[k][sfh_sav]);
-    }
-    for(k=nfilt_sfh-nfilt_mix; k<nfilt_sfh; k++){
-       fprintf(fitfp,"%12.3E",a_sav*flux_sfh[k][sfh_sav]+flux_ir[k-nfilt_sfh+nfilt_mix][ir_sav]*ldust[sfh_sav]);
-    }
-    for(k=nfilt_sfh;k<nfilt;k++){
-       fprintf(fitfp,"%12.3E",a_sav*flux_ir[k-nfilt_sfh+nfilt_mix][ir_sav]*ldust[sfh_sav]);
-    }
-    fprintf(fitfp,"\n");
 // {F77}  701     format(1p50e12.3)
 // {F77}
-
 // {F77}          write(31,703)
 // {F77}          write(31,805)
 // {F77}  805     format('# MARGINAL PDF HISTOGRAMS FOR EACH PARAMETER......')
 // {F77}
-    fprintf(fitfp,"#\n");
-    fprintf(fitfp,"# MARGINAL PDF HISTOGRAMS FOR EACH PARAMETER......\n");
 // {F77}  807     format(0pf10.4,1pe12.3e3)
 // {F77}  60      format('#....percentiles of the PDF......')
 // {F77}  61      format(0p5f8.3)
@@ -2151,488 +1566,426 @@ int main(int argc, char *argv[]){
 // {F77}          write(31,806)
 // {F77}  806     format('# ... f_mu (SFH) ...')
 // {F77}          do ibin=1,nbin2_fmu
-// {F77} c theSkyNet
 // {F77}             write(31,807) fmu2_hist(ibin),psfh2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... f_mu (SFH) ...\n");
-    for(ibin=0; ibin<nbin2_fmu; ibin++){
-        sprintf(dbuf,"%.3E",psfh2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",fmu2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_fmu_sfh(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_fmu_sfh[k]);
-    }
-    fprintf(fitfp,"\n");
-
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(psfh2, fmu2_hist, nbin2_fmu)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, fmu2_hist(1), fmu2_hist(nbin2_fmu), fmu2_hist(2) - fmu2_hist(1)
-    hpbv = get_hpbv(psfh2,fmu2_hist,nbin2_fmu);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,fmu2_hist[0],fmu2_hist[nbin2_fmu-1]);
-    fprintf(fitfp,"%10.4f\n",fmu2_hist[1] - fmu2_hist[0]);
-
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,808)
 // {F77}  808     format('# ... f_mu (IR) ...')
 // {F77}          do ibin=1,nbin2_fmu
-// {F77} c theSkyNet
 // {F77}             write(31,807) fmu2_hist(ibin),pir2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... f_mu (IR) ...\n");
-    for(ibin=0; ibin<nbin2_fmu; ibin++){
-        sprintf(dbuf,"%.3E",pir2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",fmu2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_fmu_ir(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_fmu_ir[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pir2, fmu2_hist, nbin2_fmu)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, fmu2_hist(1), fmu2_hist(nbin2_fmu), fmu2_hist(2) - fmu2_hist(1)
-    hpbv = get_hpbv(pir2,fmu2_hist,nbin2_fmu);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,fmu2_hist[0],fmu2_hist[nbin2_fmu-1]);
-    fprintf(fitfp,"%10.4f\n",fmu2_hist[1] - fmu2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,809)
 // {F77}  809     format('# ... mu parameter ...')
 // {F77}          do ibin=1,nbin2_mu
-// {F77} c theSkyNet
 // {F77}             write(31,807) mu2_hist(ibin),pmu2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... mu parameter ...\n");
-    for(ibin=0; ibin<nbin2_mu; ibin++){
-        sprintf(dbuf,"%.3E",pmu2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",mu2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_mu(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-       fprintf(fitfp,"%8.3f",pct_mu[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pmu2, mu2_hist, nbin2_mu)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, mu2_hist(1), mu2_hist(nbin2_mu), mu2_hist(2) - mu2_hist(1)
-    hpbv = get_hpbv(pmu2,mu2_hist,nbin2_mu);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,mu2_hist[0],mu2_hist[nbin2_mu-1]);
-    fprintf(fitfp,"%10.4f\n",mu2_hist[1] - mu2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,810)
 // {F77}  810     format('# ... tau_V ...')
 // {F77}          do ibin=1,nbin2_tv
-// {F77} c theSkyNet
 // {F77}             write(31,807) tv2_hist(ibin),ptv2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... tau_V ...\n");
-    for(ibin=0; ibin<nbin2_tv; ibin++){
-        sprintf(dbuf,"%.3E",ptv2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",tv2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_tv(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_tv[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(ptv2, tv2_hist, nbin2_tv)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, tv2_hist(1), tv2_hist(nbin2_tv), tv2_hist(2) - tv2_hist(1)
-    hpbv = get_hpbv(ptv2, tv2_hist, nbin2_tv);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,tv2_hist[0],tv2_hist[nbin2_tv-1]);
-    fprintf(fitfp,"%10.4f\n",tv2_hist[1] - tv2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,811)
 // {F77}  811     format('# ... sSFR_0.1Gyr ...')
 // {F77}          do ibin=1,nbin2_ssfr
-// {F77} c theSkyNet
 // {F77}             write(31,812) ssfr2_hist(ibin),pssfr2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... sSFR_0.1Gyr ...\n");
-    for(ibin=0; ibin<nbin2_ssfr; ibin++){
-        sprintf(dbuf,"%.3E",ssfr2_hist[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s",dbuf);
-        sprintf(dbuf,"%.3E",pssfr2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s\n",dbuf);
-    }
-// {F77}
 // {F77}  812     format(1p2e12.3e3)
 // {F77}          write(31,60)
 // {F77}          write(31,62) (pct_ssfr(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        sprintf(dbuf,"%.3E",pct_ssfr[k]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s",dbuf);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pssfr2, ssfr2_hist, nbin2_ssfr)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, ssfr2_hist(1), ssfr2_hist(nbin2_ssfr), ssfr2_hist(2) - ssfr2_hist(1)
-    hpbv = get_hpbv(pssfr2, ssfr2_hist, nbin2_ssfr);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,ssfr2_hist[0],ssfr2_hist[nbin2_ssfr-1]);
-    fprintf(fitfp,"%10.4f\n",ssfr2_hist[1] - ssfr2_hist[0]);
 // {F77} c theSkyNet
+// {F77}
 // {F77}
 // {F77}          write(31,813)
 // {F77}  813     format('# ... M(stars) ...')
 // {F77}          do ibin=1,nbin2_a
-// {F77} c theSkyNet
 // {F77}             write(31,812) a2_hist(ibin),pa2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... M(stars) ...\n");
-    for(ibin=0; ibin<nbin2_a; ibin++){
-        sprintf(dbuf,"%.3E",a2_hist[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s",dbuf);
-        sprintf(dbuf,"%.3E",pa2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s\n",dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,62) (pct_mstr(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        sprintf(dbuf,"%.3E",pct_mstr[k]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s",dbuf);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pa2, a2_hist, nbin2_a)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, a2_hist(1), a2_hist(nbin2_a), a2_hist(2) - a2_hist(1)
-    hpbv = get_hpbv(pa2, a2_hist, nbin2_a);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,a2_hist[0],a2_hist[nbin2_a-1]);
-    fprintf(fitfp,"%10.4f\n",a2_hist[1] - a2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,814)
 // {F77}  814     format('# ... Ldust ...')
 // {F77}          do ibin=1,nbin2_ld
-// {F77} c theSkyNet
 // {F77}             write(31,812) ld2_hist(ibin),pldust2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... Ldust ...\n");
-    for(ibin=0; ibin<nbin2_ld; ibin++){
-        sprintf(dbuf,"%.3E",ld2_hist[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s",dbuf);
-        sprintf(dbuf,"%.3E",pldust2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s\n",dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,62) (pct_ld(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        sprintf(dbuf,"%.3E",pct_ld[k]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s",dbuf);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pldust2, ld2_hist, nbin2_ld)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, ld2_hist(1), ld2_hist(nbin2_ld), ld2_hist(2) - ld2_hist(1)
-    hpbv = get_hpbv(pldust2, ld2_hist, nbin2_ld);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,ld2_hist[0],ld2_hist[nbin2_ld-1]);
-    fprintf(fitfp,"%10.4f\n",ld2_hist[1] - ld2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,815)
 // {F77}  815     format('# ... T_C^ISM ...')
 // {F77}          do ibin=1,nbin2_tbg2
-// {F77} c theSkyNet
 // {F77}             write(31,807) tbg2_2_hist(ibin),ptbg2_2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... T_C^ISM ...\n");
-    for(ibin=0; ibin<nbin2_tbg2; ibin++){
-        sprintf(dbuf,"%.3E",ptbg2_2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",tbg2_2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_tbg2(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_tbg2[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(ptbg2_2, tbg2_2_hist, nbin2_tbg2)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, tbg2_2_hist(1), tbg2_2_hist(nbin2_tbg2), tbg2_2_hist(2) - tbg2_2_hist(1)
-    hpbv = get_hpbv(ptbg2_2, tbg2_2_hist, nbin2_tbg2);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,tbg2_2_hist[0],tbg2_2_hist[nbin2_tbg2-1]);
-    fprintf(fitfp,"%10.4f\n",tbg2_2_hist[1] - tbg2_2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,820)
 // {F77}  820     format('# ... T_W^BC ...')
 // {F77}          do ibin=1,nbin2_tbg1
-// {F77} c theSkyNet
 // {F77}             write(31,807) tbg1_2_hist(ibin),ptbg1_2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... T_W^BC ...\n");
-    for(ibin=0; ibin<nbin2_tbg1; ibin++){
-        sprintf(dbuf,"%.3E",ptbg1_2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",tbg1_2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_tbg1(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_tbg1[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(ptbg1_2, tbg1_2_hist, nbin2_tbg1)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, tbg1_2_hist(1), tbg1_2_hist(nbin2_tbg1), tbg1_2_hist(2) - tbg1_2_hist(1)
-    hpbv = get_hpbv(ptbg1_2, tbg1_2_hist, nbin2_tbg1);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,tbg1_2_hist[0],tbg1_2_hist[nbin2_tbg1-1]);
-    fprintf(fitfp,"%10.4f\n",tbg1_2_hist[1] - tbg1_2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,821)
 // {F77}  821     format('# ... xi_C^tot ...')
 // {F77}          do ibin=1,nbin2_fmu_ism
-// {F77} c theSkyNet
 // {F77}             write(31,807) fmuism2_hist(ibin),pism2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... xi_C^tot ...\n");
-    for(ibin=0; ibin<nbin2_fmu_ism; ibin++){
-        sprintf(dbuf,"%.3E",pism2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",fmuism2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_ism(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_ism[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pism2, fmuism2_hist, nbin2_fmu_ism)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, fmuism2_hist(1), fmuism2_hist(nbin2_fmu_ism), fmuism2_hist(2) - fmuism2_hist(1)
-    hpbv = get_hpbv(pism2, fmuism2_hist, nbin2_fmu_ism);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,fmuism2_hist[0],fmuism2_hist[nbin2_fmu_ism-1]);
-    fprintf(fitfp,"%10.4f\n",fmuism2_hist[1] - fmuism2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,816)
 // {F77}  816     format('# ... xi_PAH^tot ...')
 // {F77}          do ibin=1,nbin2_xi
-// {F77} c theSkyNet
 // {F77}             write(31,807) xi2_hist(ibin),pxi1_2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... xi_PAH^tot ...\n");
-    for(ibin=0; ibin<nbin2_xi; ibin++){
-        sprintf(dbuf,"%.3E",pxi1_2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",xi2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_xi1(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_xi1[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pxi1_2, xi2_hist, nbin2_xi)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, xi2_hist(1), xi2_hist(nbin2_xi), xi2_hist(2) - xi2_hist(1)
-    hpbv = get_hpbv(pxi1_2, xi2_hist, nbin2_xi);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,xi2_hist[0],xi2_hist[nbin2_xi-1]);
-    fprintf(fitfp,"%10.4f\n",xi2_hist[1] - xi2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,817)
 // {F77}  817     format('# ... xi_MIR^tot ...')
 // {F77}          do ibin=1,nbin2_xi
-// {F77} c theSkyNet
 // {F77}             write(31,807) xi2_hist(ibin),pxi2_2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... xi_MIR^tot ...\n");
-    for(ibin=0; ibin<nbin2_xi; ibin++){
-        sprintf(dbuf,"%.3E",pxi2_2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",xi2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_xi2(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_xi2[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pxi2_2, xi2_hist, nbin2_xi)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, xi2_hist(1), xi2_hist(nbin2_xi), xi2_hist(2) - xi2_hist(1)
-    hpbv = get_hpbv(pxi2_2, xi2_hist, nbin2_xi);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,xi2_hist[0],xi2_hist[nbin2_xi-1]);
-    fprintf(fitfp,"%10.4f\n",xi2_hist[1] - xi2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,818)
 // {F77}  818     format('# ... xi_W^tot ...')
 // {F77}          do ibin=1,nbin2_xi
-// {F77} c theSkyNet
 // {F77}             write(31,807) xi2_hist(ibin),pxi3_2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... xi_W^tot ...\n");
-    for(ibin=0; ibin<nbin2_xi; ibin++){
-        sprintf(dbuf,"%.3E",pxi3_2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",xi2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_xi3(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_xi3[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pxi3_2, xi2_hist, nbin2_xi)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, xi2_hist(1), xi2_hist(nbin2_xi), xi2_hist(2) - xi2_hist(1)
-    hpbv = get_hpbv(pxi3_2, xi2_hist, nbin2_xi);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,xi2_hist[0],xi2_hist[nbin2_xi-1]);
-    fprintf(fitfp,"%10.4f\n",xi2_hist[1] - xi2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,81)
 // {F77}  81      format('# ... tau_V^ISM...')
 // {F77}          do ibin=1,nbin2_tvism
-// {F77} c theSkyNet
 // {F77}             write(31,807) tvism2_hist(ibin),ptvism2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... tau_V^ISM...\n");
-    for(ibin=0; ibin<nbin2_tvism; ibin++){
-        sprintf(dbuf,"%.3E",ptvism2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%10.4f%12s\n",tvism2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_tvism(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_tvism[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(ptvism2, tvism2_hist, nbin2_tvism)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, tvism2_hist(1), tvism2_hist(nbin2_tvism), tvism2_hist(2) - tvism2_hist(1)
-    hpbv = get_hpbv(ptvism2, tvism2_hist, nbin2_tvism);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,tvism2_hist[0],tvism2_hist[nbin2_tvism-1]);
-    fprintf(fitfp,"%10.4f\n",tvism2_hist[1] - tvism2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,888)
 // {F77}  888     format('# ... M(dust)...')
 // {F77}          do ibin=1,nbin2_md
-// {F77} c theSkyNet
 // {F77}             write(31,807) md2_hist(ibin),pmd_2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... M(dust)...\n");
-    for(ibin=0; ibin<nbin2_md; ibin++){
-       sprintf(dbuf,"%.3E",pmd_2[ibin]);
-       get_fexp3(dbuf);
-       fprintf(fitfp,"%10.4f%12s\n",md2_hist[ibin],dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_md(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_md[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(pmd_2, md2_hist, nbin2_md)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, md2_hist(1), md2_hist(nbin2_md), md2_hist(2) - md2_hist(1)
-    hpbv = get_hpbv(pmd_2, md2_hist, nbin2_md);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,md2_hist[0],md2_hist[nbin2_md-1]);
-    fprintf(fitfp,"%10.4f\n",md2_hist[1] - md2_hist[0]);
 // {F77} c theSkyNet
 // {F77}
 // {F77}          write(31,889)
 // {F77}  889     format('# ... SFR_0.1Gyr ...')
 // {F77}          do ibin=1,nbin2_sfr
-// {F77} c theSkyNet
 // {F77}             write(31,812) sfr2_hist(ibin),psfr2(ibin)
 // {F77}          enddo
-    fprintf(fitfp,"# ... SFR_0.1Gyr ...\n");
-    for(ibin=0; ibin<nbin2_sfr; ibin++){
-        sprintf(dbuf,"%.3E",sfr2_hist[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s",dbuf);
-        sprintf(dbuf,"%.3E",psfr2[ibin]);
-        get_fexp3(dbuf);
-        fprintf(fitfp,"%12s\n",dbuf);
-    }
 // {F77}          write(31,60)
 // {F77}          write(31,61) (pct_sfr(k),k=1,5)
-    fprintf(fitfp,"#....percentiles of the PDF......\n");
-    for(k=0;k<5;k++){
-        fprintf(fitfp,"%8.3f",pct_sfr[k]);
-    }
-    fprintf(fitfp,"\n");
 // {F77} c theSkyNet
 // {F77}          hpbv = get_hpbv(psfr2, sfr2_hist, nbin2_sfr)
 // {F77}          write(31, 900)
 // {F77}          write(31, 901) hpbv, sfr2_hist(1), sfr2_hist(nbin2_sfr), sfr2_hist(2) - sfr2_hist(1)
-    hpbv = get_hpbv(psfr2, sfr2_hist, nbin2_sfr);
-    fprintf(fitfp,"# theSkyNet2\n");
-    fprintf(fitfp,"%10.4f%10.4f%10.4f",hpbv,sfr2_hist[0],sfr2_hist[nbin2_sfr-1]);
-    fprintf(fitfp,"%10.4f\n",sfr2_hist[1] - sfr2_hist[0]);
 // {F77} c theSkyNet
+// {F77}
+// {F77}
+// {F77} czz added parameters
+// {F77}          write(31,9811)
+// {F77}  9811     format('# ... metalicity Z/Zo ...')
+// {F77}          do ibin=1,z_nbin2_zmet
+// {F77}             write(31,9812) z_zmet2_hist(ibin),z_pzmet2(ibin)
+// {F77}          enddo
+// {F77}  9812     format(1p2e12.3e3)
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_zmet(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_pzmet2, zmet2_hist, z_nbin2_zmet)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, zmet2_hist(1), zmet2_hist(z_nbin2_zmet), zmet2_hist(2) - zmet2_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9813)
+// {F77}  9813     format('# ... tform ...')
+// {F77}          do ibin=1,z_nbin2_ltform
+// {F77}             write(31,9812) z_ltform2_hist(ibin),z_pltform2(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_ltform(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_pltform2, z_ltform2_hist, z_nbin2_ltform)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_ltform2_hist(1), z_ltform2_hist(z_nbin2_ltform), z_ltform2_hist(2) - z_ltform2_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9814)
+// {F77}  9814     format('# ... gamma ...')
+// {F77}          do ibin=1,z_nbin2_lgamma
+// {F77}             write(31,9812) z_lgamma2_hist(ibin),z_plgamma2(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lgamma(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plgamma2, z_lgamma2_hist, z_nbin2_lgamma)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lgamma2_hist(1), z_lgamma2_hist(z_nbin2_lgamma), z_lgamma2_hist(2) - z_lgamma2_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9815)
+// {F77}  9815     format('# ... tlastb ...')
+// {F77}          do ibin=1,z_nbin2_ltlastb
+// {F77}             write(31,9812) z_ltlastb2_hist(ibin),z_pltlastb2(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_ltlastb(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_pltlastb2, z_ltlastb2_hist, z_nbin2_ltlastb)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_ltlastb2_hist(1), z_ltlastb2_hist(z_nbin2_ltlastb), z_ltlastb2_hist(2) - z_ltlastb2_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9816)
+// {F77}  9816     format('# ... agem ...')
+// {F77}          do ibin=1,z_nbin2_lagem
+// {F77}             write(31,9812) z_lagem2_hist(ibin),z_plagem2(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lagem(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plagem2, z_lagem2_hist, z_nbin2_lagem)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lagem2_hist(1), z_lagem2_hist(z_nbin2_lagem), z_lagem2_hist(2) - z_lagem2_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9817)
+// {F77}  9817     format('# ... ager ...')
+// {F77}          do ibin=1,z_nbin2_lager
+// {F77}             write(31,9812) z_lager2_hist(ibin),z_plager2(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lager(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plager2, z_lager2_hist, z_nbin2_lager)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lager2_hist(1), z_lager2_hist(z_nbin2_lager), z_lager2_hist(2) - z_lager2_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9818)
+// {F77}  9818     format('# ... sfr16 ...')
+// {F77}          do ibin=1,z_nbin2_lsfr16
+// {F77}             write(31,9812) z_lsfr162_hist(ibin),z_plsfr162(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lsfr16(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plsfr162, z_lsfr162_hist, z_nbin2_lsfr16)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lsfr162_hist(1), z_lsfr162_hist(z_nbin2_lsfr16), z_lsfr162_hist(2) - z_lsfr162_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9819)
+// {F77}  9819     format('# ... sfr17 ...')
+// {F77}          do ibin=1,z_nbin2_lsfr17
+// {F77}             write(31,9812) z_lsfr172_hist(ibin),z_plsfr172(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lsfr17(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plsfr172, z_lsfr172_hist, z_nbin2_lsfr17)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lsfr172_hist(1), z_lsfr172_hist(z_nbin2_lsfr17), z_lsfr172_hist(2) - z_lsfr172_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9820)
+// {F77}  9820     format('# ... sfr18 ...')
+// {F77}          do ibin=1,z_nbin2_lsfr18
+// {F77}             write(31,9812) z_lsfr182_hist(ibin),z_plsfr182(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lsfr18(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plsfr182, z_lsfr182_hist, z_nbin2_lsfr18)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lsfr182_hist(1), z_lsfr182_hist(z_nbin2_lsfr18), z_lsfr182_hist(2) - z_lsfr182_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9821)
+// {F77}  9821     format('# ... sfr19 ...')
+// {F77}          do ibin=1,z_nbin2_lsfr19
+// {F77}             write(31,9812) z_lsfr192_hist(ibin),z_plsfr192(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lsfr19(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plsfr192, z_lsfr192_hist, z_nbin2_lsfr19)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lsfr192_hist(1), z_lsfr192_hist(z_nbin2_lsfr19), z_lsfr192_hist(2) - z_lsfr192_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9822)
+// {F77}  9822     format('# ... sfr29 ...')
+// {F77}          do ibin=1,z_nbin2_lsfr29
+// {F77}             write(31,9812) z_lsfr292_hist(ibin),z_plsfr292(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lsfr29(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plsfr292, z_lsfr292_hist, z_nbin2_lsfr29)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lsfr292_hist(1), z_lsfr292_hist(z_nbin2_lsfr29), z_lsfr292_hist(2) - z_lsfr292_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9823)
+// {F77}  9823     format('# ... fb16 ...')
+// {F77}          do ibin=1,z_nbin2_lfb16
+// {F77}             write(31,9812) z_lfb162_hist(ibin),z_plfb162(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lfb16(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plfb162, z_lfb162_hist, z_nbin2_lfb16)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lfb162_hist(1), z_lfb162_hist(z_nbin2_lfb16), z_lfb162_hist(2) - z_lfb162_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9824)
+// {F77}  9824     format('# ... fb17 ...')
+// {F77}          do ibin=1,z_nbin2_lfb17
+// {F77}             write(31,9812) z_lfb172_hist(ibin),z_plfb172(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lfb17(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plfb172, z_lfb172_hist, z_nbin2_lfb17)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lfb172_hist(1), z_lfb172_hist(z_nbin2_lfb17), z_lfb172_hist(2) - z_lfb172_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9825)
+// {F77}  9825     format('# ... fb18 ...')
+// {F77}          do ibin=1,z_nbin2_lfb18
+// {F77}             write(31,9812) z_lfb182_hist(ibin),z_plfb182(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lfb18(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plfb182, z_lfb182_hist, z_nbin2_lfb18)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lfb182_hist(1), z_lfb182_hist(z_nbin2_lfb18), z_lfb182_hist(2) - z_lfb182_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9826)
+// {F77}  9826     format('# ... fb19 ...')
+// {F77}          do ibin=1,z_nbin2_lfb19
+// {F77}             write(31,9812) z_lfb192_hist(ibin),z_plfb192(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lfb19(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plfb192, z_lfb192_hist, z_nbin2_lfb19)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lfb192_hist(1), z_lfb192_hist(z_nbin2_lfb19), z_lfb192_hist(2) - z_lfb192_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}          write(31,9827)
+// {F77}  9827     format('# ... fb29 ...')
+// {F77}          do ibin=1,z_nbin2_lfb29
+// {F77}             write(31,9812) z_lfb292_hist(ibin),z_plfb292(ibin)
+// {F77}          enddo
+// {F77}          write(31,60)
+// {F77}          write(31,62) (z_pct_lfb29(k),k=1,5)
+// {F77} c theSkyNet
+// {F77}          hpbv = get_hpbv(z_plfb292, z_lfb292_hist, z_nbin2_lfb29)
+// {F77}          write(31, 900)
+// {F77}          write(31, 901) hpbv, z_lfb292_hist(1), z_lfb292_hist(nbin2_sfr), z_lfb292_hist(2) - z_lfb292_hist(1)
+// {F77} c theSkyNet
+// {F77}
+// {F77}
+// {F77} czz added parameters end
 // {F77}
 // {F77} c     ---------------------------------------------------------------------------
 // {F77}          if (skynet .eqv. .TRUE.) then
@@ -2643,29 +1996,10 @@ int main(int argc, char *argv[]){
 // {F77}          else
 // {F77} c     ---------------------------------------------------------------------------
 // {F77}
-// {F77}             write(*,*) 'Storing best-fit SED...'
-// {F77}             write(*,*) outfile2
-// {F77}             call get_bestfit_sed(indx(sfh_sav),ir_sav,a_sav,
-// {F77}      +           fmu_sfh(sfh_sav),redshift(i_gal),outfile2)
-    if(skynet){
-        fprintf(fitfp," #...theSkyNet parameters of this model\n");
-        fprintf(fitfp,"%15i%15i",indx[sfh_sav],ir_sav+1);
-
-        // Yuck! Do the FORTRAN formatting requirement.
-        sprintf(dbuf,"%.5E",a_sav);
-        get_fsci(dbuf);
-        fprintf(fitfp,"%20s",dbuf);
-        sprintf(dbuf,"%.3E",fmu_sfh[sfh_sav]);
-        get_fsci(dbuf);
-        fprintf(fitfp,"%20s",dbuf);
-        sprintf(dbuf,"%.1E",redshift[i_gal]);
-        get_fsci(dbuf);
-        fprintf(fitfp,"%10s\n",dbuf);
-
-    } else {
-        // TODO : Imlement best fit.
-    }
-}
+// {F77}          write(*,*) 'Storing best-fit SED...'
+// {F77}          write(*,*) outfile2
+// {F77}          call get_bestfit_sed(indx(sfh_sav),ir_sav,a_sav,
+// {F77}      +        fmu_sfh(sfh_sav),redshift(i_gal),outfile2)
 // {F77}          endif
 // {F77}          STOP
 // {F77}          END
@@ -2691,21 +2025,6 @@ int main(int argc, char *argv[]){
 // {F77}       enddo
 // {F77}       RETURN
 // {F77}       END
-double get_hpbv(double hist1[],double hist2[],int nbin){
-    double max_pr = 0;
-    double hpbv = 0;
-    for(int ibin=0;ibin<nbin;ibin++){
-        if(ibin == 0){
-            max_pr = hist1[ibin];
-            hpbv = hist2[ibin];
-        }else if(hist1[ibin] > max_pr){
-            max_pr = hist1[ibin];
-            hpbv = hist2[ibin];
-        }
-    }
-    return hpbv;
-}
-
 // {F77} c theSkyNet
 // {F77}
 // {F77} c     ===========================================================================
@@ -2745,22 +2064,6 @@ double get_hpbv(double hist1[],double hist2[],int nbin){
 // {F77}
 // {F77}       RETURN
 // {F77}       END
-void degrade_hist(double delta,double min,double max,int nbin1,int * nbin2,double hist1[], double hist2[],double prob1[],double prob2[]){
-    int i=0;
-    int ibin=0;
-    double max2=0;
-    double aux;
-
-    max2=max+(delta/2);
-
-    get_histgrid(delta,min,max2,nbin2,hist2);
-    for(i=0;i<nbin1;i++){
-        aux=((hist1[i]-min)/(max-min))*(*nbin2);
-        ibin=(int)(aux);
-        prob2[ibin]=prob2[ibin]+prob1[i];
-    }
-}
-
 // {F77}
 // {F77} c     ===========================================================================
 // {F77}       SUBROUTINE GET_HISTGRID(dv,vmin,vmax,nbin,vout)
@@ -2791,18 +2094,6 @@ void degrade_hist(double delta,double min,double max,int nbin1,int * nbin2,doubl
 // {F77}       nbin=ibin-1
 // {F77}       return
 // {F77}       END
-void get_histgrid(double dv,double vmin,double vmax,int* nbin,double vout[]){
-    double x1,x2;
-    (*nbin) = 0;
-    x1=vmin;
-    x2=vmin+dv;
-    while(x2 <= vmax){
-        vout[(*nbin)]=0.5*(x1+x2);
-        x1=x1+dv;
-        x2=x2+dv;
-        (*nbin)++;
-    }
-}
 // {F77}
 // {F77} c     ===========================================================================
 // {F77}       SUBROUTINE GET_PERCENTILES(n,par,probability,percentile)
@@ -2840,25 +2131,6 @@ void get_histgrid(double dv,double vmin,double vmax,int* nbin,double vout[]){
 // {F77}
 // {F77}       return
 // {F77}       END
-void get_percentiles(int n,double par[],double probability[],double percentile[]){
-    int i=0;
-    double pless=0;
-    int n_perc[5];
-    double limit[5]={0.025,0.16,0.50,0.84,0.975};
-    sort2(par,probability,0,n-1);
-
-   for(i=0; i<5; i++){
-       n_perc[i]=0;
-       pless=0;
-       while(pless <= limit[i]){
-           pless=pless+probability[n_perc[i]];
-           n_perc[i]++;
-       }
-       n_perc[i]=n_perc[i]-1;
-       percentile[i]=par[n_perc[i]];
-   }
-}
-
 // {F77}
 // {F77} c     ===========================================================================
 // {F77}       SUBROUTINE sort2(n,arr,brr)
@@ -2959,34 +2231,6 @@ void get_percentiles(int n,double par[],double probability[],double percentile[]
 // {F77}       endif
 // {F77}       goto 1
 // {F77}       END
-void sort2(double arr1[], double arr2[], int left, int right) {
-    int i = left;
-    int j = right;
-    double temp1,temp2;
-    double pivot = arr1[(left + right) / 2];
-
-    while (i <= j) {
-        while (arr1[i] < pivot)
-            i++;
-            while (arr1[j] > pivot)
-                j--;
-            if (i <= j) {
-               temp1 = arr1[i];
-               temp2 = arr2[i];
-               arr1[i] = arr1[j];
-               arr2[i] = arr2[j];
-               arr1[j] = temp1;
-               arr2[j] = temp2;
-               i++;
-               j--;
-        }
-    };
-
-    if (left < j)
-        sort2(arr1,arr2,left,j);
-    if (i < right)
-        sort2(arr1,arr2,i,right);
-}
 // {F77}
 // {F77}
 // {F77} c     ===========================================================================
@@ -3041,49 +2285,6 @@ void sort2(double arr1[], double arr2[], int left, int right) {
 // {F77}
 // {F77}       return
 // {F77}       end
-double get_dl(double h,double q,double z){
-    double dl,d1,d2;
-    double aa,bb,epsr,s,s0;
-    double dd1,dd2;
-    bool success;
-    int npts;
-
-    dl=0;
-    s=0;
-
-    if(z <= 0){
-        return (1.0e-5);
-    }
-
-    if(q == 0){
-        dl = ((3.0e5 * z)*(1 + (z/2)))/h;
-    } else if (q > 0){
-        d1 = (q*z)+((q-1)*(sqrt(1+((2*q)*z))-1));
-        d2 = ((h*q)*q)/3.0e5;
-        dl = d1/d2;
-    } else if(q < 0){
-        omega0 = (2*(q+1))/3;
-        aa = 1;
-        bb = 1+z;
-        success=false;
-        s0=1.0e-10;
-        npts=0;
-        do{
-            npts++;
-            get_midpnt(get_funl,aa,bb,&s,npts);
-            epsr=fabs(s-s0)/s0;
-            if(epsr < 1.0e-4){
-                success=true;
-            } else {
-                s0=s;
-            }
-        }while(!success);
-        dd1=s;
-        dd2=(3.0e5 * (1+z))/(h*sqrt(omega0));
-        dl=dd1*dd2;
-    }
-    return dl;
-}
 // {F77}
 // {F77} c     ===========================================================================
 // {F77}       REAL*8 FUNCTION FUNL(x)
@@ -3096,11 +2297,6 @@ double get_dl(double h,double q,double z){
 // {F77}       funl = 1. / sqrt(((x ** 3.) + omegainv) - 1.)
 // {F77}       return
 // {F77}       end
-double get_funl(double x){
-    double omegainv;
-    omegainv = 1/omega0;
-    return (1/sqrt(((x*x*x) + omegainv)-1));
-}
 // {F77}
 // {F77}
 // {F77} c     ===========================================================================
@@ -3130,27 +2326,6 @@ double get_funl(double x){
 // {F77}       endif
 // {F77}       return
 // {F77}       END
-void get_midpnt(double (*func)(double),double a,double b,double* s,double n){
-    int it,j;
-    double ddel,del,sum,tnm,x;
-    if(n == 1){
-        (*s)=(b-a)*((*func)(0.5*(a+b)));
-    } else{
-        it=pow(3,(n-2));
-        tnm=it;
-        del=(b-a)/(3*tnm);
-        ddel=del+del;
-        x=a+0.5*del;
-        sum=0;
-        for(j=0; j < it;j++){
-            sum=sum+((*func)(x));
-            x=x+ddel;
-            sum=sum+((*func)(x));
-            x=x+del;
-        }
-        (*s)=((*s)+(b-a)*sum/tnm)/3;
-    }
-}
 // {F77}
 // {F77} c     ===========================================================================
 // {F77}       REAL*8 FUNCTION COSMOL_C(h,omega,omega_lambda,q)
@@ -3172,14 +2347,6 @@ void get_midpnt(double (*func)(double),double a,double b,double* s,double n){
 // {F77}       endif
 // {F77}       return
 // {F77}       end
-double get_cosmol_c(double h,double omega,double omega_lambda,double* q){
-    if(omega_lambda == 0){
-        *q=omega/2;
-    }else{
-        *q=(3*omega/2)-1;
-    }
-    return (omega_lambda/(3*h*h));
-}
 // {F77}
 // {F77} c     ===========================================================================
 // {F77}       REAL*8 FUNCTION T(h, q, z, lamb)
@@ -3433,7 +2600,7 @@ double get_cosmol_c(double h,double omega,double omega_lambda,double* q){
 // {F77}          write(31,311) log10(wl(i)*(1.+z)),log10(sedtot(i)/(1.+z)),
 // {F77}      +        log10(fopt_new0(i)/(1.+z))
 // {F77}       enddo
-// {F77}  311  format(3f15.6)
+// {F77}  311  format(3f12.3)
 // {F77}
 // {F77}  1    stop
 // {F77}       end
@@ -3511,120 +2678,4 @@ double get_cosmol_c(double h,double omega,double omega_lambda,double* q){
 // {F77}                      end
 // {F77}
 // {F77}
-
-// Some C helper functions
-
-// Modifies string with scientific notation double to have 3 0s in exponent.
-void get_fexp3(char dstr[]){
-    int orig_len=(int)strlen(dstr);
-    int i=orig_len;
-    while(i >= 0 && !(dstr[i] == '+' || dstr[i] == '-')){
-        i--;
-    }
-    i++;
-    int base_end_pos=i;
-
-    char * exp_str = new char[orig_len-base_end_pos+1];
-
-    char c=dstr[i];
-    int j=0;
-    while(c != '\0'){
-        c = dstr[i++];
-        exp_str[j]=c;
-        j++;
-    }
-    exp_str[j]='\0';
-
-    int exp = atoi(exp_str);
-    sprintf(exp_str,"%03d", exp);
-
-    for(int k=0; k<(int)strlen(exp_str); k++){
-        dstr[base_end_pos++]=exp_str[k];
-    }
-
-    dstr[i]='\0';
-    delete[] exp_str;
-}
-
-// Very ugly function that modifies scientific notation string into FORTRAN style preceding 0.
-void get_fsci(char dstr[]){
-    int orig_len=(int)strlen(dstr);
-    double orig_val;
-    sscanf(dstr, "%lf", &orig_val);
-    if(orig_val==0){
-        return;
-    }
-    int i=orig_len;
-    while(i >= 0 && !(dstr[i] == '+' || dstr[i] == '-')){
-        i--;
-    }
-    // Set the position where our base ends and sign starts.
-    int base_end_pos=i;
-
-    char * exp_str = new char[orig_len-base_end_pos+1];
-
-    char c=dstr[i];
-    int j=0;
-
-    // Copy exponent into new char array.
-    while(c != '\0'){
-        c = dstr[i++];
-        exp_str[j]=c;
-        j++;
-    }
-    exp_str[j]='\0';
-
-    // This is our new exponent.
-    int exp;
-    if(orig_val != 0){
-        exp = atoi(exp_str) + 1;
-    } else {
-        exp = atoi(exp_str);
-    }
-
-    // Always + if the exponent is 0.
-    if(exp == 0){
-        exp_str[0]='+';
-    }
-
-    if(exp_str[0]=='+'){
-        sprintf(exp_str,"+%02d",abs(exp));
-    } else if(exp_str[0]=='-'){
-        sprintf(exp_str,"-%02d",abs(exp));
-    }
-
-    char * old_dstr = new char[orig_len];
-    strcpy(old_dstr,dstr);
-    dstr[0]='0';
-    dstr[1]='.';
-    j=2;
-
-    for(int k=0; k<base_end_pos;k++){
-        if(old_dstr[k] != '.'){
-            dstr[j++]=old_dstr[k];
-        }
-    }
-
-    for(int k=0; k<(int)strlen(exp_str); k++){
-        dstr[j++]=exp_str[k];
-    }
-    dstr[j]='\0';
-
-    delete[] exp_str;
-    delete[] old_dstr;
-}
-
-// Rounds up depending on double FP representability.
-double round_nup(double n, int p){
-   char buf1[20],buf2[20];
-   // Simulate a print of full mantissa to check how to comes out.
-   snprintf(buf1,20,"%.20f",n);
-   snprintf(buf2,20,"%.*f%020d",p+2,n,0);
-   // IEEE dictates n will get rounded to nearest even if tie and FP is EXACTLY representable.
-   // We must override this behavior.
-   if(strcmp(buf1,buf2) == 0){
-       int m = pow((float)10,p);
-       return round(n*m)/m;
-   }
-   return n;
-}
+// {F77}
