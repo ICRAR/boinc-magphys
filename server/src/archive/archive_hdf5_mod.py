@@ -485,7 +485,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 # correct x & y for this block
                                 x = raw_x - (block_x * MAX_X_Y_BLOCK)
                                 y = raw_y - (block_y * MAX_X_Y_BLOCK)
-                                LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
+                                #LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
                                 line_number = 0
                                 percentiles_next = False
                                 histogram_next = False
@@ -494,7 +494,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 skip_this_pixel = False
                                 pixel_count += 1
                             else:
-                                LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
+                                #LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
                                 skip_this_pixel = True
                         elif skip_this_pixel:
                             # Do nothing as we're skipping this pixel
