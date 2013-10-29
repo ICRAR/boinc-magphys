@@ -26,7 +26,6 @@
 """
 Extract data from the HDF5 file
 """
-import argparse
 import sys
 import os
 import logging
@@ -39,6 +38,7 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
+import argparse
 from sqlalchemy import create_engine
 from config import DB_LOGIN
 from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_and_layers_cmd_line

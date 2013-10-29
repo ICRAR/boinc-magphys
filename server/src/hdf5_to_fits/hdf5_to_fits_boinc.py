@@ -37,7 +37,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 from config import DB_LOGIN
 from database.database_support_core import HDF5_REQUEST
 from sqlalchemy import create_engine, select
-from hdf5_to_fits_mod import generate_files, get_features_and_layers
+from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_and_layers
 from utils.logging_helper import config_logger
 
 LOG = config_logger(__name__)

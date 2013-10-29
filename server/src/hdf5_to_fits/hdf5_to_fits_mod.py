@@ -25,22 +25,43 @@
 """
 The functions to convert an HDF5 layer to a fits file
 """
-from email.mime.text import MIMEText
+import pyfits
 import os
 import shutil
 import smtplib
 import tarfile
 import tempfile
-import datetime
-import h5py
 import numpy
-import pyfits
+import h5py
+from datetime import datetime
+from email.mime.text import MIMEText
 from sqlalchemy import select
 from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY
-from hdf5_to_fits import FROM_EMAIL, SMTP_SERVER
-from utils.name_builder import get_key_hdf5, get_files_bucket, get_galaxy_image_bucket, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url
+from utils.logging_helper import config_logger
+from utils.name_builder import get_key_hdf5, get_files_bucket, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url
 from utils.s3_helper import S3Helper
+from os.path import dirname, exists
+from configobj import ConfigObj
+
+LOG = config_logger(__name__)
+
+FROM_EMAIL = None
+SMTP_SERVER = None
+
+db_file_name = dirname(__file__) + '/hdf5_to_fits.settings'
+if exists(db_file_name):
+    config = ConfigObj(db_file_name)
+    FROM_EMAIL = config['FROM_EMAIL']
+    SMTP_SERVER = config['SMTP_SERVER']
+
+else:
+    FROM_EMAIL = 'kevin.vinsen@icrar.org'
+    SMTP_SERVER = 'smtp.ivec.org'
+
+print("""
+FROM_EMAIL       = {0}
+SMTP_SERVER      = {1}""".format(FROM_EMAIL, SMTP_SERVER))
 
 FEATURES = {
     'best_fit': 0,
@@ -80,7 +101,7 @@ def get_features_and_layers(connection, request_id):
     :return:
     """
     features = []
-    for feature in connection.execute(select([HDF5_FEATURE]).join(HDF5_REQUEST_FEATURE).where(HDF5_REQUEST_FEATURE.c.request_id == request_id)):
+    for feature in connection.execute(select([HDF5_FEATURE]).join(HDF5_REQUEST_FEATURE).filter(HDF5_REQUEST_FEATURE.c.request_id == request_id)):
         if feature[HDF5_FEATURE.c.argument_name] == 'f0':
             features.append('best_fit')
         if feature[HDF5_FEATURE.c.argument_name] == 'f1':
@@ -97,7 +118,7 @@ def get_features_and_layers(connection, request_id):
             features.append('percentile_97_5')
 
     layers = []
-    for layer in connection.execute(select([HDF5_LAYER]).join(HDF5_REQUEST_LAYER).where(HDF5_REQUEST_LAYER.c.request_id == request_id)):
+    for layer in connection.execute(select([HDF5_LAYER]).join(HDF5_REQUEST_LAYER).filter(HDF5_REQUEST_LAYER.c.request_id == request_id)):
         if layer[HDF5_LAYER.c.argument_name] == 'l0':
             layers.append('f_mu_sfh')
         if layer[HDF5_LAYER.c.argument_name] == 'l1':
@@ -245,14 +266,14 @@ def generate_files(connection, galaxy_id, email, features, layers):
             file_names = []
             for feature in features:
                 for layer in layers:
-                    file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group))
+                    file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
 
             h5_file.close()
             url = zip_files_and_email(s3Helper, galaxy[GALAXY.c.name], email, file_names, output_dir)
 
     finally:
         # Delete the temp files now we're done
-        os.rmdir(output_dir)
+        shutil.rmtree(output_dir)
 
     return url
 
@@ -271,7 +292,7 @@ def zip_files_and_email(s3Helper, galaxy_name, email, file_names, output_dir):
 
     # Copy to S3
     bucket_name = get_downloads_bucket()
-    key = get_hdf5_to_fits_key(tar_file)
+    key = get_hdf5_to_fits_key(galaxy_name)
     s3Helper.add_file_to_bucket(bucket_name, key, tar_file)
     url = '{0}/{1}'.format(get_downloads_url(), key)
 
@@ -312,7 +333,7 @@ def zip_up_files(galaxy_name, file_names, output_dir):
     :param file_names: the files to add
     :return:
     """
-    tar_file_name = get_temp_file('tar.gz', galaxy_name, output_dir)
+    tar_file_name = get_temp_file('.tar.gz', galaxy_name, output_dir)
     with tarfile.open(tar_file_name, 'w:gz') as tar_file:
         for file_name in file_names:
             tar_file.add(file_name, arcname=os.path.basename(file_name))
@@ -342,16 +363,7 @@ The file will be available for 10 days and will then be deleted.'''.format(galax
     return string
 
 
-def clean_up_file(output_dir):
-    """
-    Remove the output directory
-    :param output_dir: the output directory
-    :return:
-    """
-    shutil.rmtree(output_dir)
-
-
-def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group):
+def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group, galaxy_name):
     """
     Extract a feature from the HDF5 file into a FITS file
 
@@ -390,7 +402,7 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group
                     y_offset = block_y * MAX_X_Y_BLOCK
                     # Copy the block back
                     for x in range(size_x):
-                        data[y_offset:size_y, x + x_offset] = pixel_data[x, :, layer_index, feature_index]
+                        data[y_offset:y_offset+size_y, x + x_offset] = pixel_data[x, :, layer_index, feature_index]
     else:
         pixel_data = pixel_group['pixels']
 
@@ -418,6 +430,6 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group
                 hdu_list[0].header.update(keyword, fits_header[1], fits_header[2])
 
     # Write the file
-    file_name = os.path.join(output_directory, '{0}.{1}.{2}.fits'.format(galaxy_group.attrs['name'], feature, layer))
+    file_name = os.path.join(output_directory, '{0}.{1}.{2}.fits'.format(galaxy_name, feature, layer))
     hdu_list.writeto(file_name, clobber=True)
     return file_name

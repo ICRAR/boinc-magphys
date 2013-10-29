@@ -23,24 +23,4 @@
 #    MA 02111-1307  USA
 #
 """
-Load the configuration files
 """
-from os.path import dirname, exists
-from configobj import ConfigObj
-
-FROM_EMAIL = None
-SMTP_SERVER = None
-
-db_file_name = dirname(__file__) + '/hdf5_to_fits.settings'
-if exists(db_file_name):
-    config = ConfigObj(db_file_name)
-    FROM_EMAIL = config['FROM_EMAIL']
-    SMTP_SERVER = config['SMTP_SERVER']
-
-else:
-    FROM_EMAIL = 'kevin.vinsen@icrar.org'
-    SMTP_SERVER = 'smtp.ivec.org'
-
-print("""
-FROM_EMAIL       = {0}
-SMTP_SERVER      = {1}""".format(FROM_EMAIL, SMTP_SERVER))

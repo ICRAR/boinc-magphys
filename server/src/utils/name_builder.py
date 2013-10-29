@@ -195,5 +195,5 @@ def get_ami_log_file(name):
     return filename, full_filename
 
 
-def get_hdf5_to_fits_key(tar_name):
-    return '{0}/{1}'.format(str(uuid.uuid4()), tar_name)
+def get_hdf5_to_fits_key(galaxy_name):
+    return '{0}/{1}.tar.gz'.format(str(uuid.uuid4()), galaxy_name)
