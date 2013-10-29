@@ -53,14 +53,18 @@ for request in connection.execute(select([HDF5_REQUEST]).where(HDF5_REQUEST.c.st
         request_id = request[HDF5_REQUEST.c.hdf5_request_id]
         connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=1))
         features, layers = get_features_and_layers(connection, request_id)
-        url = generate_files(connection=connection,
-                             galaxy_id=request[HDF5_REQUEST.c.galaxy_id],
-                             email=request[HDF5_REQUEST.c.email],
-                             features=features,
-                             layers=layers)
-        connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=2, link=url))
+        if len(features) > 0 and len(layers) > 0:
+            url = generate_files(connection=connection,
+                                 galaxy_id=request[HDF5_REQUEST.c.galaxy_id],
+                                 email=request[HDF5_REQUEST.c.email],
+                                 features=features,
+                                 layers=layers)
+            connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=2, link=url))
+        else:
+            connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=3))
     except Exception:
         LOG.exception('An exception occurred')
+        connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=3))
 
 LOG.info('All done')
 connection.close()

@@ -101,7 +101,7 @@ def get_features_and_layers(connection, request_id):
     :return:
     """
     features = []
-    for feature in connection.execute(select([HDF5_FEATURE]).join(HDF5_REQUEST_FEATURE).filter(HDF5_REQUEST_FEATURE.c.request_id == request_id)):
+    for feature in connection.execute(select([HDF5_FEATURE]).select_from(HDF5_FEATURE.join(HDF5_REQUEST_FEATURE)).where(HDF5_REQUEST_FEATURE.c.hdf5_request_id == request_id)):
         if feature[HDF5_FEATURE.c.argument_name] == 'f0':
             features.append('best_fit')
         if feature[HDF5_FEATURE.c.argument_name] == 'f1':
@@ -118,7 +118,7 @@ def get_features_and_layers(connection, request_id):
             features.append('percentile_97_5')
 
     layers = []
-    for layer in connection.execute(select([HDF5_LAYER]).join(HDF5_REQUEST_LAYER).filter(HDF5_REQUEST_LAYER.c.request_id == request_id)):
+    for layer in connection.execute(select([HDF5_LAYER]).select_from(HDF5_LAYER.join(HDF5_REQUEST_LAYER)).where(HDF5_REQUEST_LAYER.c.hdf5_request_id == request_id)):
         if layer[HDF5_LAYER.c.argument_name] == 'l0':
             layers.append('f_mu_sfh')
         if layer[HDF5_LAYER.c.argument_name] == 'l1':
