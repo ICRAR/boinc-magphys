@@ -48,12 +48,18 @@ LOG = config_logger(__name__)
 
 FROM_EMAIL = None
 SMTP_SERVER = None
+PORT = 0
+EMAIL_USERNAME = None
+EMAIL_PASSWORD = None
 
 db_file_name = dirname(__file__) + '/hdf5_to_fits.settings'
 if exists(db_file_name):
     config = ConfigObj(db_file_name)
     FROM_EMAIL = config['FROM_EMAIL']
     SMTP_SERVER = config['SMTP_SERVER']
+    PORT = int(config['PORT'])
+    EMAIL_USERNAME = config['EMAIL_USERNAME']
+    EMAIL_PASSWORD = config['EMAIL_PASSWORD']
 
 else:
     FROM_EMAIL = 'kevin.vinsen@icrar.org'
@@ -318,8 +324,12 @@ def send_email(email, message, galaxy_name):
     message['To'] = email
     message['From'] = FROM_EMAIL
 
-    # Send it
-    smtp = smtplib.SMTP(SMTP_SERVER)
+    # Send it - connect to the server
+    smtp = smtplib.SMTP(SMTP_SERVER, PORT)
+
+    # Do we have a username / password
+    if EMAIL_USERNAME is not None and EMAIL_PASSWORD is not None:
+        smtp.login(EMAIL_USERNAME, EMAIL_PASSWORD)
     smtp.sendmail(FROM_EMAIL, [email], message.as_string())
     smtp.quit()
 
