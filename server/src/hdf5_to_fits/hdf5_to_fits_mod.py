@@ -37,6 +37,7 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from sqlalchemy import select
 from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
+from config import DELETED, STORED
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY
 from utils.logging_helper import config_logger
 from utils.name_builder import get_key_hdf5, get_files_bucket, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url
@@ -260,30 +261,34 @@ def generate_files(connection, galaxy_id, email, features, layers):
     url = None
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
     LOG.info('Processing {0} ({1}) for {2}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], email))
-    output_dir = tempfile.mkdtemp()
-    s3Helper = S3Helper()
-    LOG.info('Getting HDF5 file to {0}'.format(output_dir))
-    tmp_file = get_hdf5_file(s3Helper, output_dir, galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
-    LOG.info('File stored in {0}'.format(tmp_file))
-    try:
-        # We have the file
-        if os.path.isfile(tmp_file):
-            h5_file = h5py.File(tmp_file, 'r')
-            galaxy_group = h5_file['galaxy']
-            pixel_group = galaxy_group['pixel']
 
-            file_names = []
-            for feature in features:
-                for layer in layers:
-                    LOG.info('Processing {0} - {1}'.format(feature, layer))
-                    file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
+    # make sure the galaxy is available
+    if galaxy[GALAXY.c.status_id] == STORED or galaxy[GALAXY.c.status_id] == DELETED:
+        output_dir = tempfile.mkdtemp()
+        try:
+            s3Helper = S3Helper()
+            LOG.info('Getting HDF5 file to {0}'.format(output_dir))
+            tmp_file = get_hdf5_file(s3Helper, output_dir, galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+            LOG.info('File stored in {0}'.format(tmp_file))
 
-            h5_file.close()
-            url = zip_files_and_email(s3Helper, galaxy[GALAXY.c.name], email, file_names, output_dir)
+            # We have the file
+            if os.path.isfile(tmp_file):
+                h5_file = h5py.File(tmp_file, 'r')
+                galaxy_group = h5_file['galaxy']
+                pixel_group = galaxy_group['pixel']
 
-    finally:
-        # Delete the temp files now we're done
-        shutil.rmtree(output_dir)
+                file_names = []
+                for feature in features:
+                    for layer in layers:
+                        LOG.info('Processing {0} - {1}'.format(feature, layer))
+                        file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
+
+                h5_file.close()
+                url = zip_files_and_email(s3Helper, galaxy[GALAXY.c.name], email, file_names, output_dir)
+
+        finally:
+            # Delete the temp files now we're done
+            shutil.rmtree(output_dir)
 
     return url
 
