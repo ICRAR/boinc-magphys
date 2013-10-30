@@ -259,7 +259,7 @@ def generate_files(connection, galaxy_id, email, features, layers):
     """
     url = None
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
-    LOG.info('Processing {0} ({1})'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id]))
+    LOG.info('Processing {0} ({1}) for {2}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], email))
     output_dir = tempfile.mkdtemp()
     s3Helper = S3Helper()
     LOG.info('Getting HDF5 file to {0}'.format(output_dir))
