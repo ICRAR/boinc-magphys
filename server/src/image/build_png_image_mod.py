@@ -36,7 +36,6 @@ from utils.logging_helper import config_logger
 from utils.name_builder import get_galaxy_image_bucket, get_build_png_name, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 from PIL import Image
-from image import fitsimage
 
 LOG = config_logger(__name__)
 
@@ -136,9 +135,10 @@ def build_png_image_boinc():
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
-        cheapest_zone = ec2_helper.get_cheapest_spot_zone(M1_SMALL)
-        if cheapest_zone is not None :
-            ec2_helper.run_spot_instance(cheapest_zone, USER_DATA, BOINC_VALUE)
+        spot_price = ec2_helper.get_cheapest_spot_price(M1_SMALL)
+        if spot_price is not None:
+            bid_price, subnet_id = ec2_helper.get_bid_price_and_subnet(spot_price)
+            ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BOINC_VALUE)
         else:
             ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
 
@@ -149,14 +149,12 @@ def build_png_image_ami():
 
     :return:
     """
-
     # First check the galaxy exists in the database
     engine = create_engine(DB_LOGIN)
     connection = engine.connect()
 
     query = select([GALAXY]).distinct().where(and_(AREA.c.galaxy_id == GALAXY.c.galaxy_id, AREA.c.update_time >= GALAXY.c.image_time))
 
-    fits_image = fitsimage.FitsImage(connection)
     galaxy_count = 0
     s3helper = S3Helper()
     bucket_name = get_galaxy_image_bucket()

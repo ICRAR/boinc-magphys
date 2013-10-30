@@ -59,7 +59,10 @@ for request in connection.execute(select([HDF5_REQUEST]).where(HDF5_REQUEST.c.st
                                  email=request[HDF5_REQUEST.c.email],
                                  features=features,
                                  layers=layers)
-            connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=2, link=url))
+            if url is not None:
+                connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=2, link=url))
+            else:
+                connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=3))
         else:
             connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=3))
     except Exception:
