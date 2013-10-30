@@ -259,9 +259,12 @@ def generate_files(connection, galaxy_id, email, features, layers):
     """
     url = None
     galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
+    LOG.info('Processing {0} ({1})'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id]))
     output_dir = tempfile.mkdtemp()
     s3Helper = S3Helper()
+    LOG.info('Getting HDF5 file to {0}'.format(output_dir))
     tmp_file = get_hdf5_file(s3Helper, output_dir, galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+    LOG.info('File stored in {0}'.format(tmp_file))
     try:
         # We have the file
         if os.path.isfile(tmp_file):
@@ -272,6 +275,7 @@ def generate_files(connection, galaxy_id, email, features, layers):
             file_names = []
             for feature in features:
                 for layer in layers:
+                    LOG.info('Processing {0} - {1}'.format(feature, layer))
                     file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
 
             h5_file.close()
