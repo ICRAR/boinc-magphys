@@ -28,7 +28,7 @@ The code to check the original images created correctly
 import datetime
 import os
 import tempfile
-from sqlalchemy import create_engine, select, and_
+from sqlalchemy import create_engine, select, and_, func
 from config import DB_LOGIN
 from database.database_support_core import GALAXY
 from image.fitsimage import FitsImage
@@ -72,8 +72,21 @@ def original_image_checked_boinc():
     if ec2_helper.boinc_instance_running(BOINC_VALUE):
         LOG.info('A previous instance is still running')
     else:
-        LOG.info('Starting up the instance')
-        ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
+        # Connect to the database - the login string is set in the database package
+        ENGINE = create_engine(DB_LOGIN)
+        connection = ENGINE.connect()
+
+        try:
+            count = connection.execute(select([func.count(GALAXY.c.galaxy_id)]).where(and_(GALAXY.c.original_image_checked == None, GALAXY.c.pixel_count > 0))).first()[0]
+            LOG.info('{0} images to check'.format(count))
+            if count > 0:
+                LOG.info('Starting up the instance')
+                ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
+        except Exception:
+            LOG.exception('Major error')
+
+        finally:
+            connection.close()
 
 
 def image_files_exist(galaxy_name, run_id, galaxy_id, s3Helper):
@@ -156,7 +169,6 @@ def original_image_checked_ami():
     try:
         # Look in the database for the galaxies
         galaxy_ids = []
-        # ALTER TABLE `magphys`.`galaxy` ADD COLUMN `original_image_checked` TIMESTAMP NULL, ADD INDEX `original_image_checked` (`original_image_checked` ASC) ;
         for galaxy in connection.execute(select([GALAXY]).where(and_(GALAXY.c.original_image_checked == None, GALAXY.c.pixel_count > 0)).order_by(GALAXY.c.galaxy_id)):
             galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
 
