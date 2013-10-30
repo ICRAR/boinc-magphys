@@ -100,31 +100,33 @@ CREATE TABLE register (
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE galaxy (
-  galaxy_id        BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  run_id           BIGINT UNSIGNED NOT NULL,
-  name             VARCHAR(128) NOT NULL,
-  dimension_x      INTEGER UNSIGNED NOT NULL,
-  dimension_y      INTEGER UNSIGNED NOT NULL,
-  dimension_z      INTEGER UNSIGNED NOT NULL,
-  redshift         DECIMAL(10, 7) NOT NULL,
-  sigma            DECIMAL(3,2) NOT NULL,
-  create_time      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  image_time       TIMESTAMP,
-  version_number   INTEGER UNSIGNED NOT NULL DEFAULT 1,
-  galaxy_type      VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
-  ra_cent          FLOAT,
-  dec_cent         FLOAT,
-  pixel_count      INTEGER,
-  pixels_processed INTEGER,
-  status_id        SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-  status_time      TIMESTAMP,
+  galaxy_id              BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  run_id                 BIGINT UNSIGNED NOT NULL,
+  name                   VARCHAR(128) NOT NULL,
+  dimension_x            INTEGER UNSIGNED NOT NULL,
+  dimension_y            INTEGER UNSIGNED NOT NULL,
+  dimension_z            INTEGER UNSIGNED NOT NULL,
+  redshift               DECIMAL(10, 7) NOT NULL,
+  sigma                  DECIMAL(3,2) NOT NULL,
+  create_time            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  image_time             TIMESTAMP,
+  version_number         INTEGER UNSIGNED NOT NULL DEFAULT 1,
+  galaxy_type            VARCHAR(10) character set utf8 collate utf8_bin NOT NULL,
+  ra_cent                FLOAT,
+  dec_cent               FLOAT,
+  pixel_count            INTEGER,
+  pixels_processed       INTEGER,
+  status_id              SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  status_time            TIMESTAMP,
+  original_image_checked TIMESTAMP,
 
   FOREIGN KEY (run_id) REFERENCES run(run_id),
   FOREIGN KEY (status_id) REFERENCES galaxy_status(galaxy_status_id),
 
   INDEX (run_id),
   INDEX (name),
-  INDEX (status_id)
+  INDEX (status_id),
+  INDEX (original_image_checked)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE fits_header (
@@ -239,3 +241,83 @@ CREATE TABLE image_filters_used (
 
   INDEX (galaxy_id, image_number)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE hdf5_request (
+  hdf5_request_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  profile_id      BIGINT UNSIGNED NOT NULL,
+  galaxy_id       BIGINT UNSIGNED NOT NULL,
+  email           VARCHAR(200) NOT NULL,
+  link            VARCHAR(200),
+  state           SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id),
+
+  INDEX (state)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE hdf5_feature (
+  hdf5_feature_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+  argument_name   VARCHAR(100) NOT NULL,
+  description     VARCHAR(100) NOT NULL,
+
+  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE hdf5_layer (
+  hdf5_layer_id   BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+  argument_name   VARCHAR(100) NOT NULL,
+  description     VARCHAR(100) NOT NULL,
+
+  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE hdf5_request_feature (
+  hdf5_request_feature_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  hdf5_request_id BIGINT UNSIGNED NOT NULL,
+  hdf5_feature_id BIGINT UNSIGNED NOT NULL,
+
+  FOREIGN KEY (hdf5_request_id) REFERENCES hdf5_request(hdf5_request_id),
+  FOREIGN KEY (hdf5_feature_id) REFERENCES hdf5_feature(hdf5_feature_id)
+
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE hdf5_request_layer (
+  hdf5_request_layer_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  hdf5_request_id BIGINT UNSIGNED NOT NULL,
+  hdf5_layer_id BIGINT UNSIGNED NOT NULL,
+
+  FOREIGN KEY (hdf5_request_id) REFERENCES hdf5_request(hdf5_request_id),
+  FOREIGN KEY (hdf5_layer_id) REFERENCES hdf5_layer(hdf5_layer_id)
+
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+INSERT INTO hdf5_feature (argument_name, description) VALUES ('f0', 'extract best fit');
+INSERT INTO hdf5_feature (argument_name, description) VALUES ('f1', 'extract percentile 50');
+INSERT INTO hdf5_feature (argument_name, description) VALUES ('f2', 'extract highest probability bin');
+INSERT INTO hdf5_feature (argument_name, description) VALUES ('f3', 'extract percentile 2.5');
+INSERT INTO hdf5_feature (argument_name, description) VALUES ('f4', 'extract percentile 16');
+INSERT INTO hdf5_feature (argument_name, description) VALUES ('f5', 'extract percentile 84');
+INSERT INTO hdf5_feature (argument_name, description) VALUES ('f6', 'extract percentile 97.5');
+
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l0',  'extract f_mu (SFH)');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l1',  'extract f_mu (IR)');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l2',  'extract mu parameter');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l3',  'extract tau_V');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l4',  'extract sSFR_0.1Gyr');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l5',  'extract M(stars)');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l6',  'extract Ldust');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l7',  'extract T_C^ISM');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l8',  'extract T_W^BC');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l9',  'extract xi_C^tot');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l10', 'extract xi_PAH^tot');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l11', 'extract xi_MIR^tot');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l12', 'extract xi_W^tot');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l13', 'extract tau_V^ISM');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l14', 'extract M(dust)');
+INSERT INTO hdf5_layer (argument_name, description) VALUES ('l15', 'extract SFR_0.1Gyr');

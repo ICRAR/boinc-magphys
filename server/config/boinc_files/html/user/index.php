@@ -51,21 +51,70 @@ We will measure physical parameters (such as stellar mass surface density, star 
         ";
     } else {
         echo "
-            theSkyNet POGS is a research project that uses Internet-connected
-            computers to do research in astronomy.
-We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe.
-We will measure physical parameters (such as stellar mass surface density, star formation rate surface density, attenuation, and first-order star formation history) on a resolved pixel-by-pixel basis using spectral energy distribution (SED) fitting techniques in a distributed computing mode.
-            You can participate by downloading and running a free program
-            on your computer.
+
+    <ul id=\"tabs\">
+      <li><a href=\"#english\">English</a></li>
+      <li><a href=\"#french\">Français</a></li>
+      <li><a href=\"#russian\">Русский</a></li>
+      <li><a href=\"#german\">Deutsch</a></li>
+      <li><a href=\"#italian\">Italiano</a></li>
+      <li><a href=\"#chinese\">中文</a></li>
+    </ul>
+
+    <div class=\"tabContent\" id=\"english\">
+TheSkyNet POGS is a research project that uses Internet-connected computers to do research in astronomy. We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe. We will calculate physical parameters such as: star formation rate, stellar mass of the galaxy, dust attenuation, and total dust mass of a galaxy; on a pixel-by-pixel basis using spectral energy distribution fitting techniques. You can participate by downloading and running a free program on your computer.
+<p>
+TheSkyNet POGS is based at The International Centre for Radio Astronomy Research.
+
+    </div>
+
+    <div class=\"tabContent\" id=\"french\">
+theSkyNet POGS est un projet de recherche qui utilise des ordinateurs
+connectés à internet afin d'effectuer de la recherche en astronomie. Notre
+but est de combiner les couvertures spectrales de GALEX, Pan-STARRS1 et
+WISE afin de produire un atlas de galaxies de l'Univers proche dans les
+longueurs d'onde ultraviolet, optique et proche infrarouge. Nous
+mesurerons leurs paramètres physiques (comme le taux de formation
+stellaire, la masse stellaire de la galaxie, l'absorption causée par la
+poussière interstellaire ainsi que sa masse totale dans la galaxie) pixel
+par pixel grâce aux techniques de distribution spectrale d'énergie. Pour
+participer, il vous suffit de télécharger puis lancer un programme gratuit
+sur votre ordinateur.
+<p>
+theSkyNet POGS est basé au Centre International de Recherche en Radio
+Astronomie (ICRAR).
+    </div>
+
+    <div class=\"tabContent\" id=\"russian\">
+theSkyNet POGS - это астрономический исследовательский проект, который использует компьютеры подключенные к Интернету для обработки данных с различных телескопов мира в разных диапазонах электромагнитного спектра. Мы объединяем GALEX, Pan-STARRS1 и WISE, чтобы создать многочастотный (ультрафиолетовый-оптический-инфракрасный спектры) атлас ближних к нам окрестностей вселенной. Мы определяем физические параметры (звездная масса галактик, поглощение излучения пылью, масса пылевой компоненты, скорость образования звезд) для каждого пиксела, используя технику поиска оптимума для распределения спектральной энергии. Вычисления для различных пикселов изображения распределяются между многими компьютерами подключенными к сети. Вы можете принять участие в нашей исследовательской программе скачав и запустив  бесплатную программу на вашем компьютере.
+<p>
+theSkyNet POGS разработан и координируется Международным Исследовательским Центром Радиоастрономический Исследований, Австралия, Перт.   
+ </div>
+
+<div class=\"tabContent\" id=\"german\">
+theSkyNet POGS ist ein wissenschaftliches Projekt, das Computer im Internet dazu verwendet astronomische Forschung zu betreiben. Wir werden die Beobachtungen von GALEX, Pan-STARRS1 und WISE in unterschiedlichen Wellenlängenbereichen dazu verwenden einen Galaxien-Atlas des nahegelegenen Universums in den Spektralbereichen UV, optisch und nah-infrarot, zu erstellen. Wir werden physikalische Parameter berechnen, wie zum Beispiel die Sternentstehungsrate, die stellare und totale Galaxienmasse oder die Lichtabschwächung durch Staub. Diese Berechnungen werden mittels mathematischer Fitting-Technologien der Spektral-Energieverteilungen in jedem Pixel durchgeführt. Sie können das POGS Projekt unterstützen, indem sie ein kostenloses Programm herunterladen und auf ihrem Computer ausführen.
+<p>
+theSkyNet POGS ist ein Projekt des International Centre for Radio Astronomy Research (Internationales Zentrum für Radio Astronomische Forschung).
+
+    </div>
+
+    <div class=\"tabContent\" id=\"chinese\">
+theSkyNet POGS 是一个利于互联网上的计算机来承担天文科研的研究项目。我们将合并若干个天文台（GALEX，Pan-STARRS1，WISE）的光谱范围，生成一个多波长的近宇宙 紫外-可见光-近红外 星系图集。我们将用光谱能量分布拟合技术从一个个像素上计算若干物理参数
+（例如恒星形成率，星系恒星质量，尘埃衰减，星系尘埃总质量）。加入该项目，请下载免费的程序并在您的电脑运行。
+<p>
+theSkyNet POGS项目是由国际射电天文学研究中心发起的。
+    </div>
+    <div class=\"tabContent\" id=\"italian\">
+The SkyNet POGS é un progetto sperimentale che utilizza calcolatori connessi via Internet per condurre ricerca in astronomia. Le gamme spettrali di GALEX, Pan-STARRS1 e WISE verranno combinate per generare un atlante dell'universo vicino che copra molteplici lunghezze d'onda (ultravioletto-ottico-vicino infrarosso). Con tale ricerca, sara' possibile misurare diversi parametri fisici, per es.: tasso di formazione stellare, massa stellare nelle galassie, attenuazione indotta dalla polvere cosmica e contenuto di polvere cosmica interstellare nelle galassie. Tali parametri verrano estrapolati con risoluzione a livello di singolo pixel, utilizzando il metodo della distribuzione spettrale d'energia (SED) tramite tecniche di 'fitting'. Puoi partecipare anche Tu scaricando ed eseguendo un programma gratuito sul tuo computer.
+<p>
+The SkyNet POGS e' un progetto gestito dal Centro Internazionale della Ricerca in Radio Astronomia (International Centre for Radio Astronomy Research - ICRAR).
+    </div>
         ";
     }
     echo "
-        <p>
-        theSkyNet POGS is based at 
-        The International Centre for Radio Astronomy Research.
         <ul>
-	<li><a href=\"../pogssite/pogs/".$user->id."\">Images you have processed</a>
-        <li><a href=\"../pogssite/pogs/GalaxyList?page=1\">Images for all the Galaxies used in the survey</a>
+	<li> <a href=\"http://production-test.theskynet.org/boinc/".$user->id."/galaxies\">Images you have processed</a>
+        <li> <a href=\"http://production-test.theskynet.org/galaxies\">Images for all the Galaxies used in the survey</a>
         <li> [Link to page describing your research in detail]
         <li> [Link to page listing project personnel, and an email address]
         </ul>
@@ -145,10 +194,92 @@ echo "<html>
     <link rel=\"stylesheet\" type=\"text/css\" href=\"main.css\" media=\"all\" />
     <link rel=\"stylesheet\" type=\"text/css\" href=\"".STYLESHEET."\">
     <link rel=\"alternate\" type=\"application/rss+xml\" title=\"".$rssname."\" href=\"".$rsslink."\">
+<style type=\"text/css\">
+  ul#tabs { list-style-type: none; margin: 30px 0 0 0; padding: 0 0 0.3em 0; }
+  ul#tabs li { display: inline; }
+  ul#tabs li a {  border: 1px solid #c9c3ba; border-bottom: none; padding: 0.3em; text-decoration: none; }
+  ul#tabs li a:hover { background-color: #f1f0ee; }
+  ul#tabs li a.selected { color: #000; background-color: #f1f0ee; font-weight: bold; padding: 0.7em 0.3em 0.38em 0.3em; }
+  div.tabContent { border: 1px solid #c9c3ba; padding: 0.5em;  }
+  div.tabContent.hide { display: none; }
+</style>
+
+<script type=\"text/javascript\">
+    //<![CDATA[
+
+    var tabLinks = new Array();
+    var contentDivs = new Array();
+
+    function init() {
+
+      // Grab the tab links and content divs from the page
+      var tabListItems = document.getElementById('tabs').childNodes;
+      for ( var i = 0; i < tabListItems.length; i++ ) {
+        if ( tabListItems[i].nodeName == \"LI\" ) {
+          var tabLink = getFirstChildWithTagName( tabListItems[i], 'A' );
+          var id = getHash( tabLink.getAttribute('href') );
+          tabLinks[id] = tabLink;
+          contentDivs[id] = document.getElementById( id );
+        }
+      }
+
+      // Assign onclick events to the tab links, and
+      // highlight the first tab
+      var i = 0;
+
+      for ( var id in tabLinks ) {
+        tabLinks[id].onclick = showTab;
+        tabLinks[id].onfocus = function() { this.blur() };
+        if ( i == 0 ) tabLinks[id].className = 'selected';
+        i++;
+      }
+
+      // Hide all content divs except the first
+      var i = 0;
+
+      for ( var id in contentDivs ) {
+        if ( i != 0 ) contentDivs[id].className = 'tabContent hide';
+        i++;
+      }
+    }
+
+    function showTab() {
+      var selectedId = getHash( this.getAttribute('href') );
+
+      // Highlight the selected tab, and dim all others.
+      // Also show the selected content div, and hide all others.
+      for ( var id in contentDivs ) {
+        if ( id == selectedId ) {
+          tabLinks[id].className = 'selected';
+          contentDivs[id].className = 'tabContent';
+        } else {
+          tabLinks[id].className = '';
+          contentDivs[id].className = 'tabContent hide';
+        }
+      }
+
+      // Stop the browser following the link
+      return false;
+    }
+
+    function getFirstChildWithTagName( element, tagName ) {
+      for ( var i = 0; i < element.childNodes.length; i++ ) {
+        if ( element.childNodes[i].nodeName == tagName ) return element.childNodes[i];
+      }
+    }
+
+    function getHash( url ) {
+      var hashPos = url.lastIndexOf ( '#' );
+      return url.substring( hashPos + 1 );
+    }
+
+    //]]>
+</script>
+
 ";
 include 'schedulers.txt';
 echo "
-    </head><body>
+    </head><body onload=\"init()\">
 <div id=\"fb-root\"></div>
 <script>(function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0];

@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -378,6 +378,11 @@ report_deadline = "7"
 delete_delay = "5"
 boinc_statistics_delay = "2"
 
+# POGS Settings
+tmp = "/tmp"
+boinc_project_root = "/home/ec2-user/projects/{0}"
+project_name = "{0}"
+
 # AWS settings
 ami_id = "XXX"
 instance_type = "m1.small"
@@ -385,10 +390,16 @@ key_name = "XXX"
 security_groups = "XXX","YYY"
 subnet_ids = "XXX","YYY"
 
-# POGS Settings
-tmp = "/tmp"
-boinc_project_root = "/home/ec2-user/projects/{0}"
-project_name = "{0}"' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.project_name))
+[m1.small]
+    price = 0.060
+
+[XXX]
+    availability_zone = "us-east-1b"
+
+[YYY]
+    availability_zone = "us-east-1c"
+
+' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.project_name))
 
     # Copy the config files
     run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))

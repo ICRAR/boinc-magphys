@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -39,6 +39,11 @@ from utils.name_builder import get_files_bucket
 from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
+
+OUTPUT_FORMAT_1_00 = 'Version 1.00'
+OUTPUT_FORMAT_1_01 = 'Version 1.01'
+OUTPUT_FORMAT_1_02 = 'Version 1.02'
+OUTPUT_FORMAT_1_03 = 'Version 1.03'
 
 PARAMETER_TYPES = ['f_mu (SFH)',
                    'f_mu (IR)',
@@ -480,7 +485,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 # correct x & y for this block
                                 x = raw_x - (block_x * MAX_X_Y_BLOCK)
                                 y = raw_y - (block_y * MAX_X_Y_BLOCK)
-                                LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
+                                #LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
                                 line_number = 0
                                 percentiles_next = False
                                 histogram_next = False
@@ -489,7 +494,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 skip_this_pixel = False
                                 pixel_count += 1
                             else:
-                                LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
+                                #LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
                                 skip_this_pixel = True
                         elif skip_this_pixel:
                             # Do nothing as we're skipping this pixel

@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -27,7 +27,7 @@ The definitions for using SQLAlchemy Core
 
 """
 
-from sqlalchemy import MetaData, Table, Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger, Boolean, Numeric
+from sqlalchemy import MetaData, Table, Column, Integer, String, Float, TIMESTAMP, ForeignKey, BigInteger, Numeric
 
 ##########################################################################
 ##########################################################################
@@ -54,7 +54,7 @@ AREA = Table('area',
              Column('bottom_y', Integer),
              Column('workunit_id', BigInteger),
              Column('update_time', TIMESTAMP)
-)
+             )
 
 AREA_USER = Table('area_user',
                   MAGPHYS_METADATA,
@@ -62,7 +62,7 @@ AREA_USER = Table('area_user',
                   Column('area_id', BigInteger, ForeignKey('area.area_id')),
                   Column('userid', Integer),
                   Column('create_time', TIMESTAMP)
-)
+                  )
 
 FILTER = Table('filter',
                MAGPHYS_METADATA,
@@ -74,7 +74,7 @@ FILTER = Table('filter',
                Column('optical', Integer),
                Column('infrared', Integer),
                Column('label', String(20))
-)
+               )
 
 FITS_HEADER = Table('fits_header',
                     MAGPHYS_METADATA,
@@ -83,7 +83,7 @@ FITS_HEADER = Table('fits_header',
                     Column('keyword', String(128)),
                     Column('value', String(128)),
                     Column('comment', String(128)),
-)
+                    )
 
 GALAXY = Table('galaxy',
                MAGPHYS_METADATA,
@@ -105,13 +105,14 @@ GALAXY = Table('galaxy',
                Column('pixels_processed', Integer),
                Column('status_id', Integer, ForeignKey('galaxy_status.galaxy_status_id')),
                Column('status_time', TIMESTAMP),
-)
+               Column('original_image_checked', TIMESTAMP),
+               )
 
 GALAXY_STATUS = Table('galaxy_status',
                       MAGPHYS_METADATA,
                       Column('galaxy_status_id', Integer, primary_key=True),
                       Column('description', String(250)),
-)
+                      )
 
 IMAGE_FILTERS_USED = Table('image_filters_used',
                            MAGPHYS_METADATA,
@@ -121,14 +122,14 @@ IMAGE_FILTERS_USED = Table('image_filters_used',
                            Column('filter_id_red', Integer, ForeignKey('filter.filter_id')),
                            Column('filter_id_green', Integer, ForeignKey('filter.filter_id')),
                            Column('filter_id_blue', Integer, ForeignKey('filter.filter_id')),
-)
+                           )
 
 PARAMETER_NAME = Table('parameter_name',
                        MAGPHYS_METADATA,
                        Column('parameter_name_id', Integer, primary_key=True, autoincrement=True),
                        Column('name', String(100)),
                        Column('column_name', String(100)),
-)
+                       )
 
 PIXEL_RESULT = Table('pixel_result',
                      MAGPHYS_METADATA,
@@ -154,7 +155,7 @@ PIXEL_RESULT = Table('pixel_result',
                      Column('tvism', Float),
                      Column('mdust', Float),
                      Column('sfr', Float),
-)
+                     )
 
 REGISTER = Table('register',
                  MAGPHYS_METADATA,
@@ -169,7 +170,7 @@ REGISTER = Table('register',
                  Column('register_time', TIMESTAMP, nullable=False),
                  Column('create_time', TIMESTAMP),
                  Column('run_id', BigInteger, ForeignKey('run.run_id'), nullable=False)
-)
+                 )
 
 RUN = Table('run',
             MAGPHYS_METADATA,
@@ -179,11 +180,55 @@ RUN = Table('run',
             Column('directory', String(1000)),
             Column('fpops_est', Float),
             Column('cobblestone_factor', Float),
-)
+            )
 
 RUN_FILTER = Table('run_filter',
                    MAGPHYS_METADATA,
                    Column('run_filter_id', BigInteger, primary_key=True),
                    Column('run_id', BigInteger, ForeignKey('run.run_id')),
                    Column('filter_id', BigInteger, ForeignKey('filter.filter_id'))
-)
+                   )
+
+HDF5_REQUEST = Table('hdf5_request',
+                     MAGPHYS_METADATA,
+                     Column('hdf5_request_id', BigInteger, primary_key=True),
+                     Column('profile_id', BigInteger, nullable=False),
+                     Column('galaxy_id', BigInteger, ForeignKey('galaxy.galaxy_id')),
+                     Column('email', String(200), nullable=False),
+                     Column('link', String(200), nullable=False),
+                     Column('state', Integer, nullable=False),
+                     Column('created_at', TIMESTAMP, nullable=False),
+                     Column('updated_at', TIMESTAMP, nullable=False),
+                     )
+
+HDF5_FEATURE = Table('hdf5_feature',
+                     MAGPHYS_METADATA,
+                     Column('hdf5_feature_id', BigInteger, primary_key=True),
+                     Column('argument_name', String(100), nullable=False),
+                     Column('description', String(100), nullable=False),
+                     Column('created_at', TIMESTAMP, nullable=False),
+                     Column('updated_at', TIMESTAMP, nullable=False),
+                     )
+
+HDF5_LAYER = Table('hdf5_layer',
+                   MAGPHYS_METADATA,
+                   Column('hdf5_layer_id', BigInteger, primary_key=True),
+                   Column('argument_name', String(100), nullable=False),
+                   Column('description', String(100), nullable=False),
+                   Column('created_at', TIMESTAMP, nullable=False),
+                   Column('updated_at', TIMESTAMP, nullable=False),
+                   )
+
+HDF5_REQUEST_FEATURE = Table('hdf5_request_feature',
+                             MAGPHYS_METADATA,
+                             Column('hdf5_request_feature_id', BigInteger, primary_key=True),
+                             Column('hdf5_request_id', BigInteger, ForeignKey('hdf5_request.hdf5_request_id')),
+                             Column('hdf5_feature_id', BigInteger, ForeignKey('hdf5_feature.hdf5_feature_id')),
+                             )
+
+HDF5_REQUEST_LAYER = Table('hdf5_request_layer',
+                           MAGPHYS_METADATA,
+                           Column('hdf5_request_layer_id', BigInteger, primary_key=True),
+                           Column('hdf5_request_id', BigInteger, ForeignKey('hdf5_request.hdf5_request_id')),
+                           Column('hdf5_layer_id', BigInteger, ForeignKey('hdf5_layer.hdf5_layer_id')),
+                           )

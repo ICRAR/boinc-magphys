@@ -5,7 +5,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -28,19 +28,21 @@ Plot data about usage from the BOINC stats
 """
 import logging
 import argparse
-from tools.usage_mod import plot_file_size_histogram
+from plots.usage_mod import get_data
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-parser = argparse.ArgumentParser('Plot graphs of usage from theSkyNet POGS data ')
-parser.add_argument('file', nargs='*', help='the file to plot to')
+parser = argparse.ArgumentParser('Get all the stats data from theSkyNet POGS data ')
+parser.add_argument('output_directory', nargs=1, help='where to put the output files')
 args = vars(parser.parse_args())
 
-if len(args['file']) != 1:
-    parser.print_help()
-    exit(1)
+#ENGINE = create_engine("mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@127.0.0.1:9870/pogs")
+#connection = ENGINE.connect()
+#max_id = connection.execute(select([func.max(USER.c.id)])).first()[0]
+#connection.close()
+#LOG.info('Max Id: %d', max_id)
 
-plot_file_size_histogram(args['file'][0])
+get_data(args['output_directory'][0])
 
 LOG.info('All Done.')

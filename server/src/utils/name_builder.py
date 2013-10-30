@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -26,7 +26,17 @@
 The various name builders used in the project
 """
 import datetime
+import uuid
 from config import POGS_PROJECT_NAME
+
+
+def get_downloads_bucket():
+    """
+    Return the name of the bucket to hold downloads
+
+    :return: the bucket name
+    """
+    return 'icrar.{0}.downloads'.format(POGS_PROJECT_NAME)
 
 
 def get_galaxy_image_bucket():
@@ -54,6 +64,14 @@ def get_archive_bucket():
     :return: the bucket name
     """
     return 'icrar.{0}.archive'.format(POGS_PROJECT_NAME)
+
+
+def get_downloads_url():
+    """
+    Return the URL for the downloads
+    :return:
+    """
+    return 'icrar.{0}.downloads.s3-website-us-east-1.amazonaws.com'.format(POGS_PROJECT_NAME)
 
 
 def get_stats_archive_key(key1, key2):
@@ -167,6 +185,15 @@ def get_build_png_name(galaxy_key_prefix, parameter):
 
 
 def get_ami_log_file(name):
+    """
+    Get the AMI log file
+    :param name:
+    :return:
+    """
     filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
     full_filename = '/home/ec2-user/logs_ami/{0}_{1}'.format(name, filename)
     return filename, full_filename
+
+
+def get_hdf5_to_fits_key(galaxy_name):
+    return '{0}/{1}.tar.gz'.format(str(uuid.uuid4()), galaxy_name)

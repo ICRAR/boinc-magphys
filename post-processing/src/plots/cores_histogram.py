@@ -5,7 +5,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -24,35 +24,53 @@
 #    MA 02111-1307  USA
 #
 """
-Plot data about usage from the BOINC stats
+Build the os stacks
 """
 import logging
 import argparse
-from sqlalchemy import create_engine, select, func
-from config import BOINC_DB_LOGIN
-from database.boinc_database_support_core import USER
-from tools.usage_mod import get_individual_data
-from utils.readable_dir import ReadableDir
+from plots.usage_mod import plot_cores
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
 
-parser = argparse.ArgumentParser('Get individual data from theSkyNet POGS data ')
-parser.add_argument('-d','--dir', action=ReadableDir, nargs=1, help='where the stats files are')
-parser.add_argument('file', nargs='*', help='the file to hold the usage data')
+parser = argparse.ArgumentParser('Plot graphs of OS from theSkyNet POGS data ')
+parser.add_argument('file', nargs='*', help='the file to plot the OS data to')
 args = vars(parser.parse_args())
 
 if len(args['file']) != 1:
     parser.print_help()
     exit(1)
 
-ENGINE = create_engine(BOINC_DB_LOGIN)
-connection = ENGINE.connect()
-max_id = connection.execute(select([func.max(USER.c.id)])).first()[0]
-connection.close()
 
-LOG.info('Max Id: %d', max_id)
+CORES = [
+    [4, 4365],
+    [2, 3486],
+    [8, 2233],
+    [1, 700],
+    [6, 328],
+    [12, 239],
+    [16, 90],
+    [3, 73],
+    [24, 28],
+    [32, 21],
+    [256, 19],
+    [5, 15],
+    [64, 9],
+    [7, 5],
+    [9, 4],
+    [100, 4],
+    [10, 2],
+    [22, 2],
+    [48, 2],
+    [15, 1],
+    [20, 1],
+    [40, 1],
+    [128, 1],
+    [4048, 1],
+]
 
-get_individual_data(args['dir'], args['file'][0], max_id)
+map_of_os = {}
+
+plot_cores(args['file'][0], CORES)
 
 LOG.info('All Done.')

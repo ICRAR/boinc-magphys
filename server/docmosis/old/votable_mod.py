@@ -5,7 +5,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -82,7 +82,7 @@ def getVOTable(url,table_number):
    os.close(file)
    xml_file = tmp[1]
    table = None
-   try: 
+   try:
       req = urllib2.Request(url)
       response = urllib2.urlopen(req,timeout=10)
       with open(xml_file, 'w') as file:

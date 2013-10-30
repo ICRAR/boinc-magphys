@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -28,6 +28,7 @@ Helper functions for EC2
 import random
 import boto
 import time
+import datetime
 from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
 from config import AWS_AMI_ID, AWS_INSTANCE_TYPE, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS
@@ -129,3 +130,30 @@ class EC2Helper:
                 return address.association_id, address.allocation_id
 
         return None, None
+
+    def run_spot_instance(self, cheapest_zone, user_data, boinc_value):
+        """
+        Run the ami as a spot instance
+
+        :param cheapest_zone:
+        :param user_data:
+        :param boinc_value:
+        :return:
+        """
+        pass
+
+    def get_cheapest_spot_zone(self, instance_type):
+        """
+        Find the cheapest spot price in a zone we use
+
+        :param instance_type:
+        :return:
+        """
+        prices = self.ec2_connection.get_spot_price_history(start_time=datetime.datetime.now().isoformat(),
+                                                            instance_type=instance_type,
+                                                            product_description='Linux/UNIX (Amazon VPC)')
+
+        for spot_price in prices:
+            pass
+
+        return None

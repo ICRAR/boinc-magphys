@@ -5,7 +5,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -54,7 +54,8 @@ if args['option'] == 'boinc':
     process_boinc()
 else:
     # We're running from a specially created AMI
-    filename, full_filename = get_ami_log_file('archive_boinc_stats')
+    log_name = 'archive_boinc_stats'
+    filename, full_filename = get_ami_log_file(log_name)
     add_file_handler_to_root(full_filename)
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')
@@ -67,7 +68,7 @@ else:
     try:
         LOG.info('About to copy the log file')
         s3helper = S3Helper()
-        s3helper.add_file_to_bucket(get_archive_bucket(), get_log_archive_key('archive_boinc_stats', filename), full_filename, True)
+        s3helper.add_file_to_bucket(get_archive_bucket(), get_log_archive_key(log_name, filename), full_filename, True)
         os.remove(full_filename)
     except:
         LOG.exception('Failed to copy the log file')

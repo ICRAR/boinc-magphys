@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012
+#    Copyright by UWA, 2012-2013-2013
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -238,6 +238,12 @@ def edit_files():
       <period> 12 hours </period>
       <disabled> 0 </disabled>
       <output> archive_boinc_stats.out </output>
+    </task>
+    <task>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/original_image_checked.py boinc </cmd>
+      <period> 24 hours </period>
+      <disabled> 0 </disabled>
+      <output> original_image_checked.out </output>
     </task>
     <task>
       <cmd> /home/ec2-user/boinc-magphys/server/src/archive/processed_galaxy.py </cmd>
