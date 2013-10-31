@@ -193,10 +193,7 @@ HDF5_REQUEST = Table('hdf5_request',
                      MAGPHYS_METADATA,
                      Column('hdf5_request_id', BigInteger, primary_key=True),
                      Column('profile_id', BigInteger, nullable=False),
-                     Column('galaxy_id', BigInteger, ForeignKey('galaxy.galaxy_id')),
-                     Column('email', String(200), nullable=False),
-                     Column('link', String(200), nullable=False),
-                     Column('state', Integer, nullable=False),
+                     Column('email', String(256), nullable=False),
                      Column('created_at', TIMESTAMP, nullable=False),
                      Column('updated_at', TIMESTAMP, nullable=False),
                      )
@@ -218,6 +215,16 @@ HDF5_LAYER = Table('hdf5_layer',
                    Column('created_at', TIMESTAMP, nullable=False),
                    Column('updated_at', TIMESTAMP, nullable=False),
                    )
+
+HDF5_REQUEST_GALAXY = Table('hdf5_request_galaxy',
+                            MAGPHYS_METADATA,
+                            Column('hdf5_request_galaxy_id', BigInteger, primary_key=True),
+                            Column('hdf5_request_id', BigInteger, ForeignKey('hdf5_request.hdf5_request_id')),
+                            Column('galaxy_id', BigInteger, ForeignKey('galaxy.galaxy_id')),
+                            Column('link', String(1000)),
+                            Column('state', Integer, nullable=False),
+                            Column('link_expires_at', TIMESTAMP)
+                            )
 
 HDF5_REQUEST_FEATURE = Table('hdf5_request_feature',
                              MAGPHYS_METADATA,

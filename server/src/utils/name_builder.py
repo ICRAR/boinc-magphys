@@ -26,7 +26,6 @@
 The various name builders used in the project
 """
 import datetime
-import uuid
 from config import POGS_PROJECT_NAME
 
 
@@ -195,5 +194,12 @@ def get_ami_log_file(name):
     return filename, full_filename
 
 
-def get_hdf5_to_fits_key(galaxy_name):
-    return '{0}/{1}.tar.gz'.format(str(uuid.uuid4()), galaxy_name)
+def get_hdf5_to_fits_key(uuid, galaxy_name):
+    """
+    Get the hdf5 to fits key
+
+    :param uuid:
+    :param galaxy_name:
+    :return:
+    """
+    return '{0}/{1}.tar.gz'.format(uuid, galaxy_name)

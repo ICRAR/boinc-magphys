@@ -35,9 +35,9 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
 from config import DB_LOGIN
-from database.database_support_core import HDF5_REQUEST
+from database.database_support_core import HDF5_REQUEST, HDF5_REQUEST_GALAXY
 from sqlalchemy import create_engine, select
-from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_and_layers
+from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_layers_galaxies
 from utils.logging_helper import config_logger
 
 LOG = config_logger(__name__)
@@ -47,27 +47,16 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 
-for request in connection.execute(select([HDF5_REQUEST]).where(HDF5_REQUEST.c.state == 0)):
-    try:
-        # Mark the request as being processed
-        request_id = request[HDF5_REQUEST.c.hdf5_request_id]
-        connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=1))
-        features, layers = get_features_and_layers(connection, request_id)
-        if len(features) > 0 and len(layers) > 0:
-            url = generate_files(connection=connection,
-                                 galaxy_id=request[HDF5_REQUEST.c.galaxy_id],
-                                 email=request[HDF5_REQUEST.c.email],
-                                 features=features,
-                                 layers=layers)
-            if url is not None:
-                connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=2, link=url))
-            else:
-                connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=3))
-        else:
-            connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=3))
-    except Exception:
-        LOG.exception('An exception occurred')
-        connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(state=3))
+for request in connection.execute(select([HDF5_REQUEST], distinct=True, from_obj=HDF5_REQUEST.join(HDF5_REQUEST_GALAXY)).where(HDF5_REQUEST_GALAXY.c.state == 0)):
+    # Mark the request as being processed
+    request_id = request[HDF5_REQUEST.c.hdf5_request_id]
+    features, layers, hdf5_request_galaxy_ids = get_features_layers_galaxies(connection, request_id)
+    if len(features) > 0 and len(layers) > 0 and len(hdf5_request_galaxy_ids) > 0:
+        generate_files(connection=connection,
+                       hdf5_request_galaxy_ids=hdf5_request_galaxy_ids,
+                       email=request[HDF5_REQUEST.c.email],
+                       features=features,
+                       layers=layers)
 
 LOG.info('All done')
 connection.close()
