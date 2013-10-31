@@ -38,6 +38,7 @@ import uuid
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from sqlalchemy import select
+from sqlalchemy.sql.expression import distinct
 from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
 from config import DELETED, STORED
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY
@@ -110,7 +111,7 @@ def get_features_layers_galaxies(connection, request_id):
     :return:
     """
     features = []
-    for feature in connection.execute(select([HDF5_FEATURE]).select_from(HDF5_FEATURE.join(HDF5_REQUEST_FEATURE)).where(HDF5_REQUEST_FEATURE.c.hdf5_request_id == request_id)):
+    for feature in connection.execute(select([HDF5_FEATURE], distinct=True).select_from(HDF5_FEATURE.join(HDF5_REQUEST_FEATURE)).where(HDF5_REQUEST_FEATURE.c.hdf5_request_id == request_id)):
         if feature[HDF5_FEATURE.c.argument_name] == 'f0':
             features.append('best_fit')
         if feature[HDF5_FEATURE.c.argument_name] == 'f1':
@@ -127,7 +128,7 @@ def get_features_layers_galaxies(connection, request_id):
             features.append('percentile_97_5')
 
     layers = []
-    for layer in connection.execute(select([HDF5_LAYER]).select_from(HDF5_LAYER.join(HDF5_REQUEST_LAYER)).where(HDF5_REQUEST_LAYER.c.hdf5_request_id == request_id)):
+    for layer in connection.execute(select([HDF5_LAYER], distinct=True).select_from(HDF5_LAYER.join(HDF5_REQUEST_LAYER)).where(HDF5_REQUEST_LAYER.c.hdf5_request_id == request_id)):
         if layer[HDF5_LAYER.c.argument_name] == 'l0':
             layers.append('f_mu_sfh')
         if layer[HDF5_LAYER.c.argument_name] == 'l1':
@@ -162,7 +163,7 @@ def get_features_layers_galaxies(connection, request_id):
             layers.append('sfr_0_1gyr')
 
     hdf5_request_galaxy_ids = []
-    for galaxy_request in connection.execute(select([HDF5_REQUEST_GALAXY]).where(HDF5_REQUEST_GALAXY.c.hdf5_request_id == request_id)):
+    for galaxy_request in connection.execute(select([HDF5_REQUEST_GALAXY], distinct=True).where(HDF5_REQUEST_GALAXY.c.hdf5_request_id == request_id)):
         hdf5_request_galaxy_ids.append(HDF5RequestDetails(galaxy_request[HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id], galaxy_request[HDF5_REQUEST_GALAXY.c.galaxy_id]))
 
     return features, layers, hdf5_request_galaxy_ids
