@@ -405,7 +405,7 @@ def get_final_message(results, features, layers):
     string = 'You requested the following galaxies:\n'
     galaxy_count = 0
     for result in results:
-        string += ' * {0}\n'.format(result.galaxy_name)
+        string += '   * {0}\n'.format(result.galaxy_name)
         if galaxy_count == 0:
             subject = result.galaxy_name
         elif galaxy_count < 10:
@@ -417,11 +417,11 @@ def get_final_message(results, features, layers):
 
     string += 'The following features:\n'
     for feature in features:
-        string += ' * {0}\n'.format(feature)
+        string += '   * {0}\n'.format(feature)
 
     string += 'The following layers:\n'
     for layer in layers:
-        string += ' * {0}\n'.format(layer)
+        string += '   * {0}\n'.format(layer)
 
     string += '''
 These files have been put in a gzip files one per galaxy. The files will be available for 10 days and will then be deleted. The links are as follows:
@@ -429,7 +429,7 @@ These files have been put in a gzip files one per galaxy. The files will be avai
     errors = False
     for result in results:
         if result.error is None:
-            string += ' * {0} {1}\n'.format(result.galaxy_name, result.link)
+            string += '   * {0} http://{1}\n'.format(result.galaxy_name, result.link)
         else:
             errors = True
 
