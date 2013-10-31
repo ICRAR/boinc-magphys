@@ -43,7 +43,7 @@ from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORM
 from config import DELETED, STORED
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY
 from utils.logging_helper import config_logger
-from utils.name_builder import get_key_hdf5, get_files_bucket, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url
+from utils.name_builder import get_key_hdf5, get_files_bucket, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 from os.path import dirname, exists
 from configobj import ConfigObj
@@ -298,7 +298,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
                                 file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
 
                         h5_file.close()
-                        url = zip_files(s3Helper, galaxy[GALAXY.c.name], uuid_string, file_names, output_dir)
+                        url = zip_files(s3Helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
                         connection.execute(HDF5_REQUEST_GALAXY.update().
                                            where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
                                            values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))
@@ -415,15 +415,16 @@ def get_final_message(results, features, layers):
             subject += ', ...'
         galaxy_count += 1
 
-    string += 'The following features:\n'
+    string += '\nThe following features:\n'
     for feature in features:
         string += '   * {0}\n'.format(feature)
 
-    string += 'The following layers:\n'
+    string += '\nThe following layers:\n'
     for layer in layers:
         string += '   * {0}\n'.format(layer)
 
     string += '''
+
 These files have been put in a gzip files one per galaxy. The files will be available for 10 days and will then be deleted. The links are as follows:
 '''
     errors = False
@@ -434,7 +435,8 @@ These files have been put in a gzip files one per galaxy. The files will be avai
             errors = True
 
     if errors:
-        string += ''' The following errors occurred:
+        string += '''
+The following errors occurred:
 '''
         for result in results:
             if result.error is not None:

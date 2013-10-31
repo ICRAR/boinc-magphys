@@ -142,19 +142,28 @@ class EC2Helper:
         """
         now = datetime.datetime.now()
         now_plus = now + datetime.timedelta(minutes=5)
-        reservations = self.ec2_connection.request_spot_instances(spot_price,
-                                                                  image_id=AWS_AMI_ID,
-                                                                  count=1,
-                                                                  valid_from=now.isoformat(),
-                                                                  valid_until=now_plus.isoformat(),
-                                                                  instance_type=AWS_INSTANCE_TYPE,
-                                                                  subnet_id=subnet_id,
-                                                                  key_name=AWS_KEY_NAME,
-                                                                  security_group_ids=AWS_SECURITY_GROUPS,
-                                                                  user_data=user_data )
-        instance = reservations.instances[0]
+        request = self.ec2_connection.request_spot_instances(spot_price,
+                                                             image_id=AWS_AMI_ID,
+                                                             count=1,
+                                                             valid_from=now.isoformat(),
+                                                             valid_until=now_plus.isoformat(),
+                                                             instance_type=AWS_INSTANCE_TYPE,
+                                                             subnet_id=subnet_id,
+                                                             key_name=AWS_KEY_NAME,
+                                                             security_group_ids=AWS_SECURITY_GROUPS,
+                                                             user_data=user_data)
+
+        # Wait for EC2 to provision the instance
+        provisioned = False
+        while not provisioned:
+            requests = self.ec2_connection.get_all_spot_instance_requests(request_id=[request[0].request_id])
+            if requests[0].state == '':
+                provisioned = True
+            time.sleep(10)
+
+        instance = request.instances[0]
         time.sleep(5)
-        # TODO
+
         LOG.info('Assigning the tags')
         self.ec2_connection.create_tags([instance.id],
                                         {'BOINC': '{0}'.format(boinc_value),
@@ -203,8 +212,10 @@ class EC2Helper:
             LOG.info('No Spot Price')
             return None
 
-        # The spot price is too high
+        # put the bid price at 10% more than the current price
         bid_price = best_price.price * 1.1
+
+        # The spot price is too high
         if bid_price > AWS_M1_SMALL_DICT['price']:
             LOG.info('Spot Price too high')
             return None
