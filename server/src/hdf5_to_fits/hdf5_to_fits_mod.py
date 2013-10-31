@@ -415,15 +415,16 @@ def get_final_message(results, features, layers):
             subject += ', ...'
         galaxy_count += 1
 
-    string += 'The following features:\n'
+    string += '\nThe following features:\n'
     for feature in features:
         string += '   * {0}\n'.format(feature)
 
-    string += 'The following layers:\n'
+    string += '\nThe following layers:\n'
     for layer in layers:
         string += '   * {0}\n'.format(layer)
 
     string += '''
+
 These files have been put in a gzip files one per galaxy. The files will be available for 10 days and will then be deleted. The links are as follows:
 '''
     errors = False
@@ -434,7 +435,8 @@ These files have been put in a gzip files one per galaxy. The files will be avai
             errors = True
 
     if errors:
-        string += ''' The following errors occurred:
+        string += '''
+The following errors occurred:
 '''
         for result in results:
             if result.error is not None:
