@@ -140,11 +140,13 @@ class EC2Helper:
         :param boinc_value:
         :return:
         """
+        now = datetime.datetime.now()
+        now_plus = now + datetime.timedelta(minutes=5)
         reservations = self.ec2_connection.request_spot_instances(spot_price,
                                                                   image_id=AWS_AMI_ID,
                                                                   count=1,
-                                                                  valid_from=datetime.datetime.now().isoformat(),
-                                                                  valid_until=datetime.datetime.now().isoformat(),
+                                                                  valid_from=now.isoformat(),
+                                                                  valid_until=now_plus.isoformat(),
                                                                   instance_type=AWS_INSTANCE_TYPE,
                                                                   subnet_id=subnet_id,
                                                                   key_name=AWS_KEY_NAME,
@@ -202,17 +204,18 @@ class EC2Helper:
             return None
 
         # The spot price is too high
-        if best_price.price > AWS_M1_SMALL_DICT['price']:
+        bid_price = best_price.price * 1.1
+        if bid_price > AWS_M1_SMALL_DICT['price']:
             LOG.info('Spot Price too high')
             return None
 
         LOG.info('Spot Price {0} - {1}'.format(best_price.price, best_price.availability_zone))
-        return best_price
 
-    def get_bid_price_and_subnet(self, spot_price):
-        """
+        # Now get the subnet id
+        subnet_id = None
+        for key, value in AWS_SUBNET_DICT.iteritems():
+            if value['availability_zone'] == best_price.availability_zone:
+                subnet_id = key
+                break
 
-        :param spot_price:
-        :return:
-        """
-        pass
+        return bid_price, subnet_id

@@ -25,6 +25,7 @@
 """
 The functions to convert an HDF5 layer to a fits file
 """
+import traceback
 import pyfits
 import os
 import shutil
@@ -33,12 +34,13 @@ import tarfile
 import tempfile
 import numpy
 import h5py
-from datetime import datetime
+import uuid
+from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from sqlalchemy import select
 from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
 from config import DELETED, STORED
-from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY
+from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY
 from utils.logging_helper import config_logger
 from utils.name_builder import get_key_hdf5, get_files_bucket, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url
 from utils.s3_helper import S3Helper
@@ -100,9 +102,9 @@ LAYERS = {
 }
 
 
-def get_features_and_layers(connection, request_id):
+def get_features_layers_galaxies(connection, request_id):
     """
-    Get the features and layers
+    Get the features, layers and hdf5_request_galaxy_ids
     :param connection: the database connection
     :param request_id: the request id
     :return:
@@ -159,7 +161,11 @@ def get_features_and_layers(connection, request_id):
         if layer[HDF5_LAYER.c.argument_name] == 'l15':
             layers.append('sfr_0_1gyr')
 
-    return features, layers
+    hdf5_request_galaxy_ids = []
+    for galaxy_request in connection.execute(select([HDF5_REQUEST_GALAXY]).where(HDF5_REQUEST_GALAXY.c.hdf5_request_id == request_id)):
+        hdf5_request_galaxy_ids.append(HDF5RequestDetails(galaxy_request[HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id], galaxy_request[HDF5_REQUEST_GALAXY.c.galaxy_id]))
+
+    return features, layers, hdf5_request_galaxy_ids
 
 
 def get_features_and_layers_cmd_line(args):
@@ -248,52 +254,76 @@ def get_temp_file(extension, file_name, output_dir):
     return tmp[1]
 
 
-def generate_files(connection, galaxy_id, email, features, layers):
+def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers):
     """
     Get the FITS files for this request
 
-    :param galaxy_id: the galaxy id
+    :param hdf5_request_galaxy_ids: the galaxy id
     :param email:
     :param features:
     :param layers:
     :return:
     """
-    url = None
-    galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
-    LOG.info('Processing {0} ({1}) for {2}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], email))
-
-    # make sure the galaxy is available
-    if galaxy[GALAXY.c.status_id] == STORED or galaxy[GALAXY.c.status_id] == DELETED:
-        output_dir = tempfile.mkdtemp()
+    uuid_string = str(uuid.uuid4())
+    results = []
+    for hdf5_request_galaxy in hdf5_request_galaxy_ids:
+        result = HDF5ToFitsResult()
+        results.append(result)
+        connection.execute(HDF5_REQUEST_GALAXY.update().where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).values(state=1))
         try:
-            s3Helper = S3Helper()
-            LOG.info('Getting HDF5 file to {0}'.format(output_dir))
-            tmp_file = get_hdf5_file(s3Helper, output_dir, galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
-            LOG.info('File stored in {0}'.format(tmp_file))
+            galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
+            result.galaxy_name = galaxy[GALAXY.c.name]
+            LOG.info('Processing {0} ({1}) for {2}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], email))
 
-            # We have the file
-            if os.path.isfile(tmp_file):
-                h5_file = h5py.File(tmp_file, 'r')
-                galaxy_group = h5_file['galaxy']
-                pixel_group = galaxy_group['pixel']
+            # make sure the galaxy is available
+            if galaxy[GALAXY.c.status_id] == STORED or galaxy[GALAXY.c.status_id] == DELETED:
+                output_dir = tempfile.mkdtemp()
+                try:
+                    s3Helper = S3Helper()
+                    LOG.info('Getting HDF5 file to {0}'.format(output_dir))
+                    tmp_file = get_hdf5_file(s3Helper, output_dir, galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+                    LOG.info('File stored in {0}'.format(tmp_file))
 
-                file_names = []
-                for feature in features:
-                    for layer in layers:
-                        LOG.info('Processing {0} - {1}'.format(feature, layer))
-                        file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
+                    # We have the file
+                    if os.path.isfile(tmp_file):
+                        h5_file = h5py.File(tmp_file, 'r')
+                        galaxy_group = h5_file['galaxy']
+                        pixel_group = galaxy_group['pixel']
 
-                h5_file.close()
-                url = zip_files_and_email(s3Helper, galaxy[GALAXY.c.name], email, file_names, output_dir)
+                        file_names = []
+                        for feature in features:
+                            for layer in layers:
+                                LOG.info('Processing {0} - {1}'.format(feature, layer))
+                                file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
 
-        finally:
-            # Delete the temp files now we're done
-            shutil.rmtree(output_dir)
+                        h5_file.close()
+                        url = zip_files(s3Helper, galaxy[GALAXY.c.name], uuid_string, file_names, output_dir)
+                        connection.execute(HDF5_REQUEST_GALAXY.update().
+                                           where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
+                                           values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))
+                        result.error = None
+                        result.link = url
+                finally:
+                    # Delete the temp files now we're done
+                    shutil.rmtree(output_dir)
 
-    return url
+            else:
+                connection.execute(HDF5_REQUEST_GALAXY.update().
+                                   where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
+                                   values(state=3))
+                result.error = 'Cannot process {0} ({1}) as the HDF5 file has not been generated'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id])
+                LOG.info(result.error)
+        except:
+            LOG.error('Major error')
+            result.error = traceback.format_exc()
+            connection.execute(HDF5_REQUEST_GALAXY.update().
+                               where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
+                               values(state=3))
+
+    send_email(email, results, features, layers)
 
 
-def zip_files_and_email(s3Helper, galaxy_name, email, file_names, output_dir):
+def zip_files(s3Helper, galaxy_name, uuid_string, file_names, output_dir):
     """
     Zip the files and send the email
 
@@ -307,29 +337,29 @@ def zip_files_and_email(s3Helper, galaxy_name, email, file_names, output_dir):
 
     # Copy to S3
     bucket_name = get_downloads_bucket()
-    key = get_hdf5_to_fits_key(galaxy_name)
+    key = get_hdf5_to_fits_key(uuid_string, galaxy_name)
     s3Helper.add_file_to_bucket(bucket_name, key, tar_file)
     url = '{0}/{1}'.format(get_downloads_url(), key)
-
-    # Email
-    send_email(email, get_final_message(galaxy_name, file_names, url), galaxy_name)
 
     return url
 
 
-def send_email(email, message, galaxy_name):
+def send_email(email, results, features, layers):
     """
     Send and email to the user with a message
     :param email: the users email address
-    :param message: the message to send the user
-    :param galaxy_name: the galaxy name
+    :param results: the results
+    :param features: the features
+    :param layers: the layers
     :return:
     """
-
+    subject, message = get_final_message(results, features, layers)
     # Build the message
-    print('send_email {0} {1} {2}'.format(email, galaxy_name, message))
+    LOG.info('''send_email {0}
+{1}
+{2}'''.format(email, subject, message))
     message = MIMEText(message)
-    message['Subject'] = galaxy_name
+    message['Subject'] = subject
     message['To'] = email
     message['From'] = FROM_EMAIL
 
@@ -361,24 +391,45 @@ def zip_up_files(galaxy_name, file_names, output_dir):
     return tar_file_name
 
 
-def get_final_message(galaxy_name, file_names, uuid_string):
+def get_final_message(results, features, layers):
     """
     Build the email message to send
 
-    :param uuid_string: the UUID string
-    :param galaxy_name: the galaxy name
-    :param file_names: the files built
+    :param results: the UUID string
+    :param features: the features
+    :param layers: the layers
     :return: the built message
     """
-    string = 'The files you requested for the galaxy {0} are:\n'.format(galaxy_name)
-    for file_name in file_names:
-        string += ' * {0}\n'.format(os.path.basename(file_name))
+    string = 'You requested for the following galaxies:\n'
+    for result in results:
+        string += ' * {0}\n'.format(result.galaxy_name)
+
+    string += 'The following features:\n'
+    for feature in features:
+        string += ' * {0}\n'.format(feature)
+
+    string += 'The following layers:\n'
+    for layer in layers:
+        string += ' * {0}\n'.format(layer)
+
     string += '''
-These files have been put in a gzip file called {0}.tar.gz.
+These files have been put in a gzip files one per galaxy. The files will be available for 10 days and will then be deleted. The links are as follows:
+'''
+    errors = False
+    for result in results:
+        if result.error is None:
+            string += ' * {0} {1}\n'.format(result.galaxy_name, result.link)
+        else:
+            errors = True
 
-The file is available for download from http://{1}.
-
-The file will be available for 10 days and will then be deleted.'''.format(galaxy_name, uuid_string)
+    if errors:
+        string += ''' The following errors occurred:
+'''
+        for result in results:
+            if result.error is not None:
+                string += '''-- {0} --
+{1}
+'''.format(result.galaxy_name, result.error)
     return string
 
 
@@ -452,3 +503,16 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group
     file_name = os.path.join(output_directory, '{0}.{1}.{2}.fits'.format(galaxy_name, feature, layer))
     hdu_list.writeto(file_name, clobber=True)
     return file_name
+
+
+class HDF5RequestDetails:
+    def __init__(self, hdf5_request_galaxy_id, galaxy_id):
+        self.hdf5_request_galaxy_id = hdf5_request_galaxy_id
+        self.galaxy_id = galaxy_id
+
+
+class HDF5ToFitsResult:
+    def __init__(self):
+        self.link = None
+        self.error = None
+        self.galaxy_name = None

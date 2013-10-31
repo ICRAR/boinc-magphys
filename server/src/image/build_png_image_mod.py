@@ -135,9 +135,8 @@ def build_png_image_boinc():
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
-        spot_price = ec2_helper.get_cheapest_spot_price(M1_SMALL)
-        if spot_price is not None:
-            bid_price, subnet_id = ec2_helper.get_bid_price_and_subnet(spot_price)
+        bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(M1_SMALL)
+        if bid_price is not None and subnet_id is not None:
             ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BOINC_VALUE)
         else:
             ec2_helper.run_instance(USER_DATA, BOINC_VALUE)

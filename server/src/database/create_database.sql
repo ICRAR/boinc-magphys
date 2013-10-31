@@ -245,16 +245,10 @@ CREATE TABLE image_filters_used (
 CREATE TABLE hdf5_request (
   hdf5_request_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   profile_id      BIGINT UNSIGNED NOT NULL,
-  galaxy_id       BIGINT UNSIGNED NOT NULL,
-  email           VARCHAR(200) NOT NULL,
-  link            VARCHAR(200),
-  state           SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  email           VARCHAR(256) NOT NULL,
   created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
-  FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id),
-
-  INDEX (state)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE hdf5_feature (
@@ -277,10 +271,24 @@ CREATE TABLE hdf5_layer (
   updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+CREATE TABLE hdf5_request_galaxy (
+  hdf5_request_galaxy_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  hdf5_request_id        BIGINT UNSIGNED NOT NULL,
+  galaxy_id              BIGINT UNSIGNED NOT NULL,
+  link                   VARCHAR(1000),
+  state                  SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  link_expires_at        TIMESTAMP,
+
+  FOREIGN KEY (hdf5_request_id) REFERENCES hdf5_request(hdf5_request_id),
+  FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id),
+
+  INDEX (state)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
 CREATE TABLE hdf5_request_feature (
   hdf5_request_feature_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  hdf5_request_id BIGINT UNSIGNED NOT NULL,
-  hdf5_feature_id BIGINT UNSIGNED NOT NULL,
+  hdf5_request_id         BIGINT UNSIGNED NOT NULL,
+  hdf5_feature_id         BIGINT UNSIGNED NOT NULL,
 
   FOREIGN KEY (hdf5_request_id) REFERENCES hdf5_request(hdf5_request_id),
   FOREIGN KEY (hdf5_feature_id) REFERENCES hdf5_feature(hdf5_feature_id)
@@ -289,8 +297,8 @@ CREATE TABLE hdf5_request_feature (
 
 CREATE TABLE hdf5_request_layer (
   hdf5_request_layer_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  hdf5_request_id BIGINT UNSIGNED NOT NULL,
-  hdf5_layer_id BIGINT UNSIGNED NOT NULL,
+  hdf5_request_id       BIGINT UNSIGNED NOT NULL,
+  hdf5_layer_id         BIGINT UNSIGNED NOT NULL,
 
   FOREIGN KEY (hdf5_request_id) REFERENCES hdf5_request(hdf5_request_id),
   FOREIGN KEY (hdf5_layer_id) REFERENCES hdf5_layer(hdf5_layer_id)
