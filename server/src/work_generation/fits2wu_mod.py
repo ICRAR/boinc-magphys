@@ -712,4 +712,4 @@ class Fit2Wu:
         :return:
         """
         for tag_register in self._connection.execute(select([TAG_REGISTER]).where(TAG_REGISTER.c.register_id == register_id)):
-            self._connection.execute(TAG_GALAXY.insert().values(galaxy_id=self._galaxy_id, tag_id=tag_register[TAG_GALAXY.c.tag_id]))
+            self._connection.execute(TAG_GALAXY.insert().values(galaxy_id=self._galaxy_id, tag_id=tag_register[TAG_REGISTER.c.tag_id]))
