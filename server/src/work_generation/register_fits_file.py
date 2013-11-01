@@ -97,7 +97,7 @@ tag_ids = set()
 for tag in TAGS:
     tag = tag.strip()
     if len(tag) > 0:
-        tag_id = connection.execute(select([TAG.c.tag_id]).where(TAG.c.tag_text == tag)).first()
+        tag_id = connection.execute(select([TAG.c.tag_id]).where(TAG.c.tag_text == tag)).first()[0]
         if tag_id is None:
             result = connection.execute(TAG.insert(),
                                         tag_text=tag)
