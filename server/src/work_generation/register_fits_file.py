@@ -95,7 +95,7 @@ register_id = result.inserted_primary_key[0]
 tag_ids = set()
 for tag_text in TAGS:
     tag_text = tag_text.strip()
-    if len(tag) > 0:
+    if len(tag_text) > 0:
         tag = connection.execute(select([TAG]).where(TAG.c.tag_text == tag_text)).first()
         if tag is None:
             tag_id = tag[TAG.c.tag_id]
