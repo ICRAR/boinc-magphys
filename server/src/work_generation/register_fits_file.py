@@ -90,19 +90,21 @@ result = connection.execute(REGISTER.insert(),
                             sigma_filename=sigma_filename)
 
 register_id = result.inserted_primary_key[0]
-LOG.info('{0} - {1}'.format(type(register_id), register_id))
 
 # Get the tag ids
 tag_ids = set()
-for tag in TAGS:
-    tag = tag.strip()
+for tag_text in TAGS:
+    tag_text = tag_text.strip()
     if len(tag) > 0:
-        tag_id = connection.execute(select([TAG.c.tag_id]).where(TAG.c.tag_text == tag)).first()[0]
-        if tag_id is None:
+        tag = connection.execute(select([TAG]).where(TAG.c.tag_text == tag_text)).first()
+        if tag is None:
+            tag_id = tag[TAG.c.tag_id]
             result = connection.execute(TAG.insert(),
                                         tag_text=tag)
             tag_id = result.inserted_primary_key[0]
-            LOG.info('{0} - {1}'.format(type(tag_id), tag_id))
+        else:
+            tag_id = tag[TAG.c.tag_id]
+
         tag_ids.add(tag_id)
 
 # Add the tag ids
