@@ -29,11 +29,12 @@ Register a FITS file ready to be converted into Work Units
 import argparse
 import sys
 from datetime import datetime
+from sqlalchemy import select
 from utils.logging_helper import config_logger
 import os
 from sqlalchemy.engine import create_engine
 from config import DB_LOGIN
-from database.database_support_core import REGISTER
+from database.database_support_core import REGISTER, TAG_REGISTER, TAG
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
@@ -46,6 +47,7 @@ parser.add_argument('type', nargs=1, help='the hubble type')
 parser.add_argument('sigma', nargs=1, help='the error in the observations or the file with the per pixel error')
 parser.add_argument('priority', type=int, nargs=1, help='the higher the number the higher the priority')
 parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')
+parser.add_argument('tags', nargs='*', help='any tags to be associated with the galaxy')
 
 args = vars(parser.parse_args())
 
@@ -56,6 +58,7 @@ GALAXY_TYPE = args['type'][0]
 PRIORITY = args['priority'][0]
 SIGMA = args['sigma'][0]
 RUN_ID = args['run_id'][0]
+TAGS = args['tags']
 
 # Make sure the file exists
 if not os.path.isfile(INPUT_FILE):
@@ -75,16 +78,37 @@ except ValueError:
     sigma = 0.0
     sigma_filename = SIGMA
 
-connection.execute(REGISTER.insert(),
-                   galaxy_name=GALAXY_NAME,
-                   redshift=REDSHIFT,
-                   galaxy_type=GALAXY_TYPE,
-                   filename=INPUT_FILE,
-                   priority=PRIORITY,
-                   register_time=datetime.now(),
-                   run_id=RUN_ID,
-                   sigma=sigma,
-                   sigma_filename=sigma_filename)
+result = connection.execute(REGISTER.insert(),
+                            galaxy_name=GALAXY_NAME,
+                            redshift=REDSHIFT,
+                            galaxy_type=GALAXY_TYPE,
+                            filename=INPUT_FILE,
+                            priority=PRIORITY,
+                            register_time=datetime.now(),
+                            run_id=RUN_ID,
+                            sigma=sigma,
+                            sigma_filename=sigma_filename)
+
+register_id = result.inserted_primary_key[0]
+
+# Get the tag ids
+tag_ids = set()
+for tag in TAGS:
+    tag = tag.strip()
+    if len(tag) > 0:
+        tag_id = connection.execute(select([TAG.c.tag_id]).where(TAG.c.tag_text == tag)).first()
+        if tag_id is None:
+            result = connection.execute(TAG.insert(),
+                                        tag_text=tag)
+            tag_id = result.inserted_primary_key[0]
+        tag_ids.add(tag_id)
+
+# Add the tag ids
+for tag_id in tag_ids:
+    connection.execute(TAG_REGISTER.insert(),
+                       tag_id=tag_id,
+                       register_id=register_id)
+
 transaction.commit()
 
 LOG.info('Registered %s %s %f %s %d %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY, RUN_ID)

@@ -39,7 +39,7 @@ import subprocess
 from datetime import datetime
 from sqlalchemy.sql.expression import select
 from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
-from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN
+from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
 from utils.s3_helper import S3Helper
@@ -175,6 +175,9 @@ class Fit2Wu:
                                                                  run_id=self._run_id))
         self._galaxy_id = result.inserted_primary_key[0]
         LOG.info("Writing %s to database", self._galaxy_name)
+
+        # Store the tags
+        self._store_tags(registration[REGISTER.c.register_id])
 
         # Store the fits header
         self._store_fits_header()
@@ -701,3 +704,12 @@ class Fit2Wu:
                     dec_deg_found = True
 
             index += 1
+
+    def _store_tags(self, register_id):
+        """
+        Copy the tags to the galaxy
+        :param register_id:
+        :return:
+        """
+        for tag_register in self._connection.execute(select([TAG_REGISTER]).where(TAG_REGISTER.c.register_id == register_id)):
+            self._connection.execute(TAG_GALAXY.insert().values(galaxy_id=self._galaxy_id, tag_id=tag_register[TAG_GALAXY.c.tag_id]))

@@ -43,7 +43,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import and_, func, select
 from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
 from database.boinc_database_support_core import RESULT
-from database.database_support_core import REGISTER
+from database.database_support_core import REGISTER, TAG_REGISTER
 from work_generation.fits2wu_mod import Fit2Wu, MIN_QUORUM
 
 LOG = config_logger(__name__)
@@ -117,6 +117,7 @@ else:
                     if registration.sigma_filename is not None and os.path.exists(registration.sigma_filename):
                         os.remove(registration[REGISTER.c.sigma_filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
+                connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
 
     # We want an explict galaxy to load
     else:
@@ -141,6 +142,7 @@ else:
                 if registration[REGISTER.c.sigma_filename] is not None:
                     os.remove(registration[REGISTER.c.sigma_filename])
                 connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
+            connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
 
     LOG.info('Done - added %d Results', files_processed)
 
