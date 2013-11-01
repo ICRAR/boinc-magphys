@@ -99,7 +99,7 @@ for tag_text in TAGS:
         tag = connection.execute(select([TAG]).where(TAG.c.tag_text == tag_text)).first()
         if tag is None:
             result = connection.execute(TAG.insert(),
-                                        tag_text=tag)
+                                        tag_text=tag_text)
             tag_id = result.inserted_primary_key[0]
         else:
             tag_id = tag[TAG.c.tag_id]
