@@ -90,6 +90,7 @@ result = connection.execute(REGISTER.insert(),
                             sigma_filename=sigma_filename)
 
 register_id = result.inserted_primary_key[0]
+LOG.info('{0} - {1}'.format(type(register_id), register_id))
 
 # Get the tag ids
 tag_ids = set()
@@ -101,6 +102,7 @@ for tag in TAGS:
             result = connection.execute(TAG.insert(),
                                         tag_text=tag)
             tag_id = result.inserted_primary_key[0]
+            LOG.info('{0} - {1}'.format(type(tag_id), tag_id))
         tag_ids.add(tag_id)
 
 # Add the tag ids
