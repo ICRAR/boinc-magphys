@@ -98,7 +98,6 @@ for tag_text in TAGS:
     if len(tag_text) > 0:
         tag = connection.execute(select([TAG]).where(TAG.c.tag_text == tag_text)).first()
         if tag is None:
-            tag_id = tag[TAG.c.tag_id]
             result = connection.execute(TAG.insert(),
                                         tag_text=tag)
             tag_id = result.inserted_primary_key[0]
