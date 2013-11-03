@@ -115,3 +115,5 @@ for tag_id in tag_ids:
 transaction.commit()
 
 LOG.info('Registered %s %s %f %s %d %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY, RUN_ID)
+for tag_text in TAGS:
+    LOG.info('Tag: {0}'.format(tag_text))
