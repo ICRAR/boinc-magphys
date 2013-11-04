@@ -45,12 +45,14 @@ USER_DATA = '''#!/bin/bash
 # Sleep for a while to let everything settle down
 sleep 10s
 
+# For testing
+sleep 100s
 # Has the NFS mounted properly?
-if [ -d '/home/ec2-user/boinc-magphys/server' ]
-then
+#if [ -d '/home/ec2-user/boinc-magphys/server' ]
+#then
     # We are root so we have to run this via sudo to get access to the ec2-user details
-    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/image/build_png_image.py ami'
-fi
+#    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/image/build_png_image.py ami'
+#fi
 
 # All done terminate
 shutdown -h now

@@ -140,35 +140,39 @@ class EC2Helper:
         :param boinc_value:
         :return:
         """
-        now = datetime.datetime.now()
-        now_plus = now + datetime.timedelta(minutes=5)
-        request = self.ec2_connection.request_spot_instances(spot_price,
-                                                             image_id=AWS_AMI_ID,
-                                                             count=1,
-                                                             valid_from=now.isoformat(),
-                                                             valid_until=now_plus.isoformat(),
-                                                             instance_type=AWS_INSTANCE_TYPE,
-                                                             subnet_id=subnet_id,
-                                                             key_name=AWS_KEY_NAME,
-                                                             security_group_ids=AWS_SECURITY_GROUPS,
-                                                             user_data=user_data)
+        now_plus = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+        spot_request = self.ec2_connection.request_spot_instances(spot_price,
+                                                                  image_id=AWS_AMI_ID,
+                                                                  count=1,
+                                                                  valid_until=now_plus.isoformat(),
+                                                                  instance_type=AWS_INSTANCE_TYPE,
+                                                                  subnet_id=subnet_id,
+                                                                  key_name=AWS_KEY_NAME,
+                                                                  security_group_ids=AWS_SECURITY_GROUPS,
+                                                                  user_data=user_data)
 
         # Wait for EC2 to provision the instance
-        provisioned = False
-        while not provisioned:
-            requests = self.ec2_connection.get_all_spot_instance_requests(request_id=[request[0].request_id])
-            if requests[0].state == '':
-                provisioned = True
-            time.sleep(10)
+        instance_id = None
+        while instance_id is None:
+            spot_request_id = spot_request[0].id
+            requests = self.ec2_connection.get_all_spot_instance_requests(request_ids=[spot_request_id])
+            LOG.info('{0}, state: {1}, status:{2}'.format(spot_request_id, requests[0].state, requests[0].status))
+            if requests[0].state == 'active' and requests[0].status.code == 'fulfilled':
+                instance_id = requests[0].instance_id
+            elif requests[0].state == 'cancelled':
+                raise CancelledException('Request {0} cancelled. Status: {1}'.format(spot_request_id, requests[0].status))
+            else:
+                time.sleep(10)
 
-        instance = request.instances[0]
-        time.sleep(5)
-
+        # Give it time to settle down
         LOG.info('Assigning the tags')
-        self.ec2_connection.create_tags([instance.id],
+        self.ec2_connection.create_tags([instance_id],
                                         {'BOINC': '{0}'.format(boinc_value),
                                          'Name': 'pogs-{0}'.format(boinc_value),
                                          'Created By': 'pogs'})
+
+        reservations = self.ec2_connection.get_all_instances(instance_ids=[instance_id])
+        instance = reservations[0].instances[0]
 
         LOG.info('Allocating a VPC public IP address')
         allocation = self.ec2_connection.allocate_address('vpc')
@@ -176,10 +180,10 @@ class EC2Helper:
             LOG.info('Not running yet')
             time.sleep(1)
 
-        if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
+        if self.ec2_connection.associate_address(public_ip=None, instance_id=instance_id, allocation_id=allocation.allocation_id):
             LOG.info('Allocated a VPC public IP address')
         else:
-            LOG.error('Could not associate the IP to the instance {0}'.format(instance.id))
+            LOG.error('Could not associate the IP to the instance {0}'.format(instance_id))
             self.ec2_connection.release_address(allocation_id=allocation.allocation_id)
 
     def get_cheapest_spot_price(self, instance_type):
@@ -204,7 +208,7 @@ class EC2Helper:
             if spot_price.availability_zone not in availability_zones:
                 # Ignore this one
                 LOG.info('Ignoring spot price {0} - {1}'.format(spot_price.price, spot_price.availability_zone))
-            elif best_price is None:
+            elif spot_price.price != 0.0 and best_price is None:
                 best_price = spot_price
             elif spot_price.price != 0.0 and spot_price.price < best_price.price:
                 best_price = spot_price
@@ -212,8 +216,8 @@ class EC2Helper:
             LOG.info('No Spot Price')
             return None
 
-        # put the bid price at 10% more than the current price
-        bid_price = best_price.price * 1.1
+        # put the bid price at 15% more than the current price
+        bid_price = best_price.price * 1.15
 
         # The spot price is too high
         if bid_price > AWS_M1_SMALL_DICT['price']:
@@ -230,3 +234,10 @@ class EC2Helper:
                 break
 
         return bid_price, subnet_id
+
+
+class CancelledException(Exception):
+    """
+    The request has been cancelled
+    """
+    pass
