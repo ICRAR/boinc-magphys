@@ -5,13 +5,13 @@ concat(round(sum(data_length)/(1024*1024*1024),2),'G') DATA,
 concat(round(sum(index_length)/(1024*1024*1024),2),'G') idx,
 concat(round(sum(data_length+index_length)/(1024*1024*1024),2),'G') total_size,
 round(sum(index_length)/sum(data_length),2) idxfrac
-FROM information_schema.TABLES 
+FROM information_schema.TABLES
 group by table_schema;
 
-select table_schema, table_name, 
-	round(((data_length) / (1024*1024)),2) as 'Data (M)', 
-	round(((index_length) / (1024*1024)),2) as 'Index (M)' 
-from information_schema.tables 
+select table_schema, table_name,
+	round(((data_length) / (1024*1024)),2) as 'Data (M)',
+	round(((index_length) / (1024*1024)),2) as 'Index (M)'
+from information_schema.tables
 where table_schema in ('magphys', 'pogs')
 order by table_schema, table_name;
 
@@ -32,3 +32,21 @@ WHERE table_schema in ('magphys','pogs')
 ORDER BY (data_length+index_length);
 
 show variables like 'innodb%';
+
+-- How to empty the database
+truncate table result;
+truncate table workunit;
+
+truncate table pixel_result;
+truncate table fits_header;
+truncate table area_user;
+delete from area;
+truncate table image_filters_used;
+truncate table tag_galaxy;
+truncate table tag_register;
+delete from tag;
+truncate table user_pixel;
+delete from galaxy;
+delete from register;
+
+

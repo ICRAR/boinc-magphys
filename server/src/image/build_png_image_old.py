@@ -1,3 +1,4 @@
+#! /usr/bin/env python2.7
 #
 #    (c) UWA, The University of Western Australia
 #    M468/35 Stirling Hwy
@@ -23,40 +24,53 @@
 #    MA 02111-1307  USA
 #
 """
-The code to build a PNG image
+Build a PNG image from the data in the database
 """
+import os
+import sys
+
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '../')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
+
+import argparse
 import math
-import datetime
 import numpy
-from sqlalchemy import create_engine, select, and_
-from config import DB_LOGIN, POGS_TMP, M1_SMALL
-from database.database_support_core import GALAXY, AREA, PIXEL_RESULT
-from utils.ec2_helper import EC2Helper
+import datetime
 from utils.logging_helper import config_logger
 from utils.name_builder import get_galaxy_image_bucket, get_build_png_name, get_galaxy_file_name
-from utils.s3_helper import S3Helper
+from sqlalchemy.engine import create_engine
+from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import and_
+from config import DB_LOGIN, POGS_TMP
+from image import fitsimage
+from database.database_support_core import AREA, GALAXY, PIXEL_RESULT
 from PIL import Image
+from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-BOINC_VALUE = 'build_png_image'
-USER_DATA = '''#!/bin/bash
+parser = argparse.ArgumentParser('Build images from the POGS results')
+parser.add_argument('names', nargs='*', help='optional the name of the galaxies to produce')
+parser.add_argument('-all', action='store_true', help='build images for all the galaxies')
+args = vars(parser.parse_args())
 
-# Sleep for a while to let everything settle down
-sleep 10s
+# First check the galaxy exists in the database
+engine = create_engine(DB_LOGIN)
+connection = engine.connect()
 
-# For testing
-#sleep 1000s
-# Has the NFS mounted properly?
-if [ -d '/home/ec2-user/boinc-magphys/server' ]
-then
-    # We are root so we have to run this via sudo to get access to the ec2-user details
-    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/image/build_png_image1.py ami'
-fi
-
-# All done terminate
-shutdown -h now
-'''
+query = select([GALAXY]).distinct()
+if len(args['names']) > 0:
+    LOG.info('Building PNG files for the galaxies {0}'.format(args['names']))
+    query = query.where(GALAXY.c.name.in_(args['names']))
+elif args['all']:
+    LOG.info('Building PNG files for all the galaxies')
+    query = query.order_by(GALAXY.c.name)
+else:
+    LOG.info('Building PNG files for updated galaxies')
+    query = query.where(and_(AREA.c.galaxy_id == GALAXY.c.galaxy_id, AREA.c.update_time >= GALAXY.c.image_time))
 
 IMAGE_NAMES = ['fmu_sfh',
                'fmu_ir',
@@ -122,128 +136,100 @@ FIRE_B = [0, 7, 15, 22, 30, 38, 45, 53, 61, 65, 69, 74, 78,
           152, 160, 167, 175, 183, 191, 199, 207, 215, 223, 227, 231, 235, 239, 243, 247, 251, 255,
           255, 255, 255, 255, 255, 255, 255]
 
+fits_image = fitsimage.FitsImage(connection)
+galaxy_count = 0
+s3helper = S3Helper()
+bucket_name = get_galaxy_image_bucket()
+for galaxy in connection.execute(query):
+    LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
+    array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(PNG_IMAGE_NAMES)), dtype=numpy.float)
+    array.fill(numpy.NaN)
 
-def build_png_image_boinc():
-    """
-    We're running the process on the BOINC server.
+    # Return the rows
+    pixel_count = 0
+    pixels_processed = 0
+    for row in connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])):
+        row__x = row[PIXEL_RESULT.c.x]
+        row__y = row[PIXEL_RESULT.c.y]
+        pixel_count += 1
+        if row[PIXEL_RESULT.c.mu] is not None and row[PIXEL_RESULT.c.m] is not None and row[PIXEL_RESULT.c.ldust] is not None and row[PIXEL_RESULT.c.sfr] is not None:
+            pixels_processed += 1
 
-    Check if an instance is still running, if not start it up.
-    :return:
-    """
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_helper = EC2Helper()
-
-    if ec2_helper.boinc_instance_running(BOINC_VALUE):
-        LOG.info('A previous instance is still running')
-    else:
-        LOG.info('Starting up the instance')
-        bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(M1_SMALL)
-        if bid_price is not None and subnet_id is not None:
-            ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BOINC_VALUE)
-        else:
-            ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
-
-
-def build_png_image_ami():
-    """
-    Build the images
-
-    :return:
-    """
-    # First check the galaxy exists in the database
-    engine = create_engine(DB_LOGIN)
-    connection = engine.connect()
-
-    query = select([GALAXY]).distinct().where(and_(AREA.c.galaxy_id == GALAXY.c.galaxy_id, AREA.c.update_time >= GALAXY.c.image_time))
-
-    galaxy_count = 0
-    s3helper = S3Helper()
-    bucket_name = get_galaxy_image_bucket()
-    for galaxy in connection.execute(query):
-        LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
-        array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(PNG_IMAGE_NAMES)), dtype=numpy.float)
-        array.fill(numpy.NaN)
-
-        # Return the rows
-        pixel_count = 0
-        pixels_processed = 0
-        for row in connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])):
-            row__x = row[PIXEL_RESULT.c.x]
-            row__y = row[PIXEL_RESULT.c.y]
-            pixel_count += 1
-            if row[PIXEL_RESULT.c.workunit_id] is not None:
-                pixels_processed += 1
-
+            try:
                 array[row__y, row__x, 0] = row[PIXEL_RESULT.c.mu]
                 array[row__y, row__x, 1] = row[PIXEL_RESULT.c.m]
                 array[row__y, row__x, 2] = row[PIXEL_RESULT.c.ldust]
                 # the SFR is a log
                 array[row__y, row__x, 3] = math.pow(10, row[PIXEL_RESULT.c.sfr])
+            except TypeError:
+                LOG.error('Error at x: {0}, y: {1}'.format(row__x, row__y))
 
-        connection.execute(GALAXY.update()
-                           .where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])
-                           .values(image_time=datetime.datetime.now(), pixel_count=pixel_count, pixels_processed=pixels_processed))
-        galaxy_count += 1
+    transaction = connection.begin()
+    connection.execute(GALAXY.update()
+                       .where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])
+                       .values(image_time=datetime.datetime.now(), pixel_count=pixel_count, pixels_processed=pixels_processed))
+    transaction.commit()
+    galaxy_count += 1
 
-        # Now write the files
-        blackRGB = (0, 0, 0)
-        for name in PNG_IMAGE_NAMES:
-            value = 0
-            height = galaxy[GALAXY.c.dimension_y]
-            width = galaxy[GALAXY.c.dimension_x]
+    # Now right the files
+    blackRGB = (0, 0, 0)
+    for name in PNG_IMAGE_NAMES:
+        value = 0
+        height = galaxy[GALAXY.c.dimension_y]
+        width = galaxy[GALAXY.c.dimension_x]
+        idx = 0
+        if name == 'mu':
             idx = 0
-            if name == 'mu':
-                idx = 0
-            elif name == 'm':
-                idx = 1
-            elif name == 'ldust':
-                idx = 2
-            elif name == 'sfr':
-                idx = 3
+        elif name == 'm':
+            idx = 1
+        elif name == 'ldust':
+            idx = 2
+        elif name == 'sfr':
+            idx = 3
 
-            values = []
-            for x in range(0, width - 1):
-                for y in range(0, height - 1):
-                    value = array[y, x, idx]
-                    if not math.isnan(value) and value > 0:
-                        values.append(value)
+        values = []
+        for x in range(0, width - 1):
+            for y in range(0, height - 1):
+                value = array[y, x, idx]
+                if not math.isnan(value) and value > 0:
+                    values.append(value)
 
-            values.sort()
-            if len(values) > 1000:
-                top_count = int(len(values) * 0.005)
-                top_value = values[len(values) - top_count]
-            elif len(values) > 0:
-                top_value = values[len(values) - 1]
-            else:
-                top_value = 1
-            if len(values) > 1:
-                median_value = values[int(len(values) / 2)]
-            elif len(values) > 0:
-                median_value = values[0]
-            else:
-                median_value = 1
+        values.sort()
+        if len(values) > 1000:
+            top_count = int(len(values) * 0.005)
+            top_value = values[len(values) - top_count]
+        elif len(values) > 0:
+            top_value = values[len(values) - 1]
+        else:
+            top_value = 1
+        if len(values) > 1:
+            median_value = values[int(len(values) / 2)]
+        elif len(values) > 0:
+            median_value = values[0]
+        else:
+            median_value = 1
 
-            sigma = 1 / median_value
-            multiplier = 255.0 / math.asinh(top_value * sigma)
+        sigma = 1 / median_value
+        multiplier = 255.0 / math.asinh(top_value * sigma)
 
-            image = Image.new("RGB", (width, height), blackRGB)
-            for x in range(0, width - 1):
-                for y in range(0, height - 1):
-                    value = array[y, x, idx]
-                    if not math.isnan(value) and value > 0:
-                        value = int(math.asinh(value * sigma) * multiplier)
-                        if value > 255:
-                            value = 255
-                        red = FIRE_R[value]
-                        green = FIRE_G[value]
-                        blue = FIRE_B[value]
-                        image.putpixel((x, height - y - 1), (red, green, blue))
+        image = Image.new("RGB", (width, height), blackRGB)
+        for x in range(0, width - 1):
+            for y in range(0, height - 1):
+                value = array[y, x, idx]
+                if not math.isnan(value) and value > 0:
+                    value = int(math.asinh(value * sigma) * multiplier)
+                    if value > 255:
+                        value = 255
+                    red = FIRE_R[value]
+                    green = FIRE_G[value]
+                    blue = FIRE_B[value]
+                    image.putpixel((x, height - y - 1), (red, green, blue))
 
-            file_name = '{0}/image.png'.format(POGS_TMP)
-            image.save(file_name)
-            s3helper.add_file_to_bucket(bucket_name,
-                                        get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]),
-                                                           name),
-                                        file_name)
+        file_name = '{0}/image.png'.format(POGS_TMP)
+        image.save(file_name)
+        s3helper.add_file_to_bucket(bucket_name,
+                                    get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]),
+                                                       name),
+                                    file_name)
 
-    LOG.info('Built images for %d galaxies', galaxy_count)
+LOG.info('Built images for %d galaxies', galaxy_count)

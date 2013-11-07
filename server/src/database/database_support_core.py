@@ -239,3 +239,26 @@ HDF5_REQUEST_LAYER = Table('hdf5_request_layer',
                            Column('hdf5_request_id', BigInteger, ForeignKey('hdf5_request.hdf5_request_id')),
                            Column('hdf5_layer_id', BigInteger, ForeignKey('hdf5_layer.hdf5_layer_id')),
                            )
+
+TAG = Table('tag',
+            MAGPHYS_METADATA,
+            Column('tag_id', BigInteger, primary_key=True),
+            Column('tag_text', String(200), nullable=False),
+            Column('created_at', TIMESTAMP, nullable=False),
+            )
+
+TAG_REGISTER = Table('tag_register',
+                     MAGPHYS_METADATA,
+                     Column('tag_register_id', BigInteger, primary_key=True),
+                     Column('tag_id', BigInteger, ForeignKey('tag.tag_id')),
+                     Column('register_id', BigInteger, ForeignKey('register.register_id')),
+                     Column('created_at', TIMESTAMP, nullable=False),
+                     )
+
+TAG_GALAXY = Table('tag_galaxy',
+                   MAGPHYS_METADATA,
+                   Column('tag_galaxy_id', BigInteger, primary_key=True),
+                   Column('tag_id', BigInteger, ForeignKey('tag.tag_id')),
+                   Column('galaxy_id', BigInteger, ForeignKey('galaxy.galaxy_id')),
+                   Column('created_at', TIMESTAMP, nullable=False),
+                   )

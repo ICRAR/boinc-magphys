@@ -34,6 +34,7 @@ import sys
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
+import datetime
 from config import DB_LOGIN
 from database.database_support_core import HDF5_REQUEST, HDF5_REQUEST_GALAXY
 from sqlalchemy import create_engine, select
@@ -57,6 +58,7 @@ for request in connection.execute(select([HDF5_REQUEST], distinct=True, from_obj
                        email=request[HDF5_REQUEST.c.email],
                        features=features,
                        layers=layers)
+        connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(updated_at=datetime.datetime.now()))
 
 LOG.info('All done')
 connection.close()

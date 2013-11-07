@@ -329,3 +329,32 @@ INSERT INTO hdf5_layer (argument_name, description) VALUES ('l12', 'extract xi_W
 INSERT INTO hdf5_layer (argument_name, description) VALUES ('l13', 'extract tau_V^ISM');
 INSERT INTO hdf5_layer (argument_name, description) VALUES ('l14', 'extract M(dust)');
 INSERT INTO hdf5_layer (argument_name, description) VALUES ('l15', 'extract SFR_0.1Gyr');
+
+CREATE TABLE tag (
+  tag_id     BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  tag_text   VARCHAR(200) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  INDEX (tag_text)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE tag_register (
+  tag_register_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  tag_id          BIGINT UNSIGNED NOT NULL,
+  register_id     BIGINT UNSIGNED NOT NULL,
+  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (tag_id) REFERENCES tag(tag_id),
+  FOREIGN KEY (register_id) REFERENCES register(register_id)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE tag_galaxy (
+  tag_galaxy_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  tag_id        BIGINT UNSIGNED NOT NULL,
+  galaxy_id     BIGINT UNSIGNED NOT NULL,
+  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (tag_id) REFERENCES tag(tag_id),
+  FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
