@@ -791,10 +791,14 @@ def archive_to_hdf5(connection):
             LOG.info('Moving the file %s to %s', filename, to_store)
             if not os.path.exists(to_store):
                 os.makedirs(to_store)
+
             # Sometimes the file can exist so remove it
-            old_filename = os.path.join(to_store, filename)
+            old_filename = os.path.join(to_store, '{0}.hdf5'.format(galaxy_file_name))
+            LOG.info('Checking for old file %s', old_filename)
             if os.path.exists(old_filename):
+                LOG.info('Removing old file %s', old_filename)
                 os.remove(old_filename)
+
             shutil.move(filename, to_store)
 
             connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=ARCHIVED, status_time=datetime.datetime.now()))
