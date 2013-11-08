@@ -32,7 +32,7 @@ import datetime
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../src')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse

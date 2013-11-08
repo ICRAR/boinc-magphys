@@ -50,6 +50,7 @@ if exists(config_file_name):
     ############### ARCHIVE Settings ###############
     ARC_DELETE_DELAY = config['delete_delay']
     ARC_BOINC_STATISTICS_DELAY = config['boinc_statistics_delay']
+    HDF5_OUTPUT_DIRECTORY = config['hdf5_output_directory']
 
     ############### Global Settings ###############
     POGS_TMP = config['tmp']

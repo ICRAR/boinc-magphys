@@ -214,15 +214,16 @@ class EC2Helper:
                 best_price = spot_price
         if best_price is None:
             LOG.info('No Spot Price')
-            return None
+            return None, None
 
-        # put the bid price at 15% more than the current price
-        bid_price = best_price.price * 1.15
+        # put the bid price at 20% more than the current price
+        bid_price = best_price.price * 1.2
 
         # The spot price is too high
-        if bid_price > AWS_M1_SMALL_DICT['price']:
+        LOG.info('bid_price: {0}, aws_m1_small: {1}'.format(bid_price, float(AWS_M1_SMALL_DICT['price'])))
+        if bid_price > float(AWS_M1_SMALL_DICT['price']):
             LOG.info('Spot Price too high')
-            return None
+            return None, None
 
         LOG.info('Spot Price {0} - {1}'.format(best_price.price, best_price.availability_zone))
 
@@ -233,6 +234,7 @@ class EC2Helper:
                 subnet_id = key
                 break
 
+        LOG.info('bid_price: {0}, subnet_id: {1}'.format(bid_price, subnet_id))
         return bid_price, subnet_id
 
 
