@@ -47,6 +47,7 @@ def check_database_connection():
     :return:
     """
     try:
+        LOG.info('Testing DB connection')
         engine = create_engine(DB_LOGIN)
         connection = engine.connect()
 
@@ -70,11 +71,12 @@ def access_s3():
     :return:
     """
     try:
+        LOG.info('Testing S3 access')
         s3helper = S3Helper()
         bucket = s3helper.get_bucket(get_archive_bucket())
         LOG.info('Access S3 bucket name: {0}'.format(bucket.name))
     except Exception:
-        LOG.exception('check_database_connection')
+        LOG.exception('access_s3')
         return False
 
     return True
@@ -86,6 +88,7 @@ def public_ip():
 
     :return:
     """
+    LOG.info('Testing public ip')
     found_public_ip = False
     try:
         metadata = get_instance_metadata()
@@ -100,7 +103,7 @@ def public_ip():
                 found_public_ip = False
 
     except Exception:
-        LOG.exception('check_database_connection')
+        LOG.exception('public_ip')
         return False
     return found_public_ip
 

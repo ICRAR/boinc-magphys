@@ -194,6 +194,17 @@ def get_ami_log_file(name):
     return filename, full_filename
 
 
+def get_tmp_log_file(name):
+    """
+    Get the AMI log file
+    :param name:
+    :return:
+    """
+    filename = '{0}.log'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    full_filename = '/tmp/{0}_{1}'.format(name, filename)
+    return filename, full_filename
+
+
 def get_hdf5_to_fits_key(uuid, galaxy_name):
     """
     Get the hdf5 to fits key
