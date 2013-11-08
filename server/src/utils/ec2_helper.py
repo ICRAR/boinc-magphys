@@ -31,7 +31,7 @@ import time
 import datetime
 from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
-from config import AWS_AMI_ID, AWS_INSTANCE_TYPE, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_M1_SMALL_DICT, AWS_SUBNET_DICT
+from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_M1_SMALL_DICT, AWS_SUBNET_DICT
 
 LOG = config_logger(__name__)
 
@@ -54,7 +54,7 @@ class EC2Helper:
         """
         return self.ec2_connection.get_all_instances(filters={'tag:BOINC': boinc_value})
 
-    def run_instance(self, user_data, boinc_value):
+    def run_instance(self, user_data, boinc_value, instance_type):
         """
         Run up an instance
 
@@ -66,7 +66,7 @@ class EC2Helper:
         subnet_id = AWS_SUBNET_IDS[index]
         LOG.info('Running instance: ami: {0}, boinc_value: {1}, subnet_id: {2}'.format(AWS_AMI_ID, boinc_value, subnet_id))
         reservations = self.ec2_connection.run_instances(AWS_AMI_ID,
-                                                         instance_type=AWS_INSTANCE_TYPE,
+                                                         instance_type=instance_type,
                                                          instance_initiated_shutdown_behavior='terminate',
                                                          subnet_id=subnet_id,
                                                          key_name=AWS_KEY_NAME,
@@ -131,7 +131,7 @@ class EC2Helper:
 
         return None, None
 
-    def run_spot_instance(self, spot_price, subnet_id, user_data, boinc_value):
+    def run_spot_instance(self, spot_price, subnet_id, user_data, boinc_value, instance_type):
         """
         Run the ami as a spot instance
 
@@ -145,7 +145,7 @@ class EC2Helper:
                                                                   image_id=AWS_AMI_ID,
                                                                   count=1,
                                                                   valid_until=now_plus.isoformat(),
-                                                                  instance_type=AWS_INSTANCE_TYPE,
+                                                                  instance_type=instance_type,
                                                                   subnet_id=subnet_id,
                                                                   key_name=AWS_KEY_NAME,
                                                                   security_group_ids=AWS_SECURITY_GROUPS,

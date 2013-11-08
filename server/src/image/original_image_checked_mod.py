@@ -29,7 +29,7 @@ import datetime
 import os
 import tempfile
 from sqlalchemy import create_engine, select, and_, func
-from config import DB_LOGIN
+from config import DB_LOGIN, M1_SMALL
 from database.database_support_core import GALAXY
 from image.fitsimage import FitsImage
 from utils.ec2_helper import EC2Helper
@@ -81,7 +81,7 @@ def original_image_checked_boinc():
             LOG.info('{0} images to check'.format(count))
             if count > 0:
                 LOG.info('Starting up the instance')
-                ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
+                ec2_helper.run_instance(USER_DATA, BOINC_VALUE, M1_SMALL)
         except Exception:
             LOG.exception('Major error')
 

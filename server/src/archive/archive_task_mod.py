@@ -32,10 +32,8 @@ from archive.delete_galaxy_mod import delete_galaxy_data
 from archive.processed_galaxy_mod import processed_data
 from archive.store_files_mod import store_files
 from utils.logging_helper import config_logger
-from config import POGS_BOINC_PROJECT_ROOT, ARC_BOINC_STATISTICS_DELAY, DB_LOGIN, M1_SMALL
+from config import DB_LOGIN, M1_MEDIUM
 from utils.ec2_helper import EC2Helper
-from utils.name_builder import get_archive_bucket, get_stats_archive_key
-from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
 
@@ -71,11 +69,11 @@ def process_boinc():
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
-        bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(M1_SMALL)
+        bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(M1_MEDIUM)
         if bid_price is not None and subnet_id is not None:
-            ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BOINC_VALUE)
+            ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BOINC_VALUE, M1_MEDIUM)
         else:
-            ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
+            ec2_helper.run_instance(USER_DATA, BOINC_VALUE, M1_MEDIUM)
 
 
 def process_ami():

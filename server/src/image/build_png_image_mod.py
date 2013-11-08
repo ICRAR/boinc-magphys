@@ -139,9 +139,9 @@ def build_png_image_boinc():
         LOG.info('Starting up the instance')
         bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(M1_SMALL)
         if bid_price is not None and subnet_id is not None:
-            ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BOINC_VALUE)
+            ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BOINC_VALUE, M1_SMALL)
         else:
-            ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
+            ec2_helper.run_instance(USER_DATA, BOINC_VALUE, M1_SMALL)
 
 
 def build_png_image_ami():

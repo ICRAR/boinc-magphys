@@ -59,7 +59,6 @@ if exists(config_file_name):
 
     ############### AWS Settings ###############
     AWS_AMI_ID = config['ami_id']
-    AWS_INSTANCE_TYPE = config['instance_type']
     AWS_KEY_NAME = config['key_name']
     AWS_SECURITY_GROUPS = config['security_groups']
     AWS_SUBNET_IDS = config['subnet_ids']
@@ -84,3 +83,4 @@ DELETED = 4
 
 ############### AWS Instances we use ###############
 M1_SMALL = 'm1.small'
+M1_MEDIUM = 'm1.medium'
