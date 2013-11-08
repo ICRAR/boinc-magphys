@@ -29,7 +29,7 @@ import math
 import datetime
 import numpy
 from sqlalchemy import create_engine, select, and_
-from config import DB_LOGIN, POGS_TMP, M1_SMALL
+from config import DB_LOGIN, POGS_TMP, BUILD_PNG_IMAGE, BUILD_PNG_IMAGE_DICT
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT
 from utils.ec2_helper import EC2Helper
 from utils.logging_helper import config_logger
@@ -39,7 +39,6 @@ from PIL import Image
 
 LOG = config_logger(__name__)
 
-BOINC_VALUE = 'build_png_image'
 USER_DATA = '''#!/bin/bash
 
 # Sleep for a while to let everything settle down
@@ -133,15 +132,20 @@ def build_png_image_boinc():
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     ec2_helper = EC2Helper()
 
-    if ec2_helper.boinc_instance_running(BOINC_VALUE):
+    if ec2_helper.boinc_instance_running(BUILD_PNG_IMAGE):
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
-        bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(M1_SMALL)
-        if bid_price is not None and subnet_id is not None:
-            ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BOINC_VALUE, M1_SMALL)
+        instance_type = BUILD_PNG_IMAGE_DICT['instance_type']
+        max_price = float(BUILD_PNG_IMAGE_DICT['price'])
+        if instance_type is None or max_price is None:
+            LOG.error('Instance type and price not set up correctly')
         else:
-            ec2_helper.run_instance(USER_DATA, BOINC_VALUE, M1_SMALL)
+            bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(instance_type, max_price)
+            if bid_price is not None and subnet_id is not None:
+                ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BUILD_PNG_IMAGE, instance_type)
+            else:
+                ec2_helper.run_instance(USER_DATA, BUILD_PNG_IMAGE, instance_type)
 
 
 def build_png_image_ami():

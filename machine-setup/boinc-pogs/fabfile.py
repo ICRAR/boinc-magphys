@@ -222,19 +222,7 @@ def edit_files():
       <output> fits2wu.out </output>
     </task>
     <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/delete_galaxy_task.py </cmd>
-      <period> 4 hours </period>
-      <disabled> 0 </disabled>
-      <output> delete_galaxy_task.out </output>
-    </task>
-    <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/archive_hdf5_galaxy.py -o /home/ec2-user/archive </cmd>
-      <period> 4 hours </period>
-      <disabled> 0 </disabled>
-      <output> archive_hdf5_galaxy.out </output>
-    </task>
-    <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py boinc </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/archive_task.py boinc </cmd>
       <period> 12 hours </period>
       <disabled> 0 </disabled>
       <output> archive_boinc_stats.out </output>
@@ -244,18 +232,6 @@ def edit_files():
       <period> 24 hours </period>
       <disabled> 0 </disabled>
       <output> original_image_checked.out </output>
-    </task>
-    <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/processed_galaxy.py </cmd>
-      <period> 4 hours </period>
-      <disabled> 0 </disabled>
-      <output> processed_galaxy.out </output>
-    </task>
-    <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/archive/store_files.py -d /home/ec2-user/archive/to_store/ </cmd>
-      <period> 4 hours </period>
-      <disabled> 0 </disabled>
-      <output> store_files.out </output>
     </task>
   </tasks>
   <daemons>

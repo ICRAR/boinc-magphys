@@ -29,7 +29,7 @@ import datetime
 import os
 import tempfile
 from sqlalchemy import create_engine, select, and_, func
-from config import DB_LOGIN, M1_SMALL
+from config import DB_LOGIN, ORIGINAL_IMAGE_CHECKED_DICT, ORIGINAL_IMAGE_CHECKED
 from database.database_support_core import GALAXY
 from image.fitsimage import FitsImage
 from utils.ec2_helper import EC2Helper
@@ -40,7 +40,6 @@ from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
 
-BOINC_VALUE = 'original_image_checked'
 USER_DATA = '''#!/bin/bash
 
 # Sleep for a while to let everything settle down
@@ -69,7 +68,7 @@ def original_image_checked_boinc():
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     ec2_helper = EC2Helper()
 
-    if ec2_helper.boinc_instance_running(BOINC_VALUE):
+    if ec2_helper.boinc_instance_running(ORIGINAL_IMAGE_CHECKED_DICT):
         LOG.info('A previous instance is still running')
     else:
         # Connect to the database - the login string is set in the database package
@@ -81,7 +80,11 @@ def original_image_checked_boinc():
             LOG.info('{0} images to check'.format(count))
             if count > 0:
                 LOG.info('Starting up the instance')
-                ec2_helper.run_instance(USER_DATA, BOINC_VALUE, M1_SMALL)
+                instance_type = ORIGINAL_IMAGE_CHECKED_DICT['instance_type']
+                if instance_type is None:
+                    LOG.error('Instance type not set up correctly')
+                else:
+                    ec2_helper.run_instance(USER_DATA, ORIGINAL_IMAGE_CHECKED, instance_type)
         except Exception:
             LOG.exception('Major error')
 

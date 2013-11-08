@@ -31,7 +31,7 @@ import time
 import datetime
 from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
-from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_M1_SMALL_DICT, AWS_SUBNET_DICT, AWS_M1_MEDIUM_DICT, M1_MEDIUM, M1_SMALL
+from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT
 
 LOG = config_logger(__name__)
 
@@ -186,7 +186,7 @@ class EC2Helper:
             LOG.error('Could not associate the IP to the instance {0}'.format(instance_id))
             self.ec2_connection.release_address(allocation_id=allocation.allocation_id)
 
-    def get_cheapest_spot_price(self, instance_type):
+    def get_cheapest_spot_price(self, instance_type, max_price):
         """
         Find the cheapest spot price in a zone we use
 
@@ -219,12 +219,6 @@ class EC2Helper:
 
         # put the bid price at 20% more than the current price
         bid_price = best_price.price * 1.2
-        if instance_type == M1_SMALL:
-            max_price = float(AWS_M1_SMALL_DICT['price'])
-        elif instance_type == M1_MEDIUM:
-            max_price = float(AWS_M1_MEDIUM_DICT['price'])
-        else:
-            max_price = 0.0
 
         # The spot price is too high
         LOG.info('bid_price: {0}, max_price: {1}, instance: {2}'.format(bid_price, max_price, instance_type))
