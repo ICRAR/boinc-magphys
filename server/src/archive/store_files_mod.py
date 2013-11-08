@@ -69,7 +69,8 @@ def store_files(connection):
     """
     LOG.info('Directory: %s', HDF5_OUTPUT_DIRECTORY)
 
-    files = os.path.join(HDF5_OUTPUT_DIRECTORY, '*.hdf5')
+    to_store_dir = os.path.join(HDF5_OUTPUT_DIRECTORY, 'to_store')
+    files = os.path.join(to_store_dir, '*.hdf5')
     file_count = 0
 
     s3helper = S3Helper()
