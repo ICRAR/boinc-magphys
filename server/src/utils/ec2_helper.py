@@ -31,7 +31,7 @@ import time
 import datetime
 from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
-from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_M1_SMALL_DICT, AWS_SUBNET_DICT
+from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_M1_SMALL_DICT, AWS_SUBNET_DICT, AWS_M1_MEDIUM_DICT, M1_MEDIUM, M1_SMALL
 
 LOG = config_logger(__name__)
 
@@ -193,6 +193,7 @@ class EC2Helper:
         :param instance_type:
         :return:
         """
+        LOG.info('instance_type: {0}'.format(instance_type))
         prices = self.ec2_connection.get_spot_price_history(start_time=datetime.datetime.now().isoformat(),
                                                             instance_type=instance_type,
                                                             product_description='Linux/UNIX (Amazon VPC)')
@@ -218,10 +219,16 @@ class EC2Helper:
 
         # put the bid price at 20% more than the current price
         bid_price = best_price.price * 1.2
+        if instance_type == M1_SMALL:
+            max_price = float(AWS_M1_SMALL_DICT['price'])
+        elif instance_type == M1_MEDIUM:
+            max_price = float(AWS_M1_MEDIUM_DICT['price'])
+        else:
+            max_price = 0.0
 
         # The spot price is too high
-        LOG.info('bid_price: {0}, aws_m1_small: {1}'.format(bid_price, float(AWS_M1_SMALL_DICT['price'])))
-        if bid_price > float(AWS_M1_SMALL_DICT['price']):
+        LOG.info('bid_price: {0}, max_price: {1}, instance: {2}'.format(bid_price, max_price, instance_type))
+        if bid_price > max_price:
             LOG.info('Spot Price too high')
             return None, None
 

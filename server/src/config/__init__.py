@@ -64,6 +64,7 @@ if exists(config_file_name):
     AWS_SUBNET_IDS = config['subnet_ids']
 
     AWS_M1_SMALL_DICT = config['m1.small']
+    AWS_M1_MEDIUM_DICT = config['m1.medium']
 
     AWS_SUBNET_DICT = {}
     for subnet_id in AWS_SUBNET_IDS:
