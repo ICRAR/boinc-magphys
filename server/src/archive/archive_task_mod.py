@@ -32,12 +32,11 @@ from archive.delete_galaxy_mod import delete_galaxy_data
 from archive.processed_galaxy_mod import processed_data
 from archive.store_files_mod import store_files
 from utils.logging_helper import config_logger
-from config import DB_LOGIN, M1_MEDIUM
+from config import DB_LOGIN, ARCHIVE_DATA, ARCHIVE_DATA_DICT
 from utils.ec2_helper import EC2Helper
 
 LOG = config_logger(__name__)
 
-BOINC_VALUE = 'archive_data'
 USER_DATA = '''#!/bin/bash
 
 # Sleep for a while to let everything settle down
@@ -65,15 +64,20 @@ def process_boinc():
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     ec2_helper = EC2Helper()
 
-    if ec2_helper.boinc_instance_running(BOINC_VALUE):
+    if ec2_helper.boinc_instance_running(ARCHIVE_DATA):
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
-        bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(M1_MEDIUM)
-        if bid_price is not None and subnet_id is not None:
-            ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BOINC_VALUE, M1_MEDIUM)
+        instance_type = ARCHIVE_DATA_DICT['instance_type']
+        max_price = float(ARCHIVE_DATA_DICT['price'])
+        if instance_type is None or max_price is None:
+            LOG.error('Instance type and price not set up correctly')
         else:
-            ec2_helper.run_instance(USER_DATA, BOINC_VALUE, M1_MEDIUM)
+            bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(instance_type, max_price)
+            if bid_price is not None and subnet_id is not None:
+                ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, ARCHIVE_DATA, instance_type)
+            else:
+                ec2_helper.run_instance(USER_DATA, ARCHIVE_DATA, instance_type)
 
 
 def process_ami():

@@ -28,6 +28,11 @@ The configuration directory
 from os.path import exists, dirname
 from configobj import ConfigObj
 
+############### AWS Instance Tags we use ###############
+BUILD_PNG_IMAGE = 'build_png_image'
+ORIGINAL_IMAGE_CHECKED = 'original_image_checked'
+ARCHIVE_DATA = 'archive_data'
+
 config_file_name = dirname(__file__) + '/pogs.settings'
 if exists(config_file_name):
     config = ConfigObj(config_file_name)
@@ -63,8 +68,9 @@ if exists(config_file_name):
     AWS_SECURITY_GROUPS = config['security_groups']
     AWS_SUBNET_IDS = config['subnet_ids']
 
-    AWS_M1_SMALL_DICT = config['m1.small']
-    AWS_M1_MEDIUM_DICT = config['m1.medium']
+    BUILD_PNG_IMAGE_DICT = config[BUILD_PNG_IMAGE]
+    ORIGINAL_IMAGE_CHECKED_DICT = config[ORIGINAL_IMAGE_CHECKED]
+    ARCHIVE_DATA_DICT = config[ARCHIVE_DATA]
 
     AWS_SUBNET_DICT = {}
     for subnet_id in AWS_SUBNET_IDS:
@@ -81,7 +87,3 @@ PROCESSED = 1
 ARCHIVED = 2
 STORED = 3
 DELETED = 4
-
-############### AWS Instances we use ###############
-M1_SMALL = 'm1.small'
-M1_MEDIUM = 'm1.medium'
