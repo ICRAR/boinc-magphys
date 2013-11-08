@@ -450,7 +450,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 # Now process the file
                 start_time = time.time()
                 LOG.info('Processing file {0}'.format(key.key))
-                temp_file = os.path.join(output_directory, 'temp.sed')
+                temp_file = os.path.join('/tmp', 'temp.sed')
                 key.get_contents_to_filename(temp_file)
 
                 if is_gzip(temp_file):
@@ -733,7 +733,7 @@ def archive_to_hdf5(connection):
 
             # Copy the galaxy details
             galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
-            filename = os.path.join(HDF5_OUTPUT_DIRECTORY, '{0}.hdf5'.format(galaxy_file_name))
+            filename = os.path.join('/tmp', '{0}.hdf5'.format(galaxy_file_name))
 
             h5_file = h5py.File(filename, 'w')
 
