@@ -50,6 +50,8 @@ def add_file_handler_to_root(file_name):
     :param file_name:
     :return:
     """
+    formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
     file_handler = logging.FileHandler(file_name)
+    file_handler.setFormatter(formatter)
     root_logger = logging.getLogger()
     root_logger.addHandler(file_handler)

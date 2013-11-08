@@ -26,6 +26,8 @@
 Module used to write data to an HDF5 file
 """
 import gzip
+import shutil
+import datetime
 import h5py
 import math
 import numpy
@@ -33,9 +35,9 @@ import os
 import time
 from utils.logging_helper import config_logger
 from sqlalchemy.sql.expression import select, func
-from config import MIN_HIST_VALUE
-from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT
-from utils.name_builder import get_files_bucket
+from config import MIN_HIST_VALUE, ARCHIVED, PROCESSED, HDF5_OUTPUT_DIRECTORY
+from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT, PARAMETER_NAME, GALAXY
+from utils.name_builder import get_files_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
@@ -700,3 +702,101 @@ def get_pixel_result(connection, pxresult_id):
         x = pixel_result[PIXEL_RESULT.c.x]
         y = pixel_result[PIXEL_RESULT.c.y]
         return x, y, area_id
+
+
+def archive_to_hdf5(connection):
+    """
+    Archive data to an HDF5 file
+
+    :param connection:
+    :return:
+    """
+    # Load the parameter name map
+    map_parameter_name = {}
+    for parameter_name in connection.execute(select([PARAMETER_NAME])):
+        map_parameter_name[parameter_name[PARAMETER_NAME.c.name]] = parameter_name[PARAMETER_NAME.c.parameter_name_id]
+
+    # Look in the database for the galaxies
+    galaxy_ids = []
+    for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == PROCESSED).order_by(GALAXY.c.galaxy_id)):
+        galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
+
+    for galaxy_id_str in galaxy_ids:
+        start_time = time.time()
+
+        galaxy_id1 = int(galaxy_id_str)
+        galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id1)).first()
+        if galaxy is None:
+            LOG.info('Error: Galaxy with galaxy_id of %d was not found', galaxy_id1)
+        else:
+            LOG.info('Archiving Galaxy with galaxy_id of %d - %s', galaxy_id1, galaxy[GALAXY.c.name])
+
+            # Copy the galaxy details
+            galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+            filename = os.path.join(HDF5_OUTPUT_DIRECTORY, '{0}.hdf5'.format(galaxy_file_name))
+
+            h5_file = h5py.File(filename, 'w')
+
+            # Build the groups
+            galaxy_group = h5_file.create_group('galaxy')
+            area_group = galaxy_group.create_group('area')
+            pixel_group = galaxy_group.create_group('pixel')
+
+            # Write the galaxy data
+            galaxy_group.attrs['galaxy_id'] = galaxy[GALAXY.c.galaxy_id]
+            galaxy_group.attrs['run_id'] = galaxy[GALAXY.c.run_id]
+            galaxy_group.attrs['name'] = galaxy[GALAXY.c.name]
+            galaxy_group.attrs['dimension_x'] = galaxy[GALAXY.c.dimension_x]
+            galaxy_group.attrs['dimension_y'] = galaxy[GALAXY.c.dimension_y]
+            galaxy_group.attrs['dimension_z'] = galaxy[GALAXY.c.dimension_z]
+            galaxy_group.attrs['redshift'] = float(galaxy[GALAXY.c.redshift])
+            galaxy_group.attrs['create_time'] = str(galaxy[GALAXY.c.create_time])
+            galaxy_group.attrs['image_time'] = str(galaxy[GALAXY.c.image_time])
+            galaxy_group.attrs['galaxy_type'] = galaxy[GALAXY.c.galaxy_type]
+            galaxy_group.attrs['ra_cent'] = galaxy[GALAXY.c.ra_cent]
+            galaxy_group.attrs['dec_cent'] = galaxy[GALAXY.c.dec_cent]
+            galaxy_group.attrs['sigma'] = float(galaxy[GALAXY.c.sigma])
+            galaxy_group.attrs['pixel_count'] = galaxy[GALAXY.c.pixel_count]
+            galaxy_group.attrs['pixels_processed'] = galaxy[GALAXY.c.pixels_processed]
+            galaxy_group.attrs['output_format'] = OUTPUT_FORMAT_1_03
+
+            galaxy_id_aws = galaxy[GALAXY.c.galaxy_id]
+
+            # Store the data associated with the galaxy
+            store_fits_header(connection, galaxy_id_aws, galaxy_group)
+            store_image_filters(connection, galaxy_id_aws, galaxy_group)
+
+            # Store the data associated with the areas
+            area_count = store_area(connection, galaxy_id_aws, area_group)
+            store_area_user(connection, galaxy_id_aws, area_group)
+            h5_file.flush()
+
+            # Store the values associated with a pixel
+            pixel_count = store_pixels(connection,
+                                       galaxy_file_name,
+                                       pixel_group,
+                                       galaxy[GALAXY.c.dimension_x],
+                                       galaxy[GALAXY.c.dimension_y],
+                                       galaxy[GALAXY.c.dimension_z],
+                                       area_count,
+                                       HDF5_OUTPUT_DIRECTORY,
+                                       map_parameter_name)
+
+            # Flush the HDF5 data to disk
+            h5_file.flush()
+            h5_file.close()
+
+            # Move the file
+            to_store = os.path.join(HDF5_OUTPUT_DIRECTORY, 'to_store')
+            LOG.info('Moving the file %s to %s', filename, to_store)
+            if not os.path.exists(to_store):
+                os.makedirs(to_store)
+            shutil.move(filename, to_store)
+
+            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=ARCHIVED, status_time=datetime.datetime.now()))
+
+            end_time = time.time()
+            LOG.info('Galaxy with galaxy_id of %d was archived.', galaxy_id1)
+            LOG.info('Copied %d areas %d pixels.', area_count, pixel_count)
+            total_time = end_time - start_time
+            LOG.info('Total time %d mins %.1f secs', int(total_time / 60), total_time % 60)

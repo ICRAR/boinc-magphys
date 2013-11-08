@@ -25,8 +25,15 @@
 """
 The function used to process a galaxy
 """
+import datetime
 from sqlalchemy import select
-from database.database_support_core import AREA
+from database.database_support_core import AREA, GALAXY
+from sqlalchemy.engine import create_engine
+from config import BOINC_DB_LOGIN, PROCESSED, COMPUTING
+from database.boinc_database_support_core import RESULT
+from utils.logging_helper import config_logger
+
+LOG = config_logger(__name__)
 
 
 def build_key(galaxy_name, galaxy_id):
@@ -70,3 +77,37 @@ def finish_processing(galaxy_name, galaxy_id, sorted_data):
     :return:
     """
     return sorted_data.get(build_key(galaxy_name, galaxy_id)) is None
+
+
+def processed_data(connection):
+    """
+    Work out which galaxies have been processed
+
+    :param connection:
+    :return:
+    """
+    # Get the work units still being processed
+    engine = create_engine(BOINC_DB_LOGIN)
+    connection_boinc = engine.connect()
+    current_jobs = []
+    for result in connection_boinc.execute(select([RESULT]).where(RESULT.c.server_state != 5)):
+        current_jobs.append(result[RESULT.c.name])
+    connection_boinc.close()
+
+    sorted_data = sort_data(connection, current_jobs)
+    for key in sorted(sorted_data.iterkeys()):
+        LOG.info('{0}: {1} results'.format(key, len(sorted_data[key])))
+
+    # Get the galaxies we know are still processing
+    processed = []
+    for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == COMPUTING)):
+        if finish_processing(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], sorted_data):
+            processed.append(galaxy[GALAXY.c.galaxy_id])
+            LOG.info('%d %s has completed', galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.name])
+
+    for galaxy_id in processed:
+        connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=PROCESSED, status_time=datetime.datetime.now()))
+
+    LOG.info('Marked %d galaxies ready for archiving', len(processed))
+    LOG.info('%d galaxies are still being processed', len(sorted_data))
+

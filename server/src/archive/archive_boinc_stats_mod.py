@@ -31,45 +31,10 @@ import datetime
 import shutil
 from utils.logging_helper import config_logger
 from config import POGS_BOINC_PROJECT_ROOT, ARC_BOINC_STATISTICS_DELAY
-from utils.ec2_helper import EC2Helper
 from utils.name_builder import get_archive_bucket, get_stats_archive_key
 from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
-
-BOINC_VALUE = 'archive_data'
-USER_DATA = '''#!/bin/bash
-
-# Sleep for a while to let everything settle down
-sleep 10s
-
-# Has the NFS mounted properly?
-if [ -d '/home/ec2-user/boinc-magphys/server' ]
-then
-    # We are root so we have to run this via sudo to get access to the ec2-user details
-    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_boinc_stats.py ami'
-fi
-
-# All done terminate
-shutdown -h now
-'''
-
-
-def process_boinc():
-    """
-    We're running the process on the BOINC server.
-
-    Check if an instance is still running, if not start it up.
-    :return:
-    """
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_helper = EC2Helper()
-
-    if ec2_helper.boinc_instance_running(BOINC_VALUE):
-        LOG.info('A previous instance is still running')
-    else:
-        LOG.info('Starting up the instance')
-        ec2_helper.run_instance(USER_DATA, BOINC_VALUE)
 
 
 def correct(directory_name):
@@ -94,7 +59,7 @@ def move_files_to_s3(s3helper, directory_name):
     shutil.rmtree(directory_name, ignore_errors=True)
 
 
-def process_ami():
+def archive_boinc_stats():
     """
     We're running on the AMI instance - so actually do the work
 
