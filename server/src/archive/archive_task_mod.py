@@ -93,17 +93,13 @@ def process_ami():
     try:
         # Check the processed data
         try:
-            transaction = connection.begin()
             processed_data(connection)
-            transaction.commit()
         except:
             LOG.exception('processed_data(): an exception occurred')
 
         # Archive to HDF5
         try:
-            transaction = connection.begin()
             archive_to_hdf5(connection)
-            transaction.commit()
         except:
             LOG.exception('archive_to_hdf5(): an exception occurred')
 
