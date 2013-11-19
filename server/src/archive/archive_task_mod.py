@@ -97,17 +97,9 @@ def process_ami():
         except:
             LOG.exception('processed_data(): an exception occurred')
 
-        # Archive to HDF5
-        try:
-            archive_to_hdf5(connection)
-        except:
-            LOG.exception('archive_to_hdf5(): an exception occurred')
-
         # Store files
         try:
-            transaction = connection.begin()
             store_files(connection)
-            transaction.commit()
         except:
             LOG.exception('store_files(): an exception occurred')
 
@@ -122,6 +114,12 @@ def process_ami():
             archive_boinc_stats()
         except:
             LOG.exception('archive_boinc_stats(): an exception occurred')
+
+        # Archive to HDF5
+        try:
+            archive_to_hdf5(connection)
+        except:
+            LOG.exception('archive_to_hdf5(): an exception occurred')
 
     finally:
         connection.close()
