@@ -41,7 +41,7 @@ if os.path.exists('/home/ec2-user'):
     LIBRARY_DIRS = ['/usr/lib64/mysql/']
     extensions = [Extension("create_work_unit",
                             sources=["c_project/create_work.cpp"],
-                            extra_compile_args=['pthreads'],
+                            extra_compile_args=['pthread'],
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
                             extra_objects=['/home/ec2-user/boinc/sched/libsched.la',
@@ -62,7 +62,7 @@ else:
 
     extensions = [Extension("create_work_unit",
                             sources=["c_project/create_work.cpp"],
-                            extra_compile_args=['pthreads'],
+                            extra_compile_args=['pthread'],
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
                             libraries=["boinc", "boinc_api", "mysqlclient"],
