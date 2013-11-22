@@ -36,8 +36,11 @@ if os.path.exists('/home/ec2-user'):
                     '/home/ec2-user/boinc/db',
                     '/home/ec2-user/boinc/sched',
                     '/home/ec2-user/boinc/lib',
-                    '/home/ec2-user/boinc/tools',]
-    LIBRARY_DIRS = ['/home/ec2-user/boinc/lib','/home/ec2-user/boinc/api']
+                    '/home/ec2-user/boinc/tools',
+                    '/usr/include/mysql55']
+    LIBRARY_DIRS = ['/home/ec2-user/boinc/lib',
+                    '/home/ec2-user/boinc/api',
+                    '/usr/lib64/mysql/']
 else:
     INCLUDE_DIRS = ['/Users/kevinvinsen/Documents/ICRAR/work/boinc',
                     '/Users/kevinvinsen/Documents/ICRAR/work/boinc/db',
