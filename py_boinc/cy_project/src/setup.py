@@ -32,7 +32,7 @@ import os
 from Cython.Build import cythonize
 
 PY_BOINC = "py_boinc"
-SOURCES = ['cy_create_work_unit.pyx','c_project/create_work.cpp']
+SOURCES = ['py_boinc.pyx','c_project/create_work.cpp']
 
 if os.path.exists('/home/ec2-user'):
     INCLUDE_DIRS = ['/home/ec2-user/boinc/sched',
@@ -64,7 +64,7 @@ else:
     LIBRARY_DIRS = ['/Users/kevinvinsen/Documents/ICRAR/work/boinc/mac_build/build/Development',
                     '/usr/local/mysql-5.5.14-osx10.6-x86_64/lib']
 
-    extensions = [Extension('create_work111',
+    extensions = [Extension('create_work',
                             sources=SOURCES,
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
