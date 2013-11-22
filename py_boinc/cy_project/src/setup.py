@@ -32,15 +32,23 @@ import os
 from Cython.Build import cythonize
 
 if os.path.exists('/home/ec2-user'):
-    INCLUDE_DIRS = ['/home/ec2-user/boinc',
-                    '/home/ec2-user/boinc/db',
-                    '/home/ec2-user/boinc/sched',
+    INCLUDE_DIRS = ['/home/ec2-user/boinc/sched',
+                    '/home/ec2-user/boinc/api',
                     '/home/ec2-user/boinc/lib',
+                    '/home/ec2-user/boinc/db',
                     '/home/ec2-user/boinc/tools',
                     '/usr/include/mysql55']
-    LIBRARY_DIRS = ['/home/ec2-user/boinc/lib',
-                    '/home/ec2-user/boinc/api',
-                    '/usr/lib64/mysql/']
+    LIBRARY_DIRS = ['/usr/lib64/mysql/']
+    extensions = [Extension("create_work_unit",
+                            sources=["c_project/create_work.cpp"],
+                            extra_compile_args=['pthreads'],
+                            include_dirs=INCLUDE_DIRS,
+                            library_dirs=LIBRARY_DIRS,
+                            extra_objects=['/home/ec2-user/boinc/sched/libsched.la',
+                                           '/home/ec2-user/boinc/lib/libboinc.la',
+                                           ],
+                            libraries=["mysqlclient"],
+                            )]
 else:
     INCLUDE_DIRS = ['/Users/kevinvinsen/Documents/ICRAR/work/boinc',
                     '/Users/kevinvinsen/Documents/ICRAR/work/boinc/db',
@@ -52,12 +60,13 @@ else:
     LIBRARY_DIRS = ['/Users/kevinvinsen/Documents/ICRAR/work/boinc/mac_build/build/Development',
                     '/usr/local/mysql-5.5.14-osx10.6-x86_64/lib']
 
-extensions = [Extension("create_work_unit",
-                        sources=["c_project/create_work.cpp"],
-                        include_dirs=INCLUDE_DIRS,
-                        library_dirs=LIBRARY_DIRS,
-                        libraries=["boinc", "boinc_api", "mysqlclient"],
-                        )]
+    extensions = [Extension("create_work_unit",
+                            sources=["c_project/create_work.cpp"],
+                            extra_compile_args=['pthreads'],
+                            include_dirs=INCLUDE_DIRS,
+                            library_dirs=LIBRARY_DIRS,
+                            libraries=["boinc", "boinc_api", "mysqlclient"],
+                            )]
 setup(
     name="py_boinc",
     version='1.0',
