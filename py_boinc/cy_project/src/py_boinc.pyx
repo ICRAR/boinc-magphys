@@ -25,7 +25,13 @@
 """
 Setup the wrappers around the BOINC 'C' libraries
 """
-cdef extern from 'c_project/create_work.h':
+cdef extern from "c_project/create_work.h":
     int boinc_db_open()
 
     int boinc_db_close()
+
+cdef int boinc_db_close1():
+    return boinc_db_close()
+
+cdef int boinc_db_open1():
+    return boinc_db_open()
