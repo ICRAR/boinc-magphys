@@ -66,6 +66,8 @@
 
 #include "backend_lib.h"
 
+extern "C"
+{
 /**
  * Make a DB connection to the BOINC database.
  *
@@ -203,4 +205,6 @@ int create_work(char* app_name,
     }
 
     return 0;
+}
+
 }
