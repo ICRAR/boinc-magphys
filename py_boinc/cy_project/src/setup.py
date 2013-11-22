@@ -31,7 +31,7 @@ from distutils.extension import Extension
 import os
 from Cython.Build import cythonize
 
-SOURCES = ['cy_create_work_unit.pyx', 'c_project/create_work.cpp']
+SOURCES = ['cy_create_work_unit.pyx', 'c_project/create_work.c']
 
 if os.path.exists('/home/ec2-user'):
     INCLUDE_DIRS = ['/home/ec2-user/boinc/sched',
