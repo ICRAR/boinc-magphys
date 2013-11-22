@@ -75,7 +75,7 @@ extern "C" {
  *
  * The connection is effectively a singleton stored in boinc_db
  */
-int boinc_db_open() {
+int db_open() {
     int retval;
     const char* config_dir = 0;
     char download_dir[256], db_name[256], db_passwd[256];
@@ -107,7 +107,7 @@ int boinc_db_open() {
 /**
  * Close the DB connection to the BOINC database
  */
-int boinc_db_close() {
+int db_close() {
     boinc_db.close();
 
     return 0;

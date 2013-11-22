@@ -51,10 +51,10 @@ extern "C" {
 // Open the connect to the BOINC DB - this is effectively a singleton to be
 // used for all DB operations.
 // Return errval if it fails
-int boinc_db_open();
+int db_open();
 
 // Close the connect to the BOINC DB
-int boinc_db_close();
+int db_close();
 
 // Create a work unit
 int create_work(char* app_name,
