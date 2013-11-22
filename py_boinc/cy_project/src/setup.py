@@ -31,6 +31,8 @@ from distutils.extension import Extension
 import os
 from Cython.Build import cythonize
 
+SOURCES = ['c_project/create_work.cpp', 'create_work_unit.pxd']
+
 if os.path.exists('/home/ec2-user'):
     INCLUDE_DIRS = ['/home/ec2-user/boinc/sched',
                     '/home/ec2-user/boinc/api',
@@ -41,7 +43,7 @@ if os.path.exists('/home/ec2-user'):
                     '/usr/include/mysql55']
     LIBRARY_DIRS = ['/usr/lib64/mysql/']
     extensions = [Extension("create_work_unit",
-                            sources=["c_project/create_work.cpp"],
+                            sources=SOURCES,
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
                             extra_objects=['/home/ec2-user/boinc/sched/libsched.a',
@@ -62,7 +64,7 @@ else:
                     '/usr/local/mysql-5.5.14-osx10.6-x86_64/lib']
 
     extensions = [Extension("create_work_unit",
-                            sources=['c_project/create_work.cpp','create_work_unit.pxd'],
+                            sources=SOURCES,
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
                             libraries=["boinc", "boinc_api", "mysqlclient"],
