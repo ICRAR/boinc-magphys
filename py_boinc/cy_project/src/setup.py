@@ -62,7 +62,7 @@ else:
                     '/usr/local/mysql-5.5.14-osx10.6-x86_64/lib']
 
     extensions = [Extension("create_work_unit",
-                            sources=["c_project/create_work.cpp"],
+                            sources=['c_project/create_work.cpp','create_work_unit.pxd'],
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
                             libraries=["boinc", "boinc_api", "mysqlclient"],
