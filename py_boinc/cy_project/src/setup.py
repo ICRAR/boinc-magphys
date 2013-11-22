@@ -74,6 +74,6 @@ setup(
     version='1.0',
     ext_modules=cythonize(
         extensions,
-        name="create_work_unit",
+        name="py_boinc",
         language="c")
 )
