@@ -44,9 +44,9 @@ if os.path.exists('/home/ec2-user'):
                             sources=["c_project/create_work.cpp"],
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
-                            extra_objects=['/home/ec2-user/boinc/sched/libsched.la',
-                                           '/home/ec2-user/boinc/lib/libboinc.la',
-                                           ],
+                            extra_objects=['/home/ec2-user/boinc/sched/libsched.a',
+                                           '/home/ec2-user/boinc/lib/libboinc.a',
+                                           '/home/ec2-user/boinc/api/libboinc_api.a'],
                             libraries=["mysqlclient"],
                             )]
 else:
