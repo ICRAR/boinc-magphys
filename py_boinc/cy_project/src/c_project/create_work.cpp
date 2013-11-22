@@ -46,9 +46,6 @@
 // See the docs for a description of WU and result template files
 // This program must be run in the project's root directory
 //
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "config.h"
 
@@ -70,6 +67,9 @@ extern "C" {
 
 #include "backend_lib.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Make a DB connection to the BOINC database.
  *
