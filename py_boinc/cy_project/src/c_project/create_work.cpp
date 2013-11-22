@@ -46,6 +46,7 @@
 // See the docs for a description of WU and result template files
 // This program must be run in the project's root directory
 //
+extern "C" {
 #include "config.h"
 
 #include <cstdio>
@@ -205,4 +206,4 @@ int create_work(char* app_name,
     return 0;
 }
 
-
+}

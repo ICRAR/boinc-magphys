@@ -44,6 +44,8 @@
 // Create a workunit.
 // Input files must be in the download dir.
 
+extern "C" {
+
 
 // Open the connect to the BOINC DB - this is effectively a singleton to be
 // used for all DB operations.
@@ -70,3 +72,5 @@ int create_work(char* app_name,
     int opaque,
     int priority,
     char** input_files);
+
+}

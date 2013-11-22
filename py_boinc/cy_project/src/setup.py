@@ -31,7 +31,7 @@ from distutils.extension import Extension
 import os
 from Cython.Build import cythonize
 
-SOURCES = ['cy_create_work_unit.pyx', 'c_project/create_work.c']
+SOURCES = ['cy_create_work_unit.pyx', 'c_project/create_work.cpp']
 
 if os.path.exists('/home/ec2-user'):
     INCLUDE_DIRS = ['/home/ec2-user/boinc/sched',
@@ -75,5 +75,5 @@ setup(
     ext_modules=cythonize(
         extensions,
         name="py_boinc",
-        language="c")
+        language="c++")
 )
