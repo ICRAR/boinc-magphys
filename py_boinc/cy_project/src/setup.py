@@ -28,10 +28,38 @@ Setup the wrappers around the BOINC 'C' libraries
 
 from distutils.core import setup
 from distutils.extension import Extension
-from cython.Distutils import build_ext
+import os
+from Cython.Build import cythonize
 
+if os.path.exists('/home/ec2-user'):
+    INCLUDE_DIRS = ['/home/ec2-user/boinc',
+                    '/home/ec2-user/boinc/db',
+                    '/home/ec2-user/boinc/sched',
+                    '/home/ec2-user/boinc/lib',
+                    '/home/ec2-user/boinc/tools',]
+    LIBRARY_DIRS = ['/home/ec2-user/boinc/lib','/home/ec2-user/boinc/api']
+else:
+    INCLUDE_DIRS = ['/Users/kevinvinsen/Documents/ICRAR/work/boinc',
+                    '/Users/kevinvinsen/Documents/ICRAR/work/boinc/db',
+                    '/Users/kevinvinsen/Documents/ICRAR/work/boinc/sched',
+                    '/Users/kevinvinsen/Documents/ICRAR/work/boinc/lib',
+                    '/Users/kevinvinsen/Documents/ICRAR/work/boinc/clientgui/mac',
+                    '/Users/kevinvinsen/Documents/ICRAR/work/boinc/tools',
+                    '/usr/local/mysql-5.5.14-osx10.6-x86_64/include',]
+    LIBRARY_DIRS = ['/Users/kevinvinsen/Documents/ICRAR/work/boinc/mac_build/build/Development',
+                    '/usr/local/mysql-5.5.14-osx10.6-x86_64/lib']
+
+extensions = [Extension("create_work_unit",
+                        sources=["c_project/create_work.cpp"],
+                        include_dirs=INCLUDE_DIRS,
+                        library_dirs=LIBRARY_DIRS,
+                        libraries=["boinc", "boinc_api", "mysqlclient"],
+                        )]
 setup(
-    cmdclass={'build_ext': build_ext},
-    ext_modules=[Extension("queue", ["queue.pyx"])]
+    name="py_boinc",
+    version='1.0',
+    ext_modules=cythonize(
+        extensions,
+        name="create_work_unit",
+        language="c")
 )
-

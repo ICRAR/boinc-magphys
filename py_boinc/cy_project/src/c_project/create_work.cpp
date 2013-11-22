@@ -66,35 +66,52 @@
 
 #include "backend_lib.h"
 
+/**
+ * Make a DB connection to the BOINC database.
+ *
+ * The connection is effectively a singleton stored in boinc_db
+ */
 int boinc_db_open() {
+    int retval;
     const char* config_dir = 0;
+    char download_dir[256], db_name[256], db_passwd[256];
+    char db_user[256],db_host[256];
 
     retval = config.parse_file(config_dir);
     if (retval) {
         fprintf(stderr, "Can't parse config file: %s\n", boincerror(retval));
-        exit(1);
-    } else {
-        strcpy(db_name, config.db_name);
-        strcpy(db_passwd, config.db_passwd);
-        strcpy(db_user, config.db_user);
-        strcpy(db_host, config.db_host);
-        strcpy(download_dir, config.download_dir);
+        return(retval);
     }
+
+    strcpy(db_name, config.db_name);
+    strcpy(db_passwd, config.db_passwd);
+    strcpy(db_user, config.db_user);
+    strcpy(db_host, config.db_host);
+    strcpy(download_dir, config.download_dir);
 
     retval = boinc_db.open(db_name, db_host, db_user, db_passwd);
     if (retval) {
         fprintf(stderr,
             "create_work: error opening database: %s\n", boincerror(retval)
         );
-        exit(1);
+        return(retval);
     }
 
+    return 0;
 }
 
+/**
+ * Close the DB connection to the BOINC database
+ */
 int boinc_db_close() {
     boinc_db.close();
+
+    return 0;
 }
 
+/**
+ * Create a work unit
+ */
 int create_work(char* app_name,
         int min_quorom,
         int max_success_results,
@@ -115,28 +132,20 @@ int create_work(char* app_name,
     DB_APP app;
     DB_WORKUNIT wu;
     int retval;
-    char wu_template[BLOB_SIZE];
     char wu_template_file[256], result_template_file[256], result_template_path[MAXPATHLEN];
     const char* command_line=NULL;
-    const char** infiles = NULL;
-    int i, ninfiles;
-    char download_dir[256], db_name[256], db_passwd[256];
-    char db_user[256],db_host[256];
+    int ninfiles;
     char buf[256];
     char additional_xml[256];
-    const char* config_dir = 0;
 
-
-    strcpy(wu_template_file, "");
-    strcpy(result_template_file, "");
-    strcpy(app.name, "");
-    strcpy(db_passwd, "");
-    strcpy(additional_xml, "");
-    ninfiles = 0;
-    wu.clear();
+    safe_strcpy(wu_template_file, wu_template);
+    safe_strcpy(result_template_file, result_template);
+    safe_strcpy(app.name, app_name);
+    strcpy(additional_xml, additional_xml_in);
+    ninfiles = number_input_files;
 
     // defaults (in case they're not in WU template)
-
+    wu.clear();
     wu.id = 0;
     wu.min_quorum = min_quorom;
     wu.target_nresults = target_nresults;
@@ -154,34 +163,15 @@ int create_work(char* app_name,
     wu.opaque = opaque;
     safe_strcpy(wu.name, wu_name);
 
-    safe_strcpy(app.name, app_name);
-
-
-        } else if (arg(argv, i, "d")) {
-            int dl = atoi(argv[++i]);
-            log_messages.set_debug_level(dl);
-            if (dl ==4) g_print_queries = true;
-
-    show_wu_name = false;
-
-    safe_strcpy(wu_template_file, wu_template);
-    safe_strcpy(result_template_file, result_template);
-    strcpy(additional_xml, additional_xml_in);
-
-    infiles = input_files;
-    ninfiles = number_input_files;
+    int dl = 3;
+    log_messages.set_debug_level(dl);
+    if (dl ==4) g_print_queries = true;
 
     sprintf(buf, "where name='%s'", app.name);
     retval = app.lookup(buf);
     if (retval) {
         fprintf(stderr, "create_work: app not found\n");
-        exit(1);
-    }
-
-    retval = config.parse_file(config_dir);
-    if (retval) {
-        fprintf(stderr, "Can't parse config file: %s\n", boincerror(retval));
-        exit(1);
+        return(retval);
     }
 
     retval = read_filename(wu_template_file, wu_template, sizeof(wu_template));
@@ -189,7 +179,7 @@ int create_work(char* app_name,
         fprintf(stderr,
             "create_work: can't open input template %s\n", wu_template_file
         );
-        exit(1);
+        return(retval);
     }
 
     wu.appid = app.id;
@@ -201,7 +191,7 @@ int create_work(char* app_name,
         wu_template,
         result_template_file,
         result_template_path,
-        const_cast<const char **>(infiles),
+        const_cast<const char **>(input_files),
         ninfiles,
         config,
         command_line,
@@ -209,9 +199,8 @@ int create_work(char* app_name,
     );
     if (retval) {
         fprintf(stderr, "create_work: %s\n", boincerror(retval));
-        exit(1);
+        return(retval);
     }
-    boinc_db.close();
-}
 
-const char *BOINC_RCSID_3865dbbf46 = "$Id$";
+    return 0;
+}

@@ -45,7 +45,9 @@
 // Input files must be in the download dir.
 
 
-// Open the connect to the BOINC DB
+// Open the connect to the BOINC DB - this is effectively a singleton to be
+// used for all DB operations.
+// Return errval if it fails
 int boinc_db_open();
 
 // Close the connect to the BOINC DB
