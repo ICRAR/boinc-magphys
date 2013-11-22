@@ -46,7 +46,10 @@
 // See the docs for a description of WU and result template files
 // This program must be run in the project's root directory
 //
+#ifdef __cplusplus
 extern "C" {
+#endif
+
 #include "config.h"
 
 #include <cstdio>
@@ -206,4 +209,6 @@ int create_work(char* app_name,
     return 0;
 }
 
+#ifdef __cplusplus
 }
+#endif

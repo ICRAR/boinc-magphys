@@ -44,8 +44,9 @@
 // Create a workunit.
 // Input files must be in the download dir.
 
+#ifdef __cplusplus
 extern "C" {
-
+#endif
 
 // Open the connect to the BOINC DB - this is effectively a singleton to be
 // used for all DB operations.
@@ -73,4 +74,6 @@ int create_work(char* app_name,
     int priority,
     char** input_files);
 
+#ifdef __cplusplus
 }
+#endif
