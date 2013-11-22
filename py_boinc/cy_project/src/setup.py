@@ -31,6 +31,7 @@ from distutils.extension import Extension
 import os
 from Cython.Build import cythonize
 
+PY_BOINC = "py_boinc"
 SOURCES = ['cy_create_work_unit.pyx', 'c_project/create_work.cpp']
 
 if os.path.exists('/home/ec2-user'):
@@ -42,7 +43,7 @@ if os.path.exists('/home/ec2-user'):
                     '/home/ec2-user/boinc',
                     '/usr/include/mysql55']
     LIBRARY_DIRS = ['/usr/lib64/mysql/']
-    extensions = [Extension("create_work_unit",
+    extensions = [Extension(PY_BOINC,
                             sources=SOURCES,
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
@@ -63,17 +64,17 @@ else:
     LIBRARY_DIRS = ['/Users/kevinvinsen/Documents/ICRAR/work/boinc/mac_build/build/Development',
                     '/usr/local/mysql-5.5.14-osx10.6-x86_64/lib']
 
-    extensions = [Extension("py_boinc",
+    extensions = [Extension(PY_BOINC,
                             sources=SOURCES,
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
                             libraries=["boinc", "boinc_api", "mysqlclient"],
                             )]
 setup(
-    name="py_boinc",
+    name=PY_BOINC,
     version='1.0',
     ext_modules=cythonize(
         extensions,
-        name="py_boinc",
+        name=PY_BOINC,
         language="c++")
 )
