@@ -46,6 +46,7 @@ if os.path.exists('/home/ec2-user'):
                             library_dirs=LIBRARY_DIRS,
                             extra_objects=['/home/ec2-user/boinc/sched/libsched.a',
                                            '/home/ec2-user/boinc/lib/libboinc.a',
+                                           '/home/ec2-user/boinc/lib/libboinc_crypt.a',
                                            '/home/ec2-user/boinc/api/libboinc_api.a'],
                             libraries=["mysqlclient"],
                             )]
