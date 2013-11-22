@@ -37,6 +37,7 @@ if os.path.exists('/home/ec2-user'):
                     '/home/ec2-user/boinc/lib',
                     '/home/ec2-user/boinc/db',
                     '/home/ec2-user/boinc/tools',
+                    '/home/ec2-user/boinc',
                     '/usr/include/mysql55']
     LIBRARY_DIRS = ['/usr/lib64/mysql/']
     extensions = [Extension("create_work_unit",
