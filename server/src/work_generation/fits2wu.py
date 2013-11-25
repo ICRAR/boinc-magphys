@@ -36,6 +36,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
+import py_bonic
 from Boinc import configxml
 from datetime import datetime
 from utils.logging_helper import config_logger
@@ -85,18 +86,52 @@ else:
     fanout = long(boinc_config.config.uldl_dir_fanout)
     LOG.info("download_dir: %s, fanout: %d", download_dir, fanout)
 
-    # Normal operation
-    files_processed = 0
-    if args['register'] is None:
-        FILES_TO_PROCESS = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
+    # Open the BOINC DB
+    LOG.info("Opening BOINC DB")
+    return_value = py_bonic.boinc_db_open()
+    if return_value != 0:
+        LOG.error('Could not open BOINC DB return code: %d', return_value)
 
-        # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
-        while files_processed < FILES_TO_PROCESS:
-            LOG.info("Added %d of %d", files_processed, FILES_TO_PROCESS)
-            registration = connection.execute(select([REGISTER]).where(REGISTER.c.create_time == None).order_by(REGISTER.c.priority.desc(), REGISTER.c.register_time)).first()
+    else:
+        # Normal operation
+        files_processed = 0
+        if args['register'] is None:
+            FILES_TO_PROCESS = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
+
+            # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
+            while files_processed < FILES_TO_PROCESS:
+                LOG.info("Added %d of %d", files_processed, FILES_TO_PROCESS)
+                registration = connection.execute(select([REGISTER]).where(REGISTER.c.create_time == None).order_by(REGISTER.c.priority.desc(), REGISTER.c.register_time)).first()
+                if registration is None:
+                    LOG.info('No registrations waiting')
+                    break
+                else:
+                    # As the load work unit component adds data to the data base we need autocommit on to ensure each pixel matches
+                    #transaction = connection.begin()
+                    if not os.path.isfile(registration[REGISTER.c.filename]):
+                        LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
+                        connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
+                    elif registration[REGISTER.c.sigma_filename] is not None and not os.path.isfile(registration[REGISTER.c.sigma_filename]):
+                        LOG.error('The file %s does not exist', registration[REGISTER.c.sigma_filename])
+                        connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
+                    else:
+                        LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
+                        fit2wu = Fit2Wu(connection, LIMIT, download_dir, fanout)
+                        (work_units_added, pixel_count) = fit2wu.process_file(registration)
+                        # One WU = MIN_QUORUM Results
+                        files_processed += (work_units_added * MIN_QUORUM)
+                        if os.path.exists(registration[REGISTER.c.filename]):
+                            os.remove(registration[REGISTER.c.filename])
+                        if registration.sigma_filename is not None and os.path.exists(registration.sigma_filename):
+                            os.remove(registration[REGISTER.c.sigma_filename])
+                        connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
+                    connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
+
+        # We want an explict galaxy to load
+        else:
+            registration = connection.execute(select([REGISTER]).where(and_(REGISTER.c.register_id == args['register'], REGISTER.c.create_time == None))).first()
             if registration is None:
-                LOG.info('No registrations waiting')
-                break
+                LOG.info('No registration waiting with the id %d', args['register'])
             else:
                 # As the load work unit component adds data to the data base we need autocommit on to ensure each pixel matches
                 #transaction = connection.begin()
@@ -110,41 +145,20 @@ else:
                     LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
                     fit2wu = Fit2Wu(connection, LIMIT, download_dir, fanout)
                     (work_units_added, pixel_count) = fit2wu.process_file(registration)
-                    # One WU = MIN_QUORUM Results
-                    files_processed += (work_units_added * MIN_QUORUM)
-                    if os.path.exists(registration[REGISTER.c.filename]):
-                        os.remove(registration[REGISTER.c.filename])
-                    if registration.sigma_filename is not None and os.path.exists(registration.sigma_filename):
+                    files_processed = work_units_added * MIN_QUORUM
+                    os.remove(registration[REGISTER.c.filename])
+                    if registration[REGISTER.c.sigma_filename] is not None:
                         os.remove(registration[REGISTER.c.sigma_filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
 
-    # We want an explict galaxy to load
-    else:
-        registration = connection.execute(select([REGISTER]).where(and_(REGISTER.c.register_id == args['register'], REGISTER.c.create_time == None))).first()
-        if registration is None:
-            LOG.info('No registration waiting with the id %d', args['register'])
-        else:
-            # As the load work unit component adds data to the data base we need autocommit on to ensure each pixel matches
-            #transaction = connection.begin()
-            if not os.path.isfile(registration[REGISTER.c.filename]):
-                LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
-                connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
-            elif registration[REGISTER.c.sigma_filename] is not None and not os.path.isfile(registration[REGISTER.c.sigma_filename]):
-                LOG.error('The file %s does not exist', registration[REGISTER.c.sigma_filename])
-                connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
-            else:
-                LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
-                fit2wu = Fit2Wu(connection, LIMIT, download_dir, fanout)
-                (work_units_added, pixel_count) = fit2wu.process_file(registration)
-                files_processed = work_units_added * MIN_QUORUM
-                os.remove(registration[REGISTER.c.filename])
-                if registration[REGISTER.c.sigma_filename] is not None:
-                    os.remove(registration[REGISTER.c.sigma_filename])
-                connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
-            connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
+        LOG.info('Done - added %d Results', files_processed)
 
-    LOG.info('Done - added %d Results', files_processed)
+    # Closing BOINC DB
+    if return_value == 0:
+        LOG.info('Closing BOINC DB')
+        return_value = py_bonic.boinc_db_close()
+
 
 # Log how many are left in the queue
 count = connection.execute(select([func.count(REGISTER.c.register_id)]).where(REGISTER.c.create_time == None)).first()[0]

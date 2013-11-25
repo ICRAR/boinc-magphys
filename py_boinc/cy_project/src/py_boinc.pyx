@@ -55,15 +55,16 @@ cdef extern from "c_project/create_work.h":
                     char* additional_xml,
                     int opaque,
                     int priority,
-                    char** input_files)
+                    char** input_files,
+                    int number_input_files)
 
-def boinc_db_close():
+cpdef int boinc_db_close():
     return db_close()
 
-def boinc_db_open():
+cpdef int boinc_db_open():
     return db_open()
 
-def boinc_create_work(char* app_name,
+cpdef int boinc_create_work(char* app_name,
                       int min_quorom,
                       int max_success_results,
                       int delay_bound,
@@ -80,7 +81,7 @@ def boinc_create_work(char* app_name,
                       int priority,
                       list_input_files):
     cdef char **c_input_files = to_cstring_array(list_input_files)
-    retval = create_work(app_name,
+    cdef int retval = create_work(app_name,
                        min_quorom,
                        max_success_results,
                        delay_bound,
@@ -95,7 +96,8 @@ def boinc_create_work(char* app_name,
                        additional_xml,
                        opaque,
                        priority,
-                       c_input_files)
+                       c_input_files,
+                       len(list_input_files))
 
     free(c_input_files)
     return retval
