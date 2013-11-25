@@ -47,7 +47,7 @@ from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
 
-OLD_WAY = True
+OLD_WAY = False
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = POGS_BOINC_PROJECT_ROOT + '/bin'
 TEMPLATES_PATH1 = 'templates'                                          # In true BOINC style, this is magically relative to the project root
