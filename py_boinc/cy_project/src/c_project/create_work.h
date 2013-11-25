@@ -72,7 +72,8 @@ int create_work(char* app_name,
     char* additional_xml,
     int opaque,
     int priority,
-    char** input_files);
+    char** input_files,
+    int number_input_files);
 
 #ifdef __cplusplus
 }

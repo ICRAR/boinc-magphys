@@ -136,11 +136,11 @@ int create_work(char* app_name,
     DB_APP app;
     DB_WORKUNIT wu;
     int retval;
-    char wu_template_file[256], result_template_file[256], result_template_path[MAXPATHLEN];
+    char wu_template_file[512], result_template_file[512], result_template_path[MAXPATHLEN];
     const char* command_line=NULL;
     int ninfiles;
-    char buf[256];
-    char additional_xml[256];
+    char buf[512];
+    char additional_xml[512];
 
     safe_strcpy(wu_template_file, wu_template);
     safe_strcpy(result_template_file, result_template);
