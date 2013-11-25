@@ -25,6 +25,16 @@
 """
 Setup the wrappers around the BOINC 'C' libraries
 """
+from libc.stdlib cimport malloc, free
+from libc.string cimport strcmp
+from cpython.string cimport PyString_AsString
+
+cdef char ** to_cstring_array(list_str):
+    cdef char **ret = <char **>malloc(len(list_str) * sizeof(char *))
+    for i in xrange(len(list_str)):
+        ret[i] = PyString_AsString(list_str[i])
+    return ret
+
 cdef extern from "c_project/create_work.h":
     int db_open()
 
@@ -68,8 +78,9 @@ def boinc_create_work(char* app_name,
                       char* additional_xml,
                       int opaque,
                       int priority,
-                      char** input_files):
-    return create_work(app_name,
+                      list_input_files):
+    cdef char **c_input_files = to_cstring_array(list_input_files)
+    retval = create_work(app_name,
                        min_quorom,
                        max_success_results,
                        delay_bound,
@@ -84,4 +95,7 @@ def boinc_create_work(char* app_name,
                        additional_xml,
                        opaque,
                        priority,
-                       input_files)
+                       c_input_files)
+
+    free(c_input_files)
+    return retval
