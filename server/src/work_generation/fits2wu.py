@@ -36,7 +36,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
-import py_bonic
+import py_boinc
 from Boinc import configxml
 from datetime import datetime
 from utils.logging_helper import config_logger
@@ -88,7 +88,7 @@ else:
 
     # Open the BOINC DB
     LOG.info("Opening BOINC DB")
-    return_value = py_bonic.boinc_db_open()
+    return_value = py_boinc.boinc_db_open()
     if return_value != 0:
         LOG.error('Could not open BOINC DB return code: %d', return_value)
 
@@ -157,7 +157,7 @@ else:
     # Closing BOINC DB
     if return_value == 0:
         LOG.info('Closing BOINC DB')
-        return_value = py_bonic.boinc_db_close()
+        return_value = py_boinc.boinc_db_close()
 
 
 # Log how many are left in the queue
