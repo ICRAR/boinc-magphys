@@ -122,7 +122,7 @@ int create_work(char* app_name,
         int delay_bound,
         int target_nresults,
         char* wu_name,
-        char* wu_template,
+        char* wu_template_file_in,
         char* result_template,
         float rsc_fpops_est,
         float rsc_fpops_bound,
@@ -136,13 +136,14 @@ int create_work(char* app_name,
     DB_APP app;
     DB_WORKUNIT wu;
     int retval;
+    char wu_template[BLOB_SIZE];
     char wu_template_file[512], result_template_file[512], result_template_path[MAXPATHLEN];
     const char* command_line=NULL;
     int ninfiles;
     char buf[512];
     char additional_xml[512];
 
-    safe_strcpy(wu_template_file, wu_template);
+    safe_strcpy(wu_template_file, wu_template_file_in);
     safe_strcpy(result_template_file, result_template);
     safe_strcpy(app.name, app_name);
     strcpy(additional_xml, additional_xml_in);
