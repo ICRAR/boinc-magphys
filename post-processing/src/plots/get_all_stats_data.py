@@ -37,12 +37,6 @@ parser = argparse.ArgumentParser('Get all the stats data from theSkyNet POGS dat
 parser.add_argument('output_directory', nargs=1, help='where to put the output files')
 args = vars(parser.parse_args())
 
-#ENGINE = create_engine("mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@127.0.0.1:9870/pogs")
-#connection = ENGINE.connect()
-#max_id = connection.execute(select([func.max(USER.c.id)])).first()[0]
-#connection.close()
-#LOG.info('Max Id: %d', max_id)
-
 get_data(args['output_directory'][0])
 
 LOG.info('All Done.')

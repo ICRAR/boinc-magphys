@@ -50,3 +50,7 @@ delete from galaxy;
 delete from register;
 
 
+-- Blocking the hosts of a user
+update host
+set max_results_day = -1
+where userid = <blah>;
