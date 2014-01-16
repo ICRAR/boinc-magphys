@@ -114,6 +114,27 @@ class Fit2Wu:
         self._sfh_model_file = None
         self._ir_model_file = None
         self._zlib_file = None
+        self._filename = None
+        self._galaxy_name = None
+        self._galaxy_id = None
+        self._galaxy_type = None
+        self._priority = None
+        self._redshift = None
+        self._run_id = None
+        self._sigma = None
+        self._sigma_filename = None
+        self._rounded_redshift = None
+        self._hdu_list = None
+        self._layer_count = None
+        self._end_y = None
+        self._end_x = None
+        self._fpops_est_per_pixel = None
+        self._cobblestone_scaling_factor = None
+        self._template_file = None
+        self._layer_order = None
+        self._ultraviolet_bands = {}
+        self._optical_bands = {}
+        self._infrared_bands = {}
 
     def process_file(self, registration):
         """
@@ -458,7 +479,7 @@ class Fit2Wu:
                 "--rsc_fpops_bound", "%(bound).4f%(exp)s" % {'bound': self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area, 'exp': FPOPS_EXP},
                 "--rsc_memory_bound", "1e8",
                 "--rsc_disk_bound", "1e8",
-                "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_area * self._cobblestone_scaling_factor},
+                "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
                 "--opaque",   str(area.area_id),
                 "--priority", '{0}'.format(self._priority)
             ]
