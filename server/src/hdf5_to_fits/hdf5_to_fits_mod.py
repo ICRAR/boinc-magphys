@@ -38,7 +38,6 @@ import uuid
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from sqlalchemy import select
-from sqlalchemy.sql.expression import distinct
 from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
 from config import DELETED, STORED
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY
@@ -280,9 +279,9 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
             if galaxy[GALAXY.c.status_id] == STORED or galaxy[GALAXY.c.status_id] == DELETED:
                 output_dir = tempfile.mkdtemp()
                 try:
-                    s3Helper = S3Helper()
+                    s3_helper = S3Helper()
                     LOG.info('Getting HDF5 file to {0}'.format(output_dir))
-                    tmp_file = get_hdf5_file(s3Helper, output_dir, galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+                    tmp_file = get_hdf5_file(s3_helper, output_dir, galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
                     LOG.info('File stored in {0}'.format(tmp_file))
 
                     # We have the file
@@ -298,7 +297,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
                                 file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
 
                         h5_file.close()
-                        url = zip_files(s3Helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
+                        url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
                         connection.execute(HDF5_REQUEST_GALAXY.update().
                                            where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
                                            values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))

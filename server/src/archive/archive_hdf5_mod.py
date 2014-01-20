@@ -35,7 +35,7 @@ import os
 import time
 from utils.logging_helper import config_logger
 from sqlalchemy.sql.expression import select, func
-from config import MIN_HIST_VALUE, ARCHIVED, PROCESSED, HDF5_OUTPUT_DIRECTORY
+from config import MIN_HIST_VALUE, ARCHIVED, PROCESSED, HDF5_OUTPUT_DIRECTORY, POGS_TMP
 from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT, PARAMETER_NAME, GALAXY
 from utils.name_builder import get_files_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
@@ -346,6 +346,22 @@ def area_intersects_block(connection, key, block_x, block_y, map_area_ids):
     return area_intersects_block1(block_x, block_y, area_details)
 
 
+def load_map_areas(connection, map_areas, galaxy_id):
+    """
+    Load the area map
+
+    :param connection:
+    :param map_areas:
+    :param galaxy_id:
+    :return:
+    """
+    LOG.info('Loading the area details')
+    for area in connection.execute(select([AREA]).where(AREA.c.galaxy_id == galaxy_id)):
+        area_details = [area[AREA.c.top_x], area[AREA.c.top_y], area[AREA.c.bottom_x], area[AREA.c.bottom_y]]
+        map_areas[area[AREA.c.area_id]] = area_details
+    LOG.info('Loaded the area details')
+
+
 def pixel_in_block(raw_x, raw_y, block_x, block_y):
     """
     Is the pixel inside the block we're processing
@@ -381,7 +397,7 @@ def pixel_in_block(raw_x, raw_y, block_x, block_y):
     return block_top_x <= raw_x <= block_bottom_x and block_top_y <= raw_y <= block_bottom_y
 
 
-def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, dimension_z, area_total, output_directory, map_parameter_name):
+def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, dimension_z, area_total, galaxy_id, map_parameter_name):
     """
     Store the pixel data
     """
@@ -413,6 +429,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     group.attrs['PIXELS_DIM4_PERCENTILE_97_5'] = INDEX_PERCENTILE_97_5
 
     histogram_list = []
+    keys = []
     map_areas = {}
     pixel_count = 0
     area_count = 0
@@ -420,6 +437,14 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     histogram_block_index = 0
     s3helper = S3Helper()
     bucket = s3helper.get_bucket(get_files_bucket())
+
+    # Load the area details and keys
+    load_map_areas(connection, map_areas, galaxy_id)
+    for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
+        # Ignore the key
+        if key.key.endswith('/'):
+            continue
+        keys.append(key)
 
     histogram_group = group.create_group('histogram_blocks')
     histogram_data = histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
@@ -438,11 +463,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             data_pixel_filter = group.create_dataset('pixel_filters_{0}_{1}'.format(block_x, block_y), (size_x, size_y, dimension_z), dtype=data_type_pixel_filter, compression='gzip')
             data_pixel_histograms_grid = group.create_dataset('pixel_histograms_grid_{0}_{1}'.format(block_x, block_y), (size_x, size_y, NUMBER_PARAMETERS), dtype=data_type_block_details, compression='gzip')
 
-            for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
-                # Ignore the key
-                if key.key.endswith('/'):
-                    continue
-
+            for key in keys:
                 if not area_intersects_block(connection, key.key, block_x, block_y, map_areas):
                     LOG.info('Skipping {0}'.format(key.key))
                     continue
@@ -450,7 +471,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 # Now process the file
                 start_time = time.time()
                 LOG.info('Processing file {0}'.format(key.key))
-                temp_file = os.path.join('/tmp', 'temp.sed')
+                temp_file = os.path.join(POGS_TMP, 'temp.sed')
                 key.get_contents_to_filename(temp_file)
 
                 if is_gzip(temp_file):
@@ -779,7 +800,7 @@ def archive_to_hdf5(connection):
                                        galaxy[GALAXY.c.dimension_y],
                                        galaxy[GALAXY.c.dimension_z],
                                        area_count,
-                                       HDF5_OUTPUT_DIRECTORY,
+                                       galaxy[GALAXY.c.galaxy_id],
                                        map_parameter_name)
 
             # Flush the HDF5 data to disk

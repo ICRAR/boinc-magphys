@@ -59,12 +59,15 @@ We will measure physical parameters (such as stellar mass surface density, star 
       <li><a href=\"#german\">Deutsch</a></li>
       <li><a href=\"#italian\">Italiano</a></li>
       <li><a href=\"#chinese\">中文</a></li>
+      <li><a href=\"#polish\">Polski</a></li>
     </ul>
 
     <div class=\"tabContent\" id=\"english\">
 TheSkyNet POGS is a research project that uses Internet-connected computers to do research in astronomy. We will combine the spectral coverage of GALEX, Pan-STARRS1, and WISE to generate a multi-wavelength UV-optical-NIR galaxy atlas for the nearby Universe. We will calculate physical parameters such as: star formation rate, stellar mass of the galaxy, dust attenuation, and total dust mass of a galaxy; on a pixel-by-pixel basis using spectral energy distribution fitting techniques. You can participate by downloading and running a free program on your computer.
-<p>
-TheSkyNet POGS is based at The International Centre for Radio Astronomy Research.
+<p><a href=\"http://www.theskynet.org\">TheSkyNet</a> is an initiative of the International Centre for Radio Astronomy Research (ICRAR), a joint venture of Curtin University and The University of Western Australia. 
+By joining this project your computer will help astronomers around the world answer some of the big questions we have about the Universe. 
+TheSkyNet POGS is theSkyNet's newest project, in testing since late 2012 and officially joining theSkyNet on our second birthday - September 13th 2013. 
+
 
     </div>
 
@@ -81,8 +84,7 @@ par pixel grâce aux techniques de distribution spectrale d'énergie. Pour
 participer, il vous suffit de télécharger puis lancer un programme gratuit
 sur votre ordinateur.
 <p>
-theSkyNet POGS est basé au Centre International de Recherche en Radio
-Astronomie (ICRAR).
+<a href=\"http://www.theskynet.org\">TheSkyNet</a> est une initiative du Centre International de Recherche en Radioastronomie (ICRAR), et une entreprise commune entre les universités de Curtin et d'Australie Occidentale. En participant à ce projet, votre ordinateur servira à aider les astronomes du monde entier à répondre à quelques-unes des Grandes questions que nous nous posons sur notre univers. Le SkyNet POGs est le tout nouveau projet de theSkyNet, en phase de test depuis fin 2012 et y faisant officiellement part entière au deuxième anniversaire de theSkyNet le 13 Septembre 2013.
     </div>
 
     <div class=\"tabContent\" id=\"russian\">
@@ -105,18 +107,23 @@ theSkyNet POGS 是一个利于互联网上的计算机来承担天文科研的�
 theSkyNet POGS项目是由国际射电天文学研究中心发起的。
     </div>
     <div class=\"tabContent\" id=\"italian\">
-The SkyNet POGS é un progetto sperimentale che utilizza calcolatori connessi via Internet per condurre ricerca in astronomia. Le gamme spettrali di GALEX, Pan-STARRS1 e WISE verranno combinate per generare un atlante dell'universo vicino che copra molteplici lunghezze d'onda (ultravioletto-ottico-vicino infrarosso). Con tale ricerca, sara' possibile misurare diversi parametri fisici, per es.: tasso di formazione stellare, massa stellare nelle galassie, attenuazione indotta dalla polvere cosmica e contenuto di polvere cosmica interstellare nelle galassie. Tali parametri verrano estrapolati con risoluzione a livello di singolo pixel, utilizzando il metodo della distribuzione spettrale d'energia (SED) tramite tecniche di 'fitting'. Puoi partecipare anche Tu scaricando ed eseguendo un programma gratuito sul tuo computer.
+TheSkyNet POGS é un progetto sperimentale che utilizza calcolatori connessi via Internet per condurre ricerca in astronomia. Le gamme spettrali di GALEX, Pan-STARRS1 e WISE verranno combinate per generare un atlante dell'universo vicino che copra molteplici lunghezze d'onda (ultravioletto-ottico-vicino infrarosso). Con tale ricerca, sara' possibile misurare diversi parametri fisici, per es.: tasso di formazione stellare, massa stellare nelle galassie, attenuazione indotta dalla polvere cosmica e contenuto di polvere cosmica interstellare nelle galassie. Tali parametri verrano estrapolati con risoluzione a livello di singolo pixel, utilizzando il metodo della distribuzione spettrale d'energia (SED) tramite tecniche di 'fitting'. Puoi partecipare anche Tu scaricando ed eseguendo un programma gratuito sul tuo computer.
 <p>
 The SkyNet POGS e' un progetto gestito dal Centro Internazionale della Ricerca in Radio Astronomia (International Centre for Radio Astronomy Research - ICRAR).
+    </div>
+    <div class=\"tabContent\" id=\"polish\">
+TheSkyNet POGS jest projektem badawczym, który wykorzystuje komputery podłączone do Internetu, aby wykonywać badania w zakresie astronomii. Łączymy badania zakresu widma GALEX, Pan-STARRS1 i WISE, aby wygenerować Atlas pobliskiego wszechświata w zakresie fal UV - NIR. Będziemy obliczać parametry fizyczne, takie jak: prędkość formowania się gwiazd, gwiezdna masa galaktyk, tłumienie pyłu, i masa całkowita pyłu galaktycznego, przy użyciu metody pixel- po - pixelu i technik dopasowania spektralnej dystrybucji energii. Możesz zostać uczestnikiem badań pobierając i uruchamiając bezpłatny program na swoim komputerze.
+<p>
+<a href=\"http://www.theskynet.org\">TheSkyNet</a> to inicjatywa International Centre for Radio Astronomy Research (ICRAR), we współpracy z Curtin University i University of Western Australia. Przystępując do tego projektu, twój komputer pomoże astronomom na całym świecie odpowiedzieć na niektóre z wielkich pytań na temat Wszechświata. TheSkyNet POGS jest najnowszym projektem theSkyNet, testowanym do końca 2012 roku i oficjalnie włączonym do theSkyNet w nasze drugie urodziny - 13 września 2013
     </div>
         ";
     }
     echo "
         <ul>
-	<li> <a href=\"http://production-test.theskynet.org/boinc/".$user->id."/galaxies\">Images you have processed</a>
-        <li> <a href=\"http://production-test.theskynet.org/galaxies\">Images for all the Galaxies used in the survey</a>
-        <li> [Link to page describing your research in detail]
-        <li> [Link to page listing project personnel, and an email address]
+	<li> <a href=\"http://www.theskynet.org/boinc/".$user->id."/galaxies\">Images you have processed</a>
+        <li> <a href=\"http://www.theskynet.org/galaxies\">Images for all the Galaxies used in the survey</a>
+        <li> <a href=\"http://www.theskynet.org/pages/Spectral%20Energy%20Distribution%20Fitting\">The Science we are trying to achieve</a>
+        <li> <a href=\"http://www.theskynet.org/pages/team_pogs\">The Team</a>
         </ul>
         <h2 class=headline>Join ".PROJECT."</h2>
         <ul>
@@ -289,13 +296,16 @@ echo "
   fjs.parentNode.insertBefore(js, fjs);
 }(document, 'script', 'facebook-jssdk'));</script>
     <div class=page_title>".PROJECT."</div>
-    <div><img src=\"logos/POGSbanner_label.jpg\" alt=\"POGS Banner\" width=\"808\" height=\"202\" border=\"0\" usemap=\"#map\" />
+    <div>
+        <a href=\"http://www.theskynet.org\"><img src=\"logos/POGS-Reverse.png\" alt=\"POGS\" border=\"0\" height=\"202\" /></a>
+        <img src=\"logos/POGSbanner_label.jpg\" alt=\"POGS Banner\" width=\"808\" height=\"202\" border=\"0\" usemap=\"#map\" />
         <map name=\"map\">
             <area shape=\"rect\" coords=\"0,0,200,200\" alt=\"GALEX (Galaxy Evolution Explorer)\" href=\"http://www.galex.caltech.edu\" />
             <area shape=\"rect\" coords=\"203,0,403,200\" alt=\"Pan-STARRS1\" href=\"http://www.ps1sc.org\" />
             <area shape=\"rect\" coords=\"406,0,606,200\" alt=\"WISE (Wide-field Infrared Survey Explorer)\" href=\"http://wise.ssl.berkeley.edu/index.html\" />
             <area shape=\"rect\" coords=\"608,0,808,200\" alt=\"MAGPHYS\" href=\"http://www.iap.fr/magphys/magphys/MAGPHYS.html\" />
         </map>
+        <a href=\"http://www.theskynet.org\"><img src=\"logos/theSkyNet-sidebar-Ad-larger-text.gif\" alt=\"theSkyNet POGS\" border=\"0\" height=\"202\" /></a>
    </div>
 ";
 

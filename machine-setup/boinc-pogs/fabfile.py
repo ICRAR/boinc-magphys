@@ -210,7 +210,7 @@ def edit_files():
       <output> update_credit.out </output>
     </task>
     <task>
-      <cmd> /home/ec2-user/boinc-magphys/server/src/image/build_png_image.py </cmd>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/image/build_png_image.py boinc</cmd>
       <period> 3 hour </period>
       <disabled> 0 </disabled>
       <output> build_png_image.out </output>
@@ -232,6 +232,12 @@ def edit_files():
       <period> 24 hours </period>
       <disabled> 0 </disabled>
       <output> original_image_checked.out </output>
+    </task>
+    <task>
+      <cmd> /home/ec2-user/boinc-magphys/server/src/hdf5_to_fits/hdf5_to_fits_boinc.py </cmd>
+      <period> 4 minutes </period>
+      <disabled> 0 </disabled>
+      <output> hdf5_to_fits_boinc.out </output>
     </task>
   </tasks>
   <daemons>

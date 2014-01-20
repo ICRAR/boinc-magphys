@@ -367,7 +367,8 @@ databaseHostname = "{2}"
 databaseName = "magphys"
 boincDatabaseName = "{3}"' > /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.db_username, env.db_password, env.db_host_name, env.project_name))
 
-    run('''echo '# Work Generation settings
+    run('''echo '
+# Work Generation settings
 min_pixels_per_file = "15"
 row_height = "7"
 threshold = "1000"
@@ -382,6 +383,7 @@ boinc_statistics_delay = "2"
 tmp = "/tmp"
 boinc_project_root = "/home/ec2-user/projects/{0}"
 project_name = "{0}"
+hdf5_output_directory = "/home/ec2-user/archive"
 
 # AWS settings
 ami_id = "XXX"
@@ -390,8 +392,17 @@ key_name = "XXX"
 security_groups = "XXX","YYY"
 subnet_ids = "XXX","YYY"
 
-[m1.small]
+[build_png_image]
+    instance_type = "m1.small"
     price = 0.060
+
+[original_image_checked]
+    instance_type = "m1.small"
+    price = 0.060
+
+[archive_data]
+    price = 0.120
+    instance_type = "m1.medium"
 
 [XXX]
     availability_zone = "us-east-1b"

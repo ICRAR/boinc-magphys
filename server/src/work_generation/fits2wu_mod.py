@@ -34,6 +34,7 @@ import json
 import shutil
 import math
 import pyfits
+import py_boinc
 import subprocess
 
 from datetime import datetime
@@ -46,6 +47,7 @@ from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
 
+OLD_WAY = False
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = POGS_BOINC_PROJECT_ROOT + '/bin'
 TEMPLATES_PATH1 = 'templates'                                          # In true BOINC style, this is magically relative to the project root
@@ -112,6 +114,27 @@ class Fit2Wu:
         self._sfh_model_file = None
         self._ir_model_file = None
         self._zlib_file = None
+        self._filename = None
+        self._galaxy_name = None
+        self._galaxy_id = None
+        self._galaxy_type = None
+        self._priority = None
+        self._redshift = None
+        self._run_id = None
+        self._sigma = None
+        self._sigma_filename = None
+        self._rounded_redshift = None
+        self._hdu_list = None
+        self._layer_count = None
+        self._end_y = None
+        self._end_x = None
+        self._fpops_est_per_pixel = None
+        self._cobblestone_scaling_factor = None
+        self._template_file = None
+        self._layer_order = None
+        self._ultraviolet_bands = {}
+        self._optical_bands = {}
+        self._infrared_bands = {}
 
     def process_file(self, registration):
         """
@@ -422,49 +445,68 @@ class Fit2Wu:
         :param pixels:
         """
         pixels_in_area = len(pixels)
-        filename = '%(galaxy)s_area%(area)s' % {'galaxy': self._galaxy_name, 'area': area.area_id}
-        LOG.info("Creating work unit %s : %d pixels", filename, pixels_in_area)
+        work_unit_name = '%(galaxy)s_area%(area)s' % {'galaxy': self._galaxy_name, 'area': area.area_id}
+        LOG.info("Creating work unit %s : %d pixels", work_unit_name, pixels_in_area)
 
-        args_params = [
-            "--appname",         APP_NAME,
-            "--min_quorum",      "%(min_quorum)s" % {'min_quorum':MIN_QUORUM},
-            "--max_success_results", "4",
-            "--delay_bound",     "%(delay_bound)s" % {'delay_bound':DELAY_BOUND},
-            "--target_nresults", "%(target_nresults)s" % {'target_nresults':TARGET_NRESULTS},
-            "--wu_name",         filename,
-            "--wu_template",     self._template_file,
-            "--result_template", TEMPLATES_PATH1 + "/fitsed_result.xml",
-            "--rsc_fpops_est",   "%(est).4f%(exp)s" % {'est':self._fpops_est_per_pixel * pixels_in_area, 'exp':FPOPS_EXP},
-            "--rsc_fpops_bound", "%(bound).4f%(exp)s" % {'bound':self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area, 'exp':FPOPS_EXP},
-            "--rsc_memory_bound", "1e8",
-            "--rsc_disk_bound", "1e8",
-            "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit':pixels_in_area * self._cobblestone_scaling_factor},
-            "--opaque",   str(area.area_id),
-            "--priority", '{0}'.format(self._priority)
-        ]
-        file_name_job = filename + '.job.xml'
+        file_name_job = work_unit_name + '.job.xml'
 
         # Copy files into BOINC's download hierarchy
-        data = [{'galaxy':self._galaxy_name,
-                 'run_id':self._run_id,
-                 'galaxy_id':self._galaxy_id,
-                 'area_id':area.area_id,
-                 'pixels':pixels_in_area,
-                 'top_x':area.top_x,
-                 'top_y':area.top_y,
-                 'bottom_x':area.bottom_x,
-                 'bottom_y':area.bottom_y, }]
-        self._create_observation_file(filename, data, pixels)
+        data = [{'galaxy': self._galaxy_name,
+                 'run_id': self._run_id,
+                 'galaxy_id': self._galaxy_id,
+                 'area_id': area.area_id,
+                 'pixels': pixels_in_area,
+                 'top_x': area.top_x,
+                 'top_y': area.top_y,
+                 'bottom_x': area.bottom_x,
+                 'bottom_y': area.bottom_y, }]
+        self._create_observation_file(work_unit_name, data, pixels)
         self._create_job_xml(file_name_job, pixels_in_area)
 
         # And "create work" = create the work unit
-        args_files = [filename, file_name_job, self._filter_file, self._zlib_file, self._sfh_model_file, self._ir_model_file]
-        cmd_create_work = [
-            BIN_PATH + "/create_work"
-        ]
-        cmd_create_work.extend(args_params)
-        cmd_create_work.extend(args_files)
-        subprocess.call(cmd_create_work)
+        args_files = [work_unit_name, file_name_job, self._filter_file, self._zlib_file, self._sfh_model_file, self._ir_model_file]
+        if OLD_WAY:
+            args_params = [
+                "--appname",         APP_NAME,
+                "--min_quorum",      "%(min_quorum)s" % {'min_quorum': MIN_QUORUM},
+                "--max_success_results", "4",
+                "--delay_bound",     "%(delay_bound)s" % {'delay_bound': DELAY_BOUND},
+                "--target_nresults", "%(target_nresults)s" % {'target_nresults': TARGET_NRESULTS},
+                "--wu_name",         work_unit_name,
+                "--wu_template",     self._template_file,
+                "--result_template", TEMPLATES_PATH1 + "/fitsed_result.xml",
+                "--rsc_fpops_est",   "%(est).4f%(exp)s" % {'est': self._fpops_est_per_pixel * pixels_in_area, 'exp': FPOPS_EXP},
+                "--rsc_fpops_bound", "%(bound).4f%(exp)s" % {'bound': self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area, 'exp': FPOPS_EXP},
+                "--rsc_memory_bound", "1e8",
+                "--rsc_disk_bound", "1e8",
+                "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
+                "--opaque",   str(area.area_id),
+                "--priority", '{0}'.format(self._priority)
+            ]
+            cmd_create_work = [
+                BIN_PATH + "/create_work"
+            ]
+            cmd_create_work.extend(args_params)
+            cmd_create_work.extend(args_files)
+            subprocess.call(cmd_create_work)
+
+        else:
+            py_boinc.boinc_create_work(app_name=APP_NAME,
+                                       min_quorom=MIN_QUORUM,
+                                       max_success_results=4,
+                                       delay_bound=DELAY_BOUND,
+                                       target_nresults=TARGET_NRESULTS,
+                                       wu_name=work_unit_name,
+                                       wu_template=self._template_file,
+                                       result_template=TEMPLATES_PATH1 + "/fitsed_result.xml",
+                                       rsc_fpops_est=self._fpops_est_per_pixel * pixels_in_area * 1e12,
+                                       rsc_fpops_bound=self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area * 1e12,
+                                       rsc_memory_bound=1e8,
+                                       rsc_disk_bound=1e8,
+                                       additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
+                                       opaque=area.area_id,
+                                       priority=self._priority,
+                                       list_input_files=args_files)
 
     def _enough_layers(self, pixels):
         """

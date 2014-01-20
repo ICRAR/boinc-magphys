@@ -552,7 +552,7 @@ def plot_os_data_stack(file_name, map_of_os):
         count = os_group[1]
         pyplot.text(os_group_id + width / 2, bottoms[os_group_id] + 100, '{0}'.format(count), horizontalalignment='center')
 
-    pyplot.ylim(ymin=0.1, ymax=10000)
+    pyplot.ylim(ymin=0.1, ymax=15000)
     pyplot.ylabel('Count')
     pyplot.xlabel('Operating System')
     pyplot.xticks(indexes + width / 2, x_ticks)

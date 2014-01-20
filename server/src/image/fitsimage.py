@@ -229,7 +229,7 @@ class ImageBuilder:
             self._image = self._image.resize((80, 80), Image.ANTIALIAS)
             self._save_to_s3(self._thumbnail_file_key, s3helper)
 
-    def _save_to_s3(self, image_file_key, s3Helper):
+    def _save_to_s3(self, image_file_key, s3_helper):
         """
         Save the image to an S3 bucket
 
@@ -239,7 +239,7 @@ class ImageBuilder:
         LOG.info('Saving an image to {0}'.format(image_file_key))
         file_name = '{0}/image.png'.format(POGS_TMP)
         self._image.save(file_name)
-        s3Helper.add_file_to_bucket(self._bucket_name, image_file_key, file_name)
+        s3_helper.add_file_to_bucket(self._bucket_name, image_file_key, file_name)
 
 
 class FitsImage:
@@ -259,7 +259,7 @@ class FitsImage:
         :param bucket:
         """
         # Use the new asinh algorithm.
-        self._build_Image_Asinh(fits_file_name, image_key_stub, self.centre, galaxy_id, bucket_name)
+        self._build_image_asinh(fits_file_name, image_key_stub, self.centre, galaxy_id, bucket_name)
 
     def _get_image_filters(self, hdulist):
         """
@@ -282,6 +282,11 @@ class FitsImage:
             image2_filters = [325, 324, 323]
             image3_filters = [326, 324, 323]
             image4_filters = [327, 325, 323]
+        elif 124 in filters_used and 230 in filters_used and 231 in filters_used and 232 in filters_used and 280 in filters_used and 283 in filters_used:
+            image1_filters = [232, 231, 230]
+            image2_filters = [231, 230, 124]
+            image3_filters = [280, 230, 124]
+            image4_filters = [283, 231, 124]
         elif 229 in filters_used and 230 in filters_used and 231 in filters_used and 232 in filters_used and 233 in filters_used:
             image1_filters = [232, 231, 230]
             image2_filters = [231, 230, 229]
@@ -297,7 +302,7 @@ class FitsImage:
 
         return image1_filters, image2_filters, image3_filters, image4_filters
 
-    def _build_Image_Asinh(self, fits_file_name, galaxy_key_stub, centre, galaxy_id, bucket_name):
+    def _build_image_asinh(self, fits_file_name, galaxy_key_stub, centre, galaxy_id, bucket_name):
         """
         Build Three Colour Images using the asinh() function.
         :param fits_file_name:
