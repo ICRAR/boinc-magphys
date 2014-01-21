@@ -35,6 +35,7 @@ import os
 from sqlalchemy.engine import create_engine
 from config import DB_LOGIN
 from database.database_support_core import REGISTER, TAG_REGISTER, TAG
+from work_generation.register_fits_file_mod import fix_redshift
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
