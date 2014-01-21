@@ -45,6 +45,11 @@ INSERT INTO filter VALUES (25, 'PACS170',  170.0,  171, 0, 0, 1, '170&#181;m');
 INSERT INTO filter VALUES (26, 'SPIRE250', 250.0,  172, 0, 0, 1, '250&#181;m');
 INSERT INTO filter VALUES (27, 'SPIRE350', 350.0,  173, 0, 0, 1, '350&#181;m');
 INSERT INTO filter VALUES (28, 'SPIRE500', 500.0,  174, 0, 0, 1, '500&#181;m');
+INSERT INTO filter VALUES (29, 'SDSSu',    0.354,  115, 0, 1, 0, 'u');
+INSERT INTO filter VALUES (30, 'SDSSg',    0.477,  116, 0, 1, 0, 'g');
+INSERT INTO filter VALUES (31, 'SDSSr',    0.623,  117, 0, 1, 0, 'r');
+INSERT INTO filter VALUES (32, 'SDSSi',    0.763,  118, 0, 1, 0, 'i');
+INSERT INTO filter VALUES (33, 'SDSSz',    0.913,  119, 0, 1, 0, 'z');
 
 CREATE TABLE galaxy_status (
   galaxy_status_id SMALLINT UNSIGNED NOT NULL PRIMARY KEY,
