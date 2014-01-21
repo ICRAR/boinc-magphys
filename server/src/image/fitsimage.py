@@ -120,6 +120,7 @@ class ImageBuilder:
                                        filter_id_green=filter_id_green))
 
     def _get_filter_id(self, connection, filter_number):
+        LOG.info('filter_number: {0}'.format(filter_number))
         filter_data = connection.execute(select([FILTER]).where(FILTER.c.filter_number == filter_number)).first()
         return filter_data[FILTER.c.filter_id]
 
@@ -277,6 +278,8 @@ class FitsImage:
             filter_number = hdu.header['MAGPHYSI']
             filters_used.append(filter_number)
 
+        LOG.info('Filters used {0}'.format(filters_used))
+
         if 323 in filters_used and 324 in filters_used and 325 in filters_used and 326 in filters_used and 327 in filters_used:
             image1_filters = [326, 325, 324]
             image2_filters = [325, 324, 323]
@@ -300,6 +303,7 @@ class FitsImage:
         else:
             LOG.critical('No filters defined that we recognise')
 
+        LOG.info('filters1 {0}, filters2 {1}, filters3 {2}, filters4 {3}'.format(image1_filters, image2_filters, image3_filters, image4_filters))
         return image1_filters, image2_filters, image3_filters, image4_filters
 
     def _build_image_asinh(self, fits_file_name, galaxy_key_stub, centre, galaxy_id, bucket_name):
