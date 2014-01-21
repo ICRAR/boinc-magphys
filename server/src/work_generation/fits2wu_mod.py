@@ -721,30 +721,32 @@ class Fit2Wu:
         ra_deg_found = False
         dec_deg_found = False
         for keyword in header:
-            # The new version of PyFits supports comments
-            value = header[index]
-            comment = header.comments[index]
-            self._connection.execute(insert.values(galaxy_id=self._galaxy_id, keyword=keyword, value=value, comment=comment))
+            try:
+                # The new version of PyFits supports comments
+                value = header[index]
+                comment = header.comments[index]
+                self._connection.execute(insert.values(galaxy_id=self._galaxy_id, keyword=keyword, value=value, comment=comment))
 
-            # Record the ctype so we can get the RA and DEC
-            if keyword == 'CTYPE1':
-                ctype1 = value
-            elif keyword == 'CTYPE2':
-                ctype2 = value
+                # Record the ctype so we can get the RA and DEC
+                if keyword == 'CTYPE1':
+                    ctype1 = value
+                elif keyword == 'CTYPE2':
+                    ctype2 = value
 
-            # Record the RA and DEC if we can
-            if not ra_deg_found:
-                if keyword == 'RA_CENT' or (ctype1 == 'RA---TAN' and keyword == 'CRVAL1') or keyword == 'RA_DEG':
-                    self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(ra_cent=float(value)))
-                if keyword == 'RA_DEG':
-                    ra_deg_found = True
+                # Record the RA and DEC if we can
+                if not ra_deg_found:
+                    if keyword == 'RA_CENT' or (ctype1 == 'RA---TAN' and keyword == 'CRVAL1') or keyword == 'RA_DEG':
+                        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(ra_cent=float(value)))
+                    if keyword == 'RA_DEG':
+                        ra_deg_found = True
 
-            if not dec_deg_found:
-                if keyword == 'DEC_CENT' or (ctype2 == 'DEC--TAN' and keyword == 'CRVAL2') or keyword == 'DEC_DEG':
-                    self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent=float(value)))
-                if keyword == 'DEC_DEG':
-                    dec_deg_found = True
-
+                if not dec_deg_found:
+                    if keyword == 'DEC_CENT' or (ctype2 == 'DEC--TAN' and keyword == 'CRVAL2') or keyword == 'DEC_DEG':
+                        self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(dec_cent=float(value)))
+                    if keyword == 'DEC_DEG':
+                        dec_deg_found = True
+            except pyfits.verify.VerifyError:
+                LOG.exception('VerifyError')
             index += 1
 
     def _store_tags(self, register_id):
