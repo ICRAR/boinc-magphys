@@ -34,6 +34,7 @@ LOG = config_logger(__name__)
 def fix_redshift(redshift_in):
     """
     Fix the redshift if it happens to be exactly on the boundary between two models
+
     >>> fix_redshift('0.00')
     0.00
     """
