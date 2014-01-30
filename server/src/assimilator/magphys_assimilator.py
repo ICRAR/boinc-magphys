@@ -45,7 +45,7 @@ from assimilator_utils import is_gzip
 from config import DB_LOGIN
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
-from database.database_support_core import PARAMETER_NAME, PIXEL_RESULT, AREA, AREA_USER, GALAXY
+from database.database_support_core import PARAMETER_NAME, PIXEL_RESULT, AREA, AREA_USER, GALAXY, GALAXY_USER
 from utils.name_builder import get_files_bucket, get_key_sed
 from utils.s3_helper import S3Helper
 
