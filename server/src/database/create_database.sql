@@ -363,3 +363,16 @@ CREATE TABLE tag_galaxy (
   FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+CREATE TABLE galaxy_user (
+  galaxyuser_id  BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  galaxy_id      BIGINT UNSIGNED NOT NULL,
+  userid       INTEGER NOT NULL,
+  create_time  TIMESTAMP,
+
+  FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id),
+
+  INDEX (galaxy_id),
+  INDEX (userid),
+  UNIQUE KEY uniq_galaxy_id_userid (galaxy_id,userid),
+) CHARACTER SET utf8 ENGINE=InnoDB;
+

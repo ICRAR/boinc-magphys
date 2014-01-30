@@ -243,9 +243,11 @@ class MagphysAssimilator(assimilator.Assimilator):
                                         user_id_set.add(user_id)
 
                             connection.execute(AREA_USER.delete().where(AREA_USER.c.area_id == self._area_id))
-                            insert = AREA_USER.insert()
+                            insert_area_user = AREA_USER.insert()
+                            insert_galaxy_user = GALAXY_USER.insert().prefix_with('IGNORE')
                             for user_id in user_id_set:
-                                connection.execute(insert, area_id=self._area_id, userid=user_id)
+                                connection.execute(insert_area_user, area_id=self._area_id, userid=user_id)
+                                connection.execute(insert_galaxy_user, galaxy_id=self._galaxy_id, userid=user_id)
 
                             # Copy the file to S3
                             s3helper = S3Helper()
