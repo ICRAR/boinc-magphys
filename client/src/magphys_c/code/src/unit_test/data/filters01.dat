@@ -1,0 +1,14 @@
+#name       lambda_eff  filter_id       fit?
+GALEXFUV    0.152       123             1
+GALEXNUV    0.231       124             1
+SDSSu       0.354       115             1
+SDSSg       0.477       116             1
+SDSSr       0.623       117             1
+SDSSi       0.763       118             1
+SDSSz       0.913       119             1
+WISEW1      3.4         280             1
+WISEW2      4.6         281             1
+WISEW3      12.0        282             1
+WISEW4      22.0        283             1
+
+
