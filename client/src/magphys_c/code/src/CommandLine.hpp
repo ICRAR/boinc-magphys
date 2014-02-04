@@ -34,37 +34,41 @@ using std::vector;
 
 namespace magphys {
 
-    class CommandLine {
-        public:
-            CommandLine();
-            ~CommandLine();
+class CommandLine {
+public:
+	CommandLine();
+	~CommandLine();
 
-            bool loadArguments(const vector<string>& args);
-            inline string observationsFile() const {
-                return observationsFile_;
-            }
-            inline string filtersFile() const {
-                return filtersFile_;
-            }
-            inline string modelOpticalFile() const {
-                return modelOpticalFile_;
-            }
-            inline string modelInfraredFile() const {
-                return modelInfraredFile_;
-            }
-            inline double redshift() const {
-                return redshift_;
-            }
+	bool loadArguments(const vector<string>& args);
+	inline string observationsFile() const {
+		return observationsFile__;
+	}
+	inline string filtersFile() const {
+		return filtersFile__;
+	}
+	inline string modelOpticalFile() const {
+		return modelOpticalFile__;
+	}
+	inline string modelInfraredFile() const {
+		return modelInfraredFile__;
+	}
+	inline double redshift() const {
+		return redshift__;
+	}
+    inline int startingLine() const {
+        return startingLine__;
+    }
 
-        private:
-            bool checkFiles();
+private:
+	bool checkFiles();
 
-            double redshift_;
-            string observationsFile_;
-            string filtersFile_;
-            string modelOpticalFile_;
-            string modelInfraredFile_;
-    };
+	double redshift__ = 0;
+	string observationsFile__;
+	string filtersFile__;
+	string modelOpticalFile__;
+	string modelInfraredFile__;
+	int startingLine__ = 0;
+};
 
 }
 

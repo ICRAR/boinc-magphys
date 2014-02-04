@@ -38,8 +38,7 @@ namespace magphys {
 class ModelData {
 public:
 	ModelData(double redshift) :
-			redshift_ { redshift } {
-
+			redshift__ { redshift } {
 	}
 	~ModelData();
 
@@ -50,48 +49,56 @@ public:
 	void convertToLnu(double distance, ObservationLine& observationLine);
 
 	inline vector<Filter>* filters() {
-		return &filters_;
+		return filters__;
 	}
 	inline vector<ObservationLine>* observationLines() {
-		return &observations_;
+		return observationLines__;
 	}
 	inline int nfilt_sfh() const {
-		return nfilt_sfh_;
+		return nfilt_sfh__;
 	}
 	inline int nfilt_ir() const {
-		return nfilt_ir_;
+		return nfilt_ir__;
 	}
 	inline int nfilt_mix() const {
-		return nfilt_mix_;
+		return nfilt_mix__;
+	}
+	inline int n_sfh() const {
+		return n_sfh__;
+	}
+	inline int n_ir() const {
+		return n_ir__;
 	}
 	inline ModelInfrared* modelInfrared(int model_number) {
-		return &modelInfrared_[model_number];
+		return &modelInfrared__[model_number];
 	}
 	inline ModelOptical* modelOptical(int model_number) {
-		return &modelOptical_[model_number];
+		return &modelOptical__[model_number];
 	}
 	inline double* fluxInfrared(int model_number) {
-		return &flux_ir_[model_number * nfilt_ir_];
+		return &flux_ir__[model_number * nfilt_ir__];
 	}
 	inline double* fluxOptical(int model_number) {
-		return &flux_sfh_[model_number * nfilt_sfh_];
+		return &flux_sfh__[model_number * nfilt_sfh__];
 	}
 	inline double redshift() const {
-		return redshift_;
+		return redshift__;
 	}
 
 private:
-	vector<Filter> filters_;
-	vector<ObservationLine> observations_;
+	vector<Filter>* filters__ = nullptr;
+	vector<ObservationLine>* observationLines__ = nullptr;
 
-	const double redshift_;
-	int nfilt_sfh_ = 0;
-	int nfilt_ir_ = 0;
-	int nfilt_mix_ = 0;
-	double* flux_ir_ = nullptr;
-	ModelInfrared* modelInfrared_ = nullptr;
-	double* flux_sfh_ = nullptr;
-	ModelOptical* modelOptical_ = nullptr;
+	const double redshift__;
+	int nfilt_sfh__ = 0;
+	int nfilt_ir__ = 0;
+	int nfilt_mix__ = 0;
+	int n_sfh__ = 0;
+	int n_ir__ = 0;
+	double* flux_ir__ = nullptr;
+	ModelInfrared* modelInfrared__ = nullptr;
+	double* flux_sfh__ = nullptr;
+	ModelOptical* modelOptical__ = nullptr;
 }; // Class ModelData
 } // namespace magphys
 

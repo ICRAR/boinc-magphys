@@ -35,36 +35,36 @@ using std::vector;
 
 namespace magphys {
 
-    class Fit {
-        public:
-            Fit(double redshift) :
-                redshift_ {redshift} {
+class Fit {
+public:
+    Fit(double redshift)
+            : redshift__ { redshift } {
 
-            }
-            ~Fit();
+    }
+    ~Fit();
 
-            void initialise();
-            void fit();
-        
-            double dist() const {
-                return dist_;
-            }
+    void initialise();
+    void fit();
 
-        private:
-            void cosmol_c();
-            void calculateDistance();
-            double get_dl();
-            double get_funl(double x);
-            double get_midpnt(double a, double b, double s, double n);
-        
-            const double redshift_;
-            const double h_ = 70.0;
-            const double omega_ = 0.30;
-            const double omega_lambda_ = 0.70;
-            double q_;
-            double dist_;
-            double omega0_ = 0;     // TODO: Same as Omega
-    };
+    double dist() const {
+        return dist__;
+    }
+
+private:
+    void cosmol_c();
+    void calculateDistance();
+    double get_dl();
+    double get_funl(double x);
+    double get_midpnt(double a, double b, double s, double n);
+
+    const double redshift__;
+    const double h__ = 70.0;
+    const double omega__ = 0.30;
+    const double omega_lambda__ = 0.70;
+    double q__ = 0;
+    double dist__ = 0;
+    double omega0__ = 0;     // TODO: Same as Omega
+};
 
 }
 

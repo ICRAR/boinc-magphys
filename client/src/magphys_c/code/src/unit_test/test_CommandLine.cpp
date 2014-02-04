@@ -23,52 +23,59 @@
  *    MA 02111-1307  USA
  */
 
+#include <boost/test/unit_test.hpp>
+
+#include "test_STR.hpp"
 #include "CommandLine.hpp"
 
-#include <gmock/gmock.h>
-using ::testing::Eq;
-#include <gtest/gtest.h>
-using ::testing::Test;
+BOOST_AUTO_TEST_SUITE(CommandLineTests)
 
+BOOST_AUTO_TEST_CASE(one_arg) {
+    vector<string> args;
+    args.push_back("0.123");
+    magphys::CommandLine commandLine;
+    bool result = commandLine.loadArguments(args);
 
-namespace magphys {
-    namespace testing {
-
-        class CommandLineTest : public Test {
-            protected:
-                CommandLineTest() {}
-                ~CommandLineTest() {}
-
-                virtual void SetUp() {}
-                virtual void TearDown() {}
-
-                CommandLine commandLine;
-        };
-
-
-        TEST_F(CommandLineTest, one_arg) {
-            vector<string> args;
-            args.push_back("0.123");
-            bool result = commandLine.loadArguments(args);
-
-            EXPECT_FALSE(result);
-        }
-
-        TEST_F(CommandLineTest, four_args) {
-            vector<string> args;
-            args.push_back("0.123");
-            args.push_back("../../../src/unit_test/data/observations.dat");
-            args.push_back("../../../src/unit_test/data/filters01.dat");
-            args.push_back("../../../src/unit_test/data/model_infrared.dat");
-            args.push_back("../../../src/unit_test/data/model_optical.dat");
-            bool result = commandLine.loadArguments(args);
-
-            EXPECT_TRUE(result);
-            EXPECT_DOUBLE_EQ(0.123, commandLine.redshift());
-            EXPECT_EQ("../../../src/unit_test/data/observations.dat", commandLine.observationsFile());
-            EXPECT_EQ("../../../src/unit_test/data/filters01.dat", commandLine.filtersFile());
-            EXPECT_EQ("../../../src/unit_test/data/model_infrared.dat", commandLine.modelInfraredFile());
-            EXPECT_EQ("../../../src/unit_test/data/model_optical.dat", commandLine.modelOpticalFile());
-        }
-    }
+    BOOST_REQUIRE(!result);
 }
+
+BOOST_AUTO_TEST_CASE(four_args) {
+    vector<string> args;
+    args.push_back("0.123");
+    args.push_back(path + "observations.dat");
+    args.push_back(path + "filters01.dat");
+    args.push_back(path + "model_infrared.dat");
+    args.push_back(path + "model_optical.dat");
+    magphys::CommandLine commandLine;
+    bool result = commandLine.loadArguments(args);
+
+    BOOST_REQUIRE(result);
+    BOOST_CHECK_EQUAL(0.123, commandLine.redshift());
+    BOOST_CHECK_EQUAL(path + "observations.dat", commandLine.observationsFile());
+    BOOST_CHECK_EQUAL(path + "filters01.dat", commandLine.filtersFile());
+    BOOST_CHECK_EQUAL(path + "model_infrared.dat", commandLine.modelInfraredFile());
+    BOOST_CHECK_EQUAL(path + "model_optical.dat", commandLine.modelOpticalFile());
+    BOOST_CHECK_EQUAL(0, commandLine.startingLine());
+}
+
+BOOST_AUTO_TEST_CASE(five_args) {
+    vector<string> args;
+    args.push_back("0.123");
+    args.push_back(path + "observations.dat");
+    args.push_back(path + "filters01.dat");
+    args.push_back(path + "model_infrared.dat");
+    args.push_back(path + "model_optical.dat");
+    args.push_back("5");
+    magphys::CommandLine commandLine;
+    bool result = commandLine.loadArguments(args);
+
+    BOOST_REQUIRE(result);
+    BOOST_CHECK_EQUAL(0.123, commandLine.redshift());
+    BOOST_CHECK_EQUAL(path + "observations.dat", commandLine.observationsFile());
+    BOOST_CHECK_EQUAL(path + "filters01.dat", commandLine.filtersFile());
+    BOOST_CHECK_EQUAL(path + "model_infrared.dat", commandLine.modelInfraredFile());
+    BOOST_CHECK_EQUAL(path + "model_optical.dat", commandLine.modelOpticalFile());
+    BOOST_CHECK_EQUAL(5, commandLine.startingLine());
+}
+
+BOOST_AUTO_TEST_SUITE_END()

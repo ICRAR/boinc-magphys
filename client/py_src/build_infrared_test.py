@@ -41,25 +41,35 @@ def correct_xi(xi, fmu_ir, fmu_ism, const):
     return xi * (1 - fmu_ir) + const * (1 - fmu_ism) * fmu_ir
 
 
-def build_line(line_number, line):
+def build_line(line_number, line, first=False):
     line = line.strip()
     elements = line.split()
-    print '''
-model = modelData.modelInfrared({0});
+    if first:
+        print '''
+// Checking line {0}
+magphys::ModelInfrared& model = *modelData.modelInfrared({0});
+double* flux = modelData.fluxInfrared({0});
+'''.format(line_number)
+    else:
+        print '''
+// Checking line {0}
+model = *modelData.modelInfrared({0});
 flux = modelData.fluxInfrared({0});
-EXPECT_DOUBLE_EQ({1}, model.fmu_ir);
-EXPECT_DOUBLE_EQ({2}, model.fmu_ism);
-EXPECT_DOUBLE_EQ({3}, model.tbg1);
-EXPECT_DOUBLE_EQ({4}, model.tbg2);
-EXPECT_DOUBLE_EQ({5}, model.xi1);
-EXPECT_DOUBLE_EQ({6}, model.xi2);
-EXPECT_DOUBLE_EQ({7}, model.xi3);
-EXPECT_DOUBLE_EQ({8}, model.mdust);
+'''.format(line_number)
+    print '''// The body of line {0}
+BOOST_CHECK_CLOSE({1}, model.fmu_ir__, 0.001);
+BOOST_CHECK_CLOSE({2}, model.fmu_ism__, 0.001);
+BOOST_CHECK_CLOSE({3}, model.tbg1__, 0.001);
+BOOST_CHECK_CLOSE({4}, model.tbg2__, 0.001);
+BOOST_CHECK_CLOSE({5}, model.xi1__, 0.001);
+BOOST_CHECK_CLOSE({6}, model.xi2__, 0.001);
+BOOST_CHECK_CLOSE({7}, model.xi3__, 0.001);
+BOOST_CHECK_CLOSE({8}, model.mdust__, 0.001);
 
-EXPECT_EQ(e_str({9}), e_str(flux[0]));
-EXPECT_EQ(e_str({10}), e_str(flux[1]));
-EXPECT_EQ(e_str({11}), e_str(flux[2]));
-EXPECT_EQ(e_str({12}), e_str(flux[3]));
+BOOST_CHECK_CLOSE({9}, flux[0], 0.001);
+BOOST_CHECK_CLOSE({10}, flux[1], 0.001);
+BOOST_CHECK_CLOSE({11}, flux[2], 0.001);
+BOOST_CHECK_CLOSE({12}, flux[3], 0.001);
 '''.format(line_number,
            elements[0],
            float(elements[1]) * float(elements[0]),
@@ -80,7 +90,7 @@ def main():
     """
     Build the code
     """
-    build_line(0, '     0.038     0.826    38.052    18.623     0.018     0.158     0.824   3.104E-04    8.9539    7.8566    3.6544    2.9735')
+    build_line(0, '     0.038     0.826    38.052    18.623     0.018     0.158     0.824   3.104E-04    8.9539    7.8566    3.6544    2.9735', True)
     build_line(1, '     0.764     0.742    32.412    22.175     0.117     0.128     0.756   9.863E-04    6.9860    6.9238    3.3404    3.6933')
     build_line(2, '     0.238     0.708    37.248    17.715     0.175     0.229     0.595   1.132E-03    6.7509    6.5482    2.8115    2.7530')
     build_line(3, '     0.474     0.922    54.388    22.040     0.009     0.148     0.843   7.304E-04    8.7806    8.1460    4.1058    2.9801')

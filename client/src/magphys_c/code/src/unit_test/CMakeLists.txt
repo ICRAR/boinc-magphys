@@ -23,8 +23,8 @@
 #   MA 02111-1307  USA
 #
 
-add_gmock_test(fit_sed_test 
-               test_STR.cpp
+add_boost_test(fit_sed_test_boost
+			   test_Main.cpp
                test_STR.hpp
                test_CommandLine.cpp
                test_ModelData.cpp
@@ -32,7 +32,8 @@ add_gmock_test(fit_sed_test
                test_Fit.cpp
                test_ConvertToLnu.cpp)
 
-target_link_libraries(fit_sed_test 
+target_link_libraries(fit_sed_test_boost 
                       fit_sed_core
                       boost_filesystem
-                      boost_system)
+                      boost_system
+                      boost_unit_test_framework)

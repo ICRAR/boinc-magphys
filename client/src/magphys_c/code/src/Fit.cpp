@@ -66,19 +66,19 @@ namespace magphys {
         // {F77} c     Omega is entered by the user
         // {F77} c     omega=1.-omega_lambda
         // {F77} c     ===========================================================================
-        if(omega_lambda_ == 0) {
-            q_ = omega_ / 2;
+        if(omega_lambda__ == 0) {
+            q__ = omega__ / 2;
         } else {
-            q_ = (3 * omega_ / 2) - 1;
+            q__ = (3 * omega__ / 2) - 1;
         }
-        omega0_ = (2 * (q_ + 1)) / 3;
+        omega0__ = (2 * (q__ + 1)) / 3;
     }
     
     void Fit::calculateDistance() {
         // {F77} c     Compute distance in Mpc from the redshifts z
         // {F77}       dist(i_gal)=dl(h,q,redshift(i_gal))
         // {F77}       dist(i_gal)=dist(i_gal)*3.086e+24/dsqrt(1.+redshift(i_gal))
-        dist_ = get_dl() * (3.086e+24) / sqrt(1 + redshift_);
+        dist__ = get_dl() * (3.086e+24) / sqrt(1 + redshift__);
     }
     
     double Fit::get_dl() {
@@ -139,21 +139,21 @@ namespace magphys {
         double dl = 0;
         double s = 0;
         
-        if(redshift_ <= 0) {
+        if(redshift__ <= 0) {
             return (1.0e-5);
         }
         
-        if(q_ == 0) {
-            dl = ((3.0e5 * redshift_) * (1 + (redshift_ / 2))) / h_;
+        if(q__ == 0) {
+            dl = ((3.0e5 * redshift__) * (1 + (redshift__ / 2))) / h__;
         } 
-        else if(q_ > 0) {
-            double d1 = (q_ * redshift_) + ((q_ - 1) * (sqrt(1 + ((2 * q_) * redshift_)) - 1));
-            double d2 = ((h_ * q_) * q_) / 3.0e5;
+        else if(q__ > 0) {
+            double d1 = (q__ * redshift__) + ((q__ - 1) * (sqrt(1 + ((2 * q__) * redshift__)) - 1));
+            double d2 = ((h__ * q__) * q__) / 3.0e5;
             dl = d1 / d2;
         } 
-        else if(q_ < 0) {
+        else if(q__ < 0) {
             double aa = 1;
-            double bb = 1 + redshift_;
+            double bb = 1 + redshift__;
             bool success = false;
             double s0 = 1.0e-10;
             int npts = 0;
@@ -168,7 +168,7 @@ namespace magphys {
                 }
             } while(!success);
             double dd1 = s;
-            double dd2 = (3.0e5 * (1 + redshift_)) / (h_ * sqrt(omega0_));
+            double dd2 = (3.0e5 * (1 + redshift__)) / (h__ * sqrt(omega0__));
             dl = dd1 * dd2;
         }
         return dl;        
@@ -187,7 +187,7 @@ namespace magphys {
         // {F77}       funl = 1. / sqrt(((x ** 3.) + omegainv) - 1.)
         // {F77}       return
         // {F77}       end
-        double omegainv = 1 / omega0_;
+        double omegainv = 1 / omega0__;
         return (1 / sqrt(((x * x * x) + omegainv) - 1));
     }
 

@@ -23,41 +23,27 @@
  *    MA 02111-1307  USA
  */
 
+
 #include "Fit.hpp"
 #include "test_STR.hpp"
 
-#include <gmock/gmock.h>
-using ::testing::Eq;
-#include <gtest/gtest.h>
-using ::testing::Test;
+#include <boost/test/unit_test.hpp>
 
 
-namespace magphys {
-    namespace testing {
+BOOST_AUTO_TEST_SUITE( FitTests )
 
-        class FitTest : public Test {
-            protected:
-                FitTest() {}
-                ~FitTest() {}
+BOOST_AUTO_TEST_CASE(initialise) {
+    magphys::Fit fit1__ { 0.0037000 };
+    magphys::Fit fit2__ { 0.02 };
+    magphys::Fit fit3__ { 0.03 };
 
-                virtual void SetUp() {}
-                virtual void TearDown() {}
+    fit1__.initialise();
+    fit2__.initialise();
+    fit3__.initialise();
 
-                Fit fit1 {0.0037000};
-                Fit fit2 {0.02};
-                Fit fit3 {0.03};
-        };
+    BOOST_CHECK_CLOSE(4.89847438071e+25, fit1__.dist(), 0.0001);
+    BOOST_CHECK_CLOSE(2.65939226237e+26, fit2__.dist(), 0.0001);
+    BOOST_CHECK_CLOSE(3.99944349871e+26, fit3__.dist(), 0.0001);
+}
 
-
-        TEST_F(FitTest, initialise) {
-            fit1.initialise();
-            fit2.initialise();
-            fit3.initialise();
-
-            EXPECT_EQ(e_str(4.89847438071e+25), e_str(fit1.dist()));
-            EXPECT_EQ(e_str(2.65939226237e+26), e_str(fit2.dist()));
-            EXPECT_EQ(e_str(3.99944349871e+26), e_str(fit3.dist()));
-        }
-
-    }
-} //namespace magphys
+BOOST_AUTO_TEST_SUITE_END()

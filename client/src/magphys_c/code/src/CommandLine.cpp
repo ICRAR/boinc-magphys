@@ -27,56 +27,62 @@
 #include <boost/filesystem.hpp>
 #include "CommandLine.hpp"
 
-
 namespace magphys {
 
-    CommandLine::CommandLine() {
-    }
+CommandLine::CommandLine() {
+}
 
-    CommandLine::~CommandLine() {
-    }
+CommandLine::~CommandLine() {
+}
 
-    /*
-     * Load the command line arguments
-     */
-    bool CommandLine::loadArguments(const vector<string>& args) {
-        // Do we have the correct number of arguments?
-        if(args.size() != 5) {
-            return false;
-        }
-
+/*
+ * Load the command line arguments
+ */
+bool CommandLine::loadArguments(const vector<string>& args) {
+	// Do we have the correct number of arguments?
+	if (args.size() == 5 || args.size() == 6) {
         // We do have the right number
-        redshift_ = atof(args[0].c_str());
-        observationsFile_ = args[1];
-        filtersFile_ = args[2];
-        modelInfraredFile_ = args[3];
-        modelOpticalFile_ = args[4];
+        redshift__ = atof(args[0].c_str());
+        observationsFile__ = args[1];
+        filtersFile__ = args[2];
+        modelInfraredFile__ = args[3];
+        modelOpticalFile__ = args[4];
+
+        if (args.size() == 6) {
+            startingLine__ = atoi(args[5].c_str());
+        }
+
         return checkFiles();
-    }
+	}
+    return false;
+}
 
+/*
+ * Check the files exist
+ */
+bool CommandLine::checkFiles() {
+	bool ok = true;
+	if (!boost::filesystem::exists(observationsFile__)) {
+		std::cerr << "The file " << observationsFile__ << " does not exist."
+				<< std::endl;
+		ok = false;
+	}
+	if (!boost::filesystem::exists(filtersFile__)) {
+		std::cerr << "The file " << filtersFile__ << " does not exist."
+				<< std::endl;
+		ok = false;
+	}
+	if (!boost::filesystem::exists(modelInfraredFile__)) {
+		std::cerr << "The file " << modelInfraredFile__ << " does not exist."
+				<< std::endl;
+		ok = false;
+	}
+	if (!boost::filesystem::exists(modelOpticalFile__)) {
+		std::cerr << "The file " << modelOpticalFile__ << " does not exist."
+				<< std::endl;
+		ok = false;
+	}
 
-    /*
-     * Check the files exist
-     */
-    bool CommandLine::checkFiles() {
-        bool ok = true;
-        if(!boost::filesystem::exists(observationsFile_)) {
-            std::cerr << "The file " << observationsFile_ << " does not exist." << std::endl;
-            ok = false;
-        }
-        if(!boost::filesystem::exists(filtersFile_)) {
-            std::cerr << "The file " << filtersFile_ << " does not exist." << std::endl;
-            ok = false;
-        }
-        if(!boost::filesystem::exists(modelInfraredFile_)) {
-            std::cerr << "The file " << modelInfraredFile_ << " does not exist." << std::endl;
-            ok = false;
-        }
-        if(!boost::filesystem::exists(modelOpticalFile_)) {
-            std::cerr << "The file " << modelOpticalFile_ << " does not exist." << std::endl;
-            ok = false;
-        }
-
-        return ok;
-    }
+	return ok;
+}
 } //namespace magphys

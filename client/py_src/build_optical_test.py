@@ -37,33 +37,42 @@ def correct_flux(flux, mstr1):
     return flux / (1 + redshift)
 
 
-def build_line(line_number, line):
+def build_line(line_number, line, first=False):
     line = line.strip()
     elements = line.split()
     mstr1 = float(elements[6])
-    print '''
-model = modelData.modelOptical({0});
+    if first:
+        print '''
+// Checking line {0}
+magphys::ModelOptical& model = *modelData.modelOptical({0});
+double* flux = modelData.fluxOptical({0});
+'''.format(line_number)
+    else:
+        print '''
+// Checking line {0}
+model = *modelData.modelOptical({0});
 flux = modelData.fluxOptical({0});
+'''.format(line_number)
+    print '''// The body of line {0}
+BOOST_CHECK_CLOSE({1}, model.fmu_sfh__, 0.001);
+BOOST_CHECK_CLOSE({2}, model.mstr1__, 0.001);
+BOOST_CHECK_CLOSE({3}, model.ldust__, 0.001);
+BOOST_CHECK_CLOSE({4}, model.logldust__, 0.001);
+BOOST_CHECK_CLOSE({5}, model.mu__, 0.001);
+BOOST_CHECK_CLOSE({6}, model.tauv__, 0.001);
+BOOST_CHECK_CLOSE({7}, model.ssfr__, 0.001);
+BOOST_CHECK_CLOSE({8}, model.lssfr__, 0.001);
+BOOST_CHECK_CLOSE({9}, model.tvsim__, 0.001);
 
-EXPECT_DOUBLE_EQ({1}, model.fmu_sfh);
-EXPECT_DOUBLE_EQ({2}, model.mstr1);
-EXPECT_EQ(f_str({3}), f_str(model.ldust));
-EXPECT_EQ(f_str({4}), f_str(model.logldust));
-EXPECT_DOUBLE_EQ({5}, model.mu);
-EXPECT_DOUBLE_EQ({6}, model.tauv);
-EXPECT_DOUBLE_EQ({7}, model.ssfr);
-EXPECT_EQ(f_str({8}), f_str(model.lssfr));
-EXPECT_DOUBLE_EQ({9}, model.tvsim);
-
-EXPECT_EQ(e_str({10}), e_str(flux[0]));
-EXPECT_EQ(e_str({11}), e_str(flux[1]));
-EXPECT_EQ(e_str({12}), e_str(flux[2]));
-EXPECT_EQ(e_str({13}), e_str(flux[3]));
-EXPECT_EQ(e_str({14}), e_str(flux[4]));
-EXPECT_EQ(e_str({15}), e_str(flux[5]));
-EXPECT_EQ(e_str({16}), e_str(flux[6]));
-EXPECT_EQ(e_str({17}), e_str(flux[7]));
-EXPECT_EQ(e_str({18}), e_str(flux[8]));
+BOOST_CHECK_CLOSE({10}, flux[0], 0.001);
+BOOST_CHECK_CLOSE({11}, flux[1], 0.001);
+BOOST_CHECK_CLOSE({12}, flux[2], 0.001);
+BOOST_CHECK_CLOSE({13}, flux[3], 0.001);
+BOOST_CHECK_CLOSE({14}, flux[4], 0.001);
+BOOST_CHECK_CLOSE({15}, flux[5], 0.001);
+BOOST_CHECK_CLOSE({16}, flux[6], 0.001);
+BOOST_CHECK_CLOSE({17}, flux[7], 0.001);
+BOOST_CHECK_CLOSE({18}, flux[8], 0.001);
 '''.format(line_number,
            elements[22],
            mstr1,
@@ -90,7 +99,7 @@ def main():
     """
     Build the code
     """
-    build_line(    0, '   1      1.15E+10    0.1291    1.3307    4.2970    0.7220    2.5511    4.7204  2.94E-11  2.95E-11  2.96E-11  6.28E-11  4.94E-11  5.33E+08  0.00E+00  0.00E+00  0.00E+00  7.72E-03  7.72E-03  5.11E+09  4.42E+09  2.35E+00    0.9180  1.10E-05  8.13E-07   16.8898   14.3729   11.0083    8.6379    7.2997    6.5404    5.9079    4.7473    5.0653')
+    build_line(    0, '   1      1.15E+10    0.1291    1.3307    4.2970    0.7220    2.5511    4.7204  2.94E-11  2.95E-11  2.96E-11  6.28E-11  4.94E-11  5.33E+08  0.00E+00  0.00E+00  0.00E+00  7.72E-03  7.72E-03  5.11E+09  4.42E+09  2.35E+00    0.9180  1.10E-05  8.13E-07   16.8898   14.3729   11.0083    8.6379    7.2997    6.5404    5.9079    4.7473    5.0653', True)
     build_line(    1, '   2      1.31E+10    0.4039    0.2871    1.5080    0.4799    0.9455    1.7636  2.02E-12  2.02E-12  2.06E-12  2.15E-10  1.10E-10  2.46E+08  0.00E+00  0.00E+00  0.00E+00  1.47E-01  1.47E-01  7.91E+09  3.33E+09  8.95E-01    0.9850  3.81E-05  7.58E-06    9.2713    8.4061    6.9972    5.6504    5.1787    4.8109    4.4388    4.6051    5.0516')
     build_line(    2, '   3      2.13E+09    0.3335    0.1012    0.9018    0.0702    0.3070    0.5087  1.64E-10  1.64E-10  1.67E-10  1.94E-10  2.32E-10  2.13E+09  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00  1.18E+09  8.06E+08  1.29E+00    0.1570  1.20E-03  3.25E-04    6.3311    6.1956    5.6912    4.7779    4.5308    4.2674    3.9674    4.6587    5.1991')
     build_line(    3, '   4      1.27E+10    0.6155    1.8815    4.5052    0.3180    0.7528    1.4754  2.51E-13  2.52E-13  2.59E-13  3.45E-13  4.91E-13  7.42E+09  0.00E+00  0.00E+00  0.00E+00  0.00E+00  0.00E+00  1.11E+10  1.08E+10  2.07E-01    0.9920  1.50E-07  9.89E-09   16.4477   15.1495   11.4408    9.0717    7.8482    7.2123    6.7109    6.2683    6.6617')

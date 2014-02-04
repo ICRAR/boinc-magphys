@@ -103,12 +103,14 @@ def get_dl(q_, redshift_, omega0_):
     return dl
 
 
-def main(redshift):
+def get_distance(redshift, print_distance=False):
     q_, omega0_ = cosmol_c()
     dist_ = get_dl(q_, redshift, omega0_) * 3.086e+24 / sqrt(1 + redshift)
-    print dist_
+    if print_distance:
+        print dist_
+    return dist_
 
 if __name__ == '__main__':
-    main(0.0037000)
-    main(0.02)
-    main(0.03)
+    get_distance(0.0037000, True)
+    get_distance(0.02, True)
+    get_distance(0.03, True)

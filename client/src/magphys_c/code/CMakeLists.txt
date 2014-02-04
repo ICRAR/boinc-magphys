@@ -30,8 +30,8 @@ project("magphys_c")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
-enable_testing()
-include(gmock)
+enable_testing(true)
+include(boost)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -58,8 +58,8 @@ set(CONFIGURED_ONCE TRUE CACHE INTERNAL
     "A flag showing that CMake has configured at least once.")
 
 # Show summary.
-message (STATUS "CMAKE_SYSTEM ........... = ${CMAKE_SYSTEM}")
-message (STATUS "CMAKE_CXX_COMPILER_ID .. = ${CMAKE_CXX_COMPILER_ID}")
-message (STATUS "BUILD_SHARED_LIBS ...... = ${BUILD_SHARED_LIBS}")
-message (STATUS "CMAKE_CXX_COMPILER ..... = ${CMAKE_CXX_COMPILER}")
-message (STATUS "CMAKE_CXX_FLAGS ........ = ${CMAKE_CXX_FLAGS}")
+message (STATUS "CMAKE_SYSTEM ............ = ${CMAKE_SYSTEM}")
+message (STATUS "CMAKE_CXX_COMPILER_ID ... = ${CMAKE_CXX_COMPILER_ID}")
+message (STATUS "BUILD_SHARED_LIBS ....... = ${BUILD_SHARED_LIBS}")
+message (STATUS "CMAKE_CXX_COMPILER ...... = ${CMAKE_CXX_COMPILER}")
+message (STATUS "CMAKE_CXX_FLAGS ......... = ${CMAKE_CXX_FLAGS}")

@@ -23,22 +23,13 @@
  *    MA 02111-1307  USA
  */
 
-#include "test_STR.hpp"
 
-namespace magphys {
-    namespace testing {
-        
-        string e_str(double number) {
-            char buffer[100];
-            sprintf(buffer, "%.5e", number);
-            return string(buffer);
-        }
-        
-        string f_str(double number) {
-            char buffer[100];
-            sprintf(buffer, "%.5f", number);
-            return string(buffer);
-        }
-    }    
-} //namespace magphys
+/*
+ * This is the entry point for the boost UTF
+ * http://www.boost.org/doc/libs/1_55_0/libs/test/doc/html/utf/compilation.html#utf.flag.dyn-link
+ */
+#define BOOST_TEST_MAIN
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE fit_sed_test
+#include <boost/test/unit_test.hpp>
 

@@ -77,8 +77,8 @@ int main(int argc, char* argv[]) {
         magphys::ObservationLine& observationLine = observationLines[i];
         // Check we have enough fluxes to work on
         int numberFluxes = 0;
-        for(auto& observation : observationLine.observations) {
-            if(observation.flux_obs > 0) {
+        for(auto& observation : observationLine.observations__) {
+            if(observation.flux_obs__ > 0) {
                 numberFluxes++;
             }
         }

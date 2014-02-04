@@ -4,25 +4,25 @@
 
 * Boost
 
-This uses the standard c++11 
+The code uses the standard c++11 so you'll need a compiler that supports this.
 
 ## Build
 
-The code is built using CMake
+The code is built using CMake and Eclipse. 
+To build the eclipse project from CMake do the following:
 
-$ mkdir build
-$ cd build
-$ cmake -G "Unix Makefiles" ..
-$ make 
+```bash
+mkdir build
 
-## Code Layout
+cd build
 
-The code is laid out using astyle
+cmake -G "Eclipse CDT4 - Unix Makefiles" -D_ECLIPSE_VERSION=4.3 -DCMAKE_BUILD_TYPE=Debug  ../code/
 
-$ astyle -A2 --recursive "\*.cpp" "\*.hpp"
+make 
+```
 
-The double quotes are important.
+## Tests
 
-To remove the .orig files
-$ find . -name "*.orig" -exec rm -- {} +
-
+The testing framework uses the *Boost Unit Test Framework*.
+The only reason to use it is Eclipse can parse the header files and not give syntax errors. 
+It has problems with GMock

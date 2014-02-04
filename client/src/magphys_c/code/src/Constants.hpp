@@ -43,50 +43,54 @@ using std::vector;
 #define NBINMAX2 300
 #define MIN_HPBV 0.00001
 
+/*
+ * As this could is based one the MAGPHYS code I've tried to use the same variable names.
+ * The main difference is I postfix them with __
+ */
 
 namespace magphys {
 
-    struct Filter {
-        string filterName;
-        double lambdaEff;
-        int filterId;
-        int fit;
-    };
+struct Filter {
+    string filterName__;
+    double lambdaEff__;
+    int filterId__;
+    int fit__;
+};
 
-    struct Observation {
-        double flux_obs;
-        double sigma;
-        double w = 0;
-    };
+struct Observation {
+    double flux_obs__ = 0;
+    double sigma__ = 0;
+    double w__ = 0;
+};
 
-    struct ObservationLine {
-        string galaxyName;
-        double redshift;
-        vector<Observation> observations;
-    };
+struct ObservationLine {
+    string galaxyName__;
+    double redshift__;
+    vector<Observation> observations__;
+};
 
-    struct ModelOptical {
-        double fmu_sfh;     // fmu parameter Ld(ISM)/Ld(tot) - optical
-        double mstr1;       // stellar mass
-        double ldust;       // total luminosity of dust (normalize to Mstar)
-        double logldust;    // log(ldust)
-        double mu;          // mu parameter (CF00 model)
-        double tauv;        // optical V-band depth tauV (CF00 model)
-        double ssfr;        // recent SSFR_0.01Gyr / stellar mass
-        double lssfr;       // log(SSFR_0.01Gyr)
-        double tvsim;       // mu*tauV=V-band optical depth for ISM
-    };
+struct ModelOptical {
+    double fmu_sfh__;     // fmu parameter Ld(ISM)/Ld(tot) - optical
+    double mstr1__;       // stellar mass
+    double ldust__;       // total luminosity of dust (normalize to Mstar)
+    double logldust__;    // log(ldust__)
+    double mu__;          // mu parameter (CF00 model)
+    double tauv__;        // optical V-band depth tauV (CF00 model)
+    double ssfr__;        // recent SSFR_0.01Gyr / stellar mass
+    double lssfr__;       // log(SSFR_0.01Gyr)
+    double tvsim__;       // mu*tauV=V-band optical depth for ISM
+};
 
-    struct ModelInfrared {
-        double fmu_ir;      // fmu parameter Ld(ISM)/Ld(tot) - infrared
-        double fmu_ism;     // xi_C^ISM [cont. cold dust to Ld(ISM)]
-        double tbg1;        // T_W^BC [eq. temp. warm dust in birth clouds]
-        double tbg2;        // T_C^ISM [eq. temp. cold dust in ISM]
-        double xi1;         // xi_PAH^BC Ld(PAH)/Ld(BC)
-        double xi2;         // xi_MIR^BC Ld(MIR)/Ld(BC)
-        double xi3;         // xi_W^BC Ld(warm)/Ld(BC)
-        double mdust;       // dust mass
-    };
+struct ModelInfrared {
+    double fmu_ir__;      // fmu parameter Ld(ISM)/Ld(tot) - infrared
+    double fmu_ism__;     // xi_C^ISM [cont. cold dust to Ld(ISM)]
+    double tbg1__;        // T_W^BC [eq. temp. warm dust in birth clouds]
+    double tbg2__;        // T_C^ISM [eq. temp. cold dust in ISM]
+    double xi1__;         // xi_PAH^BC Ld(PAH)/Ld(BC)
+    double xi2__;         // xi_MIR^BC Ld(MIR)/Ld(BC)
+    double xi3__;         // xi_W^BC Ld(warm)/Ld(BC)
+    double mdust__;       // dust mass
+};
 } //namespace magphys
 
 #endif
