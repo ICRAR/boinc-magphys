@@ -166,7 +166,7 @@ CREATE TABLE area_user (
   areauser_id  BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   area_id      BIGINT UNSIGNED NOT NULL,
   userid       INTEGER NOT NULL,
-  create_time  TIMESTAMP,
+  create_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   FOREIGN KEY(area_id) REFERENCES area(area_id),
 
@@ -347,7 +347,7 @@ CREATE TABLE tag_register (
   tag_register_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   tag_id          BIGINT UNSIGNED NOT NULL,
   register_id     BIGINT UNSIGNED NOT NULL,
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   FOREIGN KEY (tag_id) REFERENCES tag(tag_id),
   FOREIGN KEY (register_id) REFERENCES register(register_id)
@@ -361,5 +361,18 @@ CREATE TABLE tag_galaxy (
 
   FOREIGN KEY (tag_id) REFERENCES tag(tag_id),
   FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+CREATE TABLE galaxy_user (
+  galaxy_user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  galaxy_id      BIGINT UNSIGNED NOT NULL,
+  userid         INTEGER NOT NULL,
+  create_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY(galaxy_id) REFERENCES galaxy(galaxy_id),
+
+  INDEX (galaxy_id),
+  INDEX (userid),
+  UNIQUE (galaxy_id,userid)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 

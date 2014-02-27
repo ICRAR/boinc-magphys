@@ -45,7 +45,7 @@ from assimilator_utils import is_gzip
 from config import DB_LOGIN
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
-from database.database_support_core import PARAMETER_NAME, PIXEL_RESULT, AREA, AREA_USER, GALAXY
+from database.database_support_core import PARAMETER_NAME, PIXEL_RESULT, AREA, AREA_USER, GALAXY, GALAXY_USER
 from utils.name_builder import get_files_bucket, get_key_sed
 from utils.s3_helper import S3Helper
 
@@ -243,9 +243,12 @@ class MagphysAssimilator(assimilator.Assimilator):
                                         user_id_set.add(user_id)
 
                             connection.execute(AREA_USER.delete().where(AREA_USER.c.area_id == self._area_id))
-                            insert = AREA_USER.insert()
+                            insert_area_user = AREA_USER.insert()
+                            insert_galaxy_user = GALAXY_USER.insert().prefix_with('IGNORE')
                             for user_id in user_id_set:
-                                connection.execute(insert, area_id=self._area_id, userid=user_id)
+                                connection.execute(insert_area_user, area_id=self._area_id, userid=user_id)
+                                self.logDebug("Inserting row into galaxy_user for userid: %d galaxy_id: %d\n", user_id, self._galaxy_id)
+                                connection.execute(insert_galaxy_user, galaxy_id=self._galaxy_id, userid=user_id)
 
                             # Copy the file to S3
                             s3helper = S3Helper()

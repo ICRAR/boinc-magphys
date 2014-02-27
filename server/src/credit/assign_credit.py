@@ -42,7 +42,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.sql import select
 from config import DB_LOGIN
 from sqlalchemy import and_
-from database.database_support_core import AREA_USER, AREA
+from database.database_support_core import AREA_USER, AREA, GALAXY_USER
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
@@ -96,10 +96,12 @@ class AssignCredit:
             area_user = self._connection.execute(select([AREA_USER]).where(and_(AREA_USER.c.userid == user_id, AREA_USER.c.area_id == area_id))).first()
             if area_user is None:
                 area = self._connection.execute(select([AREA]).where(AREA.c.area_id == area_id)).first()
+                galaxy_id = area['galaxy_id']
                 if area is None:
                     print 'Area', area_id, 'not found, User', user_id, 'not Credited'
                 else:
                     AREA_USER.insert().values(userid=user_id, area_id=area_id)
+                    GALAXY_USER.insert().prefix_with('IGNORE').values(userid=user_id, galaxy_id=galaxy_id)
                     print 'User', user_id, 'Credited for Area', area_id
                     credit_count += 1
 

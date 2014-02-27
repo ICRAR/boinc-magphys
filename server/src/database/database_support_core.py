@@ -114,6 +114,14 @@ GALAXY_STATUS = Table('galaxy_status',
                       Column('description', String(250)),
                       )
 
+GALAXY_USER = Table('galaxy_user',
+                    MAGPHYS_METADATA,
+                    Column('galaxy_user_id', BigInteger, primary_key=True, autoincrement=True),
+                    Column('galaxy_id', BigInteger, ForeignKey('galaxy.galaxy_id'), nullable=False),
+                    Column('userid', Integer, nullable=False),
+                    Column('create_at', TIMESTAMP, nullable=False)
+                    )
+
 IMAGE_FILTERS_USED = Table('image_filters_used',
                            MAGPHYS_METADATA,
                            Column('image_filters_used_id', BigInteger, primary_key=True),
