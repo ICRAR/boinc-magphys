@@ -26,3 +26,8 @@ make
 The testing framework uses the *Boost Unit Test Framework*.
 The only reason to use it is Eclipse can parse the header files and not give syntax errors. 
 It has problems with GMock
+
+##Debugging
+
+Unfortunately under OS X Mavericks - Apple have removed the gdb and moved everything to clang and lldb. 
+This means that eclipse CDT can't debug the code as it (at the time of writing)
