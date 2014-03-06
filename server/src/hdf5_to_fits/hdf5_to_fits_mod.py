@@ -508,9 +508,9 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group
         keyword = fits_header[0]
         if keyword not in HEADER_KEYWORDS_TO_IGNORE:
             if output_format == OUTPUT_FORMAT_1_00 or keyword == 'COMMENT' or keyword == 'HISTORY':
-                hdu_list[0].header.update(keyword, fits_header[1])
+                hdu_list[0].header[keyword] = fits_header[1]
             else:
-                hdu_list[0].header.update(keyword, fits_header[1], fits_header[2])
+                hdu_list[0].header[keyword] = (fits_header[1], fits_header[2])
 
     # Write the file
     file_name = os.path.join(output_directory, '{0}.{1}.{2}.fits'.format(galaxy_name, feature, layer))
