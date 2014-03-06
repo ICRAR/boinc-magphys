@@ -48,6 +48,7 @@ from os.path import dirname, exists
 from configobj import ConfigObj
 
 LOG = config_logger(__name__)
+HEADER_KEYWORDS_TO_IGNORE = ['SIMPLE', 'BITPIX', 'NAXIS', 'NAXIS1', 'NAXIS2', 'EXTEND', 'DATE', 'BSCALE', 'BZERO', 'BSOFTEN', 'BOFFSET', '']
 
 FROM_EMAIL = None
 SMTP_SERVER = None
@@ -327,8 +328,8 @@ def zip_files(s3Helper, galaxy_name, uuid_string, file_names, output_dir):
     """
     Zip the files and send the email
 
+    :param s3Helper: the S3 helper
     :param galaxy_name: the galaxy to process
-    :param email: the email to explain progress
     :param file_names: the fits files to be bundled
     :return:
     """
@@ -505,11 +506,11 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group
 
     for fits_header in galaxy_group['fits_header']:
         keyword = fits_header[0]
-        if keyword not in ['SIMPLE', 'BITPIX', 'NAXIS', 'NAXIS1', 'NAXIS2', 'EXTEND', 'DATE']:
+        if keyword not in HEADER_KEYWORDS_TO_IGNORE:
             if output_format == OUTPUT_FORMAT_1_00 or keyword == 'COMMENT' or keyword == 'HISTORY':
-                hdu_list[0].header.update(keyword, fits_header[1])
+                hdu_list[0].header[keyword] = fits_header[1]
             else:
-                hdu_list[0].header.update(keyword, fits_header[1], fits_header[2])
+                hdu_list[0].header[keyword] = (fits_header[1], fits_header[2])
 
     # Write the file
     file_name = os.path.join(output_directory, '{0}.{1}.{2}.fits'.format(galaxy_name, feature, layer))
