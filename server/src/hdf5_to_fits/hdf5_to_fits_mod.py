@@ -510,7 +510,7 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group
             if output_format == OUTPUT_FORMAT_1_00 or keyword == 'COMMENT' or keyword == 'HISTORY':
                 hdu_list[0].header.append((keyword, fits_header[1]))
             else:
-                hdu_list[0].header.append(([keyword], fits_header[1], fits_header[2]))
+                hdu_list[0].header.append((keyword, fits_header[1], fits_header[2]))
 
     # Write the file
     file_name = os.path.join(output_directory, '{0}.{1}.{2}.fits'.format(galaxy_name, feature, layer))
