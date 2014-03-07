@@ -155,7 +155,7 @@ class Fit2Wu:
         self._rounded_redshift = self._get_rounded_redshift()
         if self._rounded_redshift is None:
             LOG.error('No models matching the redshift of %.4f', self._redshift)
-            return 0
+            return 0, 0
 
         self._hdu_list = pyfits.open(self._filename, memmap=True)
         self._layer_count = len(self._hdu_list)
