@@ -247,7 +247,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                             insert_galaxy_user = GALAXY_USER.insert().prefix_with('IGNORE')
                             for user_id in user_id_set:
                                 connection.execute(insert_area_user, area_id=self._area_id, userid=user_id)
-                                self.logDebug("Inserting row into galaxy_user for userid: %d galaxy_id: %d\n", user_id, self._galaxy_id)
+                                # self.logDebug("Inserting row into galaxy_user for userid: %d galaxy_id: %d\n", user_id, self._galaxy_id)
                                 connection.execute(insert_galaxy_user, galaxy_id=self._galaxy_id, userid=user_id)
 
                             # Copy the file to S3
