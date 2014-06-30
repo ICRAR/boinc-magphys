@@ -178,11 +178,16 @@ def build_png_image_ami():
                 if row[PIXEL_RESULT.c.workunit_id] is not None:
                     pixels_processed += 1
 
-                    array[row__y, row__x, 0] = row[PIXEL_RESULT.c.mu]
-                    array[row__y, row__x, 1] = row[PIXEL_RESULT.c.m]
-                    array[row__y, row__x, 2] = row[PIXEL_RESULT.c.ldust]
-                    # the SFR is a log
-                    array[row__y, row__x, 3] = math.pow(10, row[PIXEL_RESULT.c.sfr])
+                    # Defend against bad values
+                    if row[PIXEL_RESULT.c.mu] is not None:
+                        array[row__y, row__x, 0] = row[PIXEL_RESULT.c.mu]
+                    if row[PIXEL_RESULT.c.m] is not None:
+                        array[row__y, row__x, 1] = row[PIXEL_RESULT.c.m]
+                    if row[PIXEL_RESULT.c.ldust] is not None:
+                        array[row__y, row__x, 2] = row[PIXEL_RESULT.c.ldust]
+                    if row[PIXEL_RESULT.c.sfr] is not None:
+                        # the SFR is a log
+                        array[row__y, row__x, 3] = math.pow(10, row[PIXEL_RESULT.c.sfr])
 
             connection.execute(GALAXY.update()
                                .where(GALAXY.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])

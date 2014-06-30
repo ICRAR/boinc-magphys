@@ -40,7 +40,7 @@ def build_key(galaxy_name, galaxy_id):
     return '{0}_{1}'.format(galaxy_name, galaxy_id)
 
 
-def sort_data(connection, current_jobs):
+def sort_data(connection, current_jobs, modulus, remainder):
     """
     Sort the list of jobs
     :param current_jobs:
@@ -48,6 +48,7 @@ def sort_data(connection, current_jobs):
     """
     return_data = {}
     for job_name in current_jobs:
+        LOG.info('Checking {0}'.format(job_name))
         index = job_name.index('_area')
         galaxy_name = job_name[0:index]
 
@@ -57,13 +58,14 @@ def sort_data(connection, current_jobs):
         # Get the area
         area = connection.execute(select([AREA]).where(AREA.c.area_id == area_number)).first()
 
-        key = build_key(galaxy_name, area[AREA.c.galaxy_id])
-        areas = return_data.get(key)
-        if areas is None:
-            areas = []
-            return_data[key] = areas
+        if modulus is None or int(area[AREA.c.galaxy_id]) % modulus == remainder:
+            key = build_key(galaxy_name, area[AREA.c.galaxy_id])
+            areas = return_data.get(key)
+            if areas is None:
+                areas = []
+                return_data[key] = areas
 
-        areas.append(area_number)
+            areas.append(area_number)
 
     return return_data
 
@@ -79,7 +81,7 @@ def finish_processing(galaxy_name, galaxy_id, sorted_data):
     return sorted_data.get(build_key(galaxy_name, galaxy_id)) is None
 
 
-def processed_data(connection):
+def processed_data(connection, modulus, remainder):
     """
     Work out which galaxies have been processed
 
@@ -90,24 +92,26 @@ def processed_data(connection):
     engine = create_engine(BOINC_DB_LOGIN)
     connection_boinc = engine.connect()
     current_jobs = []
+    LOG.info('Getting results from BOINC')
     for result in connection_boinc.execute(select([RESULT]).where(RESULT.c.server_state != 5)):
         current_jobs.append(result[RESULT.c.name])
     connection_boinc.close()
+    LOG.info('Got results')
 
-    sorted_data = sort_data(connection, current_jobs)
+    sorted_data = sort_data(connection, current_jobs, modulus, remainder)
     for key in sorted(sorted_data.iterkeys()):
         LOG.info('{0}: {1} results'.format(key, len(sorted_data[key])))
 
     # Get the galaxies we know are still processing
     processed = []
     for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == COMPUTING)):
-        if finish_processing(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], sorted_data):
-            processed.append(galaxy[GALAXY.c.galaxy_id])
-            LOG.info('%d %s has completed', galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.name])
+        if modulus is None or int(galaxy[GALAXY.c.galaxy_id]) % modulus == remainder:
+            if finish_processing(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], sorted_data):
+                processed.append(galaxy[GALAXY.c.galaxy_id])
+                LOG.info('%d %s has completed', galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.name])
 
     for galaxy_id in processed:
         connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=PROCESSED, status_time=datetime.datetime.now()))
 
     LOG.info('Marked %d galaxies ready for archiving', len(processed))
     LOG.info('%d galaxies are still being processed', len(sorted_data))
-

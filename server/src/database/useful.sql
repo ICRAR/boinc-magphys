@@ -20,10 +20,10 @@ from galaxy
 group by status_id;
 
 
-update galaxy set status_id = 3
-where galaxy_id >= 443
-      and galaxy_id <= 499
-      and status_id = 2;
+-- update galaxy set status_id = 3
+-- where galaxy_id >= 443
+--       and galaxy_id <= 499
+--       and status_id = 2;
 
 SELECT CONCAT('OPTIMIZE TABLE ',table_schema,'.',table_name,';') OptimizeTableSQL
 FROM information_schema.tables
@@ -34,23 +34,54 @@ ORDER BY (data_length+index_length);
 show variables like 'innodb%';
 
 -- How to empty the database
-truncate table result;
-truncate table workunit;
+-- truncate table result;
+-- truncate table workunit;
 
-truncate table pixel_result;
-truncate table fits_header;
-truncate table area_user;
-delete from area;
-truncate table image_filters_used;
-truncate table tag_galaxy;
-truncate table tag_register;
-delete from tag;
-truncate table user_pixel;
-delete from galaxy;
-delete from register;
+-- truncate table pixel_result;
+-- truncate table fits_header;
+-- truncate table area_user;
+-- delete from area;
+-- truncate table image_filters_used;
+-- truncate table tag_galaxy;
+-- truncate table tag_register;
+-- delete from tag;
+-- truncate table user_pixel;
+-- delete from galaxy;
+-- delete from register;
 
 
 -- Blocking the hosts of a user
-update host
-set max_results_day = -1
-where userid = <blah>;
+--update host
+--set max_results_day = -1
+--where userid = <blah>;
+
+-- Number of Galaxies
+select max(galaxy_id)
+from magphys.galaxy;
+
+-- Number of areas
+select max(area_id)
+from magphys.area;
+
+-- Number of pixels
+select max(pxresult_id)
+from magphys.pixel_result;
+
+select count(*)
+from register
+where create_time is null;
+
+
+-- pogs
+-- Number active users
+select count(*) 
+from pogs.user
+where expavg_credit > 0;
+
+-- Number active hosts
+select count(*) 
+from pogs.host
+where expavg_credit > 0;
+
+-- SHow locks
+SHOW FULL PROCESSLIST;

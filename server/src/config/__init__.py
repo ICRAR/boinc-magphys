@@ -31,7 +31,7 @@ from configobj import ConfigObj
 ############### AWS Instance Tags we use ###############
 BUILD_PNG_IMAGE = 'build_png_image'
 ORIGINAL_IMAGE_CHECKED = 'original_image_checked'
-ARCHIVE_DATA = 'archive_data'
+ARCHIVE_DATA = 'archive_data_{0}'
 
 config_file_name = dirname(__file__) + '/pogs.settings'
 if exists(config_file_name):

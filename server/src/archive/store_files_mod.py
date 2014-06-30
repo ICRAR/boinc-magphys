@@ -60,7 +60,7 @@ def get_galaxy_id_and_name(hdf5_file_name):
     return -1, None, None
 
 
-def store_files(connection):
+def store_files(connection, modulus, remainder):
     """
     Scan a directory for files and send them to the archive
 
@@ -80,16 +80,17 @@ def store_files(connection):
         size = os.path.getsize(file_name)
         galaxy_id, galaxy_name = get_galaxy_id_and_name(file_name)
         if galaxy_id >= 0:
-            key = '{0}/{0}.hdf5'.format(galaxy_name)
-            LOG.info('File name: %s', file_name)
-            LOG.info('File size: %d', size)
-            LOG.info('Bucket:    %s', bucket_name)
-            LOG.info('Key:       %s', key)
+            if modulus is None or galaxy_id % modulus == remainder:
+                key = '{0}/{0}.hdf5'.format(galaxy_name)
+                LOG.info('File name: %s', file_name)
+                LOG.info('File size: %d', size)
+                LOG.info('Bucket:    %s', bucket_name)
+                LOG.info('Key:       %s', key)
 
-            s3helper.add_file_to_bucket(bucket_name, key, file_name)
-            file_count += 1
-            os.remove(file_name)
-            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=STORED, status_time=datetime.datetime.now()))
+                s3helper.add_file_to_bucket(bucket_name, key, file_name)
+                file_count += 1
+                os.remove(file_name)
+                connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=STORED, status_time=datetime.datetime.now()))
 
         else:
             LOG.error('File name: %s', file_name)
