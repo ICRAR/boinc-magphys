@@ -26,7 +26,7 @@
 The function used to process a galaxy
 """
 import datetime
-from sqlalchemy import select
+from sqlalchemy import select, func
 from database.database_support_core import AREA, GALAXY
 from sqlalchemy.engine import create_engine
 from config import BOINC_DB_LOGIN, PROCESSED, COMPUTING
@@ -36,34 +36,89 @@ from utils.logging_helper import config_logger
 LOG = config_logger(__name__)
 
 
+class CacheGalaxy:
+    def __init__(self, galaxy_name, galaxy_id, area_min, area_max, ignore):
+        self.galaxy_name = galaxy_name
+        self.galaxy_id = galaxy_id
+        self.area_min = area_min
+        self.area_max = area_max
+        self.ignore = ignore
+
+    def __str__(self):
+        return '{0}, {1}, {2}, {3}, {4}'.format(self.galaxy_name, self.galaxy_id, self.area_min, self.area_max, self.ignore)
+
+
 def build_key(galaxy_name, galaxy_id):
     return '{0}_{1}'.format(galaxy_name, galaxy_id)
 
 
-def sort_data(connection, current_jobs):
+def get_cached_galaxy(cache_data, galaxy_name, area_number):
+    """
+    Get any cached data for this name
+    :param cache_data:
+    :param galaxy_name:
+    :param area_number:
+    :return:
+    """
+    cache_galaxies = cache_data.get(galaxy_name)
+    if cache_galaxies is not None:
+        for cached_galaxy in cache_galaxies:
+            if cached_galaxy.area_min <= area_number <= cached_galaxy.area_max:
+                return cached_galaxy
+
+    return None
+
+
+def sort_data(connection, current_jobs, modulus, remainder):
     """
     Sort the list of jobs
+
     :param current_jobs:
     :return:
     """
+    cache_data = {}
     return_data = {}
     for job_name in current_jobs:
+        LOG.info('Checking {0}'.format(job_name))
         index = job_name.index('_area')
         galaxy_name = job_name[0:index]
 
         index1 = job_name.index('_', index + 5)
         area_number = job_name[index + 5: index1]
 
-        # Get the area
-        area = connection.execute(select([AREA]).where(AREA.c.area_id == area_number)).first()
+        cached_galaxy = get_cached_galaxy(cache_data, galaxy_name, int(area_number))
+        LOG.info('Cache check = {0}'.format(cached_galaxy))
 
-        key = build_key(galaxy_name, area[AREA.c.galaxy_id])
-        areas = return_data.get(key)
-        if areas is None:
-            areas = []
-            return_data[key] = areas
+        if cached_galaxy is None:
+            # Get the area
+            area = connection.execute(select([AREA]).where(AREA.c.area_id == area_number)).first()
+            ignore = True
+            galaxy_id = int(area[AREA.c.galaxy_id])
+            if modulus is None or galaxy_id % modulus == remainder:
+                ignore = False
+                key = build_key(galaxy_name, galaxy_id)
+                areas = return_data.get(key)
+                if areas is None:
+                    areas = []
+                    return_data[key] = areas
 
-        areas.append(area_number)
+                areas.append(area_number)
+
+            # Add this galaxy to the cache
+            min_max = connection.execute(select([func.min(AREA.c.area_id), func.max(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id)).first()
+            LOG.info('Adding to cache = {0} {1} {2}'.format(galaxy_name, min_max, ignore))
+            list_galaxies = cache_data.get(galaxy_name)
+            if list_galaxies is None:
+                list_galaxies = []
+                cache_data[galaxy_name] = list_galaxies
+
+            list_galaxies.append(CacheGalaxy(galaxy_name, galaxy_id, min_max[0], min_max[1], ignore))
+
+        else:
+            if not cached_galaxy.ignore:
+                key = build_key(galaxy_name, cached_galaxy.galaxy_id)
+                areas = return_data.get(key)
+                areas.append(area_number)
 
     return return_data
 
@@ -79,7 +134,7 @@ def finish_processing(galaxy_name, galaxy_id, sorted_data):
     return sorted_data.get(build_key(galaxy_name, galaxy_id)) is None
 
 
-def processed_data(connection):
+def processed_data(connection, modulus, remainder):
     """
     Work out which galaxies have been processed
 
@@ -90,24 +145,26 @@ def processed_data(connection):
     engine = create_engine(BOINC_DB_LOGIN)
     connection_boinc = engine.connect()
     current_jobs = []
+    LOG.info('Getting results from BOINC')
     for result in connection_boinc.execute(select([RESULT]).where(RESULT.c.server_state != 5)):
         current_jobs.append(result[RESULT.c.name])
     connection_boinc.close()
+    LOG.info('Got results')
 
-    sorted_data = sort_data(connection, current_jobs)
+    sorted_data = sort_data(connection, current_jobs, modulus, remainder)
     for key in sorted(sorted_data.iterkeys()):
         LOG.info('{0}: {1} results'.format(key, len(sorted_data[key])))
 
     # Get the galaxies we know are still processing
     processed = []
     for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == COMPUTING)):
-        if finish_processing(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], sorted_data):
-            processed.append(galaxy[GALAXY.c.galaxy_id])
-            LOG.info('%d %s has completed', galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.name])
+        if modulus is None or int(galaxy[GALAXY.c.galaxy_id]) % modulus == remainder:
+            if finish_processing(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], sorted_data):
+                processed.append(galaxy[GALAXY.c.galaxy_id])
+                LOG.info('%d %s has completed', galaxy[GALAXY.c.galaxy_id], galaxy[GALAXY.c.name])
 
     for galaxy_id in processed:
         connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=PROCESSED, status_time=datetime.datetime.now()))
 
     LOG.info('Marked %d galaxies ready for archiving', len(processed))
     LOG.info('%d galaxies are still being processed', len(sorted_data))
-

@@ -52,21 +52,31 @@ LOG = config_logger(__name__)
 
 parser = argparse.ArgumentParser('Archive POGS data')
 parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
+parser.add_argument('-mod', '--mod', nargs=2, help=' M N - the modulus M to used and which value to check N ')
 args = vars(parser.parse_args())
 
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
+if args['mod'] is None:
+    # Used to show we have
+    modulus = None
+    remainder = 0
+else:
+    LOG.info('Using modulus {0} - remainder {1}'.format(args['mod'][0], args['mod'][1]))
+    modulus = args['mod'][0]
+    remainder = args['mod'][1]
+
+
 if args['option'] == 'boinc':
-    LOG.info('PYTHONPATH = {0}'.format(sys.path))
     # We're running from the BOINC server
-    process_boinc()
+    process_boinc(modulus, remainder)
 else:
     # We're running from a specially created AMI
-    log_name = 'archive_boinc'
+    log_name = 'archive_boinc_{0}'.format(remainder)
     filename, full_filename = get_ami_log_file(log_name)
     add_file_handler_to_root(full_filename)
-    LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')
     if pass_sanity_checks():
-        process_ami()
+        process_ami(modulus, remainder)
     else:
         LOG.error('Failed to pass sanity tests')
 

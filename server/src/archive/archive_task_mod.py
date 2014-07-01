@@ -46,7 +46,7 @@ sleep 10s
 if [ -d '/home/ec2-user/boinc-magphys/server' ]
 then
     # We are root so we have to run this via sudo to get access to the ec2-user details
-    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_task.py ami'
+    su -l ec2-user -c 'python2.7 /home/ec2-user/boinc-magphys/server/src/archive/archive_task.py ami {0}'
 fi
 
 # All done terminate
@@ -54,7 +54,7 @@ shutdown -h now
 '''
 
 
-def process_boinc():
+def process_boinc(modulus, remainder):
     """
     We're running the process on the BOINC server.
 
@@ -64,7 +64,8 @@ def process_boinc():
     # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
     ec2_helper = EC2Helper()
 
-    if ec2_helper.boinc_instance_running(ARCHIVE_DATA):
+    archive_data_format = ARCHIVE_DATA.format(remainder)
+    if ec2_helper.boinc_instance_running(archive_data_format):
         LOG.info('A previous instance is still running')
     else:
         LOG.info('Starting up the instance')
@@ -74,13 +75,19 @@ def process_boinc():
             LOG.error('Instance type and price not set up correctly')
         else:
             bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(instance_type, max_price)
-            if bid_price is not None and subnet_id is not None:
-                ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, ARCHIVE_DATA, instance_type)
+            # Do we need remainder text?
+            if modulus is None:
+                mod_text = ''
             else:
-                ec2_helper.run_instance(USER_DATA, ARCHIVE_DATA, instance_type)
+                mod_text = '-mod {0} {1}'.format(modulus, remainder)
+
+            if bid_price is not None and subnet_id is not None:
+                ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA.format(mod_text), archive_data_format, instance_type)
+            else:
+                ec2_helper.run_instance(USER_DATA.format(mod_text), archive_data_format, instance_type)
 
 
-def process_ami():
+def process_ami(modulus, remainder):
     """
     We're running on the AMI instance - so actually do the work
 
@@ -93,31 +100,33 @@ def process_ami():
     try:
         # Check the processed data
         try:
-            processed_data(connection)
+            processed_data(connection, modulus, remainder)
         except:
             LOG.exception('processed_data(): an exception occurred')
 
         # Store files
         try:
-            store_files(connection)
+            store_files(connection, modulus, remainder)
         except:
             LOG.exception('store_files(): an exception occurred')
 
         # Delete galaxy data - commits happen inside
         try:
-            delete_galaxy_data(connection)
+            delete_galaxy_data(connection, modulus, remainder)
         except:
             LOG.exception('delete_galaxy_data(): an exception occurred')
 
         # Archive the BOINC stats
         try:
-            archive_boinc_stats()
+            # Only the 0 node does this one
+            if remainder == 0:
+                archive_boinc_stats()
         except:
             LOG.exception('archive_boinc_stats(): an exception occurred')
 
         # Archive to HDF5
         try:
-            archive_to_hdf5(connection)
+            archive_to_hdf5(connection, modulus, remainder)
         except:
             LOG.exception('archive_to_hdf5(): an exception occurred')
 

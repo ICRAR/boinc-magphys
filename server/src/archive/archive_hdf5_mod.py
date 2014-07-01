@@ -725,7 +725,7 @@ def get_pixel_result(connection, pxresult_id):
         return x, y, area_id
 
 
-def archive_to_hdf5(connection):
+def archive_to_hdf5(connection, modulus, remainder):
     """
     Archive data to an HDF5 file
 
@@ -740,7 +740,8 @@ def archive_to_hdf5(connection):
     # Look in the database for the galaxies
     galaxy_ids = []
     for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == PROCESSED).order_by(GALAXY.c.galaxy_id)):
-        galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
+        if modulus is None or int(galaxy[GALAXY.c.galaxy_id]) % modulus == remainder:
+            galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
 
     for galaxy_id_str in galaxy_ids:
         start_time = time.time()

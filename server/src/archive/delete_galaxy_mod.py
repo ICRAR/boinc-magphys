@@ -39,19 +39,18 @@ LOG = config_logger(__name__)
 
 
 def delete_galaxy(connection, galaxy_ids):
-    for galaxy_id_str in galaxy_ids:
+    for galaxy_id in galaxy_ids:
         transaction = connection.begin()
-        galaxy_id1 = int(galaxy_id_str)
-        galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id1)).first()
+        galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
         if galaxy is None:
-            LOG.info('Error: Galaxy with galaxy_id of %d was not found', galaxy_id1)
+            LOG.info('Error: Galaxy with galaxy_id of %d was not found', galaxy_id)
         else:
-            LOG.info('Deleting Galaxy with galaxy_id of %d - %s', galaxy_id1, galaxy[GALAXY.c.name])
+            LOG.info('Deleting Galaxy with galaxy_id of %d - %s', galaxy_id, galaxy[GALAXY.c.name])
             area_count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])).first()[0]
             counter = 1
 
             for area_id1 in connection.execute(select([AREA.c.area_id]).where(AREA.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]).order_by(AREA.c.area_id)):
-                LOG.info("Deleting galaxy {0} area {1}. {2} of {3}".format(galaxy_id_str, area_id1[0], counter, area_count))
+                LOG.info("Deleting galaxy {0} area {1}. {2} of {3}".format(galaxy_id, area_id1[0], counter, area_count))
                 connection.execute(PIXEL_RESULT.delete().where(PIXEL_RESULT.c.area_id == area_id1[0]))
 
                 # Give the rest of the world a chance to access the database
@@ -79,7 +78,7 @@ def delete_galaxy(connection, galaxy_ids):
         transaction.commit()
 
 
-def delete_galaxy_data(connection):
+def delete_galaxy_data(connection, modulus, remainder):
     """
     Delete galaxies after a period of time
 
@@ -91,7 +90,9 @@ def delete_galaxy_data(connection):
 
     galaxy_ids = []
     for galaxy in connection.execute(select([GALAXY]).where(and_(GALAXY.c.status_id == STORED, GALAXY.c.status_time < delete_delay_ago)).order_by(GALAXY.c.galaxy_id)):
-        galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
+        galaxy_id = int(galaxy[GALAXY.c.galaxy_id])
+        if modulus is None or galaxy_id % modulus == remainder:
+            galaxy_ids.append(galaxy_id)
 
     delete_galaxy(connection, galaxy_ids)
 

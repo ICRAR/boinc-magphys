@@ -41,7 +41,7 @@ from Boinc import configxml
 from datetime import datetime
 from utils.logging_helper import config_logger
 from sqlalchemy.engine import create_engine
-from sqlalchemy.sql.expression import and_, func, select
+from sqlalchemy.sql.expression import func, select
 from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import REGISTER, TAG_REGISTER
@@ -51,19 +51,17 @@ LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-r', '--register', type=int, help='the registration id of a galaxy')
+# TODO: Add an argument for the modulus operator
 parser.add_argument('-l', '--limit', type=int, help='only generate N workunits from this galaxy (for testing)')
 args = vars(parser.parse_args())
 
-count = None
-if args['register'] is None:
-    # select count(*) from result where server_state = 2
-    ENGINE = create_engine(BOINC_DB_LOGIN)
-    connection = ENGINE.connect()
-    count = connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()[0]
-    connection.close()
+# select count(*) from result where server_state = 2
+ENGINE = create_engine(BOINC_DB_LOGIN)
+connection = ENGINE.connect()
+count = connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()[0]
+connection.close()
 
-    LOG.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
+LOG.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
 
 LIMIT = None
 if args['limit'] is not None:
@@ -95,43 +93,15 @@ else:
     else:
         # Normal operation
         files_processed = 0
-        if args['register'] is None:
-            FILES_TO_PROCESS = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
+        FILES_TO_PROCESS = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
 
-            # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
-            while files_processed < FILES_TO_PROCESS:
-                LOG.info("Added %d of %d", files_processed, FILES_TO_PROCESS)
-                registration = connection.execute(select([REGISTER]).where(REGISTER.c.create_time == None).order_by(REGISTER.c.priority.desc(), REGISTER.c.register_time)).first()
-                if registration is None:
-                    LOG.info('No registrations waiting')
-                    break
-                else:
-                    # As the load work unit component adds data to the data base we need autocommit on to ensure each pixel matches
-                    #transaction = connection.begin()
-                    if not os.path.isfile(registration[REGISTER.c.filename]):
-                        LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
-                        connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
-                    elif registration[REGISTER.c.sigma_filename] is not None and not os.path.isfile(registration[REGISTER.c.sigma_filename]):
-                        LOG.error('The file %s does not exist', registration[REGISTER.c.sigma_filename])
-                        connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
-                    else:
-                        LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
-                        fit2wu = Fit2Wu(connection, LIMIT, download_dir, fanout)
-                        (work_units_added, pixel_count) = fit2wu.process_file(registration)
-                        # One WU = MIN_QUORUM Results
-                        files_processed += (work_units_added * MIN_QUORUM)
-                        if os.path.exists(registration[REGISTER.c.filename]):
-                            os.remove(registration[REGISTER.c.filename])
-                        if registration.sigma_filename is not None and os.path.exists(registration.sigma_filename):
-                            os.remove(registration[REGISTER.c.sigma_filename])
-                        connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
-                    connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
-
-        # We want an explict galaxy to load
-        else:
-            registration = connection.execute(select([REGISTER]).where(and_(REGISTER.c.register_id == args['register'], REGISTER.c.create_time == None))).first()
+        # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
+        while files_processed < FILES_TO_PROCESS:
+            LOG.info("Added %d of %d", files_processed, FILES_TO_PROCESS)
+            registration = connection.execute(select([REGISTER]).where(REGISTER.c.create_time == None).order_by(REGISTER.c.priority.desc(), REGISTER.c.register_time)).first()
             if registration is None:
-                LOG.info('No registration waiting with the id %d', args['register'])
+                LOG.info('No registrations waiting')
+                break
             else:
                 # As the load work unit component adds data to the data base we need autocommit on to ensure each pixel matches
                 #transaction = connection.begin()
@@ -145,9 +115,11 @@ else:
                     LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
                     fit2wu = Fit2Wu(connection, LIMIT, download_dir, fanout)
                     (work_units_added, pixel_count) = fit2wu.process_file(registration)
-                    files_processed = work_units_added * MIN_QUORUM
-                    os.remove(registration[REGISTER.c.filename])
-                    if registration[REGISTER.c.sigma_filename] is not None:
+                    # One WU = MIN_QUORUM Results
+                    files_processed += (work_units_added * MIN_QUORUM)
+                    if os.path.exists(registration[REGISTER.c.filename]):
+                        os.remove(registration[REGISTER.c.filename])
+                    if registration.sigma_filename is not None and os.path.exists(registration.sigma_filename):
                         os.remove(registration[REGISTER.c.sigma_filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
