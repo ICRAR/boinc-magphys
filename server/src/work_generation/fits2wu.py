@@ -93,6 +93,7 @@ else:
     else:
         # Normal operation
         files_processed = 0
+        # TODO: Divide by the modulus
         FILES_TO_PROCESS = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
 
         # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
