@@ -26,7 +26,7 @@
 The function used to process a galaxy
 """
 import datetime
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from database.database_support_core import AREA, GALAXY
 from sqlalchemy.engine import create_engine
 from config import BOINC_DB_LOGIN, PROCESSED, COMPUTING
@@ -146,7 +146,8 @@ def processed_data(connection, modulus, remainder):
     connection_boinc = engine.connect()
     current_jobs = []
     LOG.info('Getting results from BOINC')
-    for result in connection_boinc.execute(select([RESULT]).where(RESULT.c.server_state != 5)):
+    # The use of appid ensures MySQL uses an index otherwise it does a full table scan
+    for result in connection_boinc.execute(select([RESULT]).where(and_(RESULT.c.server_state != 5, RESULT.c.appid == 1))):
         current_jobs.append(result[RESULT.c.name])
     connection_boinc.close()
     LOG.info('Got results')

@@ -64,7 +64,7 @@ else:
     LOG.info('Using modulus {0} - remainder {1}'.format(args['mod'][0], args['mod'][1]))
     modulus = args['mod'][0]
     remainder = args['mod'][1]
-
+    LOG.info('module = {0}, remainder = {1}'.format(modulus, remainder))
 
 if args['option'] == 'boinc':
     # We're running from the BOINC server
