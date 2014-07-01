@@ -157,14 +157,17 @@ class EC2Helper:
         error_count = 0
         while instance_id is None and error_count < 3:
             spot_request_id = spot_request[0].id
+            requests = None
             try:
                 requests = self.ec2_connection.get_all_spot_instance_requests(request_ids=[spot_request_id])
             except EC2ResponseError:
                 LOG.exception('Error count = {0}'.format(error_count))
-                time.sleep(10)
                 error_count += 1
 
-            if requests is not None:
+            if requests is None:
+                # Wait for AWS to catch up
+                time.sleep(10)
+            else:
                 LOG.info('{0}, state: {1}, status:{2}'.format(spot_request_id, requests[0].state, requests[0].status))
                 if requests[0].state == 'active' and requests[0].status.code == 'fulfilled':
                     instance_id = requests[0].instance_id
