@@ -73,8 +73,8 @@ def delete_galaxy(connection, galaxy_ids):
             key.key = '{0}/sed/'.format(galaxy_file_name)
             bucket.delete_key(key)
 
-        LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id1)
-        connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=DELETED, status_time=datetime.datetime.now()))
+        LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id)
+        connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=DELETED, status_time=datetime.datetime.now()))
         transaction.commit()
 
 
