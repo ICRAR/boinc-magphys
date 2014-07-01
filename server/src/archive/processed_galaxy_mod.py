@@ -44,6 +44,9 @@ class CacheGalaxy:
         self.area_max = area_max
         self.ignore = ignore
 
+    def __str__(self):
+        return '{0}, {1}, {2}, {3}, {4}'.format(self.galaxy_name, self.galaxy_id, self.area_min, self.area_max, self.ignore)
+
 
 def build_key(galaxy_name, galaxy_id):
     return '{0}_{1}'.format(galaxy_name, galaxy_id)
@@ -84,6 +87,7 @@ def sort_data(connection, current_jobs, modulus, remainder):
         area_number = job_name[index + 5: index1]
 
         cached_galaxy = get_cached_galaxy(cache_data, galaxy_name, int(area_number))
+        LOG.info('Cache check = {0}'.format(cached_galaxy))
 
         if cached_galaxy is None:
             # Get the area
@@ -102,6 +106,7 @@ def sort_data(connection, current_jobs, modulus, remainder):
 
             # Add this galaxy to the cache
             min_max = connection.execute(select([func.min(AREA.c.area_id), func.max(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id)).first()
+            LOG.info('Adding to cache = {0} {1} {2}'.format(galaxy_name, min_max, ignore))
             list_galaxies = cache_data.get(galaxy_name)
             if list_galaxies is None:
                 list_galaxies = []
@@ -113,10 +118,6 @@ def sort_data(connection, current_jobs, modulus, remainder):
             if not cached_galaxy.ignore:
                 key = build_key(galaxy_name, cached_galaxy.galaxy_id)
                 areas = return_data.get(key)
-                if areas is None:
-                    areas = []
-                    return_data[key] = areas
-
                 areas.append(area_number)
 
     return return_data
