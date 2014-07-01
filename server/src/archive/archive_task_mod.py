@@ -101,18 +101,21 @@ def process_ami(modulus, remainder):
     try:
         # Check the processed data
         try:
+            LOG.info('Updating state information')
             processed_data(connection, modulus, remainder)
         except:
             LOG.exception('processed_data(): an exception occurred')
 
         # Store files
         try:
+            LOG.info('Storing files')
             store_files(connection, modulus, remainder)
         except:
             LOG.exception('store_files(): an exception occurred')
 
         # Delete galaxy data - commits happen inside
         try:
+            LOG.info('Deleting galaxy data')
             delete_galaxy_data(connection, modulus, remainder)
         except:
             LOG.exception('delete_galaxy_data(): an exception occurred')
@@ -121,12 +124,14 @@ def process_ami(modulus, remainder):
         try:
             # Only the 0 node does this one
             if remainder == 0:
+                LOG.info('Archive boinc stats')
                 archive_boinc_stats()
         except:
             LOG.exception('archive_boinc_stats(): an exception occurred')
 
         # Archive to HDF5
         try:
+            LOG.info('Archiving to HDF5')
             archive_to_hdf5(connection, modulus, remainder)
         except:
             LOG.exception('archive_to_hdf5(): an exception occurred')
