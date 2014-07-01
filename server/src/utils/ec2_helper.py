@@ -29,6 +29,7 @@ import random
 import boto
 import time
 import datetime
+from boto.exception import EC2ResponseError
 from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
 from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT
@@ -153,16 +154,24 @@ class EC2Helper:
 
         # Wait for EC2 to provision the instance
         instance_id = None
-        while instance_id is None:
+        error_count = 0
+        while instance_id is None and error_count < 3:
             spot_request_id = spot_request[0].id
-            requests = self.ec2_connection.get_all_spot_instance_requests(request_ids=[spot_request_id])
-            LOG.info('{0}, state: {1}, status:{2}'.format(spot_request_id, requests[0].state, requests[0].status))
-            if requests[0].state == 'active' and requests[0].status.code == 'fulfilled':
-                instance_id = requests[0].instance_id
-            elif requests[0].state == 'cancelled':
-                raise CancelledException('Request {0} cancelled. Status: {1}'.format(spot_request_id, requests[0].status))
-            else:
+            try:
+                requests = self.ec2_connection.get_all_spot_instance_requests(request_ids=[spot_request_id])
+            except EC2ResponseError:
+                LOG.exception('Error count = {0}'.format(error_count))
                 time.sleep(10)
+                error_count += 1
+
+            if requests is not None:
+                LOG.info('{0}, state: {1}, status:{2}'.format(spot_request_id, requests[0].state, requests[0].status))
+                if requests[0].state == 'active' and requests[0].status.code == 'fulfilled':
+                    instance_id = requests[0].instance_id
+                elif requests[0].state == 'cancelled':
+                    raise CancelledException('Request {0} cancelled. Status: {1}'.format(spot_request_id, requests[0].status))
+                else:
+                    time.sleep(10)
 
         # Give it time to settle down
         LOG.info('Assigning the tags')
