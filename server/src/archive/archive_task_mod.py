@@ -32,10 +32,11 @@ from archive.delete_galaxy_mod import delete_galaxy_data
 from archive.processed_galaxy_mod import processed_data
 from archive.store_files_mod import store_files
 from utils.logging_helper import config_logger
-from config import DB_LOGIN, ARCHIVE_DATA, ARCHIVE_DATA_DICT
+from config import DB_LOGIN, ARCHIVE_DATA_DICT
 from utils.ec2_helper import EC2Helper
 
 LOG = config_logger(__name__)
+ARCHIVE_DATA = 'archive_data_{0}'
 
 USER_DATA = '''#!/bin/bash
 
