@@ -70,7 +70,7 @@ if exists(config_file_name):
 
     BUILD_PNG_IMAGE_DICT = config[BUILD_PNG_IMAGE]
     ORIGINAL_IMAGE_CHECKED_DICT = config[ORIGINAL_IMAGE_CHECKED]
-    ARCHIVE_DATA_DICT = config[ARCHIVE_DATA]
+    ARCHIVE_DATA_DICT = config['archive_data']
 
     AWS_SUBNET_DICT = {}
     for subnet_id in AWS_SUBNET_IDS:
