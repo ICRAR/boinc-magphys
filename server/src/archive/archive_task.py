@@ -57,7 +57,7 @@ args = vars(parser.parse_args())
 
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 if args['mod'] is None:
-    # Used to show we have
+    # Used to show we have no modulus
     modulus = None
     remainder = 0
 else:

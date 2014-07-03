@@ -48,11 +48,27 @@ from database.database_support_core import REGISTER, TAG_REGISTER
 from work_generation.fits2wu_mod import Fit2Wu, MIN_QUORUM
 
 LOG = config_logger(__name__)
-LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-l', '--limit', type=int, help='only generate N workunits from this galaxy (for testing)')
+parser = argparse.ArgumentParser('Build POGS workunits')
+parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
+parser.add_argument('-mod', '--mod', nargs=2, help=' M N - the modulus M to used and which value to check N ')
 args = vars(parser.parse_args())
+
+LOG.info('PYTHONPATH = {0}'.format(sys.path))
+if args['mod'] is None:
+    # Used to show we have no modulus
+    modulus = None
+    remainder = 0
+else:
+    LOG.info('Using modulus {0} - remainder {1}'.format(args['mod'][0], args['mod'][1]))
+    modulus = int(args['mod'][0])
+    remainder = int(args['mod'][1])
+    LOG.info('module = {0}, remainder = {1}'.format(modulus, remainder))
+
+if args['option'] == 'boinc':
+    # We're running from the BOINC server
+
+else:
 
 # select count(*) from result where server_state = 2
 ENGINE = create_engine(BOINC_DB_LOGIN)
@@ -61,10 +77,6 @@ count = connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.serv
 connection.close()
 
 LOG.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
-
-LIMIT = None
-if args['limit'] is not None:
-    LIMIT = args['limit']
 
 # The BOINC scripts/apps do not feel at home outside their directory
 os.chdir(POGS_BOINC_PROJECT_ROOT)
