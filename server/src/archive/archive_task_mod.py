@@ -96,8 +96,8 @@ def process_ami(modulus, remainder):
     :return:
     """
     # Connect to the database - the login string is set in the database package
-    ENGINE = create_engine(DB_LOGIN)
-    connection = ENGINE.connect()
+    engine = create_engine(DB_LOGIN)
+    connection = engine.connect()
     try:
         # Check the processed data
         try:

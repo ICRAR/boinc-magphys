@@ -77,10 +77,10 @@ def store_files(connection, modulus, remainder):
     bucket_name = get_files_bucket()
 
     for file_name in glob.glob(files):
-        size = os.path.getsize(file_name)
         galaxy_id, galaxy_name = get_galaxy_id_and_name(file_name)
         if galaxy_id >= 0:
             if modulus is None or galaxy_id % modulus == remainder:
+                size = os.path.getsize(file_name)
                 key = '{0}/{0}.hdf5'.format(galaxy_name)
                 LOG.info('File name: %s', file_name)
                 LOG.info('File size: %d', size)
@@ -94,7 +94,6 @@ def store_files(connection, modulus, remainder):
 
         else:
             LOG.error('File name: %s', file_name)
-            LOG.error('File size: %d', size)
             LOG.error('Could not get the galaxy id')
 
     return file_count

@@ -743,7 +743,7 @@ def archive_to_hdf5(connection, modulus, remainder):
         if modulus is None or int(galaxy[GALAXY.c.galaxy_id]) % modulus == remainder:
             galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
 
-    for galaxy_id_str in galaxy_ids:
+    for galaxy_id_str in galaxy_ids[:500]:
         start_time = time.time()
 
         galaxy_id1 = int(galaxy_id_str)
