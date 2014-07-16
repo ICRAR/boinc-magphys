@@ -1,0 +1,2 @@
+all:
+	g++ -v -arch i386 main.cpp CommandLine.cpp CommandLine.hpp Constants.hpp Fit.cpp Fit.hpp HistogramRange.cpp HistogramRange.hpp ModelData.cpp ModelData.hpp Observation.cpp Observation.hpp Parser.cpp Parser.hpp -o gpubuild
