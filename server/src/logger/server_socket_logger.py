@@ -32,6 +32,8 @@ import sys
 import os
 import getopt
 import signal
+import boinc_path_config
+import thread
 
 from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
@@ -39,6 +41,13 @@ from utils.logging_helper import config_logger
 # Local logger for server logs
 server_log = config_logger('ServerLog')
 server_log.addHandler(logging.FileHandler('ServerLog'))
+
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
+
+STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 
 def main(argv):
     """
@@ -58,6 +67,7 @@ def main(argv):
 
     # Install sigint handler for shutdown
     signal.signal(signal.SIGINT, shutdown)
+    thread.start_new_thread(check_stop_trigger())
 
     # Local vars
     local_host = gethostname()
@@ -229,6 +239,15 @@ def shutdown():
     server_log.info('Logging server shutting down')
     exit(0)
 
+
+def check_stop_trigger():
+    while 1:
+        try:
+            junk = open(STOP_TRIGGER_FILENAME, 'r')
+        except IOError:
+            ()  # File does not exist, do nothing
+        else:
+            sys.exit(1)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
