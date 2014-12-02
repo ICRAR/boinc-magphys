@@ -31,13 +31,14 @@ import logging.handlers
 import sys
 import os
 import getopt
+import signal
 
 from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
 
 # Local logger for server logs
 server_log = config_logger('ServerLog')
-
+server_log.addHandler(logging.FileHandler('ServerLog'))
 
 def main(argv):
     """
@@ -54,6 +55,9 @@ def main(argv):
     :param argv: command line args
     :return: void
     """
+
+    # Install sigint handler for shutdown
+    signal.signal(signal.SIGINT, shutdown)
 
     # Local vars
     local_host = gethostname()
@@ -125,7 +129,7 @@ def main(argv):
                 # Reclaim any defunct processes to keep process table clean.
                 child_reclaim()
                 # Next client must use a different local logger. Append '1' to the name of the previous local logger
-                logger_number += '1'
+                logger_number = '' + (int(logger_number) + 1)
 
         except IOError as e:  # Socket error
             server_log.error(e.args[1])
@@ -213,6 +217,18 @@ def child_reclaim():
             more = 0
 
     return
+
+
+def shutdown():
+    """
+    Things to do when a shutdown signal is received.
+
+    :return:
+    """
+    child_reclaim()
+    server_log.info('Logging server shutting down')
+    exit(0)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
