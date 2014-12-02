@@ -75,6 +75,12 @@ if exists(config_file_name):
     for subnet_id in AWS_SUBNET_IDS:
         AWS_SUBNET_DICT[subnet_id] = config[subnet_id]
 
+    ############### Logging Server ###############
+    LOGGER_SERVER_PORT = config['logger_port']
+    LOGGER_SERVER_ADDRESS = config['logger_address']
+    LOGGER_MAX_CONNECTION_REQUESTS = config['logger_max_requests']
+    LOGGER_LOG_DIRECTORY = config['logger_directory']
+
 ############### Archive Settings ###############
 
 # Any probability in the pixel histogram less than this is considered to be 0 and ignored
@@ -86,3 +92,5 @@ PROCESSED = 1
 ARCHIVED = 2
 STORED = 3
 DELETED = 4
+
+

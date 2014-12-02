@@ -35,12 +35,14 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
-from utils.logging_helper import config_logger, add_file_handler_to_root
+from utils.logging_helper import config_logger, config_socket_logger, add_file_handler_to_root
 from utils.s3_helper import S3Helper
 from utils.ec2_helper import EC2Helper
 from utils.name_builder import get_archive_bucket, get_log_archive_key, get_ami_log_file
 from utils.sanity_checks import pass_sanity_checks
 from image.build_png_image_mod import build_png_image_boinc, build_png_image_ami
+
+from config import *
 
 
 LOG = config_logger(__name__)
@@ -57,7 +59,10 @@ else:
     # We're running from a specially created AMI
     log_name = 'build_png_image_ami'
     filename, full_filename = get_ami_log_file(log_name)
-    add_file_handler_to_root(full_filename)
+
+    # add_file_handler_to_root(full_filename)
+    LOG = config_socket_logger(full_filename, LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
+
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')
     if pass_sanity_checks():
@@ -65,6 +70,7 @@ else:
     else:
         LOG.error('Failed to pass sanity tests')
 
+    """ The log file shouldn't exist on this machine when using config_socket_logger. This section is not required.
     # Try copying the log file to S3
     try:
         LOG.info('About to copy the log file')
@@ -73,6 +79,7 @@ else:
         os.remove(full_filename)
     except:
         LOG.exception('Failed to copy the log file')
+    """
 
     ec2_helper = EC2Helper()
     ec2_helper.release_public_ip()

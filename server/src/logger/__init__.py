@@ -1,4 +1,3 @@
-#! /usr/bin/env python2.7
 #
 #    (c) UWA, The University of Western Australia
 #    M468/35 Stirling Hwy
@@ -23,15 +22,6 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 #    MA 02111-1307  USA
 #
+"""
 
-from utils.logging_helper import config_socket_logger
-
-remote_host = 'Sam-PC'
-remote_port = 9999
-
-line = raw_input('Press enter, then we\'ll start the stress test')
-
-LOG = config_socket_logger(line, remote_host, remote_port)
-
-for x in range(0, 50000):
-    LOG.info(('Line ', x))
+"""

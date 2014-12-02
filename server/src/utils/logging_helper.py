@@ -46,7 +46,7 @@ def config_logger(name):
 
 def config_socket_logger(name, host, port):
     """
-    Adds a socket handler to the specified logger
+    Get a socket logger connected to host, port
     :param host:
     :param port:
     :param name:
