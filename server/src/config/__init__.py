@@ -76,10 +76,11 @@ if exists(config_file_name):
         AWS_SUBNET_DICT[subnet_id] = config[subnet_id]
 
     ############### Logging Server ###############
-    LOGGER_SERVER_PORT = config['logger_port']
-    LOGGER_SERVER_ADDRESS = config['logger_address']
-    LOGGER_MAX_CONNECTION_REQUESTS = config['logger_max_requests']
-    LOGGER_LOG_DIRECTORY = config['logger_directory']
+    # Comment these out when the logging server goes live.
+    # LOGGER_SERVER_PORT = int(config['logger_port'])
+    # LOGGER_SERVER_ADDRESS = config['logger_address']
+    # LOGGER_MAX_CONNECTION_REQUESTS = config['logger_max_requests']
+    # LOGGER_LOG_DIRECTORY = config['logger_directory']
 
 ############### Archive Settings ###############
 
@@ -93,4 +94,9 @@ ARCHIVED = 2
 STORED = 3
 DELETED = 4
 
+############### Logging Server ###############
+LOGGER_SERVER_PORT = 9020
+LOGGER_SERVER_ADDRESS = '127.0.0.1'
+LOGGER_MAX_CONNECTION_REQUESTS = 100
+LOGGER_LOG_DIRECTORY = 'logs'
 

@@ -23,6 +23,11 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 #    MA 02111-1307  USA
 #
+"""
+Main program for a logging server that can receive multiple connections from python loggers using a socket_handler.
+Logs are saved to a local file with the same name as the name used for the logger on the client.
+
+"""
 from socket import *
 import struct
 import cPickle
@@ -32,22 +37,34 @@ import sys
 import os
 import getopt
 import signal
-import boinc_path_config
-import thread
+# import boinc_path_config
+from threading import Thread
+from multiprocessing import Process
+import time
+import datetime
 
 from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
 
 # Local logger for server logs
 server_log = config_logger('ServerLog')
-server_log.addHandler(logging.FileHandler('ServerLog'))
+handler = logging.FileHandler('ServerLog ' + datetime.date.today().strftime("%d %m %Y") + '.log')
+formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
+handler.setFormatter(formatter)
+server_log.addHandler(handler)
 
 # Setup the Python Path as we may be running this via ssh
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
-STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
+STOP_TRIGGER_FILENAME = 'stop_daemons'  # boinc_project_path.project_path('stop_daemons')
+
+# A list of all child processes (entries added whenever a client connects and removed on disconnect)
+child_list = list() 
+
+# Set to true when a SIGINT is caught
+caught_sig_int = False
 
 def main(argv):
     """
@@ -60,20 +77,16 @@ def main(argv):
         4.When connection is received, create new process to handle client
         5.Clean up any defunct processes
 
-    Will only exit when killed or an error occurs
+    Will only exit when stop trigger identified or an error occurs
     :param argv: command line args
     :return: void
     """
-
-    # Install sigint handler for shutdown
-    signal.signal(signal.SIGINT, shutdown)
-    thread.start_new_thread(check_stop_trigger())
 
     # Local vars
     local_host = gethostname()
     log_directory = LOGGER_LOG_DIRECTORY
     local_port = LOGGER_SERVER_PORT
-    logger_number = '1'
+    logger_number = 0
 
     # Get command line args
     try:
@@ -82,7 +95,7 @@ def main(argv):
     except getopt.GetoptError as e:
         print e.args[0]
         usage()
-        exit(2)
+        sys.exit(0)
 
     # Handle command line args
     for opt, arg in opts:
@@ -92,7 +105,7 @@ def main(argv):
             except ValueError as e:
                 print e.args[0]
                 usage()
-                exit(2)
+                sys.exit(0)
 
         elif opt in ("-d", "--l_dir"):
             log_directory = arg
@@ -110,7 +123,7 @@ def main(argv):
         except OSError as e:
             server_log.info(e.args[1])
             # Server_log.info('Log directory already exists')
-            exit(-1)
+            sys.exit(0)
 
     # Set up sockets
     try:
@@ -121,31 +134,29 @@ def main(argv):
         server_socket.listen(LOGGER_MAX_CONNECTION_REQUESTS)
     except IOError as e:
         server_log.error(e.args[1])
-        exit(-1)
+        sys.exit(0)
 
     while 1:
         try:
             client_socket, addr = server_socket.accept()
             server_log.info('Incoming connection from %s', addr)
 
-            # Handle each new client in a new process.
-            pid = os.fork()
+            # Handle each new client in a new process
+            pros = Process(target=handle_client, args=(log_directory, client_socket, logger_number))
+            pros.start()
 
-            if pid == 0:  # In child
-                handle_client(log_directory, client_socket, logger_number)
-                exit(0)
-
-            if pid > 0:  # In parent
-                # Reclaim any defunct processes to keep process table clean.
-                child_reclaim()
-                # Next client must use a different local logger. Append '1' to the name of the previous local logger
-                logger_number = '' + (int(logger_number) + 1)
+            # Keep a list of all PIDs to terminate later when the program is told to close
+            child_list.append(pros)
+            
+            logger_number += 1
 
         except IOError as e:  # Socket error
             server_log.error(e.args[1])
+            sys.exit(0)
 
-        except OSError as e:  # Fork error
-            server_log.error(e.args[1])
+        except SystemExit:
+            # Maintenance Thread has notified us that it's time to exit
+            sys.exit(0)
 
 
 def usage():
@@ -171,8 +182,9 @@ def handle_client(save_directory, c_socket, l_number):
     :param l_number: the logger number to be used by this handle instance
     :return: void
     """
+
     file_open = 0
-    logger = logging.getLogger(l_number)
+    logger = logging.getLogger(str(l_number))
 
     while 1:
         # Try to receive a log from the client
@@ -180,13 +192,12 @@ def handle_client(save_directory, c_socket, l_number):
             chunk = c_socket.recv(4)
 
         except IOError as e:
-            server_log.error(e.args[1])
-            # Server_log.error('Connection closed by client')
-            return 0
+            server_log.error('Connection closed')
+            exit(0)
 
         if len(chunk) < 4:
             server_log.info('Connection terminated normally')
-            return 0
+            exit(0)
 
         # This chunk of code extracts a log record from the received data and places it into record
         slen = struct.unpack('>L', chunk)[0]
@@ -222,32 +233,58 @@ def child_reclaim():
 
     while more:
         # Wait for any defunct child processes to remove them from the process table
-        (pid, status) = os.waitpid(-1, os.P_NOWAIT)
+        try:
+            (pid, status) = os.waitpid(-1, os.P_NOWAIT)
+            # Remove the dead process from the list of child processes
+            for i in child_list:
+                if i.pid == pid:
+                    child_list.remove(i)
+        except OSError as e:
+            return
+
         if pid <= 0:
             more = 0
 
-    return
 
-
-def shutdown():
+def sigint_handler(self, sig):
     """
-    Things to do when a shutdown signal is received.
+    This method handles the SIGINT signal. It sets a flag
+    but waits to exit until background_management checks this flag
+    """
 
+    global caught_sig_int
+    caught_sig_int = True
+
+
+def background_management():
+    """
+    This method is created as a thread when the program starts. It manages background operations, such as reclaiming
+    child processes and detecting shutdown signals
     :return:
     """
-    child_reclaim()
-    server_log.info('Logging server shutting down')
-    exit(0)
 
-
-def check_stop_trigger():
     while 1:
-        try:
-            junk = open(STOP_TRIGGER_FILENAME, 'r')
-        except IOError:
-            ()  # File does not exist, do nothing
-        else:
-            sys.exit(1)
+        child_reclaim()
+
+        if os.path.exists(STOP_TRIGGER_FILENAME):
+            server_log.info("Shutdown file identified, shutting down.\n")
+            signal.alarm(1)  # This is required to interrupt the socket.accept() call and force processing of the exit command
+            for i in child_list: # Kill all child processes that have not been claimed by child_reclaim()
+                i.terminate()
+            sys.exit(0)
+
+        if caught_sig_int:
+            server_log.info("SIGINT Received, shutting down.\n")
+            sys.exit(0)
+
+        time.sleep(1)  # No point in checking constantly, save a bit of CPU time
+
 
 if __name__ == "__main__":
+    # Install sigint handler
+    signal.signal(signal.SIGINT, sigint_handler)
+
+    # Start a thread to do background management tasks
+    Thread(target=background_management).start()
+
     main(sys.argv[1:])
