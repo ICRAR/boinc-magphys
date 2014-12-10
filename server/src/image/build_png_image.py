@@ -57,7 +57,7 @@ if args['option'] == 'boinc':
     build_png_image_boinc()
 else:
     # We're running from a specially created AMI
-    log_name = 'build_png_image_ami'
+    log_name = 'build_png_image_ami.log'
     filename, full_filename = get_ami_log_file(log_name)
 
     # add_file_handler_to_root(full_filename)

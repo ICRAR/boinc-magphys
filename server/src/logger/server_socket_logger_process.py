@@ -37,7 +37,7 @@ import sys
 import os
 import getopt
 import signal
-# import boinc_path_config
+import boinc_path_config
 from threading import Thread
 from multiprocessing import Process
 import time
@@ -48,7 +48,7 @@ from utils.logging_helper import config_logger
 
 # Local logger for server logs
 server_log = config_logger('ServerLog')
-handler = logging.FileHandler('ServerLog ' + datetime.date.today().strftime("%d %m %Y") + '.log')
+handler = logging.FileHandler('ServerLog.log')
 formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
 handler.setFormatter(formatter)
 server_log.addHandler(handler)
@@ -58,7 +58,7 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
-STOP_TRIGGER_FILENAME = 'stop_daemons'  # boinc_project_path.project_path('stop_daemons')
+STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
 child_list = list() 
@@ -145,16 +145,17 @@ def main(argv):
             pros = Process(target=handle_client, args=(log_directory, client_socket, logger_number))
             pros.start()
 
-            # Keep a list of all PIDs to terminate later when the program is told to close
+            # Keep a list of all processes to terminate later when the program is told to close
             child_list.append(pros)
-            
+
+            # Add 1 to logger number so the next client uses a unique logger
             logger_number += 1
 
         except IOError as e:  # Socket error
             server_log.error(e.args[1])
             sys.exit(0)
 
-        except SystemExit:
+        except SystemExit:  # sys.exit(0) is called by the mainenance thread.
             # Maintenance Thread has notified us that it's time to exit
             sys.exit(0)
 
@@ -268,8 +269,8 @@ def background_management():
 
         if os.path.exists(STOP_TRIGGER_FILENAME):
             server_log.info("Shutdown file identified, shutting down.\n")
-            signal.alarm(1)  # This is required to interrupt the socket.accept() call and force processing of the exit command
-            for i in child_list: # Kill all child processes that have not been claimed by child_reclaim()
+            signal.alarm(1)  # This is required to interrupt the socket.accept() call and force processing of the exit exception
+            for i in child_list:  # Kill all child processes that have not been claimed by child_reclaim()
                 i.terminate()
             sys.exit(0)
 

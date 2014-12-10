@@ -37,7 +37,7 @@ import sys
 import os
 import getopt
 import signal
-# import boinc_path_config
+import boinc_path_config
 from threading import Thread
 import time
 import datetime
@@ -57,7 +57,7 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
-STOP_TRIGGER_FILENAME = 'stop_daemons'  # boinc_project_path.project_path('stop_daemons')
+STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 
 # Set to true when a SIGINT is caught
 caught_sig_int = False
