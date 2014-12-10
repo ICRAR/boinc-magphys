@@ -55,7 +55,6 @@ if args['option'] == 'boinc':
     build_png_image_boinc()
 else:
     # We're running from a specially created AMI
-
     LOG.info('Attempting to create socket handler...')
     add_socket_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
     LOG.info('Socket handler created, logs should appear on logging server')
