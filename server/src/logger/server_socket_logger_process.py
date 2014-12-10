@@ -28,6 +28,7 @@ Main program for a logging server that can receive multiple connections from pyt
 Logs are saved to a local file with the same name as the name used for the logger on the client.
 
 """
+from _socket import AF_INET, SOCK_STREAM
 import os
 import sys
 
@@ -36,7 +37,7 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
-from socket import *
+from socket import socket
 import struct
 import cPickle
 import logging
@@ -47,15 +48,13 @@ from Boinc import boinc_project_path
 from threading import Thread
 from multiprocessing import Process
 import time
-import datetime
-
 from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
 
 STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
-child_list = list() 
+child_list = list()
 
 # Set to true when a SIGINT is caught
 caught_sig_int = False
@@ -66,6 +65,7 @@ handler = logging.FileHandler('ServerLog.log')
 formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
 handler.setFormatter(formatter)
 server_log.addHandler(handler)
+
 
 def main(argv):
     """
