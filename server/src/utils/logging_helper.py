@@ -44,12 +44,11 @@ def config_logger(name):
     return logger
 
 
-def add_socket_handler_to_root( host, port):
+def add_socket_handler_to_root(host, port):
     formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
     socket_handler = logging.handlers.SocketHandler(host, port)
     socket_handler.setFormatter(formatter)
     logging.getLogger().addHandler(socket_handler)
-
 
 
 def add_file_handler_to_root(file_name):
