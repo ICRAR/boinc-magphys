@@ -56,8 +56,8 @@ else:
     LOG.info('Created handler for local logs. Attempting to create socket handler...')
     add_socket_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
     LOG.info('Socket handler created, logs should appear on logging server')
-    LOG.info('Logging server host : ' + LOGGER_SERVER_ADDRESS)
-    LOG.info('Logging server port: ' + str(LOGGER_SERVER_PORT))
+    LOG.info('Logging server host: {0}'.format(LOGGER_SERVER_ADDRESS))
+    LOG.info('Logging server port: {0}'.format(str(LOGGER_SERVER_PORT)))
 
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')
