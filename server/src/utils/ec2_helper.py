@@ -32,7 +32,7 @@ import datetime
 from boto.exception import EC2ResponseError
 from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
-from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT
+from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT, SPOT_PRICE_MULTIPLIER
 
 LOG = config_logger(__name__)
 
@@ -229,8 +229,8 @@ class EC2Helper:
             LOG.info('No Spot Price')
             return None, None
 
-        # put the bid price at 20% more than the current price
-        bid_price = best_price.price * 1.2
+        # Put the bid price at the multiplier than the current price
+        bid_price = best_price.price * SPOT_PRICE_MULTIPLIER
 
         # The spot price is too high
         LOG.info('bid_price: {0}, max_price: {1}, instance: {2}'.format(bid_price, max_price, instance_type))

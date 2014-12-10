@@ -92,7 +92,6 @@ else:
     else:
         # Normal operation
         total_work_units_added = 0
-        # TODO: Divide by the modulus
         work_units_to_be_added = WG_THRESHOLD - count + WG_HIGH_WATER_MARK
 
         # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
@@ -113,7 +112,7 @@ else:
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 else:
                     LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
-                    fit2wu = Fit2Wu(connection, LIMIT, download_dir, fanout)
+                    fit2wu = Fit2Wu(connection, download_dir, fanout)
                     (work_units_added, pixel_count) = fit2wu.process_file(registration)
                     # One WU = MIN_QUORUM Results
                     total_work_units_added += (work_units_added * MIN_QUORUM)
