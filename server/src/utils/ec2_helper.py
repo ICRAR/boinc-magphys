@@ -141,7 +141,7 @@ class EC2Helper:
         :param boinc_value:
         :return:
         """
-        now_plus = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+        now_plus = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
         spot_request = self.ec2_connection.request_spot_instances(spot_price,
                                                                   image_id=AWS_AMI_ID,
                                                                   count=1,
