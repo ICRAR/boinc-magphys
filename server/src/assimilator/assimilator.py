@@ -4,7 +4,6 @@ Generic Assimilator framework
 '''
 
 import os, re, signal, sys, time, hashlib
-import boinc_path_config
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
 
 
