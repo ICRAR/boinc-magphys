@@ -29,15 +29,16 @@ import math
 import datetime
 import numpy
 from sqlalchemy import create_engine, select, and_
-from config import DB_LOGIN, POGS_TMP, BUILD_PNG_IMAGE, BUILD_PNG_IMAGE_DICT
+from config import DB_LOGIN, POGS_TMP, BUILD_PNG_IMAGE, BUILD_PNG_IMAGE_DICT, LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT
 from utils.ec2_helper import EC2Helper
-from utils.logging_helper import config_logger
+from utils.logging_helper import *
 from utils.name_builder import get_galaxy_image_bucket, get_build_png_name, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 from PIL import Image
 
 LOG = config_logger(__name__)
+
 
 USER_DATA = '''#!/bin/bash
 
@@ -154,6 +155,7 @@ def build_png_image_ami():
 
     :return:
     """
+    add_socket_handler_to_logger(LOG, LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
     # First check the galaxy exists in the database
     engine = create_engine(DB_LOGIN)
     connection = engine.connect()

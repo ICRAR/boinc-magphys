@@ -26,6 +26,7 @@
 Configure a logger
 """
 import logging
+import logging.handlers
 
 # Set up the root logger as the project likes it
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -41,6 +42,23 @@ def config_logger(name):
     logger = logging.getLogger(name)
 
     return logger
+
+
+def add_file_handler_to_logger(logger, file_name):
+
+    formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
+    file_handler = logging.FileHandler(file_name)
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+
+def add_socket_handler_to_logger(logger, host, port):
+    formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
+    socket_handler = logging.handlers.SocketHandler(host, port)
+    socket_handler.setFormatter(formatter)
+    logger.addHandler(socket_handler)
+
 
 
 def add_file_handler_to_root(file_name):
