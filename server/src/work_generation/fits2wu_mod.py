@@ -94,12 +94,11 @@ class Fit2Wu:
     """
     Convert a fit file to a wu
     """
-    def __init__(self, connection, limit, download_dir, fanout):
+    def __init__(self, connection, download_dir, fanout):
         """
         Initialise the class
 
         :param connection: the database connection
-        :param limit: any limit to the number of items to be generated
         :param download_dir: where the files will be written
         :param fanout: the fanout
         """
@@ -107,7 +106,6 @@ class Fit2Wu:
         self._work_units_added = 0
         self._signal_noise_hdu = None
         self._connection = connection
-        self._limit = limit
         self._download_dir = download_dir
         self._fanout = fanout
         self._filter_file = None
@@ -358,10 +356,6 @@ class Fit2Wu:
         pixel_result_insert = PIXEL_RESULT.insert()
         pix_x = 0
         while pix_x < self._end_x:
-            # Are we limiting the number created
-            if self._limit is not None and self._work_units_added > self._limit:
-                break
-
             max_x, pixels = self._get_pixels(pix_x, pix_y)
             if len(pixels) > 0:
                 area = Area(pix_x, pix_y, max_x, min(pix_y + WG_ROW_HEIGHT, self._end_y))

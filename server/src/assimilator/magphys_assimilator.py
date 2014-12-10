@@ -37,7 +37,6 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 
 import time
 import assimilator
-import boinc_path_config
 import gzip, traceback, datetime
 from Boinc import boinc_db
 from utils.logging_helper import config_logger

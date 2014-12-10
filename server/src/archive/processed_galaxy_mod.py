@@ -79,7 +79,7 @@ def sort_data(connection, current_jobs, modulus, remainder):
     cache_data = {}
     return_data = {}
     for job_name in current_jobs:
-        LOG.info('Checking {0}'.format(job_name))
+        #LOG.info('Checking {0}'.format(job_name))
         index = job_name.index('_area')
         galaxy_name = job_name[0:index]
 
@@ -87,7 +87,7 @@ def sort_data(connection, current_jobs, modulus, remainder):
         area_number = job_name[index + 5: index1]
 
         cached_galaxy = get_cached_galaxy(cache_data, galaxy_name, int(area_number))
-        LOG.info('Cache check = {0}'.format(cached_galaxy))
+        #LOG.info('Cache check = {0}'.format(cached_galaxy))
 
         if cached_galaxy is None:
             # Get the area
