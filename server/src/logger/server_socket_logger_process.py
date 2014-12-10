@@ -43,7 +43,7 @@ import logging
 import logging.handlers
 import getopt
 import signal
-import boinc_path_config
+from Boinc import boinc_project_path
 from threading import Thread
 from multiprocessing import Process
 import time
@@ -59,7 +59,7 @@ formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
 handler.setFormatter(formatter)
 server_log.addHandler(handler)
 
-STOP_TRIGGER_FILENAME = boinc_path_config.boinc_project_path.project_path('stop_daemons')
+STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
 child_list = list() 
