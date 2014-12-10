@@ -60,9 +60,8 @@ else:
     log_name = 'build_png_image_ami.log'
     filename, full_filename = get_ami_log_file(log_name)
 
-    add_file_handler_to_root(full_filename)
-    LOG.info('Created handler for local logs. Attempting to create socket handler...')
-    add_socket_handler_to_logger(LOG, LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
+    LOG.info('Attempting to create socket handler...')
+    add_socket_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
     LOG.info('Socket handler created, logs should appear on logging server')
     LOG.info('Logging server host : ' + LOGGER_SERVER_ADDRESS)
     LOG.info('Logging server port: ' + str(LOGGER_SERVER_PORT))
