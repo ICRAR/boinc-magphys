@@ -155,7 +155,6 @@ def build_png_image_ami():
 
     :return:
     """
-    add_socket_handler_to_logger(LOG, LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
     # First check the galaxy exists in the database
     engine = create_engine(DB_LOGIN)
     connection = engine.connect()
