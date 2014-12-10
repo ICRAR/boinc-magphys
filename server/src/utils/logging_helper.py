@@ -44,21 +44,21 @@ def config_logger(name):
     return logger
 
 
-def config_socket_logger(name, host, port):
-    """
-    Get a socket logger connected to host, port
-    :param host:
-    :param port:
-    :param name:
-    :return:
-    """
-    logger = logging.getLogger(name)
+def add_file_handler_to_logger(logger, file_name):
+
+    formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
+    file_handler = logging.FileHandler(file_name)
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+
+def add_socket_handler_to_logger(logger, host, port):
     formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
     socket_handler = logging.handlers.SocketHandler(host, port)
     socket_handler.setFormatter(formatter)
     logger.addHandler(socket_handler)
 
-    return logger
 
 
 def add_file_handler_to_root(file_name):
