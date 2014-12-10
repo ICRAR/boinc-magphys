@@ -35,7 +35,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
-from utils.logging_helper import config_logger, config_socket_logger, add_file_handler_to_root
+from utils.logging_helper import *
 from utils.s3_helper import S3Helper
 from utils.ec2_helper import EC2Helper
 from utils.name_builder import get_archive_bucket, get_log_archive_key, get_ami_log_file
@@ -60,8 +60,12 @@ else:
     log_name = 'build_png_image_ami.log'
     filename, full_filename = get_ami_log_file(log_name)
 
-    # add_file_handler_to_root(full_filename)
-    LOG = config_socket_logger(full_filename, LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
+    add_file_handler_to_root(full_filename)
+    LOG.info('Created handler for local logs. Attempting to create socket handler...')
+    add_socket_handler_to_logger(LOG, LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
+    LOG.info('Socket handler created, logs should appear on logging server')
+    LOG.info('Logging server host : ' + LOGGER_SERVER_ADDRESS)
+    LOG.info('Logging server port: ' + str(LOGGER_SERVER_PORT))
 
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')

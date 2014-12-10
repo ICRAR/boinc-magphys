@@ -52,13 +52,6 @@ import datetime
 from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
 
-# Local logger for server logs
-server_log = config_logger('ServerLog')
-handler = logging.FileHandler('ServerLog.log')
-formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
-handler.setFormatter(formatter)
-server_log.addHandler(handler)
-
 STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
@@ -66,6 +59,13 @@ child_list = list()
 
 # Set to true when a SIGINT is caught
 caught_sig_int = False
+
+# Local logger for server logs
+server_log = config_logger('ServerLog')
+handler = logging.FileHandler('ServerLog.log')
+formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
+handler.setFormatter(formatter)
+server_log.addHandler(handler)
 
 def main(argv):
     """
@@ -94,7 +94,7 @@ def main(argv):
         opts, args = getopt.getopt(argv, "p:d:", ["l_port=", "l_dir="])
 
     except getopt.GetoptError as e:
-        print e.args[0]
+        server_log.exception(e.message)
         usage()
         sys.exit(0)
 
@@ -104,12 +104,17 @@ def main(argv):
             try:
                 local_port = int(arg)
             except ValueError as e:
-                print e.args[0]
+                server_log.exception(e.message)
                 usage()
                 sys.exit(0)
 
         elif opt in ("-d", "--l_dir"):
             log_directory = arg
+
+    server_log.info('Local log started')
+    server_log.info('Log directory ' + log_directory)
+    server_log.info('Port ' + local_port)
+    server_log.info('System path ' + sys.path)
 
     # Need to ensure save directory ends with a /
     if not log_directory.endswith('/'):
@@ -122,11 +127,14 @@ def main(argv):
             os.mkdir(log_directory)
 
         except OSError as e:
-            server_log.info(e.args[1])
+            server_log.exception(e.message)
             # Server_log.info('Log directory already exists')
             sys.exit(0)
+    else:
+        server_log.info('Log directory already exists at ' + log_directory)
 
     # Set up sockets
+    server_log.info('Attempting to set up sockets...')
     try:
         server_socket = socket(AF_INET, SOCK_STREAM)
         server_socket.bind((local_host, local_port))
@@ -134,13 +142,14 @@ def main(argv):
         server_log.info('Listening on %s : %d', local_host, local_port)
         server_socket.listen(LOGGER_MAX_CONNECTION_REQUESTS)
     except IOError as e:
-        server_log.error(e.args[1])
+        server_log.exception(e.message)
         sys.exit(0)
 
     while 1:
         try:
             client_socket, addr = server_socket.accept()
             server_log.info('Incoming connection from %s', addr)
+            server_log.info('Using local logger number ' + str(logger_number))
 
             # Handle each new client in a new process
             pros = Process(target=handle_client, args=(log_directory, client_socket, logger_number))
@@ -153,11 +162,12 @@ def main(argv):
             logger_number += 1
 
         except IOError as e:  # Socket error
-            server_log.error(e.args[1])
+            server_log.exception(e.message)
             sys.exit(0)
 
-        except SystemExit:  # sys.exit(0) is called by the mainenance thread.
-            # Maintenance Thread has notified us that it's time to exit
+        except SystemExit:  # sys.exit(0) is called by the maintenance thread.
+            # Maintenance Thread has notified us that it's time to
+            server_log.info('Shutdown flag identified, shutting down...')
             sys.exit(0)
 
 
@@ -253,6 +263,7 @@ def sigint_handler(self, sig):
     This method handles the SIGINT signal. It sets a flag
     but waits to exit until background_management checks this flag
     """
+    server_log.info('Caught sigint')
 
     global caught_sig_int
     caught_sig_int = True
@@ -269,14 +280,14 @@ def background_management():
         child_reclaim()
 
         if os.path.exists(STOP_TRIGGER_FILENAME):
-            server_log.info("Shutdown file identified, shutting down.\n")
+            server_log.info("Shutdown file identified\n")
             signal.alarm(1)  # This is required to interrupt the socket.accept() call and force processing of the exit exception
             for i in child_list:  # Kill all child processes that have not been claimed by child_reclaim()
                 i.terminate()
             sys.exit(0)
 
         if caught_sig_int:
-            server_log.info("SIGINT Received, shutting down.\n")
+            server_log.info("SIGINT Received\n")
             sys.exit(0)
 
         time.sleep(1)  # No point in checking constantly, save a bit of CPU time
