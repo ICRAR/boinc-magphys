@@ -112,9 +112,9 @@ def main(argv):
             log_directory = arg
 
     server_log.info('Local log started')
-    server_log.info('Log directory ' + log_directory)
-    server_log.info('Port ' + str(local_port))
-    server_log.info('System path ' + sys.path)
+    server_log.info('Log directory : {0}'.format(log_directory))
+    server_log.info('Port : {0}'.format(local_port))
+    server_log.info('System path: {0}'.format(sys.path))
 
     # Need to ensure save directory ends with a /
     if not log_directory.endswith('/'):
@@ -131,7 +131,7 @@ def main(argv):
             # Server_log.info('Log directory already exists')
             sys.exit(0)
     else:
-        server_log.info('Log directory already exists at ' + log_directory)
+        server_log.info('Log directory already exists at {0}'.format(log_directory))
 
     # Set up sockets
     server_log.info('Attempting to set up sockets...')
@@ -148,8 +148,8 @@ def main(argv):
     while 1:
         try:
             client_socket, addr = server_socket.accept()
-            server_log.info('Incoming connection from %s', addr)
-            server_log.info('Using local logger number ' + str(logger_number))
+            server_log.info('Incoming connection from {0}'.format(addr))
+            server_log.info('Using local logger number {0}'.format(logger_number))
 
             # Handle each new client in a new process
             pros = Process(target=handle_client, args=(log_directory, client_socket, logger_number))

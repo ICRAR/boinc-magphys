@@ -36,9 +36,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 
 import argparse
 from utils.logging_helper import *
-from utils.s3_helper import S3Helper
 from utils.ec2_helper import EC2Helper
-from utils.name_builder import get_archive_bucket, get_log_archive_key, get_ami_log_file
 from utils.sanity_checks import pass_sanity_checks
 from image.build_png_image_mod import build_png_image_boinc, build_png_image_ami
 
@@ -57,14 +55,12 @@ if args['option'] == 'boinc':
     build_png_image_boinc()
 else:
     # We're running from a specially created AMI
-    log_name = 'build_png_image_ami.log'
-    filename, full_filename = get_ami_log_file(log_name)
 
     LOG.info('Attempting to create socket handler...')
     add_socket_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
     LOG.info('Socket handler created, logs should appear on logging server')
-    LOG.info('Logging server host : ' + LOGGER_SERVER_ADDRESS)
-    LOG.info('Logging server port: ' + str(LOGGER_SERVER_PORT))
+    LOG.info('Logging server host : {0}'.format(LOGGER_SERVER_ADDRESS))
+    LOG.info('Logging server port : {0}'.format(LOGGER_SERVER_PORT))
 
     LOG.info('PYTHONPATH = {0}'.format(sys.path))
     LOG.info('About to perform sanity checks')
