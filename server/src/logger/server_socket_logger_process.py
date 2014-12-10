@@ -28,13 +28,19 @@ Main program for a logging server that can receive multiple connections from pyt
 Logs are saved to a local file with the same name as the name used for the logger on the client.
 
 """
+import os
+import sys
+
+# Setup the Python Path as we may be running this via ssh
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
+
 from socket import *
 import struct
 import cPickle
 import logging
 import logging.handlers
-import sys
-import os
 import getopt
 import signal
 import boinc_path_config
@@ -52,11 +58,6 @@ handler = logging.FileHandler('ServerLog.log')
 formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
 handler.setFormatter(formatter)
 server_log.addHandler(handler)
-
-# Setup the Python Path as we may be running this via ssh
-base_path = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
-sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 
