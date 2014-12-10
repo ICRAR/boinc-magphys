@@ -84,7 +84,7 @@ def main(argv):
     """
 
     # Local vars
-    local_host = gethostname()
+    local_host = ''
     log_directory = LOGGER_LOG_DIRECTORY
     local_port = LOGGER_SERVER_PORT
     logger_number = 0
