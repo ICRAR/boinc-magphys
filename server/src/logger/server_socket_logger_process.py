@@ -113,7 +113,7 @@ def main(argv):
 
     server_log.info('Local log started')
     server_log.info('Log directory ' + log_directory)
-    server_log.info('Port ' + local_port)
+    server_log.info('Port ' + str(local_port))
     server_log.info('System path ' + sys.path)
 
     # Need to ensure save directory ends with a /
