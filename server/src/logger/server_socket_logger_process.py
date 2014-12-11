@@ -67,7 +67,7 @@ handler.setFormatter(formatter)
 server_log.addHandler(handler)
 
 
-def main(argv):
+def main():
     """
     Main program.
     1.Gets command line arguments and changes local_port or log_directory to match arguments.
@@ -283,4 +283,4 @@ if __name__ == "__main__":
     # Start a thread to do background management tasks
     Thread(target=background_management).start()
 
-    main(sys.argv[1:])
+    main()
