@@ -38,11 +38,11 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 from socket import socket
+import argparse
 import struct
 import cPickle
 import logging
 import logging.handlers
-import getopt
 import signal
 from Boinc import boinc_project_path
 from threading import Thread
@@ -67,7 +67,7 @@ handler.setFormatter(formatter)
 server_log.addHandler(handler)
 
 
-def main(argv):
+def main():
     """
     Main program.
     1.Gets command line arguments and changes local_port or log_directory to match arguments.
@@ -90,26 +90,17 @@ def main(argv):
     logger_number = 0
 
     # Get command line args
-    try:
-        opts, args = getopt.getopt(argv, "p:d:", ["l_port=", "l_dir="])
+    parser = argparse.ArgumentParser('Logging server')
+    parser.add_argument('-p', type=int, help='Local port that the logging server should listen on')
+    parser.add_argument('-d', help='Local directory to save logs to')
 
-    except getopt.GetoptError as e:
-        server_log.exception(e.message)
-        usage()
-        sys.exit(0)
+    args = vars(parser.parse_args())
 
-    # Handle command line args
-    for opt, arg in opts:
-        if opt in ("-p", "--l_port"):
-            try:
-                local_port = int(arg)
-            except ValueError as e:
-                server_log.exception(e.message)
-                usage()
-                sys.exit(0)
+    if args['p'] is not None:
+        local_port = args.p
 
-        elif opt in ("-d", "--l_dir"):
-            log_directory = arg
+    if args['d'] is not None:
+        log_directory = args.d
 
     server_log.info('Local log started')
     server_log.info('Log directory : {0}'.format(log_directory))
@@ -120,14 +111,14 @@ def main(argv):
     if not log_directory.endswith('/'):
         log_directory += '/'
 
-    # Try to create log file directory
+    # Try to create log file directory if it does not exist
     if not os.path.isdir(log_directory):
         try:
             server_log.info('Creating log directory...')
             os.mkdir(log_directory)
 
         except OSError as e:
-            server_log.exception(e.message)
+            server_log.exception('Error creating log directory')
             # Server_log.info('Log directory already exists')
             sys.exit(0)
     else:
@@ -142,7 +133,7 @@ def main(argv):
         server_log.info('Listening on %s : %d', local_host, local_port)
         server_socket.listen(LOGGER_MAX_CONNECTION_REQUESTS)
     except IOError as e:
-        server_log.exception(e.message)
+        server_log.exception('Error setting up sockets')
         sys.exit(0)
 
     while 1:
@@ -152,7 +143,7 @@ def main(argv):
             server_log.info('Using local logger number {0}'.format(logger_number))
 
             # Handle each new client in a new process
-            pros = Process(target=handle_client, args=(log_directory, client_socket, logger_number))
+            pros = Process(target=handle_client, args=(log_directory, client_socket, logger_number, addr))
             pros.start()
 
             # Keep a list of all processes to terminate later when the program is told to close
@@ -162,24 +153,16 @@ def main(argv):
             logger_number += 1
 
         except IOError as e:  # Socket error
-            server_log.exception(e.message)
+            server_log.exception('Error listening or setting up connection with client')
             sys.exit(0)
 
         except SystemExit:  # sys.exit(0) is called by the maintenance thread.
-            # Maintenance Thread has notified us that it's time to
+            # Maintenance Thread has notified us that it's time to shut down
             server_log.info('Shutdown flag identified, shutting down...')
             sys.exit(0)
 
 
-def usage():
-    """
-    Prints out usage info for the program
-    :return: void
-    """
-    print 'Usage: log_server.py -p <port> -d <log directory>'
-
-
-def handle_client(save_directory, c_socket, l_number):
+def handle_client(save_directory, c_socket, l_number, client_addr):
     """
     Handles a single client
 
@@ -224,13 +207,13 @@ def handle_client(save_directory, c_socket, l_number):
         if file_open == 0:
             # Set up log handler to print logs to file. Need at least one log to obtain name from
             formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
-            file_handler = logging.FileHandler(save_directory + record.name + '.log')
+            file_handler = logging.FileHandler(save_directory + record.msg + '.log')
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
             file_open = 1
-
-        # Finally, handle the record by printing it to the file specified
-        logger.handle(record)
+        else:
+            # Finally, handle the record by printing it to the file specified
+            logger.handle(record)
 
 
 def child_reclaim():
@@ -300,4 +283,4 @@ if __name__ == "__main__":
     # Start a thread to do background management tasks
     Thread(target=background_management).start()
 
-    main(sys.argv[1:])
+    main()

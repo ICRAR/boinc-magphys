@@ -53,8 +53,12 @@ if args['option'] == 'boinc':
     build_png_image_boinc()
 else:
     # We're running from a specially created AMI
-    LOG.info('Created handler for local logs. Attempting to create socket handler...')
+    LOG.info('Attempting to create socket handler...')
     add_socket_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
+
+    # The message of the first log sent over will be the server's filename for this logger.
+    LOG.info('build_png_image_AMI')
+
     LOG.info('Socket handler created, logs should appear on logging server')
     LOG.info('Logging server host: {0}'.format(LOGGER_SERVER_ADDRESS))
     LOG.info('Logging server port: {0}'.format(str(LOGGER_SERVER_PORT)))

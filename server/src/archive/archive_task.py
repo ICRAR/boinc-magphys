@@ -42,11 +42,10 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 
 import argparse
 from archive.archive_task_mod import process_ami, process_boinc
-from utils.logging_helper import config_logger, add_file_handler_to_root
-from utils.s3_helper import S3Helper
+from utils.logging_helper import config_logger, add_socket_handler_to_root
 from utils.ec2_helper import EC2Helper
-from utils.name_builder import get_archive_bucket, get_log_archive_key, get_ami_log_file
 from utils.sanity_checks import pass_sanity_checks
+from config import LOGGER_SERVER_PORT, LOGGER_SERVER_ADDRESS
 
 LOG = config_logger(__name__)
 
@@ -54,6 +53,7 @@ parser = argparse.ArgumentParser('Archive POGS data')
 parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
 parser.add_argument('-mod', '--mod', nargs=2, help=' M N - the modulus M to used and which value to check N ')
 args = vars(parser.parse_args())
+
 
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 if args['mod'] is None:
@@ -71,23 +71,23 @@ if args['option'] == 'boinc':
     process_boinc(modulus, remainder)
 else:
     # We're running from a specially created AMI
-    log_name = 'archive_boinc_{0}'.format(remainder)
-    filename, full_filename = get_ami_log_file(log_name)
-    add_file_handler_to_root(full_filename)
+    log_name = 'archive_task_AMI_{0}'.format(remainder)
+
+    LOG.info('Attempting to create socket handler...')
+    add_socket_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
+
+    # The message of the first log sent over will be the server's filename for this logger.
+    LOG.info(log_name)
+
+    LOG.info('Socket handler created, logs should appear on logging server')
+    LOG.info('Logging server host: {0}'.format(LOGGER_SERVER_ADDRESS))
+    LOG.info('Logging server port: {0}'.format(str(LOGGER_SERVER_PORT)))
+
     LOG.info('About to perform sanity checks')
     if pass_sanity_checks():
         process_ami(modulus, remainder)
     else:
         LOG.error('Failed to pass sanity tests')
-
-    # Try copying the log file to S3
-    # try:
-    #     LOG.info('About to copy the log file')
-    #     s3helper = S3Helper()
-    #     s3helper.add_file_to_bucket(get_archive_bucket(), get_log_archive_key(log_name, filename), full_filename, True)
-    #     os.remove(full_filename)
-    # except:
-    #     LOG.exception('Failed to copy the log file')
 
     ec2_helper = EC2Helper()
     ec2_helper.release_public_ip()
