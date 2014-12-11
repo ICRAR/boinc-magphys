@@ -179,7 +179,10 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
     """
 
     file_open = 0
+    file_name = ''
     logger = logging.getLogger(str(l_number))
+    root_logger = logging.getLogger()
+    stdouthandle = root_logger.handlers.pop()
 
     while 1:
         # Try to receive a log from the client
@@ -187,10 +190,12 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
             chunk = c_socket.recv(4)
 
         except IOError as e:
+            root_logger.addHandler(stdouthandle)
             server_log.error('Connection closed')
             exit(0)
 
         if len(chunk) < 4:
+            root_logger.addHandler(stdouthandle)
             server_log.info('Connection terminated normally')
             exit(0)
 
@@ -211,10 +216,13 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
             file_open = 1
+            file_name = record.msg
         else:
             # Finally, handle the record by printing it to the file specified
+            root_logger.addHandler(stdouthandle)
+            root_logger.info('Log record received from {0}'.format(file_name))
+            root_logger.handlers.pop()
             logger.handle(record)
-
 
 def child_reclaim():
     """
