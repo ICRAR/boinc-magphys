@@ -71,7 +71,7 @@ if args['option'] == 'boinc':
     process_boinc(modulus, remainder)
 else:
     # We're running from a specially created AMI
-    log_name = 'archive_boinc_{0}'.format(remainder)
+    log_name = 'archive_task_{0}'.format(remainder)
 
     LOG.info('Attempting to create socket handler...')
     add_socket_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
