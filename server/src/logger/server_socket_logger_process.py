@@ -43,7 +43,6 @@ import struct
 import cPickle
 import logging
 import logging.handlers
-import getopt
 import signal
 from Boinc import boinc_project_path
 from threading import Thread
@@ -182,9 +181,6 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
     file_open = 0
     logger = logging.getLogger(str(l_number))
 
-    # Remove the default handler to stop logging to console
-    logger.removeHandler(logger.handlers[0])
-
     while 1:
         # Try to receive a log from the client
         try:
@@ -218,9 +214,6 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
         else:
             # Finally, handle the record by printing it to the file specified
             logger.handle(record)
-
-            # Use a generic logger to print to console only.
-            logging.info('Log received from {0}'.format(client_addr))
 
 
 def child_reclaim():
