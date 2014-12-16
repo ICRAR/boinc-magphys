@@ -44,14 +44,14 @@ import cPickle
 import logging
 import logging.handlers
 import signal
-from Boinc import boinc_project_path
+#from Boinc import boinc_project_path
 from threading import Thread
 from multiprocessing import Process
 import time
 from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
 
-STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
+STOP_TRIGGER_FILENAME = 'stop_daemons' #boinc_project_path.project_path('stop_daemons')
 
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
 child_list = list()
@@ -209,7 +209,7 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
 
             if file_open == 0:
                 # Set up log handler to print logs to file
-                formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
+                formatter = logging.Formatter(file_name + ': %(asctime)-15s:' + logging.BASIC_FORMAT)
                 file_handler = logging.FileHandler(save_directory + file_name + '.log')
                 file_handler.setFormatter(formatter)
                 logger.addHandler(file_handler)
