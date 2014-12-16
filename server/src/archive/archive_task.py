@@ -42,7 +42,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 
 import argparse
 from archive.archive_task_mod import process_ami, process_boinc
-from utils.logging_helper import config_logger, add_socket_handler_to_root
+from utils.logging_helper import config_logger, add_special_handler_to_root
 from utils.ec2_helper import EC2Helper
 from utils.sanity_checks import pass_sanity_checks
 from config import LOGGER_SERVER_PORT, LOGGER_SERVER_ADDRESS
@@ -73,10 +73,7 @@ else:
     log_name = 'archive_task_{0}'.format(remainder)
 
     LOG.info('Attempting to create socket handler...')
-    add_socket_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
-
-    # The message of the first log sent over will be the server's filename for this logger.
-    LOG.info(log_name)
+    add_special_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT, log_name)
 
     LOG.info('Socket handler created, logs should appear on logging server')
     LOG.info('Logging server host: {0}'.format(LOGGER_SERVER_ADDRESS))
