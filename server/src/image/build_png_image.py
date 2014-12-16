@@ -35,7 +35,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
-from utils.logging_helper import config_logger, add_socket_handler_to_root
+from utils.logging_helper import config_logger, add_special_handler_to_root
 from utils.ec2_helper import EC2Helper
 from utils.sanity_checks import pass_sanity_checks
 from image.build_png_image_mod import build_png_image_boinc, build_png_image_ami
@@ -54,10 +54,7 @@ if args['option'] == 'boinc':
 else:
     # We're running from a specially created AMI
     LOG.info('Attempting to create socket handler...')
-    add_socket_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT)
-
-    # The message of the first log sent over will be the server's filename for this logger.
-    LOG.info('build_png_image_AMI')
+    add_special_handler_to_root(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT, 'build_png_image_AMI')
 
     LOG.info('Socket handler created, logs should appear on logging server')
     LOG.info('Logging server host: {0}'.format(LOGGER_SERVER_ADDRESS))
