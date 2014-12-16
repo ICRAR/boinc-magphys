@@ -27,6 +27,7 @@ Configure a logger
 """
 import logging
 import logging.handlers
+from logger.DetailedSocketHandler import DetailedSocketHandler
 
 # Set up the root logger as the project likes it
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s:' + logging.BASIC_FORMAT)
@@ -45,10 +46,30 @@ def config_logger(name):
 
 
 def add_socket_handler_to_root(host, port):
+    """
+    Old way of adding a socket handler. Will NOT specify the remote filename to write to.
+    :param host:
+    :param port:
+    :return:
+    """
     formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
     socket_handler = logging.handlers.SocketHandler(host, port)
     socket_handler.setFormatter(formatter)
     logging.getLogger().addHandler(socket_handler)
+
+
+def add_special_handler_to_root(host, port, fname):
+    """
+    New way of adding a socket handler. Specify a filename for the remote server to write to.
+    :param host:
+    :param port:
+    :param fname:
+    :return:
+    """
+    formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
+    special_handler = DetailedSocketHandler(host, port, fname)
+    special_handler.setFormatter(formatter)
+    logging.getLogger().addHandler(special_handler)
 
 
 def add_file_handler_to_root(file_name):

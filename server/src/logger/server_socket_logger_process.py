@@ -44,14 +44,14 @@ import cPickle
 import logging
 import logging.handlers
 import signal
-from Boinc import boinc_project_path
+#from Boinc import boinc_project_path
 from threading import Thread
 from multiprocessing import Process
 import time
 from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
 
-STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
+STOP_TRIGGER_FILENAME = 'stop_daemons' #boinc_project_path.project_path('stop_daemons')
 
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
 child_list = list()
@@ -126,14 +126,16 @@ def main():
 
     # Set up sockets
     server_log.info('Attempting to set up sockets...')
+
     try:
         server_socket = socket(AF_INET, SOCK_STREAM)
         server_socket.bind((local_host, local_port))
 
         server_log.info('Listening on %s : %d', local_host, local_port)
         server_socket.listen(LOGGER_MAX_CONNECTION_REQUESTS)
+
     except IOError as e:
-        server_log.exception('Error setting up sockets')
+        server_log.exception('Error setting up sockets. Is there another process listening on port {0} ?'.format(local_port))
         sys.exit(0)
 
     while 1:
@@ -153,8 +155,9 @@ def main():
             logger_number += 1
 
         except IOError as e:  # Socket error
-            server_log.exception('Error listening or setting up connection with client')
-            sys.exit(0)
+            if e.errno == 4:  # If we received Errno 4, it is because we received a sigint and wish to exit.
+                raise
+            server_log.exception('Error setting up connection with client {0}'.format(addr))
 
         except SystemExit:  # sys.exit(0) is called by the maintenance thread.
             # Maintenance Thread has notified us that it's time to shut down
@@ -179,50 +182,46 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
     """
 
     file_open = 0
-    file_name = ''
+
     logger = logging.getLogger(str(l_number))
-    root_logger = logging.getLogger()
-    stdouthandle = root_logger.handlers.pop()
 
     while 1:
         # Try to receive a log from the client
         try:
             chunk = c_socket.recv(4)
+            
+            if len(chunk) < 4:
+                server_log.info('Connection terminated normally')
+                exit(0)
+
+            # This chunk of code extracts a log record from the received data and places it into record
+            slen = struct.unpack('>L', chunk)[0]
+            chunk = c_socket.recv(slen)
+
+            while len(chunk) < slen:
+                chunk = chunk + c_socket.recv(slen - len(chunk))
+
+            obj = cPickle.loads(chunk)
+
+            file_name = obj['filename']
+
+            record = logging.makeLogRecord(obj)
+
+            if file_open == 0:
+                # Set up log handler to print logs to file
+                formatter = logging.Formatter(file_name + ': %(asctime)-15s:' + logging.BASIC_FORMAT)
+                file_handler = logging.FileHandler(save_directory + file_name + '.log')
+                file_handler.setFormatter(formatter)
+                logger.addHandler(file_handler)
+                file_open = 1
+            else:
+                # Finally, handle the record by printing it to the file specified
+                logger.handle(record)
 
         except IOError as e:
-            root_logger.addHandler(stdouthandle)
-            server_log.error('Connection closed')
+            server_log.error('Connection closed in an unexpected way.')
             exit(0)
 
-        if len(chunk) < 4:
-            root_logger.addHandler(stdouthandle)
-            server_log.info('Connection terminated normally')
-            exit(0)
-
-        # This chunk of code extracts a log record from the received data and places it into record
-        slen = struct.unpack('>L', chunk)[0]
-        chunk = c_socket.recv(slen)
-
-        while len(chunk) < slen:
-            chunk = chunk + c_socket.recv(slen - len(chunk))
-
-        obj = cPickle.loads(chunk)
-        record = logging.makeLogRecord(obj)
-
-        if file_open == 0:
-            # Set up log handler to print logs to file. Need at least one log to obtain name from
-            formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
-            file_handler = logging.FileHandler(save_directory + record.msg + '.log')
-            file_handler.setFormatter(formatter)
-            logger.addHandler(file_handler)
-            file_open = 1
-            file_name = record.msg
-        else:
-            # Finally, handle the record by printing it to the file specified
-            root_logger.addHandler(stdouthandle)
-            root_logger.info('Log record received from {0}'.format(file_name))
-            root_logger.handlers.pop()
-            logger.handle(record)
 
 def child_reclaim():
     """
@@ -266,8 +265,14 @@ def background_management():
     child processes and detecting shutdown signals
     :return:
     """
-
+    heartbeat = 0
     while 1:
+        heartbeat += 1
+
+        if heartbeat == 10:
+            server_log.info("Server is active with {0} current connection(s)".format(child_list.__len__()))
+            heartbeat = 0
+
         child_reclaim()
 
         if os.path.exists(STOP_TRIGGER_FILENAME):
