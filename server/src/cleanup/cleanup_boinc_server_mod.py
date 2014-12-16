@@ -43,12 +43,22 @@ def correct(directory_name):
     :param directory_name:
     :return:
     """
-    add_zeros = lambda string: '{0:02d}'.format(int(string))
     elements = directory_name.split('_')
-    return '{0}_{1}_{2}_{3}_{4}_{5}_{6}'.format(elements[0], elements[1], add_zeros(elements[2]), add_zeros(elements[3]), add_zeros(elements[4]), add_zeros(elements[5]), add_zeros(elements[6]))
+    if len(elements) == 7:
+        add_zeros = lambda string: '{0:02d}'.format(int(string))
+        return '{0}_{1}_{2}_{3}_{4}_{5}_{6}'.format(elements[0], elements[1], add_zeros(elements[2]), add_zeros(elements[3]), add_zeros(elements[4]), add_zeros(elements[5]), add_zeros(elements[6]))
+    else:
+        return directory_name
 
 
 def move_files_to_s3(s3helper, directory_name):
+    """
+    Move the files to S3 for 30 days
+
+    :param s3helper:
+    :param directory_name:
+    :return:
+    """
     for file_name in glob.glob(os.path.join(directory_name, '*')):
         (root_directory_name, tail_directory_name) = os.path.split(directory_name)
         (root_file_name, tail_file_name) = os.path.split(file_name)
@@ -61,7 +71,7 @@ def move_files_to_s3(s3helper, directory_name):
 
 def archive_boinc_stats():
     """
-    We're running on the AMI instance - so actually do the work
+    Clean up the BOINC stats
 
     Find the files and move them to S3
     :return:
@@ -69,7 +79,25 @@ def archive_boinc_stats():
     delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=float(ARC_BOINC_STATISTICS_DELAY))
     LOG.info('delete_delay_ago: {0}'.format(delete_delay_ago))
     s3helper = S3Helper()
-    for directory_name in glob.glob(os.path.join(POGS_BOINC_PROJECT_ROOT, 'html/stats_archive/*')):
+    for directory_name in glob.glob(os.path.join(POGS_BOINC_PROJECT_ROOT, 'html/stats_*')):
+        if os.path.isdir(directory_name):
+            directory_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(directory_name))
+            LOG.info('directory: {0}, mtime: {1}'.format(directory_name, directory_mtime))
+            if directory_mtime < delete_delay_ago:
+                move_files_to_s3(s3helper, directory_name)
+
+
+def archive_boinc_db_purge():
+    """
+    Clean up the BOINC DB Purge records
+
+    Find the files and move them to S3
+    :return:
+    """
+    delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=float(ARC_BOINC_STATISTICS_DELAY))
+    LOG.info('delete_delay_ago: {0}'.format(delete_delay_ago))
+    s3helper = S3Helper()
+    for directory_name in glob.glob(os.path.join(POGS_BOINC_PROJECT_ROOT, 'archives/*')):
         if os.path.isdir(directory_name):
             directory_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(directory_name))
             LOG.info('directory: {0}, mtime: {1}'.format(directory_name, directory_mtime))

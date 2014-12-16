@@ -118,15 +118,6 @@ def process_ami(modulus, remainder):
         except:
             LOG.exception('delete_galaxy_data(): an exception occurred')
 
-        # Archive the BOINC stats
-        try:
-            # Only the 0 node does this one
-            if remainder == 0:
-                LOG.info('Archive boinc stats')
-                archive_boinc_stats()
-        except:
-            LOG.exception('archive_boinc_stats(): an exception occurred')
-
         # Archive to HDF5
         try:
             LOG.info('Archiving to HDF5')
