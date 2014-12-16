@@ -87,7 +87,7 @@ def sort_data(connection, current_jobs, modulus, remainder):
         area_number = job_name[index + 5: index1]
 
         cached_galaxy = get_cached_galaxy(cache_data, galaxy_name, int(area_number))
-        #LOG.info('Cache check = {0}'.format(cached_galaxy))
+        # LOG.info('Cache check = {0}'.format(cached_galaxy))
 
         if cached_galaxy is None:
             # Get the area
@@ -106,7 +106,7 @@ def sort_data(connection, current_jobs, modulus, remainder):
 
             # Add this galaxy to the cache
             min_max = connection.execute(select([func.min(AREA.c.area_id), func.max(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id)).first()
-            LOG.info('Adding to cache = {0} {1} {2}'.format(galaxy_name, min_max, ignore))
+            # LOG.info('Adding to cache = {0} {1} {2}'.format(galaxy_name, min_max, ignore))
             list_galaxies = cache_data.get(galaxy_name)
             if list_galaxies is None:
                 list_galaxies = []

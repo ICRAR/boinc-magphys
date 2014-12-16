@@ -54,7 +54,6 @@ parser.add_argument('option', choices=['boinc','ami'], help='are we running on t
 parser.add_argument('-mod', '--mod', nargs=2, help=' M N - the modulus M to used and which value to check N ')
 args = vars(parser.parse_args())
 
-
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 if args['mod'] is None:
     # Used to show we have no modulus
