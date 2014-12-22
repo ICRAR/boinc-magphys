@@ -31,7 +31,7 @@ import datetime
 from sqlalchemy.sql import select, func, and_
 from utils.logging_helper import config_logger
 from config import DELETED, ARC_DELETE_DELAY, STORED
-from database.database_support_core import GALAXY, AREA, PIXEL_RESULT
+from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, FITS_HEADER, REGISTER, TAG_REGISTER
 from utils.name_builder import get_files_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 
@@ -57,7 +57,10 @@ def delete_galaxy(connection, galaxy_ids):
                 time.sleep(0.1)
                 counter += 1
 
-            # Now empty the bucket
+            LOG.info("Deleting FITS headers for galaxy {0}".format(galaxy_id))
+            connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
+
+            # Now empty the bucket of the sed files
             s3helper = S3Helper()
             bucket = s3helper.get_bucket(get_files_bucket())
             galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
@@ -86,7 +89,7 @@ def delete_galaxy_data(connection, modulus, remainder):
     :return:
     """
     delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=float(ARC_DELETE_DELAY))
-    LOG.info('Deleting {0} days ago ({1})'.format(ARC_DELETE_DELAY, delete_delay_ago))
+    LOG.info('Deleting galaxies: {0} days ago ({1})'.format(ARC_DELETE_DELAY, delete_delay_ago))
 
     galaxy_ids = []
     for galaxy in connection.execute(select([GALAXY]).where(and_(GALAXY.c.status_id == STORED, GALAXY.c.status_time < delete_delay_ago)).order_by(GALAXY.c.galaxy_id)):
@@ -96,3 +99,40 @@ def delete_galaxy_data(connection, modulus, remainder):
 
     delete_galaxy(connection, galaxy_ids)
 
+
+def delete_register_entries(connection, register_ids):
+    for register_id in register_ids:
+        transaction = connection.begin()
+        register = connection.execute(select([REGISTER]).where(REGISTER.c.register_id == register_id)).first()
+        if register is None:
+            LOG.info('Error: Register entry with register_id of %d was not found', register_id)
+        else:
+            LOG.info("Deleting tags for register entry {0}".format(register_id))
+            connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == register_id))
+
+            LOG.info('Deleting register entry with register_id of %d - %s', register_id, register[REGISTER.c.galaxy_name])
+            connection.execute(REGISTER.delete().where(REGISTER.c.register_id == register_id))
+
+        transaction.commit()
+
+
+def delete_register_data(connection, modulus, remainder):
+    """
+    Delete register entries
+
+    :param connection:
+    :param modulus:
+    :param remainder:
+    :return:
+    """
+    delete_delay_ago = datetime.datetime.now() - datetime.timedelta(days=float(ARC_DELETE_DELAY))
+    LOG.info('Deleting registrations: {0} days ago ({1})'.format(ARC_DELETE_DELAY, delete_delay_ago))
+
+    register_ids = []
+    for register in connection.execute(select([REGISTER]).where(and_(REGISTER.c.create_time is not None, REGISTER.c.create_time < delete_delay_ago)).order_by(REGISTER.c.register_id)):
+        register_id = int(register[REGISTER.c.register_id])
+
+        if modulus is None or register_id % modulus == remainder:
+            register_ids.append(register_id)
+
+    delete_register_entries(connection, register_ids)

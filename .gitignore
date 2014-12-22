@@ -3,6 +3,7 @@
 *.[oa]
 *.iml
 *.pyc
+*~
 *.settings
 py_boinc/cy_project/src/py_boinc.c
 py_boinc/cy_project/src/build
