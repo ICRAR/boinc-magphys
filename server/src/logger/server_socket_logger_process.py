@@ -44,14 +44,14 @@ import cPickle
 import logging
 import logging.handlers
 import signal
-#from Boinc import boinc_project_path
+from Boinc import boinc_project_path
 from threading import Thread
 from multiprocessing import Process
 import time
 from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
 
-STOP_TRIGGER_FILENAME = 'stop_daemons' #boinc_project_path.project_path('stop_daemons')
+STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
 child_list = list()
@@ -214,6 +214,9 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
                 file_handler.setFormatter(formatter)
                 logger.addHandler(file_handler)
                 file_open = 1
+
+                stdouthandle = logging.getLogger().handlers.__getitem__(0)
+                stdouthandle.setFormatter(formatter)
             else:
                 # Finally, handle the record by printing it to the file specified
                 logger.handle(record)
@@ -269,7 +272,7 @@ def background_management():
     while 1:
         heartbeat += 1
 
-        if heartbeat == 10:
+        if heartbeat == 60:
             server_log.info("Server is active with {0} current connection(s)".format(child_list.__len__()))
             heartbeat = 0
 
@@ -284,6 +287,8 @@ def background_management():
 
         if caught_sig_int:
             server_log.info("SIGINT Received\n")
+            for i in child_list:  # Kill all child processes that have not been claimed by child_reclaim()
+                i.terminate()
             sys.exit(0)
 
         time.sleep(1)  # No point in checking constantly, save a bit of CPU time
