@@ -31,7 +31,7 @@ import datetime
 from sqlalchemy.sql import select, func, and_
 from utils.logging_helper import config_logger
 from config import DELETED, ARC_DELETE_DELAY, STORED
-from database.database_support_core import GALAXY, AREA, PIXEL_RESULT
+from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, FITS_HEADER
 from utils.name_builder import get_files_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 
@@ -57,7 +57,10 @@ def delete_galaxy(connection, galaxy_ids):
                 time.sleep(0.1)
                 counter += 1
 
-            # Now empty the bucket
+            LOG.info("Deleting FITS headers for galaxy {0}".format(galaxy_id))
+            connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
+
+            # Now empty the bucket of the sed files
             s3helper = S3Helper()
             bucket = s3helper.get_bucket(get_files_bucket())
             galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
