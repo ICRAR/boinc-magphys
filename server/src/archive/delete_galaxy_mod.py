@@ -34,6 +34,7 @@ from config import DELETED, ARC_DELETE_DELAY, STORED
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, FITS_HEADER, REGISTER, TAG_REGISTER
 from utils.name_builder import get_files_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
+from utils.shutdown_detection import shutdown
 
 LOG = config_logger(__name__)
 
@@ -57,6 +58,10 @@ def delete_galaxy(connection, galaxy_ids):
                 time.sleep(0.1)
                 counter += 1
 
+                if shutdown() is True:
+                    transaction.rollback()
+                    raise SystemExit
+
             LOG.info("Deleting FITS headers for galaxy {0}".format(galaxy_id))
             connection.execute(FITS_HEADER.delete().where(FITS_HEADER.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]))
 
@@ -71,6 +76,10 @@ def delete_galaxy(connection, galaxy_ids):
 
                 bucket.delete_key(key)
 
+                if shutdown() is True:
+                    transaction.rollback()
+                    raise SystemExit
+
             # Now the folder
             key = Key(bucket)
             key.key = '{0}/sed/'.format(galaxy_file_name)
@@ -78,6 +87,11 @@ def delete_galaxy(connection, galaxy_ids):
 
         LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id)
         connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=DELETED, status_time=datetime.datetime.now()))
+
+        if shutdown() is True:
+            transaction.rollback()
+            raise SystemExit
+
         transaction.commit()
 
 
@@ -96,6 +110,9 @@ def delete_galaxy_data(connection, modulus, remainder):
         galaxy_id = int(galaxy[GALAXY.c.galaxy_id])
         if modulus is None or galaxy_id % modulus == remainder:
             galaxy_ids.append(galaxy_id)
+
+    if shutdown() is True:
+        raise SystemExit
 
     delete_galaxy(connection, galaxy_ids)
 
@@ -134,5 +151,8 @@ def delete_register_data(connection, modulus, remainder):
 
         if modulus is None or register_id % modulus == remainder:
             register_ids.append(register_id)
+
+        if shutdown() is True:
+            raise SystemExit
 
     delete_register_entries(connection, register_ids)

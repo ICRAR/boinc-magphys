@@ -131,5 +131,8 @@ def process_ami(modulus, remainder):
         except:
             LOG.exception('archive_to_hdf5(): an exception occurred')
 
+    except SystemExit:
+        LOG.info('Spot Instance Terminate Notice received, archive_task is shutting down')
+
     finally:
         connection.close()

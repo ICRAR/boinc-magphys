@@ -33,6 +33,8 @@ from config import BOINC_DB_LOGIN, PROCESSED, COMPUTING
 from database.boinc_database_support_core import RESULT
 from utils.logging_helper import config_logger
 
+from utils.shutdown_detection import shutdown
+
 LOG = config_logger(__name__)
 
 
@@ -149,6 +151,7 @@ def processed_data(connection, modulus, remainder):
     # The use of appid ensures MySQL uses an index otherwise it does a full table scan
     for result in connection_boinc.execute(select([RESULT]).where(and_(RESULT.c.server_state != 5, RESULT.c.appid == 1))):
         current_jobs.append(result[RESULT.c.name])
+
     connection_boinc.close()
     LOG.info('Got results')
 
@@ -166,6 +169,9 @@ def processed_data(connection, modulus, remainder):
 
     for galaxy_id in processed:
         connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=PROCESSED, status_time=datetime.datetime.now()))
+
+        if shutdown() is True:
+            raise SystemExit
 
     LOG.info('Marked %d galaxies ready for archiving', len(processed))
     LOG.info('%d galaxies are still being processed', len(sorted_data))
