@@ -307,11 +307,14 @@ class EC2Helper:
             ip_used = False
 
             for inst in instances:
+                LOG.info("Checking address {0}".format(ip))
                 if inst.ip_address == ip:
+                    LOG.info("Used.")
                     ip_used = True
                     break
 
             if ip_used is False:
+                LOG.info("Address {0} is unused.".format(ip))
                 return ip
 
         return None
