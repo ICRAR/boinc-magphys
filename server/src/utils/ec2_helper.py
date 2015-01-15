@@ -32,7 +32,7 @@ import datetime
 from boto.exception import EC2ResponseError
 from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
-from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT, SPOT_PRICE_MULTIPLIER
+from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT, SPOT_PRICE_MULTIPLIER, EC2_IP_ADDRESSES
 
 LOG = config_logger(__name__)
 
@@ -81,17 +81,38 @@ class EC2Helper:
                                          'Name': 'pogs-{0}'.format(boinc_value),
                                          'Created By': 'pogs'})
 
-        LOG.info('Allocating a VPC public IP address')
-        allocation = self.ec2_connection.allocate_address('vpc')
-        while not instance.update() == 'running':
-            LOG.info('Not running yet')
+        LOG.info('Try to allocate one of the config IP addresses')
+
+        # try to associate with one of the public ips stored in the text file.
+        # if they are all used, do things the old way
+
+        ip = self.get_next_available_address()
+
+        if ip is None:
+            # do things the old way
+            LOG.info('No IP addresses available, allocating a VPC public IP address')
+            allocation = self.ec2_connection.allocate_address('vpc')
+
+            while not instance.update() == 'running':
+                LOG.info('Not running yet')
             time.sleep(1)
 
-        if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
-            LOG.info('Allocated a VPC public IP address')
+            if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
+                LOG.info('Allocated a VPC public IP address')
+            else:
+                LOG.error('Could not associate the IP to the instance {0}'.format(instance.id))
+                self.ec2_connection.release_address(allocation_id=allocation.allocation_id)
+
         else:
-            LOG.error('Could not associate the IP to the instance {0}'.format(instance.id))
-            self.ec2_connection.release_address(allocation_id=allocation.allocation_id)
+            # do things the new way
+            while not instance.update() == 'running':
+                LOG.info('Not running yet')
+            time.sleep(1)
+
+            if self.ec2_connection.associate_address(public_ip=ip, instance_id=instance.id, allocation_id=None):
+                LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
+            else:
+                LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
 
     def boinc_instance_running(self, boinc_value):
         """
@@ -114,11 +135,13 @@ class EC2Helper:
 
         :return:
         """
-        association_id, allocation_id = self.get_allocation_id()
+        association_id, allocation_id, public_ip = self.get_allocation_id()
 
         if allocation_id is not None and association_id is not None:
             self.ec2_connection.disassociate_address(association_id=association_id)
-            self.ec2_connection.release_address(allocation_id=allocation_id)
+
+            if not self.reserved_address(public_ip):
+                self.ec2_connection.release_address(allocation_id=allocation_id)
 
     def get_allocation_id(self):
         """
@@ -128,7 +151,7 @@ class EC2Helper:
         metadata = get_instance_metadata()
         for address in self.ec2_connection.get_all_addresses():
             if address.public_ip == metadata['public-ipv4']:
-                return address.association_id, address.allocation_id
+                return address.association_id, address.allocation_id, address.public_ip
 
         return None, None
 
@@ -186,17 +209,39 @@ class EC2Helper:
         reservations = self.ec2_connection.get_all_instances(instance_ids=[instance_id])
         instance = reservations[0].instances[0]
 
-        LOG.info('Allocating a VPC public IP address')
-        allocation = self.ec2_connection.allocate_address('vpc')
-        while not instance.update() == 'running':
-            LOG.info('Not running yet')
+        LOG.info('Try to allocate one of the config IP addresses')
+
+        # try to associate with one of the public ips stored in the text file.
+        # if they are all used, do things the old way
+
+        ip = self.get_next_available_address()
+
+        if ip is None:
+            # do things the old way
+            LOG.info('No IP addresses available, allocating a VPC public IP address')
+            allocation = self.ec2_connection.allocate_address('vpc')
+
+            while not instance.update() == 'running':
+                LOG.info('Not running yet')
             time.sleep(1)
 
-        if self.ec2_connection.associate_address(public_ip=None, instance_id=instance_id, allocation_id=allocation.allocation_id):
-            LOG.info('Allocated a VPC public IP address')
+            if self.ec2_connection.associate_address(public_ip=None, instance_id=instance_id, allocation_id=allocation.allocation_id):
+                LOG.info('Allocated a VPC public IP address')
+            else:
+                LOG.error('Could not associate the IP to the instance {0}'.format(instance_id))
+                self.ec2_connection.release_address(allocation_id=allocation.allocation_id)
+
         else:
-            LOG.error('Could not associate the IP to the instance {0}'.format(instance_id))
-            self.ec2_connection.release_address(allocation_id=allocation.allocation_id)
+            # do things the new way
+            while not instance.update() == 'running':
+                LOG.info('Not running yet')
+            time.sleep(1)
+
+            if self.ec2_connection.associate_address(public_ip=ip, instance_id=instance_id, allocation_id=None):
+                LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
+            else:
+                LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance_id))
+
 
     def get_cheapest_spot_price(self, instance_type, max_price):
         """
@@ -249,6 +294,37 @@ class EC2Helper:
 
         LOG.info('bid_price: {0}, subnet_id: {1}'.format(bid_price, subnet_id))
         return bid_price, subnet_id
+
+    def get_next_available_address(self):
+        """
+        Out of the ip addresses in the config file, find one not in use
+        If there are none, return None
+        """
+
+        instances = self.ec2_connection.get_all_instances()
+
+        for ip in EC2_IP_ADDRESSES:
+            ip_used = False
+
+            for inst in instances:
+                if inst.ip_address == ip:
+                    ip_used = True
+                    break
+
+            if ip_used is False:
+                return ip
+
+        return None
+
+    def reserved_address(self, ip):
+        """
+        Returns True if ip is equal to one of the config IP addresses
+        Returns False otherwise
+        """
+        for item in EC2_IP_ADDRESSES:
+            if item == ip:
+                return True
+        return False
 
 
 class CancelledException(Exception):
