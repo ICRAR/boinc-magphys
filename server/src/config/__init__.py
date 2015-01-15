@@ -82,6 +82,14 @@ if exists(config_file_name):
     LOGGER_MAX_CONNECTION_REQUESTS = int(config['logger_max_requests'])
     LOGGER_LOG_DIRECTORY = config['logger_directory']
 
+    ############### EC2 IPs ###############
+    EC2_IP_ADDRESSES = {}
+    i = 0
+
+    for ip in config['ec2_ips']:
+        EC2_IP_ADDRESSES[i] = ip
+        i += 1
+
 ############### Archive Settings ###############
 
 # Any probability in the pixel histogram less than this is considered to be 0 and ignored
