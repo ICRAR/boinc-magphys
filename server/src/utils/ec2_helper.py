@@ -110,7 +110,7 @@ class EC2Helper:
             time.sleep(1)
 
             if self.ec2_connection.associate_address(public_ip=ip, instance_id=instance.id, allocation_id=None):
-                LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
+                LOG.info('Allocated a plain EC2 ip {0}'.format(ip))
             else:
                 LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
 
@@ -153,7 +153,7 @@ class EC2Helper:
             if address.public_ip == metadata['public-ipv4']:
                 return address.association_id, address.allocation_id, address.public_ip
 
-        return None, None
+        return None, None, None
 
     def run_spot_instance(self, spot_price, subnet_id, user_data, boinc_value, instance_type):
         """
