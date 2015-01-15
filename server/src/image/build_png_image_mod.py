@@ -28,6 +28,8 @@ The code to build a PNG image
 import math
 import datetime
 import numpy
+from utils.shutdown_detection import shutdown, start_poll
+
 from sqlalchemy import create_engine, select, and_
 from config import DB_LOGIN, POGS_TMP, BUILD_PNG_IMAGE, BUILD_PNG_IMAGE_DICT
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT
@@ -164,6 +166,10 @@ def build_png_image_ami():
         galaxy_count = 0
         s3helper = S3Helper()
         bucket_name = get_galaxy_image_bucket()
+
+        # Start the shutdown signal poller to check when this instance must close
+        start_poll()
+
         for galaxy in connection.execute(query):
             LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
             array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(PNG_IMAGE_NAMES)), dtype=numpy.float)
@@ -255,6 +261,10 @@ def build_png_image_ami():
                                             get_build_png_name(get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]),
                                                                name),
                                             file_name)
+            if shutdown() is True:
+                LOG.info('Spot Instance Terminate Notice received, build_png_image is shutting down')
+                break
+
     except:
         LOG.exception('An exception occurred.')
 

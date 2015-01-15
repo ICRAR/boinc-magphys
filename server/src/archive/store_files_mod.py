@@ -35,6 +35,7 @@ from config import DB_LOGIN, STORED, HDF5_OUTPUT_DIRECTORY
 from database.database_support_core import GALAXY
 from utils.name_builder import get_files_bucket
 from utils.s3_helper import S3Helper
+from utils.shutdown_detection import shutdown
 
 LOG = config_logger(__name__)
 
@@ -95,5 +96,8 @@ def store_files(connection, modulus, remainder):
         else:
             LOG.error('File name: %s', file_name)
             LOG.error('Could not get the galaxy id')
+
+        if shutdown() is True:
+            raise SystemExit
 
     return file_count

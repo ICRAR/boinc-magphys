@@ -33,6 +33,7 @@ from archive.store_files_mod import store_files
 from utils.logging_helper import config_logger
 from config import DB_LOGIN, ARCHIVE_DATA_DICT
 from utils.ec2_helper import EC2Helper
+from utils.shutdown_detection import start_poll
 
 LOG = config_logger(__name__)
 ARCHIVE_DATA = 'archive_data_{0}'
@@ -93,6 +94,10 @@ def process_ami(modulus, remainder):
     :return:
     """
     # Connect to the database - the login string is set in the database package
+
+    # Start the shutdown signal poller to check when this instance must close
+    start_poll()
+
     engine = create_engine(DB_LOGIN)
     connection = engine.connect()
     try:
@@ -130,6 +135,9 @@ def process_ami(modulus, remainder):
             archive_to_hdf5(connection, modulus, remainder)
         except:
             LOG.exception('archive_to_hdf5(): an exception occurred')
+
+    except SystemExit:
+        LOG.info('Spot Instance Terminate Notice received, archive_task is shutting down')
 
     finally:
         connection.close()
