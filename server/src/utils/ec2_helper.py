@@ -107,22 +107,29 @@ class EC2Helper:
             # do things the new way
             LOG.info("IP Address chosen: {0}".format(ip))
 
+            found_address = False
             for address in self.ec2_connection.get_all_addresses():
                 if address.public_ip == ip:
+                    found_address = True
 
                     allocation_id = address.allocation_id
                     LOG.info('Allocation ID: {0}'.format(allocation_id))
+                    break
 
-                    while not instance.update() == 'running':
-                        LOG.info('Not running yet')
-                        time.sleep(1)
-
-                    if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
-                        LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
-                    else:
-                        LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
-            else:
+            if not found_address:
                 LOG.error('The address {0} is not reserved!'.format(ip))
+                return
+
+
+            while not instance.update() == 'running':
+                LOG.info('Not running yet')
+                time.sleep(1)
+
+                if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
+                    LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
+                else:
+                    LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
+
 
     def boinc_instance_running(self, boinc_value):
         """
@@ -244,22 +251,27 @@ class EC2Helper:
             # do things the new way
             LOG.info("IP Address chosen: {0}".format(ip))
 
+            found_address = False
             for address in self.ec2_connection.get_all_addresses():
                 if address.public_ip == ip:
+                    found_address = True
 
                     allocation_id = address.allocation_id
                     LOG.info('Allocation ID: {0}'.format(allocation_id))
+                    break
 
-                    while not instance.update() == 'running':
-                        LOG.info('Not running yet')
-                        time.sleep(1)
-
-                    if self.ec2_connection.associate_address(public_ip=None, instance_id=instance_id, allocation_id=allocation_id):
-                        LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
-                    else:
-                        LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance_id))
-            else:
+            if not found_address:
                 LOG.error('The address {0} is not reserved!'.format(ip))
+                return
+
+            while not instance.update() == 'running':
+                LOG.info('Not running yet')
+                time.sleep(1)
+
+                if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
+                    LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
+                else:
+                    LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
 
 
     def get_cheapest_spot_price(self, instance_type, max_price):
