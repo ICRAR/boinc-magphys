@@ -87,14 +87,13 @@ if exists(config_file_name):
     EC2_IP_BUILD_IMAGE_ADDRESSES = {}
 
     i = 0
-
     for ip in config['ec2_ips_archive']:
         EC2_IP_ARCHIVE_ADDRESSES[i] = ip
         i += 1
 
     i = 0
     for ip in config['ec2_ips_build_image']:
-        EC2_IP_BUILD_IMAGE_ADRESSES[i] = ip
+        EC2_IP_BUILD_IMAGE_ADDRESSES[i] = ip
         i += 1
 
 ############### Archive Settings ###############
