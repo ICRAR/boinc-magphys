@@ -125,10 +125,10 @@ class EC2Helper:
                 LOG.info('Not running yet')
                 time.sleep(1)
 
-                if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
-                    LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
-                else:
-                    LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
+            if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
+                LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
+            else:
+                LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
 
 
     def boinc_instance_running(self, boinc_value):
@@ -268,10 +268,10 @@ class EC2Helper:
                 LOG.info('Not running yet')
                 time.sleep(1)
 
-                if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
-                    LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
-                else:
-                    LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
+            if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
+                LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
+            else:
+                LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
 
 
     def get_cheapest_spot_price(self, instance_type, max_price):
