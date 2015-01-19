@@ -83,7 +83,7 @@ def process_boinc(modulus, remainder):
                 mod_text = '-mod {0} {1}'.format(modulus, remainder)
 
             if bid_price is not None and subnet_id is not None:
-                ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA.format(mod_text), archive_data_format, instance_type)
+                ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA.format(mod_text), archive_data_format, instance_type, remainder)
 
 
 def process_ami(modulus, remainder):

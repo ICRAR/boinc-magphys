@@ -146,9 +146,9 @@ def build_png_image_boinc():
         else:
             bid_price, subnet_id = ec2_helper.get_cheapest_spot_price(instance_type, max_price)
             if bid_price is not None and subnet_id is not None:
-                ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BUILD_PNG_IMAGE, instance_type)
+                ec2_helper.run_spot_instance(bid_price, subnet_id, USER_DATA, BUILD_PNG_IMAGE, instance_type, remainder=0)
             else:
-                ec2_helper.run_instance(USER_DATA, BUILD_PNG_IMAGE, instance_type)
+                ec2_helper.run_instance(USER_DATA, BUILD_PNG_IMAGE, instance_type, remainder=0)
 
 
 def build_png_image_ami():
