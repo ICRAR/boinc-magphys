@@ -325,7 +325,7 @@ class EC2Helper:
         Returns False otherwise
         """
         for item in EC2_IP_ADDRESSES:
-            if item == ip:
+            if item == int(ip):
                 return True
         return False
 
