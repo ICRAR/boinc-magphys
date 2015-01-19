@@ -95,7 +95,7 @@ class EC2Helper:
 
             while not instance.update() == 'running':
                 LOG.info('Not running yet')
-            time.sleep(1)
+                time.sleep(1)
 
             if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
                 LOG.info('Allocated a VPC public IP address')
@@ -105,9 +105,10 @@ class EC2Helper:
 
         else:
             # do things the new way
+            LOG.info("IP address chosen {0}".format(ip))
             while not instance.update() == 'running':
                 LOG.info('Not running yet')
-            time.sleep(1)
+                time.sleep(1)
 
             if self.ec2_connection.associate_address(public_ip=ip, instance_id=instance.id, allocation_id=None):
                 LOG.info('Allocated a plain EC2 ip {0}'.format(ip))
@@ -212,7 +213,6 @@ class EC2Helper:
         LOG.info('Try to allocate one of the config IP addresses')
 
         # try to associate with one of the public ips stored in the text file.
-        # if they are all used, do things the old way
 
         ip = self.get_next_available_address(remainder, instance_type)
 
@@ -223,7 +223,7 @@ class EC2Helper:
 
             while not instance.update() == 'running':
                 LOG.info('Not running yet')
-            time.sleep(1)
+                time.sleep(1)
 
             if self.ec2_connection.associate_address(public_ip=None, instance_id=instance_id, allocation_id=allocation.allocation_id):
                 LOG.info('Allocated a VPC public IP address')
@@ -233,9 +233,10 @@ class EC2Helper:
 
         else:
             # do things the new way
+            LOG.info("IP Address chosen: {0}".format(ip))
             while not instance.update() == 'running':
                 LOG.info('Not running yet')
-            time.sleep(1)
+                time.sleep(1)
 
             if self.ec2_connection.associate_address(public_ip=ip, instance_id=instance_id, allocation_id=None):
                 LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
@@ -300,6 +301,8 @@ class EC2Helper:
         Out of the ip addresses in the config file, find one not in use
         If there are none, return None
         """
+        LOG.info("Archive addresses to choose from: {0}".format(EC2_IP_ARCHIVE_ADDRESSES))
+        LOG.info("Image addersses to choose from: {0}".format(EC2_IP_BUILD_IMAGE_ADDRESSES))
 
         if instance_type is ARCHIVE_DATA_DICT['instance_type']:
             # allocate an archive IP
