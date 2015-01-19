@@ -87,7 +87,7 @@ if exists(config_file_name):
     i = 0
 
     for ip in config['ec2_ips']:
-        EC2_IP_ADDRESSES[i] = int(ip)
+        EC2_IP_ADDRESSES[i] = ip
         i += 1
 
 ############### Archive Settings ###############
