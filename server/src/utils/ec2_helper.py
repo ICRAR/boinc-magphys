@@ -32,7 +32,7 @@ import datetime
 from boto.exception import EC2ResponseError
 from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
-from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT, SPOT_PRICE_MULTIPLIER, EC2_IP_ADDRESSES
+from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT, SPOT_PRICE_MULTIPLIER, EC2_IP_ARCHIVE_ADDRESSES, EC2_IP_BUILD_IMAGE_ADDRESSES, BUILD_PNG_IMAGE_DICT, ARCHIVE_DATA_DICT
 
 LOG = config_logger(__name__)
 
@@ -55,7 +55,7 @@ class EC2Helper:
         """
         return self.ec2_connection.get_all_instances(filters={'tag:BOINC': boinc_value})
 
-    def run_instance(self, user_data, boinc_value, instance_type):
+    def run_instance(self, user_data, boinc_value, instance_type, remainder=None):
         """
         Run up an instance
 
@@ -86,7 +86,7 @@ class EC2Helper:
         # try to associate with one of the public ips stored in the text file.
         # if they are all used, do things the old way
 
-        ip = self.get_next_available_address()
+        ip = self.get_next_available_address(remainder, instance_type)
 
         if ip is None:
             # do things the old way
@@ -155,7 +155,7 @@ class EC2Helper:
 
         return None, None, None
 
-    def run_spot_instance(self, spot_price, subnet_id, user_data, boinc_value, instance_type):
+    def run_spot_instance(self, spot_price, subnet_id, user_data, boinc_value, instance_type, remainder=None):
         """
         Run the ami as a spot instance
 
@@ -214,7 +214,7 @@ class EC2Helper:
         # try to associate with one of the public ips stored in the text file.
         # if they are all used, do things the old way
 
-        ip = self.get_next_available_address()
+        ip = self.get_next_available_address(remainder, instance_type)
 
         if ip is None:
             # do things the old way
@@ -295,27 +295,27 @@ class EC2Helper:
         LOG.info('bid_price: {0}, subnet_id: {1}'.format(bid_price, subnet_id))
         return bid_price, subnet_id
 
-    def get_next_available_address(self):
+    def get_next_available_address(self, remainder, instance_type):
         """
         Out of the ip addresses in the config file, find one not in use
         If there are none, return None
         """
 
-        instances = self.ec2_connection.get_all_instances()
+        if instance_type is ARCHIVE_DATA_DICT['instance_type']:
+            # allocate an archive IP
+            if remainder is None:
+                LOG.error("Archiver with no remainder found!")
+                return None
 
-        for ip in EC2_IP_ADDRESSES:
-            ip_used = False
+            if remainder >= EC2_IP_ARCHIVE_ADDRESSES.__len__():
+                LOG.error("There is no IP address assigned to this archiver! {0}".format(remainder))
+                return None
 
-            for inst in instances:
-                LOG.info("Checking address {0}".format(ip))
-                if inst.ip_address == ip:
-                    LOG.info("Used.")
-                    ip_used = True
-                    break
+            return EC2_IP_ARCHIVE_ADDRESSES[remainder]
 
-            if ip_used is False:
-                LOG.info("Address {0} is unused.".format(ip))
-                return ip
+        if instance_type is BUILD_PNG_IMAGE_DICT['instance_type']:
+            # allocate a build_png_image address
+            return EC2_IP_BUILD_IMAGE_ADDRESSES[remainder]
 
         return None
 
@@ -324,9 +324,14 @@ class EC2Helper:
         Returns True if ip is equal to one of the config IP addresses
         Returns False otherwise
         """
-        for item in EC2_IP_ADDRESSES:
+        for item in EC2_IP_ARCHIVE_ADDRESSES:
             if item == ip:
                 return True
+
+        for item in EC2_IP_ARCHIVE_ADDRESSES:
+            if item == ip:
+                return True
+
         return False
 
 
