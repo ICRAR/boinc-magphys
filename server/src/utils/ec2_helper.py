@@ -120,16 +120,14 @@ class EC2Helper:
                 LOG.error('The address {0} is not reserved!'.format(ip))
                 return
 
-
             while not instance.update() == 'running':
                 LOG.info('Not running yet')
                 time.sleep(1)
 
             if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
-                LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
+                LOG.info('Allocated a reserved EC2 ip {0}'.format(ip))
             else:
                 LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
-
 
     def boinc_instance_running(self, boinc_value):
         """
@@ -269,7 +267,7 @@ class EC2Helper:
                 time.sleep(1)
 
             if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
-                LOG.info('Allocated a plan EC2 ip {0}'.format(ip))
+                LOG.info('Allocated a reserved EC2 ip {0}'.format(ip))
             else:
                 LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
 
@@ -328,11 +326,11 @@ class EC2Helper:
 
     def get_next_available_address(self, remainder, instance_type):
         """
-        Out of the ip addresses in the config file, find one not in use
+        Out of the ip addresses in the config file, return the one associated with this instance
         If there are none, return None
         """
         LOG.info("Archive addresses to choose from: {0}".format(EC2_IP_ARCHIVE_ADDRESSES))
-        LOG.info("Image addersses to choose from: {0}".format(EC2_IP_BUILD_IMAGE_ADDRESSES))
+        LOG.info("Image addresses to choose from: {0}".format(EC2_IP_BUILD_IMAGE_ADDRESSES))
 
         if instance_type is ARCHIVE_DATA_DICT['instance_type']:
             # allocate an archive IP
@@ -348,6 +346,7 @@ class EC2Helper:
 
         if instance_type is BUILD_PNG_IMAGE_DICT['instance_type']:
             # allocate a build_png_image address
+            # at the moment there will only be one build png image ip address
             return EC2_IP_BUILD_IMAGE_ADDRESSES[remainder]
 
         return None
@@ -361,7 +360,7 @@ class EC2Helper:
             if item == ip:
                 return True
 
-        for item in EC2_IP_ARCHIVE_ADDRESSES:
+        for item in EC2_IP_BUILD_IMAGE_ADDRESSES:
             if item == ip:
                 return True
 
