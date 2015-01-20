@@ -26,6 +26,7 @@
 """
 Convert a FITS file ready to be converted into Work Units
 """
+
 from __future__ import print_function
 import hashlib
 from utils.logging_helper import config_logger
@@ -34,7 +35,7 @@ import json
 import shutil
 import math
 import pyfits
-import py_boinc
+#import py_boinc
 import subprocess
 
 from datetime import datetime
@@ -43,7 +44,7 @@ from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROO
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
-from utils.s3_helper import S3Helper
+#from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
 
@@ -90,10 +91,44 @@ class Pixel:
         self.pixel_id = None
 
 
-class Fit2Wu:
+cdef class Fit2Wu:
     """
     Convert a fit file to a wu
     """
+
+    cdef _pixel_count
+    cdef _work_units_added
+    cdef _signal_noise_hdu 
+    cdef _connection
+    cdef _limit
+    cdef _download_dir
+    cdef _fanout
+    cdef _filter_file 
+    cdef _sfh_model_file 
+    cdef _ir_model_file 
+    cdef _zlib_file 
+    cdef _filename 
+    cdef _galaxy_name 
+    cdef _galaxy_id 
+    cdef _galaxy_type 
+    cdef _priority 
+    cdef _redshift 
+    cdef _run_id 
+    cdef _sigma 
+    cdef _sigma_filename 
+    cdef _rounded_redshift 
+    cdef _hdu_list 
+    cdef _layer_count 
+    cdef _end_y 
+    cdef _end_x 
+    cdef _fpops_est_per_pixel 
+    cdef _cobblestone_scaling_factor 
+    cdef _template_file
+    cdef _layer_order
+    cdef _ultraviolet_bands
+    cdef _optical_bands
+    cdef _infrared_bands
+    
     def __init__(self, connection, limit, download_dir, fanout):
         """
         Initialise the class
@@ -136,7 +171,8 @@ class Fit2Wu:
         self._optical_bands = {}
         self._infrared_bands = {}
 
-    def process_file(self, registration):
+    
+    cpdef process_file(self, registration):
         """
         Process a registration.
 
@@ -219,22 +255,23 @@ class Fit2Wu:
 
         LOG.info('Building the images')
         galaxy_file_name = get_galaxy_file_name(self._galaxy_name, self._run_id, self._galaxy_id)
-        s3helper = S3Helper()
+        #s3helper = S3Helper()
         image = FitsImage(self._connection)
         image.build_image(self._filename, galaxy_file_name, self._galaxy_id, get_galaxy_image_bucket())
 
         # Copy the fits file to S3 - renamed to make it unique
-        bucket_name = get_files_bucket()
-        s3helper.add_file_to_bucket(bucket_name, get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
-        if self._sigma_filename is not None:
-            s3helper.add_file_to_bucket(bucket_name, get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
+        #bucket_name = get_files_bucket()
+        #s3helper.add_file_to_bucket(bucket_name, get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
+        #if self._sigma_filename is not None:
+        #    s3helper.add_file_to_bucket(bucket_name, get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
 
         # Store the pixel count as the last thing to stop the original_image_checker going off
         # too soon for BIG galaxies
         self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
         return self._work_units_added, self._pixel_count
 
-    def _break_up_galaxy(self):
+    
+    cpdef _break_up_galaxy(self):
         """
         Break up the galaxy into small pieces
         """
@@ -242,7 +279,8 @@ class Fit2Wu:
         for pix_y in range(start_y, self._end_y, WG_ROW_HEIGHT):
             self._create_areas(pix_y)
 
-    def _build_template_file(self):
+    
+    cpdef _build_template_file(self):
         """
         Build the template files we need if they don't exist
         """
@@ -317,7 +355,8 @@ class Fit2Wu:
 </input_template>'''.format(self._rounded_redshift))
             template_file.close()
 
-    def _copy_important_files(self):
+    
+    cpdef _copy_important_files(self):
         """
         Copy the model, zlib and filter files to where we need them (if the don't exist). They are marked as no_delete so one should be all we need
         """
@@ -350,7 +389,8 @@ class Fit2Wu:
             zlib_file.write(' 1  {0}'.format(self._rounded_redshift))
             zlib_file.close()
 
-    def _create_areas(self, pix_y):
+    
+    cpdef _create_areas(self, pix_y):
         """
         Create a area - we try to make them squares, but they aren't as the images have dead zones
         """
@@ -387,7 +427,8 @@ class Fit2Wu:
 
             pix_x = max_x + 1
 
-    def _create_job_xml(self, file_name, pixels_in_file):
+    
+    cpdef _create_job_xml(self, file_name, pixels_in_file):
         """
         Create the job.xml file
 
@@ -417,7 +458,8 @@ class Fit2Wu:
         job_file.write('</job_desc>\n')
         job_file.close()
 
-    def _create_observation_file(self, filename, data, pixels):
+    
+    cpdef _create_observation_file(self, filename, data, pixels):
         """
         Create an observation file for the list of pixels
         :param filename:
@@ -438,7 +480,8 @@ class Fit2Wu:
             row_num += 1
         outfile.close()
 
-    def _create_output_file(self, area, pixels):
+    
+    cpdef _create_output_file(self, area, pixels):
         """
         Write an output file for this area
         :param area:
@@ -491,7 +534,7 @@ class Fit2Wu:
             subprocess.call(cmd_create_work)
 
         else:
-            py_boinc.boinc_create_work(app_name=APP_NAME,
+            """py_boinc.boinc_create_work(app_name=APP_NAME,
                                        min_quorom=MIN_QUORUM,
                                        max_success_results=4,
                                        delay_bound=DELAY_BOUND,
@@ -507,8 +550,10 @@ class Fit2Wu:
                                        opaque=area.area_id,
                                        priority=self._priority,
                                        list_input_files=args_files)
+                                       """
 
-    def _enough_layers(self, pixels):
+    
+    cpdef _enough_layers(self, pixels):
         """
         Are there enough layers with data in them to warrant counting this pixel?
         :param pixels:
@@ -537,7 +582,8 @@ class Fit2Wu:
         # Not enough layers
         return False
 
-    def _fanout_path(self, file_name):
+    
+    cpdef _fanout_path(self, file_name):
         """
         Calculate the fanout path and create the directory
 
@@ -558,7 +604,8 @@ class Fit2Wu:
 
         return "%s/%x/%s" % (self._download_dir, x % self._fanout, file_name)
 
-    def _get_filters_sort_layers(self):
+    
+    cpdef _get_filters_sort_layers(self):
         """
         Get the filters we'll be using for this run
         """
@@ -630,7 +677,8 @@ class Fit2Wu:
 
         self._layer_order = layers
 
-    def _get_pixels(self, pix_x, pix_y):
+    
+    cpdef _get_pixels(self, pix_x, pix_y):
         """
         Retrieves pixels from each pair of (x, y) coordinates specified in pix_x and pix_y.
         Returns pixels only from those coordinates where there is data in more than
@@ -676,7 +724,8 @@ class Fit2Wu:
 
         return max_x, result
 
-    def _get_rounded_redshift(self):
+    
+    cpdef _get_rounded_redshift(self):
         """
         Select the template for the red shift
         """
@@ -709,7 +758,8 @@ class Fit2Wu:
         else:
             return None
 
-    def _store_fits_header(self):
+    
+    cpdef _store_fits_header(self):
         """
         Store the FITS headers we need to remember
         """
@@ -749,7 +799,8 @@ class Fit2Wu:
                 LOG.exception('VerifyError')
             index += 1
 
-    def _store_tags(self, register_id):
+    
+    cpdef _store_tags(self, register_id):
         """
         Copy the tags to the galaxy
         :param register_id:
