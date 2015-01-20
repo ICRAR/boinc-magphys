@@ -151,12 +151,17 @@ class EC2Helper:
         :return:
         """
         association_id, allocation_id, public_ip = self.get_allocation_id()
+        LOG.info('Releasing IP address {0}'.format(public_ip))
 
-        if allocation_id is not None and association_id is not None:
+        if allocation_id is not None and association_id is not None and public_ip is not None:
+            LOG.info('Disassociating...')
             self.ec2_connection.disassociate_address(association_id=association_id)
+            LOG.info('Disassociated successfully {0}'.format(public_ip))
 
             if not self.reserved_address(public_ip):
+                LOG.info('Address is also not reserved')
                 self.ec2_connection.release_address(allocation_id=allocation_id)
+                LOG.info('Successfully released {0}'.format(public_ip))
 
     def get_allocation_id(self):
         """

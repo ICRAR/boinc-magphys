@@ -37,15 +37,20 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 
 import argparse
 import py_boinc
+import signal
 from Boinc import configxml
 from datetime import datetime
 from utils.logging_helper import config_logger
+from utils.shutdown_detection import sigint_handler, check_stop_trigger
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import func, select
 from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import REGISTER, TAG_REGISTER
 from work_generation.fits2wu_mod import Fit2Wu, MIN_QUORUM
+
+# install sigint handler for shutdowns
+signal.signal(signal.SIGINT, sigint_handler)
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
@@ -96,6 +101,9 @@ else:
 
         # Get registered FITS files and generate work units until we've refilled the queue to at least the high water mark
         while total_work_units_added < work_units_to_be_added:
+            if check_stop_trigger():
+                LOG.info('Stop trigger identified')
+                break
             LOG.info("Added %d of %d", total_work_units_added, work_units_to_be_added)
             registration = connection.execute(select([REGISTER]).where(REGISTER.c.create_time == None).order_by(REGISTER.c.priority.desc(), REGISTER.c.register_time)).first()
             if registration is None:
@@ -122,6 +130,7 @@ else:
                         os.remove(registration[REGISTER.c.sigma_filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
+
 
         LOG.info('Done - added %d Results', total_work_units_added)
 
