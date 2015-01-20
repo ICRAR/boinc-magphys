@@ -105,35 +105,35 @@ def process_ami(modulus, remainder):
         try:
             LOG.info('Updating state information')
             processed_data(connection, modulus, remainder)
-        except:
+        except Exception:
             LOG.exception('processed_data(): an exception occurred')
 
         # Store files
         try:
             LOG.info('Storing files')
             store_files(connection, modulus, remainder)
-        except:
+        except Exception:
             LOG.exception('store_files(): an exception occurred')
 
         # Delete galaxy data - commits happen inside
         try:
             LOG.info('Deleting galaxy data')
             delete_galaxy_data(connection, modulus, remainder)
-        except:
+        except Exception:
             LOG.exception('delete_galaxy_data(): an exception occurred')
 
         # Delete register data - commits happen inside
         try:
             LOG.info('Deleting register data')
             delete_register_data(connection, modulus, remainder)
-        except:
+        except Exception:
             LOG.exception('delete_register_data(): an exception occurred')
 
         # Archive to HDF5
         try:
             LOG.info('Archiving to HDF5')
             archive_to_hdf5(connection, modulus, remainder)
-        except:
+        except Exception:
             LOG.exception('archive_to_hdf5(): an exception occurred')
 
     except SystemExit:
