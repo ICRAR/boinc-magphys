@@ -37,7 +37,7 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
-from socket import socket
+from socket import socket, timeout
 import argparse
 import struct
 import cPickle
@@ -144,6 +144,8 @@ def main():
             server_log.info('Incoming connection from {0}'.format(addr))
             server_log.info('Using local logger number {0}'.format(logger_number))
 
+            client_socket.settimeout(60 * 10)  # 10 min timeout
+
             # Handle each new client in a new process
             pros = Process(target=handle_client, args=(log_directory, client_socket, logger_number, addr))
             pros.start()
@@ -221,8 +223,12 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
                 # Finally, handle the record by printing it to the file specified
                 logger.handle(record)
 
-        except IOError as e:
+        except IOError:
             server_log.error('Connection closed in an unexpected way.')
+            exit(0)
+
+        except timeout:
+            server_log.error('Connection timed out {0}'.format(c_socket.getpeername))
             exit(0)
 
 
