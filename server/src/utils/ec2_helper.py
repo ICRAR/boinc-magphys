@@ -34,6 +34,11 @@ from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
 from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT, SPOT_PRICE_MULTIPLIER, EC2_IP_ARCHIVE_ADDRESSES, EC2_IP_BUILD_IMAGE_ADDRESSES, BUILD_PNG_IMAGE_DICT, ARCHIVE_DATA_DICT
 
+### DEBUG DEBUG FORCE a socket handler onto the EC2 logger
+import logging
+from logging_helper import DetailedSocketHandler
+from config import LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT
+###
 LOG = config_logger(__name__)
 
 
@@ -45,6 +50,13 @@ class EC2Helper:
         """
         # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
         self.ec2_connection = boto.connect_ec2()
+
+        ### DEBUG DEBUG FORCE a socket handler onto the EC2 logger
+        formatter = logging.Formatter('%(asctime)-15s:' + logging.BASIC_FORMAT)
+        special_handler = DetailedSocketHandler(LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT, 'ec2_helper')
+        special_handler.setFormatter(formatter)
+        LOG.addHandler(special_handler)
+        ###
 
     def get_all_instances(self, boinc_value):
         """
@@ -87,6 +99,11 @@ class EC2Helper:
         # if they are all used, do things the old way
 
         ip = self.get_next_available_address(remainder, instance_type)
+
+        ### DEBUG DEBUG - For the moment, always do things the old way if we're using the archiver.
+        if not instance_type == BUILD_PNG_IMAGE_DICT['instance_type']:
+            ip = None
+        ###
 
         if ip is None:
             # do things the old way
@@ -160,7 +177,8 @@ class EC2Helper:
 
             if not self.reserved_address(public_ip):
                 LOG.info('Address is also not reserved')
-                self.ec2_connection.release_address(allocation_id=allocation_id)
+                # self.ec2_connection.release_address(allocation_id=allocation_id)
+                LOG.info('Normally the address would be released now, but will not be for debugging purposes')
                 LOG.info('Successfully released {0}'.format(public_ip))
 
     def get_allocation_id(self):
@@ -232,8 +250,12 @@ class EC2Helper:
         LOG.info('Try to allocate one of the config IP addresses')
 
         # try to associate with one of the public ips stored in the text file.
-
         ip = self.get_next_available_address(remainder, instance_type)
+
+        ### DEBUG DEBUG - For the moment, always do things the old way if we're using the archiver.
+        if not instance_type == BUILD_PNG_IMAGE_DICT['instance_type']:
+            ip = None
+        ###
 
         if ip is None:
             # do things the old way
@@ -370,6 +392,11 @@ class EC2Helper:
                 return True
 
         return False
+
+    def print_log(self):
+        LOG.info('This is text')
+        LOG.error('This is error text')
+        LOG.debug('This is debug text')
 
 
 class CancelledException(Exception):

@@ -41,6 +41,8 @@ from utils.sanity_checks import pass_sanity_checks
 from image.build_png_image_mod import build_png_image_boinc, build_png_image_ami
 from config import LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT
 
+import time
+
 LOG = config_logger(__name__)
 
 parser = argparse.ArgumentParser('Build the intermediary images to show how the work is progressing')
@@ -68,6 +70,15 @@ else:
         LOG.error('Failed to pass sanity tests')
 
     ec2_helper = EC2Helper()
+    ec2_helper.print_log()
     ec2_helper.release_public_ip()
+
+    ### DEBUG DEBUG
+    LOG.info('We are now past the release public ip. I will sit in a loop for 5 mins')
+    i = 0
+    while(i < 5):
+        time.sleep(60)
+        i += 1
+    ###
 
 LOG.info('All done.')
