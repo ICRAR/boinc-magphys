@@ -169,13 +169,16 @@ def build_png_image_ami():
 
         # Start the shutdown signal poller to check when this instance must close
         start_poll()
+        galaxy_list = []
 
-        result = connection.execute(query)
-        total_galaxies = result.rowcount
+        for galaxy in connection.execute(query):
+            galaxy_list.append(galaxy)
+
+        total_galaxies = len(galaxy_list)
         processed_galaxies = 0
         processed_print_point = 50
 
-        for galaxy in result:
+        for galaxy in galaxy_list:
 
             if processed_galaxies == processed_print_point:
                 LOG.info('{0} out of {1} galaxies processed'.format(processed_galaxies, total_galaxies))
