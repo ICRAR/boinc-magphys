@@ -74,6 +74,6 @@ else:
         LOG.exception('Failed to copy the log file')
 
     ec2_helper = EC2Helper()
-    ec2_helper.release_public_ip()
+    ec2_helper.disassociate_public_ip()
 
 LOG.INFO('All done')

@@ -86,6 +86,6 @@ else:
         LOG.error('Failed to pass sanity tests')
 
     ec2_helper = EC2Helper()
-    ec2_helper.release_public_ip()
+    ec2_helper.disassociate_public_ip()
 
 LOG.info('All done')

@@ -170,14 +170,7 @@ def build_png_image_ami():
         # Start the shutdown signal poller to check when this instance must close
         start_poll()
 
-        ### DEBUG DEBUG
-        counter = 0
-        ###
-
         for galaxy in connection.execute(query):
-            ### DEBUG DEBUG
-            counter += 1
-            ###
 
             LOG.info('Working on galaxy %s', galaxy[GALAXY.c.name])
             array = numpy.empty((galaxy[GALAXY.c.dimension_y], galaxy[GALAXY.c.dimension_x], len(PNG_IMAGE_NAMES)), dtype=numpy.float)
@@ -272,10 +265,6 @@ def build_png_image_ami():
             if shutdown() is True:
                 LOG.info('Spot Instance Terminate Notice received, build_png_image is shutting down')
                 break
-            ### DEBUG DEBUG
-            if counter == 10:
-                break
-            ###
 
     except:
         LOG.exception('An exception occurred.')
