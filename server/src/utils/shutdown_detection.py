@@ -41,7 +41,9 @@ def start_poll():
     global THREAD_STARTED
 
     if not THREAD_STARTED:
-        threading.Thread(target=shutdown_signal_poll).start()
+        thread = threading.Thread(target=shutdown_signal_poll)
+        thread.daemon = True
+        thread.start()
         THREAD_STARTED = True
 
 
