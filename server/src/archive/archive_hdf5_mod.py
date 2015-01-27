@@ -501,9 +501,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 try:
                     for line in f:
 
-                        if shutdown() is True:
-                            raise SystemExit
-
                         line_number += 1
 
                         if line.startswith(" ####### "):

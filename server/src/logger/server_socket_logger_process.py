@@ -305,6 +305,8 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, sigint_handler)
 
     # Start a thread to do background management tasks
-    Thread(target=background_management).start()
+    thread = Thread(target=background_management)
+    thread.daemon = True
+    thread.start()
 
     main()

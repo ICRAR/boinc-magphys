@@ -41,7 +41,9 @@ def start_poll():
     global THREAD_STARTED
 
     if not THREAD_STARTED:
-        threading.Thread(target=shutdown_signal_poll).start()
+        thread = threading.Thread(target=shutdown_signal_poll)
+        thread.daemon = True
+        thread.start()
         THREAD_STARTED = True
 
 
@@ -74,6 +76,10 @@ def shutdown_signal_poll():
                 SHUTDOWN_SIGNAL = True
                 break
 
+        if check_stop_trigger() is True:
+            SHUTDOWN_SIGNAL = True
+            break
+
         time.sleep(5)
 
     conn.close()
@@ -83,17 +89,17 @@ def shutdown_signal_poll():
 
 def check_stop_trigger():
     """
-    For fits2wu. Checks whether a stop trigger is present and closes at a good time
+    Checks whether a stop trigger is present and closes at a good time
     if one is.
     """
 
     try:
         junk = open(boinc_project_path.project_path('stop_daemons'), 'r')
+        return True
     except IOError:
         if CAUGHT_SIGINT:
-            sys.exit(1)
-    else:
-        sys.exit(1)
+            return True
+    return False
 
 
 def sigint_handler():

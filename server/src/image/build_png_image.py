@@ -69,16 +69,4 @@ else:
     else:
         LOG.error('Failed to pass sanity tests')
 
-    ec2_helper = EC2Helper()
-    ec2_helper.print_log()
-    ec2_helper.release_public_ip()
-
-    ### DEBUG DEBUG
-    LOG.info('We are now past the release public ip. I will sit in a loop for 5 mins')
-    i = 0
-    while(i < 5):
-        time.sleep(60)
-        i += 1
-    ###
-
 LOG.info('All done.')
