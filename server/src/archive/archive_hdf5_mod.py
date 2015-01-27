@@ -39,6 +39,7 @@ from config import MIN_HIST_VALUE, ARCHIVED, PROCESSED, HDF5_OUTPUT_DIRECTORY, P
 from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT, PARAMETER_NAME, GALAXY
 from utils.name_builder import get_files_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
+from utils.shutdown_detection import shutdown
 
 LOG = config_logger(__name__)
 
@@ -451,6 +452,10 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
     for block_x in get_chunks(dimension_x):
         for block_y in get_chunks(dimension_y):
+
+            if shutdown() is True:
+                raise SystemExit
+
             LOG.info('Starting {0} : {1}.'.format(block_x, block_y))
 
             size_x = get_size(block_x, dimension_x)
@@ -464,6 +469,10 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             data_pixel_histograms_grid = group.create_dataset('pixel_histograms_grid_{0}_{1}'.format(block_x, block_y), (size_x, size_y, NUMBER_PARAMETERS), dtype=data_type_block_details, compression='gzip')
 
             for key in keys:
+
+                if shutdown() is True:
+                    raise SystemExit
+
                 if not area_intersects_block(connection, key.key, block_x, block_y, map_areas):
                     LOG.info('Skipping {0}'.format(key.key))
                     continue
@@ -491,6 +500,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 list_filters = []
                 try:
                     for line in f:
+
                         line_number += 1
 
                         if line.startswith(" ####### "):
@@ -744,6 +754,10 @@ def archive_to_hdf5(connection, modulus, remainder):
             galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
 
     for galaxy_id_str in galaxy_ids[:500]:
+
+        if shutdown() is True:
+            raise SystemExit
+
         start_time = time.time()
 
         galaxy_id1 = int(galaxy_id_str)
