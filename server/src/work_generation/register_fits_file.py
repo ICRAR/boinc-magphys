@@ -26,39 +26,38 @@
 """
 Register a FITS file ready to be converted into Work Units
 """
+
+import os, sys
+base_path = os.path.dirname(__file__)
+sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
+
 import argparse
-import sys
-from datetime import datetime
-from sqlalchemy import select
+
 from utils.logging_helper import config_logger
-import os
+
 from sqlalchemy.engine import create_engine
 from config import DB_LOGIN
-from database.database_support_core import REGISTER, TAG_REGISTER, TAG
-from work_generation.register_fits_file_mod import fix_redshift
+
+from work_generation.register_fits_file_mod import fix_redshift, get_data_from_galaxy_txt, \
+    decompress_gz_files, extract_tar_file, find_input_filename, find_sigma_filename, add_to_database, \
+    save_data_to_file, clean_unused_fits
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 parser = argparse.ArgumentParser()
-parser.add_argument('FITS_file', nargs=1, help='the input FITS file containing the galaxy')
-parser.add_argument('redshift', type=float, nargs=1, help='the redshift of the galaxy')
-parser.add_argument('galaxy_name', nargs=1, help='the name of the galaxy')
-parser.add_argument('type', nargs=1, help='the hubble type')
-parser.add_argument('sigma', nargs=1, help='the error in the observations or the file with the per pixel error')
+parser.add_argument('TAR_file', nargs=1, help='the input tar containing the galaxies')
+parser.add_argument('TXT_file', nargs=1, help='the input text file containing galaxy summaries')
 parser.add_argument('priority', type=int, nargs=1, help='the higher the number the higher the priority')
 parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')
 parser.add_argument('tags', nargs='*', help='any tags to be associated with the galaxy')
 
 args = vars(parser.parse_args())
 
-REDSHIFT = args['redshift'][0]
-INPUT_FILE = args['FITS_file'][0]
-GALAXY_NAME = args['galaxy_name'][0]
-GALAXY_TYPE = args['type'][0]
+INPUT_FILE = args['TAR_file'][0]
 PRIORITY = args['priority'][0]
-SIGMA = args['sigma'][0]
 RUN_ID = args['run_id'][0]
+GALAXY_TEXT_FILE = args['TXT_file'][0]
 TAGS = args['tags']
 
 # Make sure the file exists
@@ -66,55 +65,55 @@ if not os.path.isfile(INPUT_FILE):
     LOG.error('The file %s does not exist', INPUT_FILE)
     exit(1)
 
+# Extract all files from the tar file if they are not already extracted
+TAR_EXTRACT_LOCATION = INPUT_FILE[:-4]
+
+extract_tar_file(INPUT_FILE, TAR_EXTRACT_LOCATION)
+
+decompress_gz_files(TAR_EXTRACT_LOCATION)
+
+all_txt_file_data = get_data_from_galaxy_txt(GALAXY_TEXT_FILE)
+
+all_galaxy_data = []
+
+for txt_line_info in all_txt_file_data:
+    single_galaxy_data = dict()
+    single_galaxy_data['name'] = txt_line_info[0]
+
+    input_file = find_input_filename(txt_line_info[0], TAR_EXTRACT_LOCATION)
+    if input_file is None:
+        LOG.error('Galaxy {0} has an input file of None!'.format(single_galaxy_data['name']))
+        continue
+
+    sigma = find_sigma_filename(txt_line_info[0], TAR_EXTRACT_LOCATION)
+    if sigma is None:
+        LOG.error('Galaxy {0} has a sigma file of None!'.format(single_galaxy_data['name']))
+        continue
+
+    gal_type = txt_line_info[4]
+    if gal_type is '':
+        gal_type = 'Unk'
+
+    single_galaxy_data['sigma'] = find_sigma_filename(txt_line_info[0], TAR_EXTRACT_LOCATION)
+    single_galaxy_data['redshift'] = float(fix_redshift(txt_line_info[3]))
+    single_galaxy_data['input_file'] = input_file
+    single_galaxy_data['type'] = gal_type
+    single_galaxy_data['priority'] = PRIORITY
+    single_galaxy_data['run_id'] = RUN_ID
+    single_galaxy_data['tags'] = TAGS
+
+    all_galaxy_data.append(single_galaxy_data)
+
+save_data_to_file(all_galaxy_data, 'GalaxyRun1.txt')
+
+clean_unused_fits(TAR_EXTRACT_LOCATION, all_galaxy_data)
+
 # Connect to the database - the login string is set in the database package
 ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
-transaction = connection.begin()
 
-# If it is a float store it as the sigma otherwise assume it is a string pointing to a file containing the sigmas
-try:
-    sigma = float(SIGMA)
-    sigma_filename = None
-except ValueError:
-    sigma = 0.0
-    sigma_filename = SIGMA
-
-result = connection.execute(REGISTER.insert(),
-                            galaxy_name=GALAXY_NAME,
-                            redshift=REDSHIFT,
-                            galaxy_type=GALAXY_TYPE,
-                            filename=INPUT_FILE,
-                            priority=PRIORITY,
-                            register_time=datetime.now(),
-                            run_id=RUN_ID,
-                            sigma=sigma,
-                            sigma_filename=sigma_filename)
-
-register_id = result.inserted_primary_key[0]
-
-# Get the tag ids
-tag_ids = set()
-for tag_text in TAGS:
-    tag_text = tag_text.strip()
-    if len(tag_text) > 0:
-        tag = connection.execute(select([TAG]).where(TAG.c.tag_text == tag_text)).first()
-        if tag is None:
-            result = connection.execute(TAG.insert(),
-                                        tag_text=tag_text)
-            tag_id = result.inserted_primary_key[0]
-        else:
-            tag_id = tag[TAG.c.tag_id]
-
-        tag_ids.add(tag_id)
-
-# Add the tag ids
-for tag_id in tag_ids:
-    connection.execute(TAG_REGISTER.insert(),
-                       tag_id=tag_id,
-                       register_id=register_id)
-
-transaction.commit()
-
-LOG.info('Registered %s %s %f %s %d %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY, RUN_ID)
-for tag_text in TAGS:
-    LOG.info('Tag: {0}'.format(tag_text))
+for galaxy in all_galaxy_data:
+    try:
+        add_to_database(connection, galaxy)
+    except Exception:
+        LOG.exception('An error occurred adding {0} to the database'.format(galaxy['name']))
