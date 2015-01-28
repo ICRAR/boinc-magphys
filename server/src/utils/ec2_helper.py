@@ -55,6 +55,31 @@ class EC2Helper:
         """
         return self.ec2_connection.get_all_instances(filters={'tag:BOINC': boinc_value})
 
+    def wait_for_running(self, instance):
+        """
+        Waits until the instance specified is actually running.
+        Times out after 10 mins or after several attempts if instance.update() causes an exception
+        :param instance:
+        :return:
+        """
+        timeout_counter = 0
+        instance_status = ''
+        while not instance_status == 'running':
+            try:
+                instance_status = instance.update()
+            except Exception:
+                LOG.exception('Error getting instance status')
+                timeout_counter += 20
+
+            if timeout_counter == 120:
+                LOG.error('Timed out')
+                return False
+
+            LOG.info('Not running yet')
+            time.sleep(5)
+            timeout_counter += 1
+        return True
+
     def run_instance(self, user_data, boinc_value, instance_type, remainder=None):
         """
         Run up an instance
@@ -93,9 +118,8 @@ class EC2Helper:
             LOG.info('No IP addresses available, allocating a VPC public IP address')
             allocation = self.ec2_connection.allocate_address('vpc')
 
-            while not instance.update() == 'running':
-                LOG.info('Not running yet')
-                time.sleep(1)
+            if self.wait_for_running(instance) is False:
+                return False
 
             if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation.allocation_id):
                 LOG.info('Allocated a VPC public IP address')
@@ -118,16 +142,16 @@ class EC2Helper:
 
             if not found_address:
                 LOG.error('The address {0} is not reserved!'.format(ip))
-                return
+                return False
 
-            while not instance.update() == 'running':
-                LOG.info('Not running yet')
-                time.sleep(1)
+            if self.wait_for_running(instance) is False:
+                return
 
             if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
                 LOG.info('Allocated a reserved EC2 ip {0}'.format(ip))
             else:
                 LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
+        return True
 
     def boinc_instance_running(self, boinc_value):
         """
@@ -235,9 +259,8 @@ class EC2Helper:
             LOG.info('No IP addresses available, allocating a VPC public IP address')
             allocation = self.ec2_connection.allocate_address('vpc')
 
-            while not instance.update() == 'running':
-                LOG.info('Not running yet')
-                time.sleep(1)
+            if self.wait_for_running(instance) is False:
+                return False
 
             if self.ec2_connection.associate_address(public_ip=None, instance_id=instance_id, allocation_id=allocation.allocation_id):
                 LOG.info('Allocated a VPC public IP address')
@@ -260,17 +283,16 @@ class EC2Helper:
 
             if not found_address:
                 LOG.error('The address {0} is not reserved!'.format(ip))
-                return
+                return False
 
-            while not instance.update() == 'running':
-                LOG.info('Not running yet')
-                time.sleep(1)
+            if self.wait_for_running(instance) is False:
+                return False
 
             if self.ec2_connection.associate_address(public_ip=None, instance_id=instance.id, allocation_id=allocation_id):
                 LOG.info('Allocated a reserved EC2 ip {0}'.format(ip))
             else:
                 LOG.error('Could not associate the IP {0} to the instance {1}'.format(ip, instance.id))
-
+        return True
 
     def get_cheapest_spot_price(self, instance_type, max_price):
         """
@@ -338,7 +360,7 @@ class EC2Helper:
                 LOG.error("Archiver with no remainder found!")
                 return None
 
-            if remainder >= EC2_IP_ARCHIVE_ADDRESSES.__len__():
+            if remainder >= len(EC2_IP_ARCHIVE_ADDRESSES):
                 LOG.error("There is no IP address assigned to this archiver! {0}".format(remainder))
                 return None
 
