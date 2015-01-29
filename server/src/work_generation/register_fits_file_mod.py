@@ -26,7 +26,7 @@
 Functions used my register
 """
 from decimal import Decimal
-import os, gzip, tarfile
+import os, gzip, tarfile, shutil
 from utils.logging_helper import config_logger
 from datetime import datetime
 from sqlalchemy import select
@@ -211,6 +211,24 @@ def save_data_to_file(galaxies, filename):
             output.write(tag)
             output.write(' ')
         output.write('\n')
+
+
+def move_fits_files(from_location, to_location):
+    """
+    Moves all of the fits files in 'from_location' to 'to_location'
+    :param from_location:
+    :param to_location:
+    :return:
+    """
+    files = os.listdir(from_location)
+
+    for item in files:
+        if item.endswith('.fits'):
+            try:
+                shutil.move(from_location + '/' + item, to_location)
+                LOG.info('Moved {0} to {1}'.format(item, os.path.abspath(to_location)))
+            except Exception:
+                LOG.exception('Could not move file {0} to location {1}'.format(item, to_location))
 
 
 def clean_unused_fits(location, galaxies):
