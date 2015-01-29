@@ -40,7 +40,7 @@ from config import DB_LOGIN
 
 from work_generation.register_fits_file_mod import fix_redshift, get_data_from_galaxy_txt, \
     decompress_gz_files, extract_tar_file, find_input_filename, find_sigma_filename, add_to_database, \
-    save_data_to_file, clean_unused_fits
+    save_data_to_file, clean_unused_fits, move_fits_files
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
@@ -71,6 +71,9 @@ TAR_EXTRACT_LOCATION = INPUT_FILE[:-4]
 extract_tar_file(INPUT_FILE, TAR_EXTRACT_LOCATION)
 
 decompress_gz_files(TAR_EXTRACT_LOCATION)
+
+move_fits_files(TAR_EXTRACT_LOCATION, '..')
+TAR_EXTRACT_LOCATION = '.'
 
 all_txt_file_data = get_data_from_galaxy_txt(GALAXY_TEXT_FILE)
 
@@ -117,3 +120,5 @@ for galaxy in all_galaxy_data:
         add_to_database(connection, galaxy)
     except Exception:
         LOG.exception('An error occurred adding {0} to the database'.format(galaxy['name']))
+
+connection.close()
