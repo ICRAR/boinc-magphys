@@ -109,6 +109,7 @@ for txt_line_info in all_txt_file_data:
     sigma = find_sigma_filename(txt_line_info[0], WORKING_DIRECTORY)
     if sigma is None:
         LOG.error('Galaxy {0} has a sigma file of None!'.format(single_galaxy_data['name']))
+        sigma = 0.1
         num_galaxies_without_sigma += 1
 
 
