@@ -27,7 +27,7 @@
 Register a FITS file ready to be converted into Work Units
 """
 
-import os, sys
+import os, sys, shutil
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
@@ -88,7 +88,7 @@ clean_unused_fits(TAR_EXTRACT_LOCATION, all_txt_file_data)
 
 move_fits_files(TAR_EXTRACT_LOCATION, WORKING_DIRECTORY)
 
-os.remove(TAR_EXTRACT_LOCATION)
+shutil.rmtree(TAR_EXTRACT_LOCATION)
 
 all_galaxy_data = []
 

@@ -225,6 +225,8 @@ def move_fits_files(from_location, to_location):
     for item in files:
         if item.endswith('.fits'):
             try:
+                if os.path.exists(to_location + '/' + file):
+                    os.remove(to_location + '/' + file)
                 shutil.move(from_location + '/' + item, to_location)
                 LOG.info('Moved {0} to {1}'.format(item, os.path.abspath(to_location)))
             except Exception:
