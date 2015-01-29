@@ -36,8 +36,8 @@ import argparse, time
 from utils.logging_helper import config_logger
 
 from sqlalchemy.engine import create_engine
-#from config import DB_LOGIN
-DB_LOGIN = 'sqlite:////home/ict310/Desktop/register_fits_file.db'
+from config import DB_LOGIN
+#DB_LOGIN = 'sqlite:////home/ict310/Desktop/register_fits_file.db'
 
 from work_generation.register_fits_file_mod import fix_redshift, get_data_from_galaxy_txt, \
     decompress_gz_files, extract_tar_file, find_input_filename, find_sigma_filename, add_to_database, \
