@@ -287,6 +287,7 @@ def add_to_database(connection, galaxy):
     SIGMA = galaxy['sigma']
     TAGS = galaxy['tags']
     transaction = connection.begin()
+
     try:
         sigma = float(SIGMA)
         sigma_filename = None
