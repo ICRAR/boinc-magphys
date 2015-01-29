@@ -31,7 +31,7 @@ import os, sys
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
-import argparse
+import argparse, time
 
 from utils.logging_helper import config_logger
 
@@ -46,6 +46,7 @@ LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 parser = argparse.ArgumentParser()
+parser.add_argument('working_directory', nargs=1, help='galaxies directory')
 parser.add_argument('TAR_file', nargs=1, help='the input tar containing the galaxies')
 parser.add_argument('TXT_file', nargs=1, help='the input text file containing galaxy summaries')
 parser.add_argument('priority', type=int, nargs=1, help='the higher the number the higher the priority')
@@ -53,7 +54,7 @@ parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')
 parser.add_argument('tags', nargs='*', help='any tags to be associated with the galaxy')
 
 args = vars(parser.parse_args())
-
+WORKING_DIRECTORY = args['working_directory'][0]
 INPUT_FILE = args['TAR_file'][0]
 PRIORITY = args['priority'][0]
 RUN_ID = args['run_id'][0]
@@ -65,17 +66,27 @@ if not os.path.isfile(INPUT_FILE):
     LOG.error('The file %s does not exist', INPUT_FILE)
     exit(1)
 
+if not WORKING_DIRECTORY.endswith('/'):
+    WORKING_DIRECTORY += '/'
+
 # Extract all files from the tar file if they are not already extracted
-TAR_EXTRACT_LOCATION = INPUT_FILE[:-4]
+(head, tail) = os.path.split(INPUT_FILE)
+
+TAR_EXTRACT_LOCATION = WORKING_DIRECTORY + os.path.splitext(tail)[0]
+LOG.info('Working Directory: {0}'.format(WORKING_DIRECTORY))
+LOG.info('TAR Extract Location: {0}'.format(TAR_EXTRACT_LOCATION))
+time.sleep(5)
 
 extract_tar_file(INPUT_FILE, TAR_EXTRACT_LOCATION)
 
 decompress_gz_files(TAR_EXTRACT_LOCATION)
 
-move_fits_files(TAR_EXTRACT_LOCATION, '..')
-TAR_EXTRACT_LOCATION = '.'
-
 all_txt_file_data = get_data_from_galaxy_txt(GALAXY_TEXT_FILE)
+
+clean_unused_fits(TAR_EXTRACT_LOCATION, all_txt_file_data)
+
+move_fits_files(TAR_EXTRACT_LOCATION, os.path.abspath(TAR_EXTRACT_LOCATION + '/..'))
+TAR_EXTRACT_LOCATION = os.path.abspath(TAR_EXTRACT_LOCATION + '/..')
 
 all_galaxy_data = []
 
@@ -108,8 +119,6 @@ for txt_line_info in all_txt_file_data:
     all_galaxy_data.append(single_galaxy_data)
 
 save_data_to_file(all_galaxy_data, 'GalaxyRun1.txt')
-
-clean_unused_fits(TAR_EXTRACT_LOCATION, all_galaxy_data)
 
 # Connect to the database - the login string is set in the database package
 ENGINE = create_engine(DB_LOGIN)
