@@ -96,6 +96,7 @@ def decompress_gz_files(location):
     :param location:
     :return:
     """
+    num_files_decompressed = 0
     files = os.listdir(location)
     LOG.info('Decompressing now...')
     
@@ -121,6 +122,9 @@ def decompress_gz_files(location):
                 compressed.close()
                 decompressed.close()
                 os.remove(f)
+                num_files_decompressed += 1
+
+    return num_files_decompressed
 
 
 def extract_tar_file(tar_file, location):
@@ -130,10 +134,10 @@ def extract_tar_file(tar_file, location):
     :param location:
     :return:
     """
-    LOG.info('Tar Extract Location {0}'.format(location))
+    num_files_extracted = 0
     galaxy_archive = tarfile.open(tar_file, 'r')
     
-    LOG.info('{0} total galaxies to extract'.format(len(galaxy_archive.getnames())))
+    LOG.info('{0} total files (approx {1} galaxies) to extract'.format(len(galaxy_archive.getnames()), len(galaxy_archive.getnames())/2))
     LOG.info('Extracting now...')
     
     if os.path.isdir(location):
@@ -147,6 +151,10 @@ def extract_tar_file(tar_file, location):
         else:
             galaxy_archive.extract(f, location)
             LOG.info('Extracting...{0}'.format(f.name))
+            num_files_extracted += 1
+
+    return num_files_extracted
+
 
 
 def find_input_filename(galaxy_name, location):
@@ -254,12 +262,13 @@ def clean_unused_fits(location, galaxies):
             if item.endswith('.fits'):
                 files_to_delete.append(item)
 
-    LOG.info('The following fits files do not have entries in the txt file. Deleting...')
-    output = open('output.txt', 'w')
-    for item in files_to_delete:
-        LOG.info('Deleting {0}'.format(item))
-        output.write('Deleting {0}\n'.format(item))
-        os.remove(location + '/' + item)
+    if len(files_to_delete) > 0:
+        LOG.info('The following fits files do not have entries in the txt file. Deleting...')
+        for item in files_to_delete:
+            LOG.info('Deleting {0}'.format(item))
+            os.remove(location + '/' + item)
+
+    return len(files_to_delete)
 
 
 def add_to_database(connection, galaxy):
@@ -277,7 +286,6 @@ def add_to_database(connection, galaxy):
     RUN_ID = galaxy['run_id']
     SIGMA = galaxy['sigma']
     TAGS = galaxy['tags']
-    LOG.info(RUN_ID)
     transaction = connection.begin()
     try:
         sigma = float(SIGMA)
