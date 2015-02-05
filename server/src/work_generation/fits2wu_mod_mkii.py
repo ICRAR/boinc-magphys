@@ -34,7 +34,7 @@ import json
 import shutil
 import math
 import pyfits
-#import py_boinc
+import py_boinc
 import subprocess
 import multiprocessing
 
@@ -42,24 +42,19 @@ import time
 
 from datetime import datetime
 from sqlalchemy.sql.expression import select, func
-#from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
+from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 #from image.fitsimage import FitsImage
 #from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
 #from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
-WG_MIN_PIXELS_PER_FILE = 21
-WG_ROW_HEIGHT = 5
-POGS_BOINC_PROJECT_ROOT = '.'
-WG_REPORT_DEADLINE = 1
 
 OLD_WAY = False
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = POGS_BOINC_PROJECT_ROOT + '/bin'
 TEMPLATES_PATH1 = 'templates'                                          # In true BOINC style, this is magically relative to the project root
-#TEMPLATES_PATH2 = '/home/ec2-user/boinc-magphys/server/runs'           # Where the Server file & model files are
-TEMPLATES_PATH2 = '/home/ict310/boinc-magphys_rep/boinc-magphys/server/runs'
+TEMPLATES_PATH2 = '/home/ec2-user/boinc-magphys/server/runs'           # Where the Server file & model files are
 MIN_QUORUM = 2                                                         # Validator run when there are at least this many results for a work unit
 TARGET_NRESULTS = MIN_QUORUM                                           # Initially create this many instances of a work unit
 DELAY_BOUND = 86400 * WG_REPORT_DEADLINE                               # Clients must report results within WG_REPORT_DEADLINE days
@@ -376,11 +371,8 @@ class Fit2Wu:
         LOG.info('Committing all pending data to BOINC database')
         start = time.time()
         for query in self._boinc_insert_queue:
-            LOG.info('Adding {0} to boinc database...'.format(query.wu_name))
-            time.sleep(0.1)
 
-            """
-            pyboinc.boinc_db_transaction_start()
+            py_boinc.boinc_db_transaction_start()
             retval = py_boinc.boinc_create_work(app_name=query.app_name,
                                                 min_quorom=query.min_quorom,
                                                 max_success_results=query.max_success_results,
@@ -398,12 +390,11 @@ class Fit2Wu:
                                                 priority=query.priority,
                                                 list_input_files=query.list_input_files)
             if retval != 0:
-                pyboinc.boinc_db_transaction_rollback()
+                py_boinc.boinc_db_transaction_rollback()
                 LOG.error('Error writing to boinc database. boinc_create_work return value = {0}'.format(retval))
                 return
             else:
-                pyboinc.boinc_db_transaction_commit()
-            """
+                py_boinc.boinc_db_transaction_commit()
 
         # Used to calculate the final average time spent in the boinc db
         self._boinc_db_access_time.append(time.time() - start)

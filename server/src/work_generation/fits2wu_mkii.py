@@ -36,15 +36,15 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 import argparse
-#import py_boinc
+import py_boinc
 import signal
-#from Boinc import configxml
+from Boinc import configxml
 from datetime import datetime
 from utils.logging_helper import config_logger
 from utils.shutdown_detection import sigint_handler, check_stop_trigger
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import func, select
-#from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
+from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import REGISTER, TAG_REGISTER
 from work_generation.fits2wu_mod_mkii import Fit2Wu, MIN_QUORUM
@@ -60,15 +60,11 @@ parser.add_argument('-l', '--limit', type=int, help='only generate N workunits f
 args = vars(parser.parse_args())
 
 # select count(*) from result where server_state = 2
-"""
 ENGINE = create_engine(BOINC_DB_LOGIN)
 connection = ENGINE.connect()
 count = connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()[0]
 connection.close()
-"""
-WG_THRESHOLD = 1
-count = 0
-WG_HIGH_WATER_MARK = 10000
+
 LOG.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
 
 LIMIT = None
@@ -76,10 +72,10 @@ if args['limit'] is not None:
     LIMIT = args['limit']
 
 # The BOINC scripts/apps do not feel at home outside their directory
-# os.chdir(POGS_BOINC_PROJECT_ROOT)
+os.chdir(POGS_BOINC_PROJECT_ROOT)
 
 # Connect to the database - the login string is set in the database package
-ENGINE = create_engine('sqlite:////home/ict310/Desktop/register_fits_file.db')
+ENGINE = create_engine(DB_LOGIN)
 connection = ENGINE.connect()
 
 if count is not None and count >= WG_THRESHOLD:
@@ -87,11 +83,9 @@ if count is not None and count >= WG_THRESHOLD:
 
 else:
     # Get the BOINC downloads and fanout values
-    # boinc_config = configxml.ConfigFile().read()
-    # download_dir = boinc_config.config.download_dir
-    # fanout = long(boinc_config.config.uldl_dir_fanout)
-    download_dir = '/media/ict310/e1b54023-d95c-4cb5-8c47-e1216b8cc910'
-    fanout = 1024
+    boinc_config = configxml.ConfigFile().read()
+    download_dir = boinc_config.config.download_dir
+    fanout = long(boinc_config.config.uldl_dir_fanout)
     LOG.info("download_dir: %s, fanout: %d", download_dir, fanout)
     total_db_time = 0
     areaave = []
@@ -100,7 +94,7 @@ else:
 
     # Open the BOINC DB
     LOG.info("Opening BOINC DB")
-    return_value = 0 #py_boinc.boinc_db_open()
+    return_value = py_boinc.boinc_db_open()
     if return_value != 0:
         LOG.error('Could not open BOINC DB return code: %d', return_value)
 
@@ -121,7 +115,6 @@ else:
                 break
             else:
                 # As the load work unit component adds data to the data base we need autocommit on to ensure each pixel matches
-                #transaction = connection.begin()
                 if not os.path.isfile(registration[REGISTER.c.filename]):
                     LOG.error('The file %s does not exist', registration[REGISTER.c.filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
@@ -164,11 +157,9 @@ else:
         LOG.info('Done - added %d Results', total_work_units_added)
 
     # Closing BOINC DB
-    """
     if return_value == 0:
         LOG.info('Closing BOINC DB')
         return_value = py_boinc.boinc_db_close()
-        """
 
 
 # Log how many are left in the queue
