@@ -225,15 +225,8 @@ class Fit2Wu:
         if self._galaxy_id is None:
             self._galaxy_id = 0
 
-        found = False
-        other_galaxies = self._connection.execute(select([GALAXY.c.name]))
-        for gal in other_galaxies:
-            if gal[0] == self._galaxy_name:
-                found = True
-
-        if not found:
-            self._galaxy_id += 1
-            self._database_insert_queue.append(GALAXY.insert().values(name=self._galaxy_name,
+        self._galaxy_id += 1
+        self._database_insert_queue.append(GALAXY.insert().values(name=self._galaxy_name,
                                                                     dimension_x=self._end_x,
                                                                     dimension_y=self._end_y,
                                                                     dimension_z=self._layer_count,
