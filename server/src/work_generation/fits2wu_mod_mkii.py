@@ -224,27 +224,45 @@ class Fit2Wu:
         self._galaxy_id = self._connection.execute(select([func.max(GALAXY.c.galaxy_id)])).first()[0]
         if self._galaxy_id is None:
             self._galaxy_id = 0
+
+        found = False
         other_galaxies = self._connection.execute(select([GALAXY.c.name]))
         for gal in other_galaxies:
             if gal[0] == self._galaxy_name:
+                found = True
                 self._galaxy_id = self._connection.execute(select([GALAXY.c.galaxy_id]).where(GALAXY.c.name == self._galaxy_name)).first()[0]
-
-        self._galaxy_id += 1
-        self._database_insert_queue.append(GALAXY.insert().values(name=self._galaxy_name,
-                                                                dimension_x=self._end_x,
-                                                                dimension_y=self._end_y,
-                                                                dimension_z=self._layer_count,
-                                                                redshift=self._redshift,
-                                                                sigma=self._sigma,
-                                                                create_time=datetime_now,
-                                                                image_time=datetime_now,
-                                                                galaxy_type=self._galaxy_type,
-                                                                ra_cent=0,
-                                                                dec_cent=0,
-                                                                pixel_count=0,
-                                                                pixels_processed=0,
-                                                                run_id=self._run_id,
-                                                                galaxy_id=self._galaxy_id))
+                self._database_insert_queue.append(GALAXY.update().values(name=self._galaxy_name,
+                                                                          dimension_x=self._end_x,
+                                                                          dimension_y=self._end_y,
+                                                                          dimension_z=self._layer_count,
+                                                                          redshift=self._redshift,
+                                                                          sigma=self._sigma,
+                                                                          create_time=datetime_now,
+                                                                          image_time=datetime_now,
+                                                                          galaxy_type=self._galaxy_type,
+                                                                          ra_cent=0,
+                                                                          dec_cent=0,
+                                                                          pixel_count=0,
+                                                                          pixels_processed=0,
+                                                                          run_id=self._run_id,
+                                                                          galaxy_id=self._galaxy_id))
+        if not found:
+            self._galaxy_id += 1
+            self._database_insert_queue.append(GALAXY.insert().values(name=self._galaxy_name,
+                                                                    dimension_x=self._end_x,
+                                                                    dimension_y=self._end_y,
+                                                                    dimension_z=self._layer_count,
+                                                                    redshift=self._redshift,
+                                                                    sigma=self._sigma,
+                                                                    create_time=datetime_now,
+                                                                    image_time=datetime_now,
+                                                                    galaxy_type=self._galaxy_type,
+                                                                    ra_cent=0,
+                                                                    dec_cent=0,
+                                                                    pixel_count=0,
+                                                                    pixels_processed=0,
+                                                                    run_id=self._run_id,
+                                                                    galaxy_id=self._galaxy_id))
 
         # Area and Pixel PKs are needed multiple times.
         self._areaPK = self._connection.execute(select([func.max(AREA.c.area_id)])).first()[0]
