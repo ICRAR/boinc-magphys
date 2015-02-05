@@ -224,6 +224,10 @@ class Fit2Wu:
         self._galaxy_id = self._connection.execute(select([func.max(GALAXY.c.galaxy_id)])).first()[0]
         if self._galaxy_id is None:
             self._galaxy_id = 0
+        other_galaxies = self._connection.execute(select([GALAXY.c.name]))
+        for gal in other_galaxies:
+            if gal[0] == self._galaxy_name:
+                self._galaxy_id = self._connection.execute(select([GALAXY.c.galaxy_id]).where(GALAXY.c.name == self._galaxy_name)).first()[0]
 
         self._galaxy_id += 1
         self._database_insert_queue.append(GALAXY.insert().values(name=self._galaxy_name,
