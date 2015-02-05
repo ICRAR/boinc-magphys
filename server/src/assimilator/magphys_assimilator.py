@@ -37,7 +37,9 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 
 import time
 import assimilator
-import gzip, traceback, datetime
+import gzip
+import traceback
+import datetime
 from Boinc import boinc_db
 from utils.logging_helper import config_logger
 from assimilator_utils import is_gzip
@@ -194,7 +196,7 @@ class MagphysAssimilator(assimilator.Assimilator):
             f.close()
         if self._pxresult_id is not None:
             self._save_results(connection, map_pixel_results)
-            #self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
+            # self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
         return result_count
 
     def assimilate_handler(self, wu, results, canonical_result):
