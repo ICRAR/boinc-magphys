@@ -173,7 +173,7 @@ class Fit2Wu:
         self._db_access_time = []
         self._boinc_db_access_time = []
         self._pixels_processed = 0
-    @profile
+    #@profile
     def process_file(self, registration):
         """
         Process a registration.
@@ -332,7 +332,7 @@ class Fit2Wu:
         self._database_insert_queue = []
         self._boinc_insert_queue = []
 
-    @profile
+    #@profile
     def _break_up_galaxy(self):
         """
         Break up the galaxy into small pieces
@@ -509,7 +509,7 @@ class Fit2Wu:
             zlib_file = open(new_full_path, 'wb')
             zlib_file.write(' 1  {0}'.format(self._rounded_redshift))
             zlib_file.close()
-    @profile
+    #@profile
     def _create_areas(self, pix_y):
         """
         Create a area - we try to make them squares, but they aren't as the images have dead zones
@@ -612,7 +612,7 @@ class Fit2Wu:
             outfile.write('\n')
             row_num += 1
         outfile.close()
-    @profile
+    #@profile
     def _create_output_file(self, area, pixels):
         """
         Write an output file for this area
