@@ -44,14 +44,17 @@ import cPickle
 import logging
 import logging.handlers
 import signal
-from Boinc import boinc_project_path
+#from Boinc import boinc_project_path
 from threading import Thread
 from multiprocessing import Process
 import time
-from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
+#from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
 
-STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
+LOGGER_SERVER_PORT = 9020
+LOGGER_LOG_DIRECTORY = '.'
+LOGGER_MAX_CONNECTION_REQUESTS = 10
+STOP_TRIGGER_FILENAME = 'stop'#boinc_project_path.project_path('stop_daemons')
 
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
 child_list = list()
@@ -164,6 +167,7 @@ def main():
         except SystemExit:  # sys.exit(0) is called by the maintenance thread.
             # Maintenance Thread has notified us that it's time to shut down
             server_log.info('Shutdown flag identified, shutting down...')
+            server_socket.close()
             sys.exit(0)
 
 
@@ -194,6 +198,7 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
             
             if len(chunk) < 4:
                 server_log.info('Connection terminated normally')
+                c_socket.close()
                 exit(0)
 
             # This chunk of code extracts a log record from the received data and places it into record
@@ -225,10 +230,12 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
 
         except IOError:
             server_log.error('Connection closed in an unexpected way.')
+            c_socket.close()
             exit(0)
 
         except timeout:
             server_log.error('Connection timed out {0}'.format(c_socket.getpeername))
+            c_socket.close()
             exit(0)
 
 
@@ -263,6 +270,7 @@ def sigint_handler(self, sig):
     but waits to exit until background_management checks this flag
     """
     server_log.info('Caught sigint')
+
 
     global caught_sig_int
     caught_sig_int = True
@@ -303,6 +311,7 @@ def background_management():
 if __name__ == "__main__":
     # Install sigint handler
     signal.signal(signal.SIGINT, sigint_handler)
+    signal.signal(signal.SIGHUP, sigint_handler)
 
     # Start a thread to do background management tasks
     thread = Thread(target=background_management)
