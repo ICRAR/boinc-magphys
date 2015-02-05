@@ -193,7 +193,6 @@ int create_work(char* app_name,
     if (dl ==4) g_print_queries = true;
 
     sprintf(buf, "where name='%s'", app.name);
-    fprintf(stderr, buf);
     retval = app.lookup(buf);
     if (retval) {
         fprintf(stderr, "create_work: app not found\n");
