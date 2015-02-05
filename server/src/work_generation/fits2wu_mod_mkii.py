@@ -103,21 +103,21 @@ class PyBoincWu:
                  wu_template, result_template, rsc_fpops_est, rsc_fpops_bound, rsc_memory_bound,
                  rsc_disk_bound, additional_xml, opaque, priority, list_input_files):
 
-        self.app_name = app_name,
-        self.min_quorom = min_quorom,
-        self.max_success_results = max_success_results,
-        self.delay_bound = delay_bound,
-        self.target_nresults = target_nresults,
-        self.wu_name = wu_name,
-        self.wu_template = wu_template,
-        self.result_template = result_template,
-        self.rsc_fpops_est = rsc_fpops_est,
-        self.rsc_fpops_bound = rsc_fpops_bound,
-        self.rsc_memory_bound = rsc_memory_bound,
-        self.rsc_disk_bound = rsc_disk_bound,
-        self.additional_xml = additional_xml,
-        self.opaque = opaque,
-        self.priority = priority,
+        self.app_name = app_name
+        self.min_quorom = min_quorom
+        self.max_success_results = max_success_results
+        self.delay_bound = delay_bound
+        self.target_nresults = target_nresults
+        self.wu_name = wu_name
+        self.wu_template = wu_template
+        self.result_template = result_template
+        self.rsc_fpops_est = rsc_fpops_est
+        self.rsc_fpops_bound = rsc_fpops_bound
+        self.rsc_memory_bound = rsc_memory_bound
+        self.rsc_disk_bound = rsc_disk_bound
+        self.additional_xml = additional_xml
+        self.opaque = opaque
+        self.priority = priority
         self.list_input_files = list_input_files
 
 
