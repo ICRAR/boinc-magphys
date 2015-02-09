@@ -59,7 +59,7 @@ STOP_TRIGGER_FILENAME = 'stop'#boinc_project_path.project_path('stop_daemons')
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
 child_list = list()
 
-# Set to true when a SIGINT is caught
+# Set to true when a SIGINT OR SIGHUP is caught
 caught_sig_int = False
 
 # Local logger for server logs
@@ -210,7 +210,11 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
 
             obj = cPickle.loads(chunk)
 
-            file_name = obj['filename']
+            try:
+                file_name = obj['filename']
+            except KeyError:
+                server_log.error('Client connected with no filename to write to!')
+                file_name = 'NO_FILE_NAME'
 
             record = logging.makeLogRecord(obj)
 
@@ -222,7 +226,7 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
                 logger.addHandler(file_handler)
                 file_open = 1
 
-                stdouthandle = logging.getLogger().handlers.__getitem__(0)
+                stdouthandle = logging.getLogger().handlers[0]
                 stdouthandle.setFormatter(formatter)
             else:
                 # Finally, handle the record by printing it to the file specified
@@ -266,11 +270,10 @@ def child_reclaim():
 
 def sigint_handler(self, sig):
     """
-    This method handles the SIGINT signal. It sets a flag
+    This method handles the SIGINT and SIGHUP signal. It sets a flag
     but waits to exit until background_management checks this flag
     """
-    server_log.info('Caught sigint')
-
+    server_log.info('Caught shutdown signal')
 
     global caught_sig_int
     caught_sig_int = True
@@ -287,14 +290,13 @@ def background_management():
         heartbeat += 1
 
         if heartbeat == 60:
-            server_log.info("Server is active with {0} current connection(s)".format(child_list.__len__()))
+            server_log.info("Server is active with {0} current connection(s)".format(len(child_list)))
             heartbeat = 0
 
         child_reclaim()
 
         if os.path.exists(STOP_TRIGGER_FILENAME):
             server_log.info("Shutdown file identified\n")
-            signal.alarm(1)  # This is required to interrupt the socket.accept() call and force processing of the exit exception
             for i in child_list:  # Kill all child processes that have not been claimed by child_reclaim()
                 i.terminate()
             sys.exit(0)

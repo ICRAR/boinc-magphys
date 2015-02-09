@@ -166,13 +166,16 @@ class Fit2Wu:
         self._infrared_bands = {}
 
         ### New variables for bulk database inserts ###
-        self._areaPK = None
-        self._pixelPK = None
-        self._database_insert_queue = []
-        self._boinc_insert_queue = []
-        self._db_access_time = []
-        self._boinc_db_access_time = []
-        self._pixels_processed = 0
+        self._areaPK = None  # Primary Key to use when inserting area into db. Increment BEFORE use
+        self._pixelPK = None  # Primary Key to use when inserting pixel into db. Increment BEFORE use
+        self._database_insert_queue = []  # List of inserts for database, should be executable by sqlalchemy
+        self._boinc_insert_queue = []  # List of PyBoincWu objects, each representing one insert into the boinc db
+        self._pixels_processed = 0  # Number of pixels processed since last database insert
+
+        ### Variables for calculating database average and total access time ###
+        self._db_access_time = []  # List of each db access time. Can be totalled and averaged.
+        self._boinc_db_access_time = []  # List of each boinc db access time. Can be totalled and averaged
+
     @profile
     def process_file(self, registration):
         """
@@ -222,6 +225,7 @@ class Fit2Wu:
         datetime_now = datetime.now()
         # Galaxy ID is only needed once
         self._galaxy_id = self._connection.execute(select([func.max(GALAXY.c.galaxy_id)])).first()[0]
+
         if self._galaxy_id is None:
             self._galaxy_id = 0
 
@@ -252,10 +256,6 @@ class Fit2Wu:
 
         if self._pixelPK is None:
             self._pixelPK = 0
-
-        if self._galaxy_id is None or self._areaPK is None or self._pixelPK is None:
-            raise Exception('galaxy_id {0}, area_id {1}, or pxresult_id {2} is None!'
-                            .format(self._galaxy_id, self._areaPK, self._pixelPK))
 
         LOG.info("Writing %s to database", self._galaxy_name)
 
@@ -320,6 +320,11 @@ class Fit2Wu:
         return self._work_units_added, self._pixel_count, sum, ave, bsum, bave
 
     def _run_db_tasks_parallel(self):
+        """
+        Runs both the normal DB and boinc DB inserts in parallel
+        **CURRENTLY NOT USED**
+        :return:
+        """
         db_process = multiprocessing.Process(target=self._run_pending_db_tasks)
         boinc_db_process = multiprocessing.Process(target=self._run_pending_boinc_db_tasks)
 
@@ -348,7 +353,7 @@ class Fit2Wu:
         """
         LOG.info('Committing all pending data to database')
         start = time.time()
-        # Perform all database actions now as one bulk insert
+
         transaction = self._connection.begin()
         try:
             for query in self._database_insert_queue:
@@ -400,7 +405,6 @@ class Fit2Wu:
         self._boinc_db_access_time.append(time.time() - start)
         # Reset queue to none.
         self._boinc_insert_queue = []
-
 
     def _build_template_file(self):
         """
@@ -561,7 +565,6 @@ class Fit2Wu:
 
             pix_x = max_x + 1
 
-
     def _create_job_xml(self, file_name, pixels_in_file):
         """
         Create the job.xml file
@@ -667,21 +670,21 @@ class Fit2Wu:
 
         else:
             entry = PyBoincWu(app_name=APP_NAME,
-                                min_quorom=MIN_QUORUM,
-                                max_success_results=4,
-                                delay_bound=DELAY_BOUND,
-                                target_nresults=TARGET_NRESULTS,
-                                wu_name=work_unit_name,
-                                wu_template=self._template_file,
-                                result_template=TEMPLATES_PATH1 + "/fitsed_result.xml",
-                                rsc_fpops_est=self._fpops_est_per_pixel * pixels_in_area * 1e12,
-                                rsc_fpops_bound=self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area * 1e12,
-                                rsc_memory_bound=1e8,
-                                rsc_disk_bound=1e8,
-                                additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
-                                opaque=area.area_id,
-                                priority=self._priority,
-                                list_input_files=args_files)
+                              min_quorom=MIN_QUORUM,
+                              max_success_results=4,
+                              delay_bound=DELAY_BOUND,
+                              target_nresults=TARGET_NRESULTS,
+                              wu_name=work_unit_name,
+                              wu_template=self._template_file,
+                              result_template=TEMPLATES_PATH1 + "/fitsed_result.xml",
+                              rsc_fpops_est=self._fpops_est_per_pixel * pixels_in_area * 1e12,
+                              rsc_fpops_bound=self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area * 1e12,
+                              rsc_memory_bound=1e8,
+                              rsc_disk_bound=1e8,
+                              additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
+                              opaque=area.area_id,
+                              priority=self._priority,
+                              list_input_files=args_files)
             self._boinc_insert_queue.append(entry)
 
     def _enough_layers(self, pixels):
