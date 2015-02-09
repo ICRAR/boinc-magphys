@@ -56,7 +56,7 @@ def old():
                            .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
 
         sleepytime = random.randrange(8, 14, 1)
-        time.sleep(sleepytime/10)
+        time.sleep(sleepytime/10.0)
 
         area = random.randrange(5, 60, 1)
         wu_id = random.randrange(5, 60, 1)
