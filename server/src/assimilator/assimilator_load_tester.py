@@ -55,8 +55,8 @@ def old():
                            .where(AREA.c.area_id == area)
                            .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
 
-        sleepytime = random.randrange(0.8, 1.4, 0.1)
-        time.sleep(sleepytime)
+        sleepytime = random.randrange(8, 14, 1)
+        time.sleep(sleepytime/10)
 
         area = random.randrange(5, 60, 1)
         wu_id = random.randrange(5, 60, 1)
