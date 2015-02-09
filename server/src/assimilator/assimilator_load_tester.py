@@ -121,3 +121,12 @@ def new():
     ave = total/len(db_time)
     print 'Total time: {0}'.format(total)
     print 'Ave per transaction: {0}'.format(ave)
+
+if __name__ == "__main__":
+    selection = raw_input('Which version do you want to test with? (new/old)')
+
+    if selection == 'new':
+        new()
+
+    if selection == 'old':
+        old()
