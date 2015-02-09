@@ -56,6 +56,7 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 ENGINE = create_engine(DB_LOGIN)
 WU_PROCESSED_COMMIT_THRESHOLD = 30
 
+
 class MagphysAssimilator(assimilator.Assimilator):
 
     def __init__(self):
