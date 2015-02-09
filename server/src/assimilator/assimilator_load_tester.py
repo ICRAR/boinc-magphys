@@ -36,33 +36,27 @@ random.seed()
 ENGINE = create_engine(DB_LOGIN)
 
 
-def old():
+def old(iterations):
+    p_start = time.time()
     connection = ENGINE.connect()
     db_time = []
     i = 0
+    a = 0
     while i < 300:
         start = time.time()
         transaction = connection.begin()
-        area = random.randrange(5, 60, 1)
-        wu_id = random.randrange(5, 60, 1)
-        connection.execute(AREA.update()
-                           .where(AREA.c.area_id == area)
-                           .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
 
-        area = random.randrange(5, 60, 1)
-        wu_id = random.randrange(5, 60, 1)
-        connection.execute(AREA.update()
-                           .where(AREA.c.area_id == area)
-                           .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
+        while a < iterations:
+            area = random.randrange(5, 60, 1)
+            wu_id = random.randrange(5, 60, 1)
+            connection.execute(AREA.update()
+                            .where(AREA.c.area_id == area)
+                            .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
+            a += 1
 
         sleepytime = random.randrange(8, 14, 1)
         time.sleep(sleepytime/10.0)
 
-        area = random.randrange(5, 60, 1)
-        wu_id = random.randrange(5, 60, 1)
-        connection.execute(AREA.update()
-                            .where(AREA.c.area_id == area)
-                            .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
         transaction.commit()
         print 'Time in DB {0}'.format(time.time() - start)
         db_time.append(time.time() - start)
@@ -75,35 +69,30 @@ def old():
     ave = total/len(db_time)
     print 'Total time: {0}'.format(total)
     print 'Ave per transaction: {0}'.format(ave)
+    print 'Total program run time: {0}'.format(time.time() - p_start)
 
 
-def new():
+def new(iterations):
+    p_start = time.time()
     connection = ENGINE.connect()
     db_time = []
     i = 0
+    a = 0
 
     while i < 300:
         db_queue = []
-        area = random.randrange(5, 60, 1)
-        wu_id = random.randrange(5, 60, 1)
-        db_queue.append(AREA.update()
-                           .where(AREA.c.area_id == area)
-                           .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
 
-        area = random.randrange(5, 60, 1)
-        wu_id = random.randrange(5, 60, 1)
-        db_queue.append(AREA.update()
-                           .where(AREA.c.area_id == area)
-                           .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
+        while a < iterations:
+            area = random.randrange(5, 60, 1)
+            wu_id = random.randrange(5, 60, 1)
+            db_queue.append(AREA.update()
+                               .where(AREA.c.area_id == area)
+                               .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
+            a += 1
+
 
         sleepytime = random.randrange(8, 14, 1)
         time.sleep(sleepytime/10)
-
-        area = random.randrange(5, 60, 1)
-        wu_id = random.randrange(5, 60, 1)
-        db_queue.append(AREA.update()
-                           .where(AREA.c.area_id == area)
-                           .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
 
         start = time.time()
         transaction = connection.begin()
@@ -113,6 +102,7 @@ def new():
 
         i += 1
         print 'Time in DB {0}'.format(time.time() - start)
+        db_time.append(time.time() - start)
 
     total = 0
     for dbtime in db_time:
@@ -121,12 +111,13 @@ def new():
     ave = total/len(db_time)
     print 'Total time: {0}'.format(total)
     print 'Ave per transaction: {0}'.format(ave)
-
+    print 'Total program run time: {0}'.format(time.time() - p_start)
 if __name__ == "__main__":
     selection = raw_input('Which version do you want to test with? (new/old)')
+    selection2 = raw_input('How many db tasks should be done per transaction?')
 
     if selection == 'new':
-        new()
+        new(int(selection2))
 
     if selection == 'old':
-        old()
+        old(int(selection2))
