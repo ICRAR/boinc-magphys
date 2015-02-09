@@ -92,7 +92,7 @@ def new(iterations):
 
 
         sleepytime = random.randrange(8, 14, 1)
-        time.sleep(sleepytime/10)
+        time.sleep(sleepytime/10.0)
 
         start = time.time()
         transaction = connection.begin()
