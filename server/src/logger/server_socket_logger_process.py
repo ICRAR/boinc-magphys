@@ -44,17 +44,14 @@ import cPickle
 import logging
 import logging.handlers
 import signal
-#from Boinc import boinc_project_path
+from Boinc import boinc_project_path
 from threading import Thread
 from multiprocessing import Process
 import time
-#from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
+from config import LOGGER_SERVER_PORT, LOGGER_LOG_DIRECTORY, LOGGER_MAX_CONNECTION_REQUESTS
 from utils.logging_helper import config_logger
 
-LOGGER_SERVER_PORT = 9020
-LOGGER_LOG_DIRECTORY = '.'
-LOGGER_MAX_CONNECTION_REQUESTS = 10
-STOP_TRIGGER_FILENAME = 'stop'#boinc_project_path.project_path('stop_daemons')
+STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
 child_list = list()
