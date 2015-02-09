@@ -54,8 +54,8 @@ def old(iterations):
                             .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
             a += 1
 
-        sleepytime = random.randrange(8, 14, 1)
-        time.sleep(sleepytime/10.0)
+        sleepytime = random.randrange(80, 140, 1)
+        time.sleep(sleepytime/100.0)
 
         transaction.commit()
         print 'Time in DB {0}'.format(time.time() - start)
@@ -91,8 +91,8 @@ def new(iterations):
             a += 1
 
 
-        sleepytime = random.randrange(8, 14, 1)
-        time.sleep(sleepytime/10.0)
+        sleepytime = random.randrange(80, 140, 1)
+        time.sleep(sleepytime/100.0)
 
         start = time.time()
         transaction = connection.begin()
