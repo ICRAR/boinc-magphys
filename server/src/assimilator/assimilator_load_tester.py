@@ -41,11 +41,11 @@ def old(iterations):
     connection = ENGINE.connect()
     db_time = []
     i = 0
-    a = 0
     while i < 300:
         start = time.time()
         transaction = connection.begin()
 
+        a = 0
         while a < iterations:
             area = random.randrange(5, 60, 1)
             wu_id = random.randrange(5, 60, 1)
@@ -77,11 +77,10 @@ def new(iterations):
     connection = ENGINE.connect()
     db_time = []
     i = 0
-    a = 0
-
     while i < 300:
         db_queue = []
 
+        a = 0
         while a < iterations:
             area = random.randrange(5, 60, 1)
             wu_id = random.randrange(5, 60, 1)
@@ -112,6 +111,7 @@ def new(iterations):
     print 'Total time: {0}'.format(total)
     print 'Ave per transaction: {0}'.format(ave)
     print 'Total program run time: {0}'.format(time.time() - p_start)
+
 if __name__ == "__main__":
     selection = raw_input('Which version do you want to test with? (new/old)')
     selection2 = raw_input('How many db tasks should be done per transaction?')
