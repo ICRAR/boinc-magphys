@@ -115,15 +115,14 @@ def new(iterations):
 def lock(time_p):
     connection = ENGINE.connect()
     transaction = connection.begin()
-
-    area = random.randrange(5, 60, 1)
-    wu_id = random.randrange(5, 60, 1)
-    connection.execute(AREA.update()
-                    .where(AREA.c.area_id == area)
-                    .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
-    connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == wu_id).values(y=600,
-                                                                                               x=787))
-    time.sleep(time_p)
+    while True:
+        area = random.randrange(5, 60, 1)
+        wu_id = random.randrange(5, 60, 1)
+        connection.execute(AREA.update()
+                        .where(AREA.c.area_id == area)
+                        .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
+        connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == wu_id).values(y=600,
+                                                                                                   x=787))
     transaction.rollback()
 
 
