@@ -133,6 +133,7 @@ else:
                         total_work_units_added += (work_units_added * MIN_QUORUM)
                     except Exception:
                         LOG.exception('An error occurred while processing {0}'.format(registration[REGISTER.c.galaxy_name]))
+                        break
                     # One WU = MIN_QUORUM Results
 
                     if os.path.exists(registration[REGISTER.c.filename]):

@@ -121,7 +121,7 @@ def lock(time_p):
         connection.execute(AREA.update()
                         .where(AREA.c.area_id == area)
                         .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
-        connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == wu_id).values(y=600,
+        connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == 6).values(y=6000000000000,
                                                                                                    x=787))
     transaction.rollback()
 
