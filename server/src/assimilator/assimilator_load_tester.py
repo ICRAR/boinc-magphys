@@ -50,8 +50,8 @@ def old(iterations):
             area = random.randrange(5, 60, 1)
             wu_id = random.randrange(5, 60, 1)
             connection.execute(AREA.update()
-                            .where(AREA.c.area_id == area)
-                            .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
+                               .where(AREA.c.area_id == area)
+                               .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
             a += 1
 
         sleepytime = random.randrange(80, 140, 1)
@@ -85,10 +85,9 @@ def new(iterations):
             area = random.randrange(5, 60, 1)
             wu_id = random.randrange(5, 60, 1)
             db_queue.append(AREA.update()
-                               .where(AREA.c.area_id == area)
-                               .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
+                            .where(AREA.c.area_id == area)
+                            .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
             a += 1
-
 
         sleepytime = random.randrange(80, 140, 1)
         time.sleep(sleepytime/100.0)
