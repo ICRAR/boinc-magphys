@@ -111,7 +111,8 @@ def new(iterations):
     print 'Ave per transaction: {0}'.format(ave)
     print 'Total program run time: {0}'.format(time.time() - p_start)
 
-def lock(time):
+
+def lock(time_p):
     connection = ENGINE.connect()
     transaction = connection.begin()
     area = random.randrange(5, 60, 1)
@@ -119,7 +120,7 @@ def lock(time):
     connection.execute(AREA.update()
                     .where(AREA.c.area_id == area)
                     .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
-    time.sleep(time)
+    time.sleep(time_p)
     transaction.rollback()
 
 
