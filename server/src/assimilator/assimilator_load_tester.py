@@ -111,6 +111,18 @@ def new(iterations):
     print 'Ave per transaction: {0}'.format(ave)
     print 'Total program run time: {0}'.format(time.time() - p_start)
 
+def lock(time):
+    connection = ENGINE.connect()
+    transaction = connection.begin()
+    area = random.randrange(5, 60, 1)
+    wu_id = random.randrange(5, 60, 1)
+    connection.execute(AREA.update()
+                    .where(AREA.c.area_id == area)
+                    .values(workunit_id=wu_id, update_time=datetime.datetime.now()))
+    time.sleep(time)
+    transaction.rollback()
+
+
 if __name__ == "__main__":
     selection = raw_input('Which version do you want to test with? (new/old)')
     selection2 = raw_input('How many db tasks should be done per transaction?')
@@ -120,3 +132,6 @@ if __name__ == "__main__":
 
     if selection == 'old':
         old(int(selection2))
+
+    if selection == 'lock':
+        lock(int(selection2))

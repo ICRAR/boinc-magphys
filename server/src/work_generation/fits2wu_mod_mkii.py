@@ -290,7 +290,7 @@ class Fit2Wu:
 
         ave = sum / len(self._db_access_time)
         LOG.info('Total time in DB for this galaxy {0}'.format(sum))
-        LOG.info('Average time in DB for each area {0}'.format(ave))
+        LOG.info('Average time in DB for each transaction {0}'.format(ave))
 
         # ... And the amount of time spent in the boinc db
         bsum = 0
@@ -299,7 +299,7 @@ class Fit2Wu:
 
         bave = bsum / len(self._boinc_db_access_time)
         LOG.info('Total time in BOINC DB for this galaxy {0}'.format(bsum))
-        LOG.info('Average time in BOINC DB for each area {0}'.format(bave))
+        LOG.info('Average time in BOINC DB for each transaction {0}'.format(bave))
 
         LOG.info('Building the images')
         """

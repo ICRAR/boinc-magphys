@@ -130,10 +130,10 @@ else:
                         total_boinc_db_time += bsum
                         areaave.append(ave)
                         areaave_boinc.append(bave)
+                        total_work_units_added += (work_units_added * MIN_QUORUM)
                     except Exception:
                         LOG.exception('An error occurred while processing {0}'.format(registration[REGISTER.c.galaxy_name]))
                     # One WU = MIN_QUORUM Results
-                    total_work_units_added += (work_units_added * MIN_QUORUM)
 
                     if os.path.exists(registration[REGISTER.c.filename]):
                         os.remove(registration[REGISTER.c.filename])
@@ -147,7 +147,7 @@ else:
             asum = 0
             for rtime in areaave:
                 asum += rtime
-            LOG.info('Average time per area: {0}'.format(asum / len(areaave)))
+            LOG.info('Average time per transaction: {0}'.format(asum / len(areaave)))
 
             LOG.info('Total BOINC db time: {0}'.format(total_boinc_db_time))
             asum_boinc = 0
