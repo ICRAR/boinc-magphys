@@ -142,7 +142,7 @@ else:
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
 
-        if len(areaave) > 0
+        if len(areaave) > 0:
             LOG.info('Total db time: {0}'.format(total_db_time))
             asum = 0
             for rtime in areaave:
