@@ -124,6 +124,8 @@ def lock(time_p):
         connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == wu_id).values(y=i,
                                                                                                    x=i))
         i += 1
+        if i > 100000:
+            break
     transaction.rollback()
 
 
