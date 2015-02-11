@@ -270,3 +270,9 @@ TAG_GALAXY = Table('tag_galaxy',
                    Column('galaxy_id', BigInteger, ForeignKey('galaxy.galaxy_id')),
                    Column('created_at', TIMESTAMP, nullable=False),
                    )
+
+USER_PIXEL = Table('user_pixel',
+                   MAGPHYS_METADATA,
+                   Column('userid', BigInteger, primary_key=True),
+                   Column('pixel_count', Integer)
+                   )
