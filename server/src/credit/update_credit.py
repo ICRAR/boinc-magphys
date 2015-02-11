@@ -36,30 +36,75 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 from utils.logging_helper import config_logger
-from config import DB_LOGIN
-from sqlalchemy import create_engine
+#from config import DB_LOGIN
+from sqlalchemy import create_engine, select, func
+from database.database_support_core import USER_PIXEL, AREA_USER, AREA, PIXEL_RESULT
 
 LOG = config_logger(__name__)
+COMMIT_THRESHOLD = 100
+
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
+
+DB_LOGIN = "sqlite:////home/ict310/Desktop/register_fits_file.db"
 
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
+
 trans = connection.begin()
 try:
-    result = connection.execute("delete from user_pixel")
-    print 'Deleted', result.rowcount, 'rows.'
-    result = connection.execute("""
-insert into user_pixel
-select area_user.userid, count(*)
-from     area, area_user, pixel_result pxresult
-where area.area_id = area_user.area_id
-and    pxresult.area_id = area.area_id
-group by area_user.userid
-""")
-    print 'Inserted', result.rowcount, 'rows.'
+    result = connection.execute(USER_PIXEL.delete())
+    LOG.info('Deleted {0} rows.'.format(result.rowcount))
     trans.commit()
-except:
+except Exception:
     trans.rollback()
     raise
+
+# result = connection.execute(
+# insert into user_pixel
+# select area_user.userid, count(*)
+# from     area, area_user, pixel_result pxresult
+# where area.area_id = area_user.area_id
+# and    pxresult.area_id = area.area_id
+# group by area_user.userid)
+
+result = connection.execute(select([AREA_USER.c.userid, func.count()])
+                            .where(AREA.c.area_id == AREA_USER.c.area_id)
+                            .where(PIXEL_RESULT.c.area_id == AREA.c.area_id)
+                            .group_by(AREA_USER.c.userid))
+
+LOG.info(str(select([AREA_USER.c.userid, func.count()])
+             .where(AREA.c.area_id == AREA_USER.c.area_id)
+             .where(PIXEL_RESULT.c.area_id == AREA.c.area_id)
+             .group_by(AREA_USER.c.userid)))
+
+insert_queue = []
+rowcount = 0
+try:
+    for row in result:
+        rowcount += 1
+        if len(insert_queue) > COMMIT_THRESHOLD:
+
+            trans = connection.begin()
+            for item in insert_queue:
+                connection.execute(item)
+            insert_queue = []
+            trans.commit()
+
+        else:
+            insert_queue.append(USER_PIXEL.insert().values(userid=row[0], pixel_count=row[1]))
+
+    # Process any remaining db tasks
+    if len(insert_queue) > 0:
+
+        trans = connection.begin()
+        for item in insert_queue:
+            connection.execute(item)
+        trans.commit()
+
+except Exception:
+    trans.rollback()
+    raise
+
+LOG.info('Inserted {0} rows.'.format(rowcount))
 
 connection.close()
