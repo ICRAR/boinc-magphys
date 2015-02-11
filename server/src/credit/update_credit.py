@@ -36,7 +36,7 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py')))
 
 from utils.logging_helper import config_logger
-#from config import DB_LOGIN
+from config import DB_LOGIN
 from sqlalchemy import create_engine, select, func
 from database.database_support_core import USER_PIXEL, AREA_USER, AREA, PIXEL_RESULT
 
@@ -44,8 +44,6 @@ LOG = config_logger(__name__)
 COMMIT_THRESHOLD = 100
 
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
-
-DB_LOGIN = "sqlite:////home/ict310/Desktop/register_fits_file.db"
 
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
