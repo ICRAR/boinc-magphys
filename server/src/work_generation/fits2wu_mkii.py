@@ -91,6 +91,8 @@ else:
     areaave = []
     total_boinc_db_time = 0
     areaave_boinc = []
+    total_areas = 0
+    total_pixels = 0
 
     # Open the BOINC DB
     LOG.info("Opening BOINC DB")
@@ -125,11 +127,13 @@ else:
                     LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
                     fit2wu = Fit2Wu(connection, download_dir, fanout)
                     try:
-                        (work_units_added, pixel_count, sum, ave, bsum, bave) = fit2wu.process_file(registration)
+                        (work_units_added, pixel_count, sum, ave, bsum, bave, areas, pixels) = fit2wu.process_file(registration)
                         total_db_time += sum
                         total_boinc_db_time += bsum
                         areaave.append(ave)
                         areaave_boinc.append(bave)
+                        total_areas += areas
+                        total_pixels += pixels
                         total_work_units_added += (work_units_added * MIN_QUORUM)
                     except Exception:
                         LOG.exception('An error occurred while processing {0}'.format(registration[REGISTER.c.galaxy_name]))
@@ -143,6 +147,7 @@ else:
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
 
+        LOG.info('Total areas added {0}, pixels added {0}'.format(total_areas, total_pixels))
         if len(areaave) > 0:
             LOG.info('Total db time: {0}'.format(total_db_time))
             asum = 0

@@ -176,6 +176,8 @@ class Fit2Wu:
         self._db_access_time = []  # List of each db access time. Can be totalled and averaged.
         self._boinc_db_access_time = []  # List of each boinc db access time. Can be totalled and averaged
 
+        self._total_pixels = 0
+        self._total_areas = 0
     #@profile
     def process_file(self, registration):
         """
@@ -283,6 +285,8 @@ class Fit2Wu:
             self._run_pending_db_tasks()
             self._run_pending_boinc_db_tasks()
 
+        LOG.info('Total number of areas for this galaxy {0}'.format(self._total_areas))
+        LOG.info('Total number of pixels for this galaxy {0}'.format(self._total_pixels))
         # Now calculate the amount of time spent in the db...
         sum = 0
         for rtime in self._db_access_time:
@@ -317,7 +321,7 @@ class Fit2Wu:
         # Store the pixel count as the last thing to stop the original_image_checker going off
         # too soon for BIG galaxies
         self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
-        return self._work_units_added, self._pixel_count, sum, ave, bsum, bave
+        return self._work_units_added, self._pixel_count, sum, ave, bsum, bave, self._total_areas, self._total_pixels
 
     def _run_db_tasks_parallel(self):
         """
@@ -532,6 +536,7 @@ class Fit2Wu:
                 area.area_id = self._areaPK
 
                 # Enqueue this insert
+                self._total_areas += 1
                 self._database_insert_queue.append(area_insert.values(galaxy_id=self._galaxy_id,
                                                                       top_x=area.top_x,
                                                                       top_y=area.top_y,
@@ -545,6 +550,7 @@ class Fit2Wu:
                     pixel.pixel_id = self._pixelPK
 
                     # Enqueue this insert
+                    self._total_pixels += 1
                     self._database_insert_queue.append(pixel_result_insert.values(galaxy_id=self._galaxy_id,
                                                                                   area_id=area.area_id,
                                                                                   y=pixel.y,
