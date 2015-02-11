@@ -50,6 +50,7 @@ if exists(config_file_name):
     WG_THRESHOLD = int(config['threshold'])
     WG_HIGH_WATER_MARK = int(config['high_water_mark'])
     WG_REPORT_DEADLINE = int(config['report_deadline'])
+    WG_PIXEL_COMMIT_THRESHOLD = int(config['pixel_commit_threshold'])
 
     ############### ARCHIVE Settings ###############
     ARC_DELETE_DELAY = config['delete_delay']

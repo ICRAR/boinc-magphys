@@ -72,7 +72,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
         connection.close()
 
-        self.logNormal('Starting assimilator')
+        self.logNormal('Starting assimilator\n')
 
     def _get_pixel_result(self, connection, pxresult_id):
         """
@@ -207,7 +207,7 @@ class MagphysAssimilator(assimilator.Assimilator):
         :param connection:
         :return:
         """
-        self.logNormal('Committing all pending data to database')
+        self.logNormal('Committing all pending data to database\n')
         start = time.time()
 
         transaction = connection.begin()
@@ -216,12 +216,12 @@ class MagphysAssimilator(assimilator.Assimilator):
                 connection.execute(query)
             transaction.commit()
         except Exception:
-            self.logCritical('An error occurred while running a database query')
+            self.logCritical('An error occurred while running a database query\n')
             transaction.rollback()
             raise
 
-        self.logNormal('Time spent in database {0}'.format(time.time() - start))
-        self.logNormal('Number of queries executed {0}'.format(len(self._database_queue)))
+        self.logNormal('Time spent in database {0}\n'.format(time.time() - start))
+        self.logNormal('Number of queries executed {0}\n'.format(len(self._database_queue)))
         self._database_queue = []
 
     def assimilate_handler(self, wu, results, canonical_result):

@@ -42,11 +42,11 @@ import time
 
 from datetime import datetime
 from sqlalchemy.sql.expression import select, func
-from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE
+from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
-#from image.fitsimage import FitsImage
-#from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
-#from utils.s3_helper import S3Helper
+from image.fitsimage import FitsImage
+from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
+from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
 
@@ -60,7 +60,6 @@ TARGET_NRESULTS = MIN_QUORUM                                           # Initial
 DELAY_BOUND = 86400 * WG_REPORT_DEADLINE                               # Clients must report results within WG_REPORT_DEADLINE days
 FPOPS_BOUND_PER_PIXEL = 50                                             # Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
-PIXEL_COMMIT_THRESHOLD = 30
 
 
 class Area:
@@ -306,7 +305,7 @@ class Fit2Wu:
         LOG.info('Average time in BOINC DB for each transaction {0}'.format(bave))
 
         LOG.info('Building the images')
-        """
+
         galaxy_file_name = get_galaxy_file_name(self._galaxy_name, self._run_id, self._galaxy_id)
         s3helper = S3Helper()
         image = FitsImage(self._connection)
@@ -317,7 +316,7 @@ class Fit2Wu:
         s3helper.add_file_to_bucket(bucket_name, get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
         if self._sigma_filename is not None:
             s3helper.add_file_to_bucket(bucket_name, get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
-        """
+
         # Store the pixel count as the last thing to stop the original_image_checker going off
         # too soon for BIG galaxies
         self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
@@ -564,7 +563,7 @@ class Fit2Wu:
                 self._pixels_processed += len(pixels)
 
                 # Once we've processed more pixels then the commit threshold, we commit everything to both dbs
-                if self._pixels_processed > PIXEL_COMMIT_THRESHOLD:
+                if self._pixels_processed > WG_PIXEL_COMMIT_THRESHOLD:
                     self._run_pending_db_tasks()
                     self._run_pending_boinc_db_tasks()
                     self._pixels_processed = 0  # reset for next areas
