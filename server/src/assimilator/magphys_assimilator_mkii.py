@@ -215,11 +215,11 @@ class MagphysAssimilator(assimilator.Assimilator):
             for query in self._database_queue:
                 connection.execute(query)
             transaction.commit()
-            self.logNormal('Time spent in database {0}\n'.format(time.time() - start))
-            self.logNormal('Number of queries executed {0}\n'.format(len(self._database_queue)))
+            self.logNormal('Time spent in database {0:.2f}\n'.format(time.time() - start))
+            self.logNormal('Number of tasks executed {0}\n'.format(len(self._database_queue)))
             self._database_queue = []
         except Exception:
-            self.logCritical('An error occurred while running a database query\n')
+            self.logCritical('An error occurred while running a database task\n')
             transaction.rollback()
             raise
 
