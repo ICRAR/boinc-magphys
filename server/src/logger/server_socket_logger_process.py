@@ -56,7 +56,7 @@ STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
 # A list of all child processes (entries added whenever a client connects and removed on disconnect)
 child_list = list()
 
-# Set to true when a SIGINT is caught
+# Set to true when a SIGINT OR SIGHUP is caught
 caught_sig_int = False
 
 # Local logger for server logs
@@ -164,6 +164,7 @@ def main():
         except SystemExit:  # sys.exit(0) is called by the maintenance thread.
             # Maintenance Thread has notified us that it's time to shut down
             server_log.info('Shutdown flag identified, shutting down...')
+            server_socket.close()
             sys.exit(0)
 
 
@@ -194,6 +195,7 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
             
             if len(chunk) < 4:
                 server_log.info('Connection terminated normally')
+                c_socket.close()
                 exit(0)
 
             # This chunk of code extracts a log record from the received data and places it into record
@@ -205,7 +207,11 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
 
             obj = cPickle.loads(chunk)
 
-            file_name = obj['filename']
+            try:
+                file_name = obj['filename']
+            except KeyError:
+                server_log.error('Client connected with no filename to write to!')
+                file_name = 'NO_FILE_NAME'
 
             record = logging.makeLogRecord(obj)
 
@@ -217,7 +223,7 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
                 logger.addHandler(file_handler)
                 file_open = 1
 
-                stdouthandle = logging.getLogger().handlers.__getitem__(0)
+                stdouthandle = logging.getLogger().handlers[0]
                 stdouthandle.setFormatter(formatter)
             else:
                 # Finally, handle the record by printing it to the file specified
@@ -225,10 +231,12 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
 
         except IOError:
             server_log.error('Connection closed in an unexpected way.')
+            c_socket.close()
             exit(0)
 
         except timeout:
             server_log.error('Connection timed out {0}'.format(c_socket.getpeername))
+            c_socket.close()
             exit(0)
 
 
@@ -259,10 +267,10 @@ def child_reclaim():
 
 def sigint_handler(self, sig):
     """
-    This method handles the SIGINT signal. It sets a flag
+    This method handles the SIGINT and SIGHUP signal. It sets a flag
     but waits to exit until background_management checks this flag
     """
-    server_log.info('Caught sigint')
+    server_log.info('Caught shutdown signal')
 
     global caught_sig_int
     caught_sig_int = True
@@ -279,14 +287,13 @@ def background_management():
         heartbeat += 1
 
         if heartbeat == 60:
-            server_log.info("Server is active with {0} current connection(s)".format(child_list.__len__()))
+            server_log.info("Server is active with {0} current connection(s)".format(len(child_list)))
             heartbeat = 0
 
         child_reclaim()
 
         if os.path.exists(STOP_TRIGGER_FILENAME):
             server_log.info("Shutdown file identified\n")
-            signal.alarm(1)  # This is required to interrupt the socket.accept() call and force processing of the exit exception
             for i in child_list:  # Kill all child processes that have not been claimed by child_reclaim()
                 i.terminate()
             sys.exit(0)
@@ -303,6 +310,7 @@ def background_management():
 if __name__ == "__main__":
     # Install sigint handler
     signal.signal(signal.SIGINT, sigint_handler)
+    signal.signal(signal.SIGHUP, sigint_handler)
 
     # Start a thread to do background management tasks
     thread = Thread(target=background_management)

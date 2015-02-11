@@ -54,7 +54,6 @@ LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 ENGINE = create_engine(DB_LOGIN)
-WU_PROCESSED_COMMIT_THRESHOLD = 30
 
 
 class MagphysAssimilator(assimilator.Assimilator):
@@ -66,8 +65,6 @@ class MagphysAssimilator(assimilator.Assimilator):
         connection = ENGINE.connect()
         self._map_parameter_name = {}
         self._database_queue = []
-        self._wus_processed = 0
-        self._db_access_time = []
 
         # Load the parameter name map
         for parameter_name in connection.execute(select([PARAMETER_NAME])):
@@ -223,7 +220,8 @@ class MagphysAssimilator(assimilator.Assimilator):
             transaction.rollback()
             raise
 
-        self._db_access_time.append(time.time() - start)
+        self.logNormal('Time spent in database {0}'.format(time.time() - start))
+        self.logNormal('Number of queries executed {0}'.format(len(self._database_queue)))
         self._database_queue = []
 
     def assimilate_handler(self, wu, results, canonical_result):
@@ -295,10 +293,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                         time_taken = '{0:.2f}'.format(time.time() - start)
                         self.logDebug("Saving %d results for workunit %d in %s seconds\n", resultCount, wu.id, time_taken)
                         # transaction.commit()
-                    self._wus_processed += 1
-                    if self._wus_processed > WU_PROCESSED_COMMIT_THRESHOLD:
-                        self._run_pending_db_tasks(connection)
-                    self._wus_processed = 0
+                    self._run_pending_db_tasks(connection)
                     connection.close()
                 else:
                     self.logCritical("The output file was not found\n")
