@@ -165,6 +165,7 @@ def extract_tar_file(tar_file, location):
     galaxy_archive.close()
     return num_files_extracted
 
+
 def find_input_filename(galaxy_name, location):
     """
     Finds the main fits file for the specified galaxy name
