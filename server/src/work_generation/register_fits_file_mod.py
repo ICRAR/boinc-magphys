@@ -265,7 +265,7 @@ def clean_unused_fits(location, galaxies):
         for galaxy in galaxies:
             if f_file.startswith(galaxy[0]):
                 found = True
-                break
+
         if not found:
             files_to_delete.append(f_file)
 
