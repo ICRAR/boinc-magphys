@@ -260,16 +260,14 @@ def clean_unused_fits(location, galaxies):
     files = os.listdir(location)
     files_to_delete = []
 
-    for item in files:
+    for f_file in files:
         found = False
         for galaxy in galaxies:
-            if item.startswith(galaxy[0]):
-                #item.endswith('.fits') and
+            if f_file.startswith(galaxy[0]):
                 found = True
                 break
-        if found is False:
-            #if item.endswith('.fits'):
-            files_to_delete.append(item)
+        if not found:
+            files_to_delete.append(f_file)
 
     if len(files_to_delete) > 0:
         LOG.info('The following fits files do not have entries in the txt file. Deleting...')
