@@ -112,6 +112,26 @@ int db_close() {
 
     return 0;
 }
+/**
+* Starts a boinc DB transaction
+*/
+int transaction_start(){
+    return boinc_db.start_transaction();
+}
+
+/**
+* Rolls back the currently running transaction
+*/
+int transaction_rollback(){
+    return boinc_db.rollback_transaction();
+}
+
+/**
+* Commits the currently running transaction
+*/
+int transaction_commit(){
+    return boinc_db.commit_transaction();
+}
 
 /**
  * Create a work unit

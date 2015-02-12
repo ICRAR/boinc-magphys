@@ -56,6 +56,11 @@ int db_open();
 // Close the connect to the BOINC DB
 int db_close();
 
+// Transaction functions
+int transaction_start();
+int transaction_rollback();
+int transaction_commit();
+
 // Create a work unit
 int create_work(char* app_name,
     int min_quorom,

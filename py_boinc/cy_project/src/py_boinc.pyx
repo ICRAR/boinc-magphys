@@ -40,6 +40,12 @@ cdef extern from "c_project/create_work.h":
 
     int db_close()
 
+    int transaction_start()
+
+    int transaction_rollback()
+
+    int transaction_commit()
+
     int create_work(char* app_name,
                     int min_quorom,
                     int max_success_results,
@@ -57,6 +63,15 @@ cdef extern from "c_project/create_work.h":
                     int priority,
                     char** input_files,
                     int number_input_files)
+
+cpdef int boinc_db_transaction_start():
+    return transaction_start()
+
+cpdef int boinc_db_transaction_rollback():
+    return transaction_rollback()
+
+cpdef int boinc_db_transaction_commit():
+    return transaction_commit()
 
 cpdef int boinc_db_close():
     return db_close()
