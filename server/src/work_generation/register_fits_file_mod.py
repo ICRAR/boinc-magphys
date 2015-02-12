@@ -273,7 +273,7 @@ def clean_unused_fits(location, galaxies):
     if len(files_to_delete) > 0:
         LOG.info('The following fits files do not have entries in the txt file. Deleting...')
         for item in files_to_delete:
-            LOG.info('Deleting {0}'.format(item))
+            #LOG.info('Deleting {0}'.format(item))
             os.remove(location + '/' + item)
 
     return len(files_to_delete)
