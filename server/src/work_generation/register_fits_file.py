@@ -145,7 +145,7 @@ num_galaxies_inserted = 0
 # Loop through all the galaxies and add them to the db
 for galaxy in all_galaxy_data:
     try:
-        #add_to_database(connection, galaxy)
+        add_to_database(connection, galaxy)
         num_galaxies_inserted += 1
     except Exception:
         LOG.exception('An error occurred adding {0} to the database'.format(galaxy['name']))
