@@ -89,7 +89,7 @@ num_galaxies_in_txt = len(all_txt_file_data)
 
 # Delete any fits files that do not have an entry in the txt document
 num_unused_fits = clean_unused_fits(TAR_EXTRACT_LOCATION, all_txt_file_data)
-exit(1)
+
 # Move all of the fits files into the working directory
 move_fits_files(TAR_EXTRACT_LOCATION, WORKING_DIRECTORY)
 
