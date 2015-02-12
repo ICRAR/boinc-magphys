@@ -115,14 +115,23 @@ def decompress_gz_files(location):
                 LOG.info('{0} already exists!'.format(f))
             else:
                 LOG.info('Decompressing {0}...'.format(f))
-                compressed = gzip.open(f, 'rb')
-                decompressed = open(f[:-3], 'w')
-                decompressed.write(compressed.read())
+                compressed = None
+                decompressed = None
+                try:
+                    compressed = gzip.open(f, 'rb')
+                    decompressed = open(f[:-3], 'w')
+                    decompressed.write(compressed.read())
 
-                compressed.close()
-                decompressed.close()
-                os.remove(f)
-                num_files_decompressed += 1
+                    compressed.close()
+                    decompressed.close()
+                    os.remove(f)
+                    num_files_decompressed += 1
+                except Exception:
+                    LOG.exception("Error decompressing {0}".format(f))
+                    if compressed is not None:
+                        compressed.close()
+                    if decompressed is not None:
+                        decompressed.close()
 
     return num_files_decompressed
 
@@ -153,9 +162,8 @@ def extract_tar_file(tar_file, location):
             LOG.info('Extracting...{0}'.format(f.name))
             num_files_extracted += 1
 
+    galaxy_archive.close()
     return num_files_extracted
-
-
 
 def find_input_filename(galaxy_name, location):
     """
@@ -286,51 +294,54 @@ def add_to_database(connection, galaxy):
     RUN_ID = galaxy['run_id']
     SIGMA = galaxy['sigma']
     TAGS = galaxy['tags']
+
     transaction = connection.begin()
-
     try:
-        sigma = float(SIGMA)
-        sigma_filename = None
-    except ValueError:
-        sigma = 0.0
-        sigma_filename = SIGMA
+        try:
+            sigma = float(SIGMA)
+            sigma_filename = None
+        except ValueError:
+            sigma = 0.0
+            sigma_filename = SIGMA
 
-    result = connection.execute(REGISTER.insert(),
-                                galaxy_name=GALAXY_NAME,
-                                redshift=REDSHIFT,
-                                galaxy_type=GALAXY_TYPE,
-                                filename=INPUT_FILE,
-                                priority=PRIORITY,
-                                register_time=datetime.now(),
-                                run_id=RUN_ID,
-                                sigma=sigma,
-                                sigma_filename=sigma_filename)
+        result = connection.execute(REGISTER.insert(),
+                                    galaxy_name=GALAXY_NAME,
+                                    redshift=REDSHIFT,
+                                    galaxy_type=GALAXY_TYPE,
+                                    filename=INPUT_FILE,
+                                    priority=PRIORITY,
+                                    register_time=datetime.now(),
+                                    run_id=RUN_ID,
+                                    sigma=sigma,
+                                    sigma_filename=sigma_filename)
 
-    register_id = result.inserted_primary_key[0]
+        register_id = result.inserted_primary_key[0]
 
-    # Get the tag ids
-    tag_ids = set()
-    for tag_text in TAGS:
-        tag_text = tag_text.strip()
-        if len(tag_text) > 0:
-            tag = connection.execute(select([TAG]).where(TAG.c.tag_text == tag_text)).first()
-            if tag is None:
-                result = connection.execute(TAG.insert(),
-                                            tag_text=tag_text)
-                tag_id = result.inserted_primary_key[0]
-            else:
-                tag_id = tag[TAG.c.tag_id]
+        # Get the tag ids
+        tag_ids = set()
+        for tag_text in TAGS:
+            tag_text = tag_text.strip()
+            if len(tag_text) > 0:
+                tag = connection.execute(select([TAG]).where(TAG.c.tag_text == tag_text)).first()
+                if tag is None:
+                    result = connection.execute(TAG.insert(),
+                                                tag_text=tag_text)
+                    tag_id = result.inserted_primary_key[0]
+                else:
+                    tag_id = tag[TAG.c.tag_id]
 
-            tag_ids.add(tag_id)
+                tag_ids.add(tag_id)
 
-    # Add the tag ids
-    for tag_id in tag_ids:
-        connection.execute(TAG_REGISTER.insert(),
-                           tag_id=tag_id,
-                           register_id=register_id)
+        # Add the tag ids
+        for tag_id in tag_ids:
+            connection.execute(TAG_REGISTER.insert(),
+                               tag_id=tag_id,
+                               register_id=register_id)
 
-    transaction.commit()
-
-    LOG.info('Registered %s %s %f %s %d %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY, RUN_ID)
-    for tag_text in TAGS:
-        LOG.info('Tag: {0}'.format(tag_text))
+        transaction.commit()
+        LOG.info('Registered %s %s %f %s %d %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY, RUN_ID)
+        for tag_text in TAGS:
+            LOG.info('Tag: {0}'.format(tag_text))
+    except Exception:
+        transaction.rollback()
+        raise

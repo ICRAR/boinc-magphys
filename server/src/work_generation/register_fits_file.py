@@ -37,7 +37,6 @@ from utils.logging_helper import config_logger
 
 from sqlalchemy.engine import create_engine
 from config import DB_LOGIN
-#DB_LOGIN = 'sqlite:////home/ict310/Desktop/register_fits_file.db'
 
 from work_generation.register_fits_file_mod import fix_redshift, get_data_from_galaxy_txt, \
     decompress_gz_files, extract_tar_file, find_input_filename, find_sigma_filename, add_to_database, \
@@ -78,23 +77,34 @@ LOG.info('Working Directory: {0}'.format(WORKING_DIRECTORY))
 LOG.info('TAR Extract Location: {0}'.format(TAR_EXTRACT_LOCATION))
 time.sleep(5)
 
+# Extract all fits.gz files from the specified TAR archive
 num_files_extracted = extract_tar_file(INPUT_FILE, TAR_EXTRACT_LOCATION)
 
+# Decompress all the fits.gz files that are in the extract location
 num_files_decompressed = decompress_gz_files(TAR_EXTRACT_LOCATION)
 
+# Parse the galaxy data from the txt file specified
 all_txt_file_data = get_data_from_galaxy_txt(GALAXY_TEXT_FILE)
 num_galaxies_in_txt = len(all_txt_file_data)
 
+# Delete any fits files that do not have an entry in the txt document
 num_unused_fits = clean_unused_fits(TAR_EXTRACT_LOCATION, all_txt_file_data)
 
+# Move all of the fits files into the working directory
 move_fits_files(TAR_EXTRACT_LOCATION, WORKING_DIRECTORY)
 
+# Remove all remaining files from the extract location
 shutil.rmtree(TAR_EXTRACT_LOCATION)
 
 all_galaxy_data = []
 
 num_galaxies_without_file = 0
 num_galaxies_without_sigma = 0
+
+# Loop through each of the lines in the parsed txt file
+# [0] is name
+# [3] is redshift
+# [4] is galaxy_type
 
 for txt_line_info in all_txt_file_data:
     single_galaxy_data = dict()
@@ -111,7 +121,6 @@ for txt_line_info in all_txt_file_data:
         LOG.error('Galaxy {0} has a sigma file of None!'.format(single_galaxy_data['name']))
         sigma = 0.1
         num_galaxies_without_sigma += 1
-
 
     gal_type = txt_line_info[4]
     if gal_type is '':
@@ -133,6 +142,7 @@ connection = ENGINE.connect()
 
 num_galaxies_inserted = 0
 
+# Loop through all the galaxies and add them to the db
 for galaxy in all_galaxy_data:
     try:
         add_to_database(connection, galaxy)

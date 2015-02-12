@@ -87,6 +87,7 @@ else:
     download_dir = boinc_config.config.download_dir
     fanout = long(boinc_config.config.uldl_dir_fanout)
     LOG.info("download_dir: %s, fanout: %d", download_dir, fanout)
+    ## Database + program performance variables ##
     total_db_time = 0
     areaave = []
     total_boinc_db_time = 0
@@ -128,12 +129,14 @@ else:
                     fit2wu = Fit2Wu(connection, download_dir, fanout)
                     try:
                         (work_units_added, pixel_count, sum, ave, bsum, bave, areas, pixels) = fit2wu.process_file(registration)
+                        ## Calculate performance information ##
                         total_db_time += sum
                         total_boinc_db_time += bsum
                         areaave.append(ave)
                         areaave_boinc.append(bave)
                         total_areas += areas
                         total_pixels += pixels
+
                         total_work_units_added += (work_units_added * MIN_QUORUM)
                     except Exception:
                         LOG.exception('An error occurred while processing {0}'.format(registration[REGISTER.c.galaxy_name]))
@@ -167,7 +170,6 @@ else:
     if return_value == 0:
         LOG.info('Closing BOINC DB')
         return_value = py_boinc.boinc_db_close()
-
 
 # Log how many are left in the queue
 count = connection.execute(select([func.count(REGISTER.c.register_id)]).where(REGISTER.c.create_time == None)).first()[0]

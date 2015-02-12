@@ -37,7 +37,6 @@ from database.database_support_core import RUN, FILTER, RUN_FILTER
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
-
 parser = argparse.ArgumentParser()
 parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')
 parser.add_argument('dir', nargs=1, help='the directory containing the files')

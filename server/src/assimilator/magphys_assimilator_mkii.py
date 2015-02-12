@@ -215,14 +215,13 @@ class MagphysAssimilator(assimilator.Assimilator):
             for query in self._database_queue:
                 connection.execute(query)
             transaction.commit()
+            self.logNormal('Time spent in database {0:.2f}\n'.format(time.time() - start))
+            self.logNormal('Number of tasks executed {0}\n'.format(len(self._database_queue)))
+            self._database_queue = []
         except Exception:
-            self.logCritical('An error occurred while running a database query\n')
+            self.logCritical('An error occurred while running a database task\n')
             transaction.rollback()
             raise
-
-        self.logNormal('Time spent in database {0}\n'.format(time.time() - start))
-        self.logNormal('Number of queries executed {0}\n'.format(len(self._database_queue)))
-        self._database_queue = []
 
     def assimilate_handler(self, wu, results, canonical_result):
         """
@@ -230,7 +229,6 @@ class MagphysAssimilator(assimilator.Assimilator):
         """
         self.logDebug("Start of assimilate_handler for wu %d\n", wu.id)
         connection = None
-        transaction = None
         try:
             if wu.canonical_result:
                 out_file = self.get_file_path(canonical_result)
@@ -246,11 +244,10 @@ class MagphysAssimilator(assimilator.Assimilator):
                     self.logDebug("Reading File [%s]\n", out_file)
                     start = time.time()
                     connection = ENGINE.connect()
-                    # transaction = connection.begin()
+
                     resultCount = self._process_result(connection, out_file, wu)
                     if self.noinsert:
                         pass
-                        # transaction.rollback()
                     else:
                         if not resultCount:
                             self.logCritical("No results were found in the output file\n")
@@ -261,9 +258,6 @@ class MagphysAssimilator(assimilator.Assimilator):
                             self._database_queue.append(AREA.update()
                                                                .where(AREA.c.area_id == self._area_id)
                                                                .values(workunit_id=wu.id, update_time=datetime.datetime.now()))
-                            #connection.execute(AREA.update()
-                            #                   .where(AREA.c.area_id == self._area_id)
-                            #                   .values(workunit_id=wu.id, update_time=datetime.datetime.now()))
 
                             user_id_set = set()
                             for result in results:
@@ -273,15 +267,12 @@ class MagphysAssimilator(assimilator.Assimilator):
                                         user_id_set.add(user_id)
 
                             self._database_queue.append(AREA_USER.delete().where(AREA_USER.c.area_id == self._area_id))
-                            # connection.execute(AREA_USER.delete().where(AREA_USER.c.area_id == self._area_id))
+
                             insert_area_user = AREA_USER.insert()
                             insert_galaxy_user = GALAXY_USER.insert().prefix_with('IGNORE')
                             for user_id in user_id_set:
                                 self._database_queue.append(insert_area_user.values(area_id=self._area_id, userid=user_id))
                                 self._database_queue.append(insert_galaxy_user.values(galaxy_id=self._galaxy_id, userid=user_id))
-                                # connection.execute(insert_area_user, area_id=self._area_id, userid=user_id)
-                                # self.logDebug("Inserting row into galaxy_user for userid: %d galaxy_id: %d\n", user_id, self._galaxy_id)
-                                # connection.execute(insert_galaxy_user, galaxy_id=self._galaxy_id, userid=user_id)
 
                             # Copy the file to S3
                             s3helper = S3Helper()
@@ -292,7 +283,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
                         time_taken = '{0:.2f}'.format(time.time() - start)
                         self.logDebug("Saving %d results for workunit %d in %s seconds\n", resultCount, wu.id, time_taken)
-                        # transaction.commit()
+
                     self._run_pending_db_tasks(connection)
                     connection.close()
                 else:
@@ -301,10 +292,7 @@ class MagphysAssimilator(assimilator.Assimilator):
                 self.logDebug("No canonical_result for workunit\n")
                 self.report_errors(wu)
         except:
-            """
-            if transaction is not None:
-                transaction.rollback()
-            """
+
             if connection is not None:
                 connection.close()
             print "Unexpected error:", sys.exc_info()[0]

@@ -65,18 +65,22 @@ except Exception:
 # and    pxresult.area_id = area.area_id
 # group by area_user.userid)
 
+LOG.info('This is the query I am using')
+LOG.info(str(select([AREA_USER.c.userid, func.count()])
+             .where(AREA.c.area_id == AREA_USER.c.area_id)
+             .where(PIXEL_RESULT.c.area_id == AREA.c.area_id)
+             .group_by(AREA_USER.c.userid)))
+LOG.info('This\'ll probably take a while...')
+
 result = connection.execute(select([AREA_USER.c.userid, func.count()])
                             .where(AREA.c.area_id == AREA_USER.c.area_id)
                             .where(PIXEL_RESULT.c.area_id == AREA.c.area_id)
                             .group_by(AREA_USER.c.userid))
 
-LOG.info(str(select([AREA_USER.c.userid, func.count()])
-             .where(AREA.c.area_id == AREA_USER.c.area_id)
-             .where(PIXEL_RESULT.c.area_id == AREA.c.area_id)
-             .group_by(AREA_USER.c.userid)))
-
+LOG.info('Done!')
 insert_queue = []
 rowcount = 0
+LOG.info('Now inserting...')
 try:
     for row in result:
         rowcount += 1
