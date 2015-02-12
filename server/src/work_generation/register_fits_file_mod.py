@@ -263,8 +263,8 @@ def clean_unused_fits(location, galaxies):
     for f_file in files:
         found = False
         for galaxy in galaxies:
-            print f_file[-5:], galaxy[0]
-            if f_file[-5:].endswith(galaxy[0]):
+            print f_file[:-5], galaxy[0]
+            if f_file[:-5].endswith(galaxy[0]):
                 found = True
                 break
 
