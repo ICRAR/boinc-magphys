@@ -264,6 +264,7 @@ def clean_unused_fits(location, galaxies):
         found = False
         for galaxy in galaxies:
             if f_file.startswith(galaxy[0]):
+                print f_file, galaxy[0]
                 found = True
 
         if not found:
