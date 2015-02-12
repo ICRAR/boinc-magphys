@@ -177,7 +177,7 @@ class Fit2Wu:
 
         self._total_pixels = 0
         self._total_areas = 0
-    #@profile
+
     def process_file(self, registration):
         """
         Process a registration.
@@ -232,20 +232,20 @@ class Fit2Wu:
 
         self._galaxy_id += 1
         self._database_insert_queue.append(GALAXY.insert().values(name=self._galaxy_name,
-                                                                    dimension_x=self._end_x,
-                                                                    dimension_y=self._end_y,
-                                                                    dimension_z=self._layer_count,
-                                                                    redshift=self._redshift,
-                                                                    sigma=self._sigma,
-                                                                    create_time=datetime_now,
-                                                                    image_time=datetime_now,
-                                                                    galaxy_type=self._galaxy_type,
-                                                                    ra_cent=0,
-                                                                    dec_cent=0,
-                                                                    pixel_count=0,
-                                                                    pixels_processed=0,
-                                                                    run_id=self._run_id,
-                                                                    galaxy_id=self._galaxy_id))
+                                                                  dimension_x=self._end_x,
+                                                                  dimension_y=self._end_y,
+                                                                  dimension_z=self._layer_count,
+                                                                  redshift=self._redshift,
+                                                                  sigma=self._sigma,
+                                                                  create_time=datetime_now,
+                                                                  image_time=datetime_now,
+                                                                  galaxy_type=self._galaxy_type,
+                                                                  ra_cent=0,
+                                                                  dec_cent=0,
+                                                                  pixel_count=0,
+                                                                  pixels_processed=0,
+                                                                  run_id=self._run_id,
+                                                                  galaxy_id=self._galaxy_id))
 
         # Area and Pixel PKs are needed multiple times.
         self._areaPK = self._connection.execute(select([func.max(AREA.c.area_id)])).first()[0]
@@ -340,7 +340,6 @@ class Fit2Wu:
         self._database_insert_queue = []
         self._boinc_insert_queue = []
 
-    #@profile
     def _break_up_galaxy(self):
         """
         Break up the galaxy into small pieces
@@ -516,7 +515,7 @@ class Fit2Wu:
             zlib_file = open(new_full_path, 'wb')
             zlib_file.write(' 1  {0}'.format(self._rounded_redshift))
             zlib_file.close()
-    #@profile
+
     def _create_areas(self, pix_y):
         """
         Create a area - we try to make them squares, but they aren't as the images have dead zones
@@ -620,7 +619,7 @@ class Fit2Wu:
             outfile.write('\n')
             row_num += 1
         outfile.close()
-    #@profile
+
     def _create_output_file(self, area, pixels):
         """
         Write an output file for this area
