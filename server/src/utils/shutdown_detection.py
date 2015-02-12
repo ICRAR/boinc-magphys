@@ -29,9 +29,7 @@ Set of functions that help programs shut down gracefully.
 import threading
 import httplib
 import time
-import sys
-#from Boinc import boinc_project_path
-boinc_project_path = '/'
+from Boinc import boinc_project_path
 
 SHUTDOWN_SIGNAL = False
 THREAD_STARTED = False
@@ -95,8 +93,7 @@ def check_stop_trigger():
     """
 
     try:
-        #junk = open(boinc_project_path.project_path('stop_daemons'), 'r')
-        junk = open('stop_daemons', 'r')
+        junk = open(boinc_project_path.project_path('stop_daemons'), 'r')
         return True
     except IOError:
         if CAUGHT_SIGINT:
@@ -104,7 +101,7 @@ def check_stop_trigger():
     return False
 
 
-def sigint_handler(one, two):
+def signal_handler(one, two):
     global CAUGHT_SIGINT
 
     CAUGHT_SIGINT = True

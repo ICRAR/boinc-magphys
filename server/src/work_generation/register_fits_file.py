@@ -69,7 +69,6 @@ if not os.path.isfile(INPUT_FILE):
 if not WORKING_DIRECTORY.endswith('/'):
     WORKING_DIRECTORY += '/'
 
-# Extract all files from the tar file if they are not already extracted
 (head, tail) = os.path.split(INPUT_FILE)
 
 TAR_EXTRACT_LOCATION = WORKING_DIRECTORY + os.path.splitext(tail)[0]

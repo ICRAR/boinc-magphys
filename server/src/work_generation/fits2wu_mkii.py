@@ -41,7 +41,7 @@ import signal
 from Boinc import configxml
 from datetime import datetime
 from utils.logging_helper import config_logger
-from utils.shutdown_detection import sigint_handler, check_stop_trigger
+from utils.shutdown_detection import signal_handler, check_stop_trigger
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import func, select
 from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
@@ -50,7 +50,7 @@ from database.database_support_core import REGISTER, TAG_REGISTER
 from work_generation.fits2wu_mod_mkii import Fit2Wu, MIN_QUORUM
 
 # install sigint handler for shutdowns
-signal.signal(signal.SIGINT, sigint_handler)
+signal.signal(signal.SIGINT, signal_handler)
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
