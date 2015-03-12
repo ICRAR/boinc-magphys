@@ -1,0 +1,33 @@
+USE magphys;
+
+INSERT INTO run VALUES (5, 'Galex, Pan-STARRS, SDSS, Wise, Spitzer & Herschel', 'Galex, Pan-STARRS, SDSS, Wise, Spitzer & Herschel using the bc03 library', '/home/ec2-user/boinc-magphys/server/runs/0005', 7.2, 9.8);
+
+INSERT INTO run_filter VALUES (null, 5, 0);
+INSERT INTO run_filter VALUES (null, 5, 1);
+INSERT INTO run_filter VALUES (null, 5, 2);
+INSERT INTO run_filter VALUES (null, 5, 3);
+INSERT INTO run_filter VALUES (null, 5, 4);
+INSERT INTO run_filter VALUES (null, 5, 5);
+INSERT INTO run_filter VALUES (null, 5, 6);
+INSERT INTO run_filter VALUES (null, 5, 7);
+INSERT INTO run_filter VALUES (null, 5, 8);
+INSERT INTO run_filter VALUES (null, 5, 9);
+INSERT INTO run_filter VALUES (null, 5, 10);
+INSERT INTO run_filter VALUES (null, 5, 11);
+INSERT INTO run_filter VALUES (null, 5, 12);
+INSERT INTO run_filter VALUES (null, 5, 13);
+INSERT INTO run_filter VALUES (null, 5, 14);
+INSERT INTO run_filter VALUES (null, 5, 15);
+INSERT INTO run_filter VALUES (null, 5, 16);
+INSERT INTO run_filter VALUES (null, 5, 17);
+INSERT INTO run_filter VALUES (null, 5, 18);
+INSERT INTO run_filter VALUES (null, 5, 19);
+INSERT INTO run_filter VALUES (null, 5, 20);
+INSERT INTO run_filter VALUES (null, 5, 21);
+INSERT INTO run_filter VALUES (null, 5, 22);
+INSERT INTO run_filter VALUES (null, 5, 23);
+INSERT INTO run_filter VALUES (null, 5, 24);
+INSERT INTO run_filter VALUES (null, 5, 25);
+INSERT INTO run_filter VALUES (null, 5, 26);
+INSERT INTO run_filter VALUES (null, 5, 27);
+INSERT INTO run_filter VALUES (null, 5, 28);

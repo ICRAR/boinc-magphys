@@ -280,7 +280,12 @@ class FitsImage:
 
         LOG.info('Filters used {0}'.format(filters_used))
 
-        if 323 in filters_used and 324 in filters_used and 325 in filters_used and 326 in filters_used and 327 in filters_used:
+        if 229 in filters_used and 324 in filters_used and 325 in filters_used and 326 in filters_used and 327 in filters_used:
+            image1_filters = [326, 325, 324]
+            image2_filters = [325, 324, 229]
+            image3_filters = [326, 324, 229]
+            image4_filters = [327, 325, 229]
+        elif 323 in filters_used and 324 in filters_used and 325 in filters_used and 326 in filters_used and 327 in filters_used:
             image1_filters = [326, 325, 324]
             image2_filters = [325, 324, 323]
             image3_filters = [326, 324, 323]

@@ -369,7 +369,7 @@ class Fit2Wu:
         self._db_access_time.append(time.time() - start)
         # Reset queue to none
         self._database_insert_queue = []
-        
+
     def _run_pending_boinc_db_tasks(self):
         """
         Runs all of the queued boinc db tasks as one transaction.

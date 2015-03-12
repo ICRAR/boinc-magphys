@@ -182,7 +182,6 @@ class EC2Helper:
             self.ec2_connection.disassociate_address(association_id=association_id)
             LOG.info('Disassociated successfully {0}'.format(public_ip))
 
-
     def get_allocation_id(self):
         """
         Get the allocation id
@@ -372,11 +371,6 @@ class EC2Helper:
             return EC2_IP_BUILD_IMAGE_ADDRESSES[remainder]
 
         return None
-
-    def print_log(self):
-        LOG.info('This is text')
-        LOG.error('This is error text')
-        LOG.debug('This is debug text')
 
 
 class CancelledException(Exception):
