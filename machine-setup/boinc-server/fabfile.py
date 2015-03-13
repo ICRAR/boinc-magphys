@@ -56,6 +56,7 @@ AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
 KEY_NAME_VPC = 'icrar_theskynet_public_prod'
 SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
+SYDNEY_AWS_KEY = os.path.expanduser('~/.ssh/icrar_sydney.pem')
 SYDNEY_REGION = 'ap-southeast-2'
 SYDNEY_AMI_ID = 'ami-d50773ef'
 SYDNEY_KEY_NAME = 'icrar_sydney'
@@ -64,7 +65,7 @@ SYDNEY_SUBNET = 'subnet-878cc2ee'
 PROD_SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for the VPC
 TEST_SECURITY_GROUPS_VPC = ['sg-dd33e0b2', 'sg-9408dbfb']  # Security group for the VPC
 PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
-PIP_PACKAGES = 'sqlalchemy Numpy pyfits pil fabric configobj MySQL-python boto astropy cython'
+PIP_PACKAGES = 'sqlalchemy pyfits Pillow fabric configobj MySQL-python boto astropy cython'
 YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel curl-devel '
 YUM_BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
 
@@ -77,13 +78,12 @@ def base_install():
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BASE_PACKAGES))
 
     # Setup the python
-    run('wget http://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
-    sudo('sh setuptools-0.6c11-py2.7.egg')
-    run('rm setuptools-0.6c11-py2.7.egg')
+    sudo('wget https://bootstrap.pypa.io/ez_setup.py -O - | python2.7')
     sudo('rm -f /usr/bin/easy_install')
     sudo('easy_install-2.7 pip')
     sudo('rm -f /usr/bin/pip')
-    sudo('pip-2.7 install {0}'.format(PIP_PACKAGES))
+    sudo('pip2.7 install --quiet Numpy')
+    sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES))
 
     # Setup the pythonpath
     append('/home/ec2-user/.bash_profile',
@@ -93,16 +93,16 @@ def base_install():
 
     # Setup the HDF5
     with cd('/usr/local/src'):
-        sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
+        sudo('wget --no-verbose http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
         sudo('tar -xvzf szip-2.1.tar.gz')
-        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz')
-        sudo('tar -xvzf hdf5-1.8.11.tar.gz')
+        sudo('wget --no-verbose http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.14.tar.gz')
+        sudo('tar -xvzf hdf5-1.8.14.tar.gz')
         sudo('rm *.gz')
     with cd('/usr/local/src/szip-2.1'):
         sudo('./configure --prefix=/usr/local/szip')
         sudo('make')
         sudo('make install')
-    with cd('/usr/local/src/hdf5-1.8.11'):
+    with cd('/usr/local/src/hdf5-1.8.14'):
         sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
         sudo('make')
         sudo('make install')
@@ -112,10 +112,11 @@ def base_install():
 
     # Now install the H5py
     with cd('/tmp'):
-        run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
-        run('tar -xvzf h5py-2.1.0.tar.gz')
-    with cd('/tmp/h5py-2.1.0'):
-        sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
+        run('wget --no-verbose https://pypi.python.org/packages/source/h/h5py/h5py-2.4.0.tar.gz')
+        run('tar -xvzf h5py-2.4.0.tar.gz')
+    with cd('/tmp/h5py-2.4.0'):
+        sudo('python2.7 setup.py configure --hdf5=/usr/local/hdf5')
+        sudo('python2.7 setup.py build')
         sudo('python2.7 setup.py install')
 
 
@@ -558,7 +559,7 @@ def yum_pip_update():
     sudo('yum --assumeyes --quiet update')
 
     # Update the pip install
-    sudo('pip-2.7 install -U {0}'.format(PIP_PACKAGES))
+    sudo('pip2.7 install -U {0}'.format(PIP_PACKAGES))
 
 
 @task
@@ -700,10 +701,11 @@ def build_test_server():
     Build a test server in the Sydney region
     """
     # Create the instance in AWS
-    ec2_instance, ec2_connection = create_instance(10, 'POGS Test Server', True)
+    ec2_instance, ec2_connection = create_instance(15, 'POGS Test Server', True)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
-    env.hosts = [ec2_instance.ip_address]
+    env.host_string = 'ec2-user@{0}'.format(ec2_instance.ip_address)
+    # env.hosts = [ec2_instance.ip_address]
     env.branch = 'develop'
     env.create_s3 = False
     env.aws_access_key_id = 'key_id'
@@ -714,18 +716,19 @@ def build_test_server():
 
     # Add these to so we connect magically
     env.user = USERNAME
-    env.key_filename = AWS_KEY
+    env.key_filename = SYDNEY_AWS_KEY
 
     puts('env: {0}'.format(env))
 
+    # Make sure the FS is resized
     resize_file_system()
-    yum_pip_update()
 
     # Make the swap we might need
     make_swap()
 
     # Perform the base install
     base_install()
+    yum_pip_update()
 
     # Wait for things to settle down
     time.sleep(5)
