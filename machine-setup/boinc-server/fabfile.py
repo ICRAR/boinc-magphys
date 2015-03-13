@@ -35,6 +35,7 @@ so we must ensure the download server runs last as it actually adds things to th
 fab prod_env prod_deploy_stage01 prod_deploy_stage02 prod_deploy_stage03 prod_deploy_stage04
 """
 import glob
+from os.path import expanduser, join, exists
 import boto
 import os
 import time
@@ -49,12 +50,17 @@ from fabric.utils import puts, abort, fastprint
 
 USERNAME = 'ec2-user'
 AMI_ID = 'ami-05355a6c'
-INSTANCE_TYPE = 'm1.small'
+INSTANCE_TYPE = 't2.small'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
 KEY_NAME_VPC = 'icrar_theskynet_public_prod'
 SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
+SYDNEY_REGION = 'ap-southeast-2'
+SYDNEY_AMI_ID = 'ami-d50773ef'
+SYDNEY_KEY_NAME = 'icrar_sydney'
+SYDNEY_SECURITY_GROUPS = ['sg-be7ccfdb']
+SYDNEY_SUBNET = 'subnet-878cc2ee'
 PROD_SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for the VPC
 TEST_SECURITY_GROUPS_VPC = ['sg-dd33e0b2', 'sg-9408dbfb']  # Security group for the VPC
 PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
@@ -125,21 +131,39 @@ def copy_public_keys():
         put(key_file, filename)
 
 
-def create_instance(ebs_size, ami_name):
+def create_instance(ebs_size, ami_name, sydney=False):
     """
     Create the AWS instance
     :param ebs_size:
     """
     puts('Creating the instance {1} with disk size {0} GB'.format(ebs_size, ami_name))
 
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_connection = boto.connect_ec2()
+    if exists(join(expanduser('~'), '.aws/credentials')):
+        # This relies on a ~/.aws/credentials file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.aws/credentials")
+        if sydney:
+            ec2_connection = boto.ec2.connect_to_region(SYDNEY_REGION, profile_name='theSkyNet')
+        else:
+            ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    else:
+        # This relies on a ~/.boto or /etc/boto.cfg file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.boto or /etc/boto.cfg")
+        ec2_connection = boto.connect_ec2()
 
-    dev_sda1 = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
-    dev_sda1.size = int(ebs_size)  # size in Gigabytes
+    dev_xvda = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
+    dev_xvda.size = int(ebs_size)  # size in Gigabytes
     bdm = blockdevicemapping.BlockDeviceMapping()
-    bdm['/dev/sda1'] = dev_sda1
-    reservations = ec2_connection.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, block_device_map=bdm)
+    bdm['/dev/xvda'] = dev_xvda
+    if sydney:
+        reservations = ec2_connection.run_instances(
+            SYDNEY_AMI_ID,
+            subnet_id=SYDNEY_SUBNET,
+            instance_type=INSTANCE_TYPE,
+            key_name=SYDNEY_KEY_NAME,
+            security_group_ids=SYDNEY_SECURITY_GROUPS,
+            block_device_map=bdm)
+    else:
+        reservations = ec2_connection.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, block_device_map=bdm)
     instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
     for i in range(4):
@@ -178,8 +202,14 @@ def start_ami_instance(ami_id, instance_name):
     """
     puts('Starting the instance {0} from id {1}'.format(instance_name, ami_id))
 
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_connection = boto.connect_ec2()
+    if exists(join(expanduser('~'), '.aws/credentials')):
+        # This relies on a ~/.aws/credentials file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.aws/credentials")
+        ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    else:
+        # This relies on a ~/.boto or /etc/boto.cfg file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.boto or /etc/boto.cfg")
+        ec2_connection = boto.connect_ec2()
 
     if env.subnet_id == '':
         reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
@@ -283,7 +313,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('usermod -a -G ec2-user apache')
 
 
-def pogs_install(with_db):
+def pogs_install(with_db, create_snapshot=True):
     """
     Perform the tasks to install the whole BOINC server on a single machine
     """
@@ -449,15 +479,16 @@ subnet_ids = "XXX","YYY"
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('php create_forums.php')
 
-    # Save the instance as an AMI
-    puts("Stopping the instance")
-    env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
-    while not env.ec2_instance.update() == 'stopped':
-        fastprint('.')
-        time.sleep(5)
+    if create_snapshot:
+        # Save the instance as an AMI
+        puts("Stopping the instance")
+        env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
+        while not env.ec2_instance.update() == 'stopped':
+            fastprint('.')
+            time.sleep(5)
 
-    puts("The AMI is being created. Don't forget to terminate the instance if not needed")
-    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base MAGPHYS AMI')
+        puts("The AMI is being created. Don't forget to terminate the instance if not needed")
+        env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base MAGPHYS AMI')
 
     puts('All done')
 
@@ -590,8 +621,15 @@ def boinc_setup_env():
 
     Allow the user to select if a Elastic IP address is to be used
     """
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_connection = boto.connect_ec2()
+    if exists(join(expanduser('~'), '.aws/credentials')):
+        # This relies on a ~/.aws/credentials file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.aws/credentials")
+        ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    else:
+        # This relies on a ~/.boto or /etc/boto.cfg file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.boto or /etc/boto.cfg")
+        ec2_connection = boto.connect_ec2()
+
     if 'ami_id' not in env:
         images = ec2_connection.get_all_images(owners=['self'])
         puts('Available images')
@@ -657,14 +695,67 @@ def boinc_build_ami():
 
 @task
 @serial
+def build_test_server():
+    """
+    Build a test server in the Sydney region
+    """
+    # Create the instance in AWS
+    ec2_instance, ec2_connection = create_instance(10, 'POGS Test Server', True)
+    env.ec2_instance = ec2_instance
+    env.ec2_connection = ec2_connection
+    env.hosts = [ec2_instance.ip_address]
+    env.branch = 'develop'
+    env.create_s3 = False
+    env.aws_access_key_id = 'key_id'
+    env.aws_secret_access_key = 'secret_access_key'
+    env.project_name = 'pogs_test'
+    env.ops_username = 'user'
+    env.ops_password = 'user'
+
+    # Add these to so we connect magically
+    env.user = USERNAME
+    env.key_filename = AWS_KEY
+
+    puts('env: {0}'.format(env))
+
+    resize_file_system()
+    yum_pip_update()
+
+    # Make the swap we might need
+    make_swap()
+
+    # Perform the base install
+    base_install()
+
+    # Wait for things to settle down
+    time.sleep(5)
+
+    boinc_install()
+
+    # Wait for things to settle down
+    time.sleep(5)
+    pogs_install(False, False)
+
+    # TODO:
+
+
+@task
+@serial
 def pogs_setup_env():
     """
     Ask a series of questions before deploying to the cloud.
 
     Allow the user to select if a Elastic IP address is to be used
     """
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_connection = boto.connect_ec2()
+    if exists(join(expanduser('~'), '.aws/credentials')):
+        # This relies on a ~/.aws/credentials file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.aws/credentials")
+        ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    else:
+        # This relies on a ~/.boto or /etc/boto.cfg file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.boto or /etc/boto.cfg")
+        ec2_connection = boto.connect_ec2()
+
     if 'ami_id' not in env:
         images = ec2_connection.get_all_images(owners=['self'])
         puts('Available images')
