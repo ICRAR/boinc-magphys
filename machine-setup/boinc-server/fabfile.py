@@ -66,15 +66,19 @@ PROD_SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for 
 TEST_SECURITY_GROUPS_VPC = ['sg-dd33e0b2', 'sg-9408dbfb']  # Security group for the VPC
 PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
 PIP_PACKAGES = 'sqlalchemy pyfits Pillow fabric configobj MySQL-python boto astropy cython'
-YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel curl-devel '
-YUM_BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
+YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel python-devel python27 python27-devel curl-devel '
+YUM_BOINC_PACKAGES = 'httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
 
 
 def base_install():
     """
     Perform the basic install
     """
-    # Install the bits we need - we need the MySQL so the python connector will build
+    # Install the 5.6 version of MySQL
+    sudo('sudo yum localinstall http://repo.mysql.com/mysql-community-release-el6-5.noarch.rpm -y')
+    sudo('sudo yum install mysql-community-server -y')
+
+    # Install the bits we need - we need the so the python connector will build
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BASE_PACKAGES))
 
     # Setup the python
