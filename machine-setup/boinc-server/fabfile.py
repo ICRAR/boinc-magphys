@@ -740,6 +740,7 @@ def build_test_server():
     env.project_name = 'pogs_test'
     env.ops_username = 'user'
     env.ops_password = 'user'
+    env.hosts = ['pogs-test-machine.theskynet.org']
 
     # Add these to so we connect magically
     env.user = USERNAME
