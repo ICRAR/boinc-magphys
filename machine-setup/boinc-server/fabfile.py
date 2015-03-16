@@ -269,25 +269,26 @@ def make_swap():
     sudo('swapon /swapfile')
 
 
-def boinc_install():
+def boinc_install(test_server=False):
     """
     Perform the tasks to install the whole BOINC server on a single machine
     """
     # Get the packages
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
 
-    # Setup postfix
-    sudo('service sendmail stop')
-    sudo('service postfix stop')
-    sudo('chkconfig sendmail off')
-    sudo('chkconfig sendmail --del')
+    if not test_server:
+        # Setup postfix
+        sudo('service sendmail stop')
+        sudo('service postfix stop')
+        sudo('chkconfig sendmail off')
+        sudo('chkconfig sendmail --del')
 
-    sudo('chkconfig postfix --add')
-    sudo('chkconfig postfix on')
+        sudo('chkconfig postfix --add')
+        sudo('chkconfig postfix on')
 
-    sudo('service postfix start')
+        sudo('service postfix start')
 
-    sudo('''echo "relayhost = [smtp.gmail.com]:587
+        sudo('''echo "relayhost = [smtp.gmail.com]:587
 smtp_sasl_auth_enable = yes
 smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
 smtp_sasl_security_options = noanonymous
@@ -298,12 +299,12 @@ smtp_use_tls = yes
 smtp_generic_maps = hash:/etc/postfix/generic
 default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
 
-    sudo('echo "[smtp.gmail.com]:587 {0}@gmail.com:{1}" > /etc/postfix/sasl_passwd'.format(env.gmail_account, env.gmail_password))
-    sudo('chmod 400 /etc/postfix/sasl_passwd')
-    sudo('postmap /etc/postfix/sasl_passwd')
+        sudo('echo "[smtp.gmail.com]:587 {0}@gmail.com:{1}" > /etc/postfix/sasl_passwd'.format(env.gmail_account, env.gmail_password))
+        sudo('chmod 400 /etc/postfix/sasl_passwd')
+        sudo('postmap /etc/postfix/sasl_passwd')
 
     # Grab the latest trunk from GIT
-    run('git clone git://boinc.berkeley.edu/boinc-v2.git boinc')
+    run('git clone --quiet git://boinc.berkeley.edu/boinc-v2.git boinc')
 
     with cd('/home/ec2-user/boinc'):
         run('./_autosetup')
@@ -314,7 +315,7 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('usermod -a -G ec2-user apache')
 
 
-def pogs_install(with_db, create_snapshot=True):
+def pogs_install(with_db, test_server=False):
     """
     Perform the tasks to install the whole BOINC server on a single machine
     """
@@ -322,30 +323,38 @@ def pogs_install(with_db, create_snapshot=True):
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
 
     # Setup Users
-    for user in env.list_of_users:
-        sudo('useradd {0}'.format(user))
-        sudo('mkdir /home/{0}/.ssh'.format(user))
-        sudo('chmod 700 /home/{0}/.ssh'.format(user))
-        sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
-        sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
-        sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
-        sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
+    if test_server:
+        puts('No users on the test server')
+    else:
+        for user in env.list_of_users:
+            sudo('useradd {0}'.format(user))
+            sudo('mkdir /home/{0}/.ssh'.format(user))
+            sudo('chmod 700 /home/{0}/.ssh'.format(user))
+            sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
+            sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
+            sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
+            sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
 
-        # Add them to the sudoers
-        sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
+            # Add them to the sudoers
+            sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
-    nfs_mkdir('archive')
-    nfs_mkdir('boinc-magphys')
-    nfs_mkdir('galaxies')
-    nfs_mkdir('projects')
-    nfs_mkdir('logs_ami')
+    if test_server:
+        run('mkdir -p /home/ec2-user/archive')
+        run('mkdir -p /home/ec2-user/boinc-magphys')
+        run('mkdir -p /home/ec2-user/galaxies')
+        run('mkdir -p /home/ec2-user/projects')
+    else:
+        nfs_mkdir('archive')
+        nfs_mkdir('boinc-magphys')
+        nfs_mkdir('galaxies')
+        nfs_mkdir('projects')
     run('mkdir -p /home/ec2-user/archive/to_store')
 
     # Clone our code
     if env.branch == '':
-        run('git clone git://github.com/ICRAR/boinc-magphys.git')
+        run('git clone --quiet git://github.com/ICRAR/boinc-magphys.git')
     else:
-        run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
+        run('git clone --quiet -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
 
     # Create the .boto file
     run('''echo "[Credentials]
@@ -480,7 +489,7 @@ subnet_ids = "XXX","YYY"
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('php create_forums.php')
 
-    if create_snapshot:
+    if not test_server:
         # Save the instance as an AMI
         puts("Stopping the instance")
         env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
@@ -733,11 +742,11 @@ def build_test_server():
     # Wait for things to settle down
     time.sleep(5)
 
-    boinc_install()
+    boinc_install(test_server=True)
 
     # Wait for things to settle down
     time.sleep(5)
-    pogs_install(False, False)
+    pogs_install(with_db=True, test_server=True)
 
     # TODO:
 
