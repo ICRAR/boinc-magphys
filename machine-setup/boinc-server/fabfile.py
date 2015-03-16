@@ -453,10 +453,13 @@ subnet_ids = "XXX","YYY"
 ' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.project_name))
 
     # Copy the config files
-    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
-    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/* /home/ec2-user/projects/{0}/html/user/'.format(env.project_name))
-    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/hr_info.txt /home/ec2-user/projects/{0}/hr_info.txt'.format(env.project_name))
-    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/project_files.xml /home/ec2-user/projects/{0}/project_files.xml'.format(env.project_name))
+    if not test_server:
+        run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
+        run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/* /home/ec2-user/projects/{0}/html/user/'.format(env.project_name))
+        run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/hr_info.txt /home/ec2-user/projects/{0}/hr_info.txt'.format(env.project_name))
+        run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/project_files.xml /home/ec2-user/projects/{0}/project_files.xml'.format(env.project_name))
+
+    # Create the directories we need
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_archive'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_tmp'.format(env.project_name))
 
@@ -473,10 +476,14 @@ subnet_ids = "XXX","YYY"
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
-    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
-        run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
-        run('fab --set project_name={0} edit_files'.format(env.project_name))
-        sudo('fab --set project_name={0} setup_website'.format(env.project_name))
+    if test_server:
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
+            sudo('fab --set project_name={0} setup_website'.format(env.project_name))
+    else:
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
+            run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
+            run('fab --set project_name={0} edit_files'.format(env.project_name))
+            sudo('fab --set project_name={0} setup_website'.format(env.project_name))
 
     # This is needed because the files that Apache serve are inside the user's home directory.
     run('chmod 711 /home/ec2-user')
@@ -716,7 +723,7 @@ def build_test_server():
     env.host_string = 'ec2-user@{0}'.format(ec2_instance.ip_address)
     # env.hosts = [ec2_instance.ip_address]
     env.branch = 'develop'
-    env.create_s3 = False
+    env.create_s3 = 'no'
     env.aws_access_key_id = 'key_id'
     env.aws_secret_access_key = 'secret_access_key'
     env.project_name = 'pogs_test'
@@ -748,7 +755,8 @@ def build_test_server():
     time.sleep(5)
     pogs_install(with_db=True, test_server=True)
 
-    # TODO:
+    # Now set up the remain POGS bits
+    start_pogs()
 
 
 @task
