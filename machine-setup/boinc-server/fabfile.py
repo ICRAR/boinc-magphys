@@ -65,9 +65,11 @@ SYDNEY_SUBNET = 'subnet-878cc2ee'
 PROD_SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for the VPC
 TEST_SECURITY_GROUPS_VPC = ['sg-dd33e0b2', 'sg-9408dbfb']  # Security group for the VPC
 PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
-PIP_PACKAGES = 'sqlalchemy pyfits Pillow fabric configobj MySQL-python boto astropy cython'
+PIP_PACKAGES1 = 'Numpy'
+PIP_PACKAGES2 = 'MySQL-python'
+PIP_PACKAGES3 = 'sqlalchemy pyfits Pillow fabric configobj boto astropy cython'
 YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel python-devel python27 python27-devel curl-devel '
-YUM_BOINC_PACKAGES = 'httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
+YUM_BOINC_PACKAGES = 'httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates'
 YUM_BOINC_PACKAGES_TEST = 'httpd httpd-devel php php-cli php-gd php-mysqlnd mod_fcgid php-fpm ca-certificates'
 
 
@@ -87,8 +89,9 @@ def base_install():
     sudo('rm -f /usr/bin/easy_install')
     sudo('easy_install-2.7 pip')
     sudo('rm -f /usr/bin/pip')
-    sudo('pip2.7 install --quiet Numpy')
-    sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES))
+    sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES1))
+    sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES2))
+    sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES3))
 
     # Setup the pythonpath
     append('/home/ec2-user/.bash_profile',
@@ -586,7 +589,9 @@ def yum_pip_update():
     sudo('yum --assumeyes --quiet update')
 
     # Update the pip install
-    sudo('pip2.7 install -U {0}'.format(PIP_PACKAGES))
+    sudo('pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES1))
+    sudo('pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES2))
+    sudo('pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES3))
 
 
 @task
@@ -755,8 +760,8 @@ def build_test_server():
     make_swap()
 
     # Perform the base install
+    yum_update()
     base_install()
-    yum_pip_update()
 
     # Wait for things to settle down
     time.sleep(5)
