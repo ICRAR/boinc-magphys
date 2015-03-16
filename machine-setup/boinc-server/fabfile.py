@@ -68,6 +68,7 @@ PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
 PIP_PACKAGES = 'sqlalchemy pyfits Pillow fabric configobj MySQL-python boto astropy cython'
 YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel python-devel python27 python27-devel curl-devel '
 YUM_BOINC_PACKAGES = 'httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
+YUM_BOINC_PACKAGES_TEST = 'httpd httpd-devel php php-cli php-gd php-mysqlnd mod_fcgid php-fpm ca-certificates'
 
 
 def base_install():
@@ -75,8 +76,8 @@ def base_install():
     Perform the basic install
     """
     # Install the 5.6 version of MySQL
-    sudo('sudo yum localinstall http://repo.mysql.com/mysql-community-release-el6-5.noarch.rpm -y')
-    sudo('sudo yum install mysql-community-server -y')
+    sudo('sudo yum --assumeyes --quiet localinstall http://repo.mysql.com/mysql-community-release-el6-5.noarch.rpm')
+    sudo('sudo yum --assumeyes --quiet install mysql-community-server mysql-community-devel')
 
     # Install the bits we need - we need the so the python connector will build
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BASE_PACKAGES))
@@ -278,7 +279,10 @@ def boinc_install(test_server=False):
     Perform the tasks to install the whole BOINC server on a single machine
     """
     # Get the packages
-    sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
+    if test_server:
+        sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES_TEST))
+    else:
+        sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
 
     if not test_server:
         # Setup postfix
@@ -324,7 +328,10 @@ def pogs_install(with_db, test_server=False):
     Perform the tasks to install the whole BOINC server on a single machine
     """
     # Get the packages
-    sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
+    if test_server:
+        sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES_TEST))
+    else:
+        sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
 
     # Setup Users
     if test_server:
