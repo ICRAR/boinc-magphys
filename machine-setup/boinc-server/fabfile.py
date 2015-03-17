@@ -67,7 +67,7 @@ TEST_SECURITY_GROUPS_VPC = ['sg-dd33e0b2', 'sg-9408dbfb']  # Security group for 
 PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
 PIP_PACKAGES1 = 'Numpy'
 PIP_PACKAGES2 = 'MySQL-python'
-PIP_PACKAGES3 = 'sqlalchemy pyfits Pillow fabric configobj boto astropy cython'
+PIP_PACKAGES3 = 'sqlalchemy pyfits Pillow fabric configobj boto astropy cython MySQL-python'
 YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel python-devel python27 python27-devel curl-devel '
 YUM_BOINC_PACKAGES = 'httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates'
 YUM_BOINC_PACKAGES_TEST = 'httpd httpd-devel php php-cli php-gd php-mysqlnd mod_fcgid php-fpm ca-certificates'
@@ -84,13 +84,16 @@ def base_install():
     # Install the bits we need - we need the so the python connector will build
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BASE_PACKAGES))
 
+    sudo('wget https://bootstrap.pypa.io/ez_setup.py -O - | python2.6')
+    sudo('rm -f /usr/bin/easy_install')
+    sudo('easy_install-2.6 pip')
+    sudo('rm -f /usr/bin/pip')
+    sudo('pip2.6 install --quiet {0}'.format(PIP_PACKAGES2))
+
     # Setup the python
     sudo('wget https://bootstrap.pypa.io/ez_setup.py -O - | python2.7')
-    sudo('rm -f /usr/bin/easy_install')
     sudo('easy_install-2.7 pip')
-    sudo('rm -f /usr/bin/pip')
     sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES1))
-    sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES2))
     sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES3))
 
     # Setup the pythonpath
@@ -485,6 +488,9 @@ subnet_ids = "XXX","YYY"
     # Build the validator
     with cd('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
         run('make')
+
+    with cd('/home/ec2-user/boinc-magphys/py_boinc/cy_project/src'):
+        sudo('python2.7 setup.py install')
 
     # Setup the ops area password
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
