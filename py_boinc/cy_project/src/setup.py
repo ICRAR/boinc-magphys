@@ -41,7 +41,7 @@ if os.path.exists('/home/ec2-user'):
                     '/home/ec2-user/boinc/db',
                     '/home/ec2-user/boinc/tools',
                     '/home/ec2-user/boinc',
-                    '/usr/include/mysql55']
+                    '/usr/include/mysql']
     LIBRARY_DIRS = ['/usr/lib64/mysql/']
     extensions = [Extension(PY_BOINC,
                             sources=SOURCES,
