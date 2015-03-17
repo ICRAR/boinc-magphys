@@ -431,6 +431,7 @@ row_height = "7"
 threshold = "1000"
 high_water_mark = "400"
 report_deadline = "7"
+pixel_commit_threshold = "76"
 
 # Archive settings
 delete_delay = "5"
@@ -448,6 +449,15 @@ instance_type = "m1.small"
 key_name = "XXX"
 security_groups = "XXX","YYY"
 subnet_ids = "XXX","YYY"
+spot_price_multiplier = "2.0"
+ec2_ips_archive = "","","",""
+ec2_ips_build_image = "",""
+
+# Logging settings
+logger_port = "9020"
+logger_address = "XX.XX.XX.XX"
+logger_max_requests = "100"
+logger_directory = "/home/ec2-user/projects/{0}/log_ip-XX-XX-XX-XX"
 
 [build_png_image]
     instance_type = "m1.small"
