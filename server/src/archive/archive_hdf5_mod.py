@@ -36,7 +36,7 @@ import time
 from utils.logging_helper import config_logger
 from sqlalchemy.sql.expression import select, func
 from config import MIN_HIST_VALUE, ARCHIVED, PROCESSED, HDF5_OUTPUT_DIRECTORY, POGS_TMP
-from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT, PARAMETER_NAME, GALAXY
+from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT, PARAMETER_NAME, GALAXY, RUN_FILTER
 from utils.name_builder import get_files_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 from utils.shutdown_detection import shutdown
@@ -398,7 +398,7 @@ def pixel_in_block(raw_x, raw_y, block_x, block_y):
     return block_top_x <= raw_x <= block_bottom_x and block_top_y <= raw_y <= block_bottom_y
 
 
-def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, dimension_z, area_total, galaxy_id, map_parameter_name):
+def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, number_filters, area_total, galaxy_id, map_parameter_name):
     """
     Store the pixel data
     """
@@ -463,10 +463,28 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             # Create the arrays for this block
             data = numpy.empty((size_x, size_y, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
             data.fill(numpy.NaN)
-            data_pixel_details = group.create_dataset('pixel_details_{0}_{1}'.format(block_x, block_y), (size_x, size_y), dtype=data_type_pixel, compression='gzip')
-            data_pixel_parameters = group.create_dataset('pixel_parameters_{0}_{1}'.format(block_x, block_y), (size_x, size_y, NUMBER_PARAMETERS), dtype=data_type_pixel_parameter, compression='gzip')
-            data_pixel_filter = group.create_dataset('pixel_filters_{0}_{1}'.format(block_x, block_y), (size_x, size_y, dimension_z), dtype=data_type_pixel_filter, compression='gzip')
-            data_pixel_histograms_grid = group.create_dataset('pixel_histograms_grid_{0}_{1}'.format(block_x, block_y), (size_x, size_y, NUMBER_PARAMETERS), dtype=data_type_block_details, compression='gzip')
+            data_pixel_details = group.create_dataset(
+                'pixel_details_{0}_{1}'.format(block_x, block_y),
+                (size_x, size_y),
+                dtype=data_type_pixel,
+                compression='gzip')
+            data_pixel_parameters = group.create_dataset(
+                'pixel_parameters_{0}_{1}'.format(block_x, block_y),
+                (size_x, size_y, NUMBER_PARAMETERS),
+                dtype=data_type_pixel_parameter,
+                compression='gzip')
+
+            # We can't use the z dimension as blank layers show up in the SED file
+            data_pixel_filter = group.create_dataset(
+                'pixel_filters_{0}_{1}'.format(block_x, block_y),
+                (size_x, size_y, number_filters),
+                dtype=data_type_pixel_filter,
+                compression='gzip')
+            data_pixel_histograms_grid = group.create_dataset(
+                'pixel_histograms_grid_{0}_{1}'.format(block_x, block_y),
+                (size_x, size_y, NUMBER_PARAMETERS),
+                dtype=data_type_block_details,
+                compression='gzip')
 
             for key in keys:
 
@@ -510,15 +528,15 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                             # Split the line to extract the data
                             values = line.split()
-                            pointName = values[1]
-                            pxresult_id = pointName[3:].rstrip()
+                            point_name = values[1]
+                            pxresult_id = point_name[3:].rstrip()
                             (raw_x, raw_y, area_id) = get_pixel_result(connection, pxresult_id)
                             # The pixel could be out of this block as the cutting up is not uniform
                             if pixel_in_block(raw_x, raw_y, block_x, block_y):
                                 # correct x & y for this block
                                 x = raw_x - (block_x * MAX_X_Y_BLOCK)
                                 y = raw_y - (block_y * MAX_X_Y_BLOCK)
-                                #LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
+                                # LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
                                 line_number = 0
                                 percentiles_next = False
                                 histogram_next = False
@@ -527,7 +545,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 skip_this_pixel = False
                                 pixel_count += 1
                             else:
-                                #LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
+                                # LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
                                 skip_this_pixel = True
                         elif skip_this_pixel:
                             # Do nothing as we're skipping this pixel
@@ -580,7 +598,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 values = line.split()
                                 for value in values:
                                     filter_description = list_filters[filter_layer]
-                                    if filter_layer < dimension_z:
+                                    if filter_layer < number_filters:
                                         data_pixel_filter[x, y, filter_layer] = (
                                             filter_description[0],
                                             filter_description[1],
@@ -610,7 +628,11 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                         if histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
                                             histogram_block_id += 1
                                             histogram_block_index = 0
-                                            histogram_data = histogram_group.create_dataset('block_{0}'.format(histogram_block_id), (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
+                                            histogram_data = histogram_group.create_dataset(
+                                                'block_{0}'.format(histogram_block_id),
+                                                (HISTOGRAM_BLOCK_SIZE,),
+                                                dtype=data_type_pixel_histogram,
+                                                compression='gzip')
 
                                         histogram_data[histogram_block_index] = (
                                             pixel_histogram_item[0],
@@ -735,6 +757,18 @@ def get_pixel_result(connection, pxresult_id):
         return x, y, area_id
 
 
+def get_number_filters(connection, run_id):
+    """
+    Get the number of filters used in this run
+
+    :param connection:
+    :param run_id:
+    :return:
+    """
+    count = connection.execute(select([func.count(RUN_FILTER.c.run_filter_id)]).where(RUN_FILTER.c.run_id == run_id)).first()[0]
+    return count
+
+
 def archive_to_hdf5(connection, modulus, remainder):
     """
     Archive data to an HDF5 file
@@ -807,13 +841,15 @@ def archive_to_hdf5(connection, modulus, remainder):
             store_area_user(connection, galaxy_id_aws, area_group)
             h5_file.flush()
 
+            number_filters = get_number_filters(connection, galaxy[GALAXY.c.run_id])
+
             # Store the values associated with a pixel
             pixel_count = store_pixels(connection,
                                        galaxy_file_name,
                                        pixel_group,
                                        galaxy[GALAXY.c.dimension_x],
                                        galaxy[GALAXY.c.dimension_y],
-                                       galaxy[GALAXY.c.dimension_z],
+                                       number_filters,
                                        area_count,
                                        galaxy[GALAXY.c.galaxy_id],
                                        map_parameter_name)
