@@ -25,12 +25,17 @@
 """
 A helper for putting files into S3 and getting them out again
 """
+import ssl
 import boto
 from boto.s3.key import Key
 from utils.logging_helper import config_logger
 
 LOG = config_logger(__name__)
 
+
+# There is a bug in BOTO at the moment
+if hasattr(ssl, '_create_unverified_context'):
+    ssl._create_default_https_context = ssl._create_unverified_context
 
 class S3Helper:
     def __init__(self):
