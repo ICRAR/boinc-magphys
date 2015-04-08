@@ -715,7 +715,7 @@ class Fit2Wu:
                 ir_layers += 1
 
         # TODO
-        #LOG.info('optical: {0}, optical_band: {1}'.format(optical_layers, self._optical_bands))
+        LOG.info('optical: {0}'.format(optical_layers))
         if optical_layers >= 4:
             return True
 
@@ -799,19 +799,20 @@ class Fit2Wu:
         layers = []
         LOG.info('list_filter_names: {0}'.format(list_filter_names))
         LOG.info('names: {0}'.format(names))
-        for filter_name in list_filter_names:
+        for j in range(len(list_filter_names)):
+            filter_name = list_filter_names[j]
             found_it = False
             for i in range(len(names)):
                 if names[i] == filter_name[FILTER.c.name]:
-                    layers.append(i)
+                    layers.append(j)
                     if filter_name[FILTER.c.infrared] == 1:
-                        self._infrared_bands[filter_name[FILTER.c.name]] = i
+                        self._infrared_bands[filter_name[FILTER.c.name]] = j
 
                     if filter_name[FILTER.c.optical] == 1:
-                        self._optical_bands[filter_name[FILTER.c.name]] = i
+                        self._optical_bands[filter_name[FILTER.c.name]] = j
 
                     if filter_name[FILTER.c.ultraviolet] == 1:
-                        self._ultraviolet_bands[filter_name[FILTER.c.name]] = i
+                        self._ultraviolet_bands[filter_name[FILTER.c.name]] = j
                     found_it = True
                     break
 
@@ -819,6 +820,7 @@ class Fit2Wu:
                 layers.append(-1)
 
             LOG.info('layers: {0}'.format(layers))
+            LOG.info('optical_bands: {0}'.format(self._optical_bands))
 
         self._layer_order = layers
 
@@ -839,7 +841,6 @@ class Fit2Wu:
                     continue
 
                 pixels = []
-                LOG.info()
                 for layer in self._layer_order:
                     if layer == -1:
                         # The layer is missing
