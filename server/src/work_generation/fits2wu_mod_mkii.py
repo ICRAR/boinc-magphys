@@ -804,7 +804,7 @@ class Fit2Wu:
             found_it = False
             for i in range(len(names)):
                 if names[i] == filter_name[FILTER.c.name]:
-                    layers.append(j)
+                    layers.append(i)
                     if filter_name[FILTER.c.infrared] == 1:
                         self._infrared_bands[filter_name[FILTER.c.name]] = j
 
