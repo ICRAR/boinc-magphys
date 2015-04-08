@@ -714,6 +714,8 @@ class Fit2Wu:
             if pixels[layer_id].value > 0:
                 ir_layers += 1
 
+        # TODO
+        LOG.info('optical: {0}'.format(optical_layers))
         if optical_layers >= 4:
             return True
 
@@ -852,6 +854,9 @@ class Fit2Wu:
                             else:
                                 sigma = pixel * self._sigma
                             pixels.append(PixelValue(pixel, sigma))
+
+                for i in range(0, len(pixels)):
+                    LOG.info('pixel: {0}, y: {1}, x: {2}, layer: {3}'.format(pixels[i].value, y, x, i))
 
                 if self._enough_layers(pixels):
                     result.append(Pixel(x, y, pixels))
