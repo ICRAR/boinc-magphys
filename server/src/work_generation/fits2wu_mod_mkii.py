@@ -846,7 +846,7 @@ class Fit2Wu:
                             pixels.append(PixelValue(0, 0))
                         else:
                             # TODO
-                            LOG.info('pixel: {0}, y:{1}, x:{2}'.format(pixel, y, x))
+                            LOG.info('pixel: {0}, y: {1}, x: {2}, layer: {3}'.format(pixel, y, x, layer))
                             if self._signal_noise_hdu is not None:
                                 sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
                             else:
