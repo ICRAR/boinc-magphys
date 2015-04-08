@@ -696,6 +696,8 @@ class Fit2Wu:
         Are there enough layers with data in them to warrant counting this pixel?
         :param pixels:
         """
+        # TODO
+        LOG.info('Pixels: {0}'.format(pixels))
         uv_layers = 0
         for layer_id in self._ultraviolet_bands.values():
             if pixels[layer_id].value > 0:
@@ -710,6 +712,8 @@ class Fit2Wu:
         for layer_id in self._infrared_bands.values():
             if pixels[layer_id].value > 0:
                 ir_layers += 1
+        # TODO
+        LOG.info('uv_layers: {0}, optical_layers: {1}, ir_layers: {2}'.format(uv_layers, optical_layers, ir_layers))
 
         if optical_layers >= 4:
             return True
