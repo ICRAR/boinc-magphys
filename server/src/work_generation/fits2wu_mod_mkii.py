@@ -699,11 +699,6 @@ class Fit2Wu:
         Are there enough layers with data in them to warrant counting this pixel?
         :param pixels:
         """
-        # TODO
-        LOG.info('Pixels: {0}'.format(pixels))
-        LOG.info('UV Bands: {0}'.format(self._ultraviolet_bands))
-        LOG.info('Optical Bands: {0}'.format(self._optical_bands))
-        LOG.info('IR Bands: {0}'.format(self._infrared_bands))
         uv_layers = 0
         for layer_id in self._ultraviolet_bands.values():
             if pixels[layer_id].value > 0:
@@ -711,6 +706,8 @@ class Fit2Wu:
 
         optical_layers = 0
         for layer_id in self._optical_bands.values():
+            # TODO
+            LOG.info('layer_id: {0}, value: {1}'.format(layer_id, pixels[layer_id].value))
             if pixels[layer_id].value > 0:
                 optical_layers += 1
 
@@ -718,8 +715,6 @@ class Fit2Wu:
         for layer_id in self._infrared_bands.values():
             if pixels[layer_id].value > 0:
                 ir_layers += 1
-        # TODO
-        LOG.info('uv_layers: {0}, optical_layers: {1}, ir_layers: {2}'.format(uv_layers, optical_layers, ir_layers))
 
         if optical_layers >= 4:
             return True
@@ -765,9 +760,6 @@ class Fit2Wu:
         for filter_name in self._connection.execute(select([FILTER], distinct=True, from_obj=FILTER.join(RUN_FILTER)).where(RUN_FILTER.c.run_id == self._run_id).order_by(FILTER.c.eff_lambda)):
             list_filter_names.append(filter_name)
 
-        # TODO
-        LOG.info('list_filter_names: {0}'.format(list_filter_names))
-
         # The order of the filters will be there order in the fits file so record the name and its position
         names = []
         for layer in range(self._layer_count):
@@ -805,7 +797,6 @@ class Fit2Wu:
                 raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
 
         layers = []
-        LOG.info('names: {0}'.format(names))
         for filter_name in list_filter_names:
             found_it = False
             for i in range(len(names)):
@@ -856,6 +847,8 @@ class Fit2Wu:
                             # A zero tells MAGPHYS - we have no value here
                             pixels.append(PixelValue(0, 0))
                         else:
+                            # TODO
+                            LOG.info('pixel: {0}'.format(pixel))
                             if self._signal_noise_hdu is not None:
                                 sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
                             else:
