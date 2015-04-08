@@ -715,7 +715,7 @@ class Fit2Wu:
                 ir_layers += 1
 
         # TODO
-        LOG.info('optical: {0}'.format(optical_layers))
+        #LOG.info('optical: {0}, optical_band: {1}'.format(optical_layers, self._optical_bands))
         if optical_layers >= 4:
             return True
 
@@ -797,6 +797,8 @@ class Fit2Wu:
                 raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
 
         layers = []
+        LOG.info('list_filter_names: {0}'.format(list_filter_names))
+        LOG.info('names: {0}'.format(names))
         for filter_name in list_filter_names:
             found_it = False
             for i in range(len(names)):
@@ -815,6 +817,8 @@ class Fit2Wu:
 
             if not found_it:
                 layers.append(-1)
+
+            LOG.info('layers: {0}'.format(layers))
 
         self._layer_order = layers
 
@@ -835,6 +839,7 @@ class Fit2Wu:
                     continue
 
                 pixels = []
+                LOG.info()
                 for layer in self._layer_order:
                     if layer == -1:
                         # The layer is missing
@@ -847,16 +852,11 @@ class Fit2Wu:
                             # A zero tells MAGPHYS - we have no value here
                             pixels.append(PixelValue(0, 0))
                         else:
-                            # TODO
-                            LOG.info('pixel: {0}, y: {1}, x: {2}, layer: {3}'.format(pixel, y, x, layer))
                             if self._signal_noise_hdu is not None:
                                 sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
                             else:
                                 sigma = pixel * self._sigma
                             pixels.append(PixelValue(pixel, sigma))
-
-                for i in range(0, len(pixels)):
-                    LOG.info('pixel: {0}, y: {1}, x: {2}, layer: {3}'.format(pixels[i].value, y, x, i))
 
                 if self._enough_layers(pixels):
                     result.append(Pixel(x, y, pixels))
