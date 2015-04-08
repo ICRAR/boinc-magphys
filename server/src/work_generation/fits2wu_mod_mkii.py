@@ -714,8 +714,6 @@ class Fit2Wu:
             if pixels[layer_id].value > 0:
                 ir_layers += 1
 
-        # TODO
-        LOG.info('optical: {0}'.format(optical_layers))
         if optical_layers >= 4:
             return True
 
@@ -797,8 +795,6 @@ class Fit2Wu:
                 raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
 
         layers = []
-        LOG.info('list_filter_names: {0}'.format(list_filter_names))
-        LOG.info('names: {0}'.format(names))
         for j in range(len(list_filter_names)):
             filter_name = list_filter_names[j]
             found_it = False
@@ -818,9 +814,6 @@ class Fit2Wu:
 
             if not found_it:
                 layers.append(-1)
-
-            LOG.info('layers: {0}'.format(layers))
-            LOG.info('optical_bands: {0}'.format(self._optical_bands))
 
         self._layer_order = layers
 
