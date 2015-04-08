@@ -706,8 +706,6 @@ class Fit2Wu:
 
         optical_layers = 0
         for layer_id in self._optical_bands.values():
-            # TODO
-            LOG.info('layer_id: {0}, value: {1}'.format(layer_id, pixels[layer_id].value))
             if pixels[layer_id].value > 0:
                 optical_layers += 1
 
@@ -848,7 +846,7 @@ class Fit2Wu:
                             pixels.append(PixelValue(0, 0))
                         else:
                             # TODO
-                            LOG.info('pixel: {0}'.format(pixel))
+                            LOG.info('pixel: {0}, y:{1}, x:{2}'.format(pixel, y, x))
                             if self._signal_noise_hdu is not None:
                                 sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
                             else:
