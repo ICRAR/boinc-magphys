@@ -157,12 +157,16 @@ class Fit2Wu:
         self._rounded_redshift = None
         self._hdu_list = None
         self._layer_count = None
+        self._sigma_layer_count = None  # number of layers in the sigma file
         self._end_y = None
         self._end_x = None
         self._fpops_est_per_pixel = None
         self._cobblestone_scaling_factor = None
         self._template_file = None
         self._layer_order = None
+        self._sigma_layer_order = None  # order of layers in the sigma file.
+                                        # Each layer here corresponds to the same filter as in layer order.
+                                        # e.g. sigma_layer_order[1] = same filter as layer_order[1]
         self._ultraviolet_bands = {}
         self._optical_bands = {}
         self._infrared_bands = {}
@@ -209,9 +213,13 @@ class Fit2Wu:
         if self._sigma_filename is not None:
             self._sigma = 0.0
             self._signal_noise_hdu = pyfits.open(self._sigma_filename, memmap=True)
+            self._sigma_layer_count = len(self._signal_noise_hdu)
+            """
             if self._layer_count != len(self._signal_noise_hdu):
+                no longer need this!
                 LOG.error('The layer counts do not match %d vs %d', self._layer_count, len(self._signal_noise_hdu))
                 return 0, 0
+            """
         else:
             self._sigma = float(self._sigma)
 
@@ -222,8 +230,8 @@ class Fit2Wu:
 
         # Get the flops estimate amd cobblestone factor
         run = self._connection.execute(select([RUN]).where(RUN.c.run_id == self._run_id)).first()
-        self._fpops_est_per_pixel = run[RUN.c.fpops_est]
-        self._cobblestone_scaling_factor = run[RUN.c.cobblestone_factor]
+        self._fpops_est_per_pixel = run[RUN.c.fpops_est] * (self._layer_count/5)                    ##added need to find out how multiplier should work
+        self._cobblestone_scaling_factor = run[RUN.c.cobblestone_factor] * (self._layer_count/5)    ##added need to find out how multiplier should work
 
         # Create and save the object
         datetime_now = datetime.now()
@@ -616,8 +624,11 @@ class Fit2Wu:
         row_num = 0
         for pixel in pixels:
             outfile.write('pix%(id)s %(pixel_redshift)s ' % {'id': pixel.pixel_id, 'pixel_redshift': self._redshift})
-            for pixel_value in pixel.pixels:
-                outfile.write("{0}  {1}  ".format(pixel_value.value, pixel_value.sigma))
+            for pixel_value in pixel.pixels: ## Should be placed here in same order as LayerOrder
+                if pixel_value.value is None or pixel_value.value <= 0:                         ## added
+                    outfile.write("{0}  {1}  ".format(-1, -1))                                  ## added
+                else:                                                                           ## added
+                    outfile.write("{0}  {1}  ".format(pixel_value.value, pixel_value.sigma))
 
             outfile.write('\n')
             row_num += 1
@@ -779,12 +790,24 @@ class Fit2Wu:
         # If the fit is using a S/N ratio file check the order is correct
         if self._signal_noise_hdu is not None:
             names_snr = []
-            for layer in range(self._layer_count):
+            for layer in range(self._sigma_layer_count):
                 hdu = self._signal_noise_hdu[layer]
-                filter_name = hdu.header['MAGPHYSN']
-                if filter_name is None:
+                filter_name_magphysn = hdu.header['MAGPHYSN']
+                if filter_name_magphysn is None:
                     raise LookupError('The layer {0} does not have MAGPHYSN in it'.format(layer))
-                names_snr.append(filter_name)
+                names_snr.append(filter_name_magphysn) # list of all filters that appear in the sigma file
+
+                found_filter = False
+                for filter_name in list_filter_names:
+                    if filter_name_magphysn == filter_name[FILTER.c.name]:
+                        found_filter = True
+                        break
+
+                if not found_filter:
+                    raise LookupError('The filter {0} in the fits sigma file is not expected'.format(filter_name_magphysn))
+
+            """
+            Should no longer need to check whether layers are exactly the same.
 
             # Make sure they match
             if len(names) == len(names_snr):
@@ -793,8 +816,10 @@ class Fit2Wu:
                         raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
             else:
                 raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
+            """
 
         layers = []
+        sigma_layers = []
         for j in range(len(list_filter_names)):
             filter_name = list_filter_names[j]
             found_it = False
@@ -815,7 +840,26 @@ class Fit2Wu:
             if not found_it:
                 layers.append(-1)
 
+            """
+            Search the sigma hdu for the current filter name.
+            If it does exist, then add add its id to the sigma_layer_order
+            If it does not exist, then add -1.
+            sigma_layer_order will be in the same order as layer_order, meaning if a value exists for layer_order, there will be one for sigma_layer_order
+            and both of these layers will be for the same filter. only if a sigma file exists.
+
+            """
+            if self._signal_noise_hdu is not None:
+                found_it = False
+                for i in range(len(names_snr)):
+                    if names_snr[i] == filter_name[FILTER.c.name]:
+                        sigma_layers.append(i)
+                        found_it = True
+                        break
+                if not found_it:
+                    sigma_layers.append(-1)
+
         self._layer_order = layers
+        self._sigma_layer_order = sigma_layers
 
     def _get_pixels(self, pix_x, pix_y):
         """
@@ -846,10 +890,26 @@ class Fit2Wu:
                             # A zero tells MAGPHYS - we have no value here
                             pixels.append(PixelValue(0, 0))
                         else:
-                            if self._signal_noise_hdu is not None:
-                                sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
-                            else:
-                                sigma = pixel * self._sigma
+                            """
+                            If there is no sigma file at all, use self._sigma.
+                            If there is a sigma file,
+                            check whether the sigma_layer_order contains the layer in the sigma that corresponds to the current layer.
+                            if there is no layer in the sigma (-1), use 10% or whatever is defined as self._sigma.
+                            """
+                            if self._signal_noise_hdu is None:  # If there is no signal to noise file, use the sigma value.
+
+                                if self._sigma is not None:
+                                    sigma = pixel * self._sigma
+                                else:  # If there is no sigma value, use 0.1
+                                    sigma = pixel * 0.1
+
+                            else:  # if we do have a signal to noise file, use it
+
+                                if self._sigma_layer_order[layer] != -1:
+                                    sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
+                                else:  # If there is no value for the current layer, use 0.1
+                                    sigma = pixel * 0.1
+
                             pixels.append(PixelValue(pixel, sigma))
 
                 if self._enough_layers(pixels):
