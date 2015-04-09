@@ -476,12 +476,13 @@ logger_directory = "/home/ec2-user/projects/{0}/log_ip-XX-XX-XX-XX"
 ' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.project_name))
 
     # Setup the permissions
-    run('chmod 02770 upload')
-    run('chmod 02770 html/cache')
-    run('chmod 02770 html/inc')
-    run('chmod 02770 html/languages')
-    run('chmod 02770 html/languages/compiled')
-    run('chmod 02770 html/user_profile')
+    with cd('/home/ec2-user/projects/{0}'.format(env.project_name)):
+        run('chmod 02770 upload')
+        run('chmod 02770 html/cache')
+        run('chmod 02770 html/inc')
+        run('chmod 02770 html/languages')
+        run('chmod 02770 html/languages/compiled')
+        run('chmod 02770 html/user_profile')
 
     # Copy the config files
     if not test_server:
