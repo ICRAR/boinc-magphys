@@ -806,17 +806,14 @@ class Fit2Wu:
                 if not found_filter:
                     raise LookupError('The filter {0} in the fits sigma file is not expected'.format(filter_name_magphysn))
 
-            """
-            Should no longer need to check whether layers are exactly the same.
-
-            # Make sure they match
+            # No longer matters if main file and sigma have matching layers/bands.
             if len(names) == len(names_snr):
                 for index in range(len(names)):
                     if names[index] != names_snr[index]:
-                        raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
+                        LOG.info('The list of bands are not the same order. Index:{0}, {1} vs {2}'.format(index, names[index], names_snr[index]))
             else:
-                raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
-            """
+                LOG.info('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
+
 
         layers = []
         sigma_layers = []
@@ -857,6 +854,29 @@ class Fit2Wu:
                         break
                 if not found_it:
                     sigma_layers.append(-1)
+
+        LOG.info('Optical bands found: {0}'.format(len(self._optical_bands)))
+        LOG.info('Infrared bands found: {0}'.format(len(self._infrared_bands)))
+        LOG.info('Ultraviolet bands found: {0}'.format(len(self._ultraviolet_bands)))
+
+        LOG.info('Ordered layers from database:')
+        i = 0
+        for item in list_filter_names:
+            LOG.info('{0}: {1}'.format(i, item[FILTER.c.name]))
+            i += 1
+
+        i = 0
+        LOG.info('layer_order:')
+        for item in layers:
+            LOG.info('{0}: {1}'.format(i, item))
+            i += 1
+
+        i = 0
+        if self._signal_noise_hdu is not None:
+            LOG.info('sigma_order:')
+            for item in sigma_layers:
+                LOG.info('{0}: {1}'.format(i, item))
+                i += 1
 
         self._layer_order = layers
         self._sigma_layer_order = sigma_layers
