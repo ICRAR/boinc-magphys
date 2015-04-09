@@ -66,11 +66,11 @@ PROD_SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for 
 TEST_SECURITY_GROUPS_VPC = ['sg-dd33e0b2', 'sg-9408dbfb']  # Security group for the VPC
 PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
 PIP_PACKAGES1 = 'Numpy'
-PIP_PACKAGES2 = 'MySQL-python'
-PIP_PACKAGES3 = 'sqlalchemy pyfits Pillow fabric configobj boto astropy cython MySQL-python'
-YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel python-devel python27 python27-devel curl-devel '
+PIP_PACKAGES2 = 'sqlalchemy pyfits Pillow fabric configobj boto astropy cython MySQL-python'
+YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel gdb libtool gcc-gfortran git openssl-devel curl-devel python27-devel '
 YUM_BOINC_PACKAGES = 'httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates'
-YUM_BOINC_PACKAGES_TEST = 'httpd httpd-devel php php-cli php-gd php-mysqlnd mod_fcgid php-fpm ca-certificates'
+#YUM_BOINC_PACKAGES_TEST = 'httpd httpd-devel php php-cli php-gd php-mysqlnd mod_fcgid php-fpm ca-certificates'
+YUM_BOINC_PACKAGES_TEST = 'mysql-server httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm ca-certificates'
 
 
 def base_install():
@@ -78,23 +78,19 @@ def base_install():
     Perform the basic install
     """
     # Install the 5.6 version of MySQL
-    sudo('sudo yum --assumeyes --quiet localinstall http://repo.mysql.com/mysql-community-release-el6-5.noarch.rpm')
-    sudo('sudo yum --assumeyes --quiet install mysql-community-server mysql-community-devel')
+    #sudo('yum --assumeyes --quiet localinstall http://repo.mysql.com/mysql-community-release-el6-5.noarch.rpm')
+    #sudo('yum --assumeyes --quiet install mysql-community-server mysql-community-devel')
+    # Install the 5.5 version
+    sudo('yum --assumeyes --quiet install mysql mysql-devel')
 
     # Install the bits we need - we need the so the python connector will build
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BASE_PACKAGES))
 
-    sudo('wget https://bootstrap.pypa.io/ez_setup.py -O - | python2.6')
-    sudo('rm -f /usr/bin/easy_install')
-    sudo('easy_install-2.6 pip')
-    sudo('rm -f /usr/bin/pip')
-    sudo('pip2.6 install --quiet {0}'.format(PIP_PACKAGES2))
-
     # Setup the python
     sudo('wget https://bootstrap.pypa.io/ez_setup.py -O - | python2.7')
     sudo('easy_install-2.7 pip')
-    sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES1))
-    sudo('pip2.7 install --quiet {0}'.format(PIP_PACKAGES3))
+    sudo('/usr/local/bin/pip install --quiet {0}'.format(PIP_PACKAGES1))
+    sudo('/usr/local/bin/pip install --quiet {0}'.format(PIP_PACKAGES2))
 
     # Setup the pythonpath
     append('/home/ec2-user/.bash_profile',
@@ -381,7 +377,7 @@ aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(env.aws_access_ke
     # Setup the S3 environment
     if to_boolean(env.create_s3):
         with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
-            run('fab --set project_name={0} create_s3'.format(env.project_name))
+            run('/usr/local/bin/fab --set project_name={0} create_s3'.format(env.project_name))
 
     if with_db:
         # Activate the DB
@@ -479,6 +475,14 @@ logger_directory = "/home/ec2-user/projects/{0}/log_ip-XX-XX-XX-XX"
 
 ' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.project_name))
 
+    # Setup the permissions
+    run('chmod 02770 upload')
+    run('chmod 02770 html/cache')
+    run('chmod 02770 html/inc')
+    run('chmod 02770 html/languages')
+    run('chmod 02770 html/languages/compiled')
+    run('chmod 02770 html/user_profile')
+
     # Copy the config files
     if not test_server:
         run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
@@ -508,12 +512,12 @@ logger_directory = "/home/ec2-user/projects/{0}/log_ip-XX-XX-XX-XX"
 
     if test_server:
         with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
-            sudo('fab --set project_name={0} setup_website'.format(env.project_name))
+            sudo('/usr/local/bin/fab --set project_name={0} setup_website'.format(env.project_name))
     else:
         with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
-            run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
-            run('fab --set project_name={0} edit_files'.format(env.project_name))
-            sudo('fab --set project_name={0} setup_website'.format(env.project_name))
+            run('/usr/local/bin/fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
+            run('/usr/local/bin/fab --set project_name={0} edit_files'.format(env.project_name))
+            sudo('/usr/local/bin/fab --set project_name={0} setup_website'.format(env.project_name))
 
     # This is needed because the files that Apache serve are inside the user's home directory.
     run('chmod 711 /home/ec2-user')
@@ -605,9 +609,8 @@ def yum_pip_update():
     sudo('yum --assumeyes --quiet update')
 
     # Update the pip install
-    sudo('pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES1))
-    sudo('pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES2))
-    sudo('pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES3))
+    sudo('/usr/local/bin/pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES1))
+    sudo('/usr/local/bin/pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES2))
 
 
 @task
@@ -744,24 +747,23 @@ def boinc_build_ami():
 
 @task
 @serial
-def build_test_server():
+def build_beta_server():
     """
     Build a test server in the Sydney region
     """
     # Create the instance in AWS
-    ec2_instance, ec2_connection = create_instance(15, 'POGS Test Server', True)
+    ec2_instance, ec2_connection = create_instance(30, 'POGS Beta Test Server', True)
     env.ec2_instance = ec2_instance
     env.ec2_connection = ec2_connection
     env.host_string = 'ec2-user@{0}'.format(ec2_instance.ip_address)
-    # env.hosts = [ec2_instance.ip_address]
     env.branch = 'develop'
     env.create_s3 = 'no'
     env.aws_access_key_id = 'key_id'
     env.aws_secret_access_key = 'secret_access_key'
-    env.project_name = 'pogs_test'
+    env.project_name = 'pogsbeta'
     env.ops_username = 'user'
     env.ops_password = 'user'
-    env.hosts = ['pogs-test-machine.theskynet.org']
+    env.hosts = ['pogsbeta.theskynet.org']
 
     # Add these to so we connect magically
     env.user = USERNAME
@@ -944,8 +946,8 @@ BOINC
 def start_pogs():
     # Copy files into place
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
-        run('fab --set project_name={0} create_first_version'.format(env.project_name))
-        run('fab --set project_name={0} start_daemons'.format(env.project_name))
+        run('/usr/local/bin/fab --set project_name={0} create_first_version'.format(env.project_name))
+        run('/usr/local/bin/fab --set project_name={0} start_daemons'.format(env.project_name))
 
     # Setup the crontab job to keep things ticking
     run('''echo "MAILTO=\\"\\"
