@@ -375,4 +375,3 @@ CREATE TABLE galaxy_user (
   INDEX (userid),
   UNIQUE (galaxy_id,userid)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
-
