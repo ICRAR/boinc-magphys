@@ -35,7 +35,6 @@ import shutil
 import math
 import pyfits
 import py_boinc
-import subprocess
 import multiprocessing
 
 import time
@@ -50,7 +49,6 @@ from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
 
-OLD_WAY = False
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = POGS_BOINC_PROJECT_ROOT + '/bin'
 TEMPLATES_PATH1 = 'templates'                                          # In true BOINC style, this is magically relative to the project root
@@ -592,7 +590,7 @@ class Fit2Wu:
         job_file.write('<job_desc>\n')
         for i in range(1, pixels_in_file + 1):
             job_file.write('''   <task>
-      <application>fit_sed</application>
+      <application>./fit_sed</application>
       <command_line>{0} filters.dat observations.dat</command_line>
       <stdout_filename>stdout_file</stdout_filename>
       <stderr_filename>stderr_file</stderr_filename>
@@ -600,7 +598,7 @@ class Fit2Wu:
 '''.format(i))
 
         job_file.write('''   <task>
-      <application>concat</application>
+      <application>./concat</application>
       <command_line>{0} output.fit</command_line>
       <stdout_filename>stdout_file</stdout_filename>
       <stderr_filename>stderr_file</stderr_filename>
@@ -661,49 +659,23 @@ class Fit2Wu:
 
         # And "create work" = create the work unit
         args_files = [work_unit_name, file_name_job, self._filter_file, self._zlib_file, self._sfh_model_file, self._ir_model_file]
-        if OLD_WAY:
-            args_params = [
-                "--appname",         APP_NAME,
-                "--min_quorum",      "%(min_quorum)s" % {'min_quorum': MIN_QUORUM},
-                "--max_success_results", "4",
-                "--delay_bound",     "%(delay_bound)s" % {'delay_bound': DELAY_BOUND},
-                "--target_nresults", "%(target_nresults)s" % {'target_nresults': TARGET_NRESULTS},
-                "--wu_name",         work_unit_name,
-                "--wu_template",     self._template_file,
-                "--result_template", TEMPLATES_PATH1 + "/fitsed_result.xml",
-                "--rsc_fpops_est",   "%(est).4f%(exp)s" % {'est': self._fpops_est_per_pixel * pixels_in_area, 'exp': FPOPS_EXP},
-                "--rsc_fpops_bound", "%(bound).4f%(exp)s" % {'bound': self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area, 'exp': FPOPS_EXP},
-                "--rsc_memory_bound", "1e8",
-                "--rsc_disk_bound", "1e8",
-                "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
-                "--opaque",   str(area.area_id),
-                "--priority", '{0}'.format(self._priority)
-            ]
-            cmd_create_work = [
-                BIN_PATH + "/create_work"
-            ]
-            cmd_create_work.extend(args_params)
-            cmd_create_work.extend(args_files)
-            subprocess.call(cmd_create_work)
-
-        else:
-            entry = PyBoincWu(app_name=APP_NAME,
-                              min_quorom=MIN_QUORUM,
-                              max_success_results=4,
-                              delay_bound=DELAY_BOUND,
-                              target_nresults=TARGET_NRESULTS,
-                              wu_name=work_unit_name,
-                              wu_template=self._template_file,
-                              result_template=TEMPLATES_PATH1 + "/fitsed_result.xml",
-                              rsc_fpops_est=self._fpops_est_per_pixel * pixels_in_area * 1e12,
-                              rsc_fpops_bound=self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area * 1e12,
-                              rsc_memory_bound=1e8,
-                              rsc_disk_bound=1e8,
-                              additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
-                              opaque=area.area_id,
-                              priority=self._priority,
-                              list_input_files=args_files)
-            self._boinc_insert_queue.append(entry)
+        entry = PyBoincWu(app_name=APP_NAME,
+                          min_quorom=MIN_QUORUM,
+                          max_success_results=4,
+                          delay_bound=DELAY_BOUND,
+                          target_nresults=TARGET_NRESULTS,
+                          wu_name=work_unit_name,
+                          wu_template=self._template_file,
+                          result_template=TEMPLATES_PATH1 + "/fitsed_result.xml",
+                          rsc_fpops_est=self._fpops_est_per_pixel * pixels_in_area * 1e12,
+                          rsc_fpops_bound=self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area * 1e12,
+                          rsc_memory_bound=1e8,
+                          rsc_disk_bound=1e8,
+                          additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
+                          opaque=area.area_id,
+                          priority=self._priority,
+                          list_input_files=args_files)
+        self._boinc_insert_queue.append(entry)
 
     def _enough_layers(self, pixels):
         """
