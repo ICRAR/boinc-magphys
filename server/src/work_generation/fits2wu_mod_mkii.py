@@ -750,13 +750,13 @@ class Fit2Wu:
 
         # Count the number of filters of each type in the model
         for filter_entry in list_filter_names:
-            if filter_entry[filter_entry.c.optical] == 1:
+            if filter_entry[FILTER.c.optical] == 1:
                 self._num_optical_bands_model += 1
 
-            if filter_entry[filter_entry.c.infrared] == 1:
+            if filter_entry[FILTER.c.infrared] == 1:
                 self._num_infrared_bands_model += 1
 
-            if filter_entry[filter_entry.c.ultraviolet] == 1:
+            if filter_entry[FILTER.c.ultraviolet] == 1:
                 self._num_ultraviolet_bands_model += 1
 
         # The order of the filters will be there order in the fits file so record the name and its position
