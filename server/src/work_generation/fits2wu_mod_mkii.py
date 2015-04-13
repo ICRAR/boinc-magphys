@@ -169,6 +169,10 @@ class Fit2Wu:
         self._optical_bands = {}
         self._infrared_bands = {}
 
+        self._num_optical_bands_model = 0       #Total number of filters of this each type in the model (filters.dat)
+        self._num_infrared_bands_model = 0
+        self._num_ultraviolet_bands_model = 0
+
         ### New variables for bulk database inserts ###
         self._areaPK = None  # Primary Key to use when inserting area into db. Increment BEFORE use
         self._pixelPK = None  # Primary Key to use when inserting pixel into db. Increment BEFORE use
@@ -228,8 +232,8 @@ class Fit2Wu:
 
         # Get the flops estimate amd cobblestone factor
         run = self._connection.execute(select([RUN]).where(RUN.c.run_id == self._run_id)).first()
-        self._fpops_est_per_pixel = run[RUN.c.fpops_est] * (self._layer_count/5)                    ##added need to find out how multiplier should work
-        self._cobblestone_scaling_factor = run[RUN.c.cobblestone_factor] * (self._layer_count/5)    ##added need to find out how multiplier should work
+        self._fpops_est_per_pixel = run[RUN.c.fpops_est]
+        self._cobblestone_scaling_factor = run[RUN.c.cobblestone_factor]
 
         # Create and save the object
         datetime_now = datetime.now()
@@ -741,6 +745,17 @@ class Fit2Wu:
         for filter_name in self._connection.execute(select([FILTER], distinct=True, from_obj=FILTER.join(RUN_FILTER)).where(RUN_FILTER.c.run_id == self._run_id).order_by(FILTER.c.eff_lambda)):
             list_filter_names.append(filter_name)
 
+        # Count the number of filters of each type in the model
+        for filter_entry in list_filter_names:
+            if filter_entry[filter_entry.c.optical] == 1:
+                self._num_optical_bands_model += 1
+
+            if filter_entry[filter_entry.c.infrared] == 1:
+                self._num_infrared_bands_model += 1
+
+            if filter_entry[filter_entry.c.ultraviolet] == 1:
+                self._num_ultraviolet_bands_model += 1
+
         # The order of the filters will be there order in the fits file so record the name and its position
         names = []
         for layer in range(self._layer_count):
@@ -997,3 +1012,66 @@ class Fit2Wu:
         for tag_register in self._connection.execute(select([TAG_REGISTER]).where(TAG_REGISTER.c.register_id == register_id)):
             LOG.info('tag_id: {0}, galaxy_id: {1}, register_id: {2}'.format(tag_register[TAG_REGISTER.c.tag_id], self._galaxy_id, register_id))
             self._database_insert_queue.append(TAG_GALAXY.insert().values(galaxy_id=self._galaxy_id, tag_id=tag_register[TAG_REGISTER.c.tag_id]))
+
+    def _calculate_credit(self):
+        """
+        Determined additional credit that a user should get depending on the
+        number of layers in the fits file
+        Originally 5 layers
+        :return:
+        """
+        uv_model = 0
+        ir_model = 0
+        optic_model = 0
+
+        if self._num_ultraviolet_bands_model > 0:
+            uv_model = self._num_ultraviolet_bands_model * 1.0
+            LOG.info('+ {0} for {1} UV bands in model'.format(uv_model, self._num_ultraviolet_bands_model))
+        else:
+            LOG.info('No ultraviolet bands in model for credit scaling')
+
+        if self._num_infrared_bands_model > 0:
+            ir_model = self._num_infrared_bands_model * 1.2
+            LOG.info('+ {0} for {1} IR bands in model'.format(ir_model, self._num_infrared_bands_model))
+        else:
+            LOG.info('No infrared bands in model for credit scaling')
+
+        if self._num_infrared_bands_model > 0:
+            optic_model = self._num_optical_bands_model * 1.0
+            LOG.info('+ {0} for {1} optical bands in model'.format(optic_model, self._num_optical_bands_model))
+        else:
+            LOG.info('No optical bands in model for credit scaling')
+
+        uv = 0
+        ir = 0
+        optic = 0
+
+        if len(self._ultraviolet_bands) > 0:
+            uv = len(self._ultraviolet_bands) * 0.15
+            LOG.info('+ {0} for {1} UV bands in file'.format(uv, len(self._ultraviolet_bands)))
+        else:
+            LOG.info('No ultraviolet bands in file for credit scaling')
+
+        if len(self._infrared_bands) > 0:
+            ir = len(self._infrared_bands) * 0.2
+            LOG.info('+ {0} for {1} IR bands in file'.format(ir, len(self._infrared_bands)))
+        else:
+            LOG.info('No infrared bands in file for credit scaling')
+
+        if len(self._optical_bands) > 0:
+            optic = len(self._optical_bands) * 0.15
+            LOG.info('+ {0} for {1} optical bands in file'.format(optic, len(self._optical_bands)))
+        else:
+            LOG.info('No optical bands in file for credit scaling')
+
+        total_scaling = uv + ir + optic + uv_model + ir_model + optic_model
+
+        modified_cobblestone = self._cobblestone_scaling_factor * total_scaling
+        modified_fpops = self._fpops_est_per_pixel * total_scaling
+
+        LOG.info('Scaling cobblestone value from {0} to {1}'.format(self._cobblestone_scaling_factor, modified_cobblestone))
+        LOG.info('Scaling fpops_est value from {0} to {1}'.format(self._fpops_est_per_pixel, modified_fpops))
+
+        self._cobblestone_scaling_factor = modified_cobblestone
+        self._fpops_est_per_pixel = modified_fpops
+
