@@ -1,6 +1,6 @@
 USE magphys;
 
-INSERT INTO run VALUES (5, 'Galex, Pan-STARRS, SDSS, Wise, Spitzer & Herschel', 'Galex, Pan-STARRS, SDSS, Wise, Spitzer & Herschel using the bc03 library', '/home/ec2-user/boinc-magphys/server/runs/0005', 7.2, 9.8);
+INSERT INTO run VALUES (5, 'Galex, Pan-STARRS, SDSS, Wise, Spitzer & Herschel', 'Galex, Pan-STARRS, SDSS, Wise, Spitzer & Herschel using the bc03 library', '/home/ec2-user/boinc-magphys/server/runs/0005', 1.44, 1.96);
 
 INSERT INTO run_filter VALUES (null, 5, 0);
 INSERT INTO run_filter VALUES (null, 5, 1);
