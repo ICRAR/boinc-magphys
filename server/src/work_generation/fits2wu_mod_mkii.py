@@ -282,6 +282,9 @@ class Fit2Wu:
         # Get the filters we're using for this run and sort the layers
         self._get_filters_sort_layers()
 
+        # Scales the credit values depending on what's in the file
+        self._calculate_credit()
+
         # Build the template file we need if necessary
         self._build_template_file()
 
