@@ -63,6 +63,8 @@ class S3Helper:
         :param key_name:
         :param filename:
         """
+        # TODO
+        LOG.info('bucket_name: {0}, key_name: {1}, filename: {2}, reduced_redundancy: {3}'.format(bucket_name, key_name, filename, reduced_redundancy))
         bucket = self.get_bucket(bucket_name)
         key = Key(bucket)
         key.key = key_name
