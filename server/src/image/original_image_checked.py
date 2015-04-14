@@ -36,7 +36,6 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 import argparse
 from utils.logging_helper import config_logger, add_file_handler_to_root
 from utils.s3_helper import S3Helper
-from utils.ec2_helper import EC2Helper
 from utils.name_builder import get_archive_bucket, get_log_archive_key, get_ami_log_file
 from utils.sanity_checks import pass_sanity_checks
 from image.original_image_checked_mod import original_image_checked_boinc, original_image_checked_ami
@@ -45,7 +44,7 @@ from image.original_image_checked_mod import original_image_checked_boinc, origi
 LOG = config_logger(__name__)
 
 parser = argparse.ArgumentParser('Checking the original images have been created on S3 correctly')
-parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
+parser.add_argument('option', choices=['boinc', 'ami'], help='are we running on the BOINC server or the AMI server')
 args = vars(parser.parse_args())
 
 if args['option'] == 'boinc':

@@ -37,7 +37,7 @@ from utils.logging_helper import config_logger
 from sqlalchemy.sql.expression import select, func
 from config import MIN_HIST_VALUE, ARCHIVED, PROCESSED, HDF5_OUTPUT_DIRECTORY, POGS_TMP
 from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT, PARAMETER_NAME, GALAXY, RUN_FILTER
-from utils.name_builder import get_files_bucket, get_galaxy_file_name
+from utils.name_builder import get_sed_files_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 from utils.shutdown_detection import shutdown
 
@@ -372,9 +372,9 @@ def pixel_in_block(raw_x, raw_y, block_x, block_y):
     :param block_x:
     :param block_y:
     :return:
-    >>> pixel_in_block(0,0,0,0)
+    >>> pixel_in_block(0, 0, 0, 0)
     True
-    >>> pixel_in_block(0,0,0,1)
+    >>> pixel_in_block(0, 0, 0, 1)
     False
     >>> pixel_in_block(0,0,1,0)
     False
@@ -437,11 +437,11 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     histogram_block_id = 1
     histogram_block_index = 0
     s3helper = S3Helper()
-    bucket = s3helper.get_bucket(get_files_bucket())
+    bucket = s3helper.get_bucket(get_sed_files_bucket())
 
     # Load the area details and keys
     load_map_areas(connection, map_areas, galaxy_id)
-    for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
+    for key in bucket.list(prefix='{0}/'.format(galaxy_file_name)):
         # Ignore the key
         if key.key.endswith('/'):
             continue
@@ -460,6 +460,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
             size_x = get_size(block_x, dimension_x)
             size_y = get_size(block_y, dimension_y)
+
             # Create the arrays for this block
             data = numpy.empty((size_x, size_y, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
             data.fill(numpy.NaN)
@@ -487,7 +488,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 compression='gzip')
 
             for key in keys:
-
                 if shutdown() is True:
                     raise SystemExit
 

@@ -43,14 +43,13 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 import argparse
 from archive.archive_task_mod import process_ami, process_boinc
 from utils.logging_helper import config_logger, add_special_handler_to_root
-from utils.ec2_helper import EC2Helper
 from utils.sanity_checks import pass_sanity_checks
 from config import LOGGER_SERVER_PORT, LOGGER_SERVER_ADDRESS
 
 LOG = config_logger(__name__)
 
 parser = argparse.ArgumentParser('Archive POGS data')
-parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
+parser.add_argument('option', choices=['boinc', 'ami'], help='are we running on the BOINC server or the AMI server')
 parser.add_argument('-mod', '--mod', nargs=2, help=' M N - the modulus M to used and which value to check N ')
 args = vars(parser.parse_args())
 

@@ -3,6 +3,7 @@ __author__ = 'ict310'
 from utils.shutdown_detection import start_poll, shutdown
 import time
 
+
 def main():
     i = 0
 

@@ -37,6 +37,7 @@ LOG = config_logger(__name__)
 if hasattr(ssl, '_create_unverified_context'):
     ssl._create_default_https_context = ssl._create_unverified_context
 
+
 class S3Helper:
     def __init__(self):
         """

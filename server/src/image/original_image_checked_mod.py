@@ -34,7 +34,7 @@ from database.database_support_core import GALAXY
 from image.fitsimage import FitsImage
 from utils.ec2_helper import EC2Helper
 from utils.logging_helper import config_logger
-from utils.name_builder import get_galaxy_file_name, get_galaxy_image_bucket, get_files_bucket
+from utils.name_builder import get_galaxy_file_name, get_galaxy_image_bucket, get_saved_files_bucket
 from utils.s3_helper import S3Helper
 
 
@@ -72,8 +72,8 @@ def original_image_checked_boinc():
         LOG.info('A previous instance is still running')
     else:
         # Connect to the database - the login string is set in the database package
-        ENGINE = create_engine(DB_LOGIN)
-        connection = ENGINE.connect()
+        engine = create_engine(DB_LOGIN)
+        connection = engine.connect()
 
         try:
             count = connection.execute(select([func.count(GALAXY.c.galaxy_id)]).where(and_(GALAXY.c.original_image_checked == None, GALAXY.c.pixel_count > 0))).first()[0]
@@ -92,7 +92,7 @@ def original_image_checked_boinc():
             connection.close()
 
 
-def image_files_exist(galaxy_name, run_id, galaxy_id, s3Helper):
+def image_files_exist(galaxy_name, run_id, galaxy_id, s3_helper):
     """
     Check if the images exist
     :param galaxy_name:
@@ -100,7 +100,7 @@ def image_files_exist(galaxy_name, run_id, galaxy_id, s3Helper):
     :param galaxy_id:
     :return:
     """
-    bucket = s3Helper.get_bucket(get_galaxy_image_bucket())
+    bucket = s3_helper.get_bucket(get_galaxy_image_bucket())
     galaxy_file_name = get_galaxy_file_name(galaxy_name, run_id, galaxy_id)
     for image_file in IMAGE_FILES:
         key_name = '{0}/{1}'.format(galaxy_file_name, image_file)
@@ -112,7 +112,7 @@ def image_files_exist(galaxy_name, run_id, galaxy_id, s3Helper):
     return True
 
 
-def regenerated_original_images(galaxy_name, run_id, galaxy_id, s3Helper, connection):
+def regenerated_original_images(galaxy_name, run_id, galaxy_id, s3_helper, connection):
     """
     We need to regenerate the image
     :param galaxy_name:
@@ -123,7 +123,7 @@ def regenerated_original_images(galaxy_name, run_id, galaxy_id, s3Helper, connec
     all_ok = False
 
     # Get the fits file
-    bucket = s3Helper.get_bucket(get_files_bucket())
+    bucket = s3_helper.get_bucket(get_saved_files_bucket())
     galaxy_file_name = get_galaxy_file_name(galaxy_name, run_id, galaxy_id)
     key_name = '{0}/{0}.fits'.format(galaxy_name)
     key = bucket.get_key(key_name)
@@ -165,8 +165,8 @@ def original_image_checked_ami():
     :return:
     """
     # Connect to the database - the login string is set in the database package
-    ENGINE = create_engine(DB_LOGIN)
-    connection = ENGINE.connect()
+    engine = create_engine(DB_LOGIN)
+    connection = engine.connect()
 
     s3helper = S3Helper()
     try:

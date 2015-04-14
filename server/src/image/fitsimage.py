@@ -40,6 +40,12 @@ from utils.s3_helper import S3Helper
 LOG = config_logger(__name__)
 
 
+def _get_filter_id(connection, filter_number):
+    LOG.info('filter_number: {0}'.format(filter_number))
+    filter_data = connection.execute(select([FILTER]).where(FILTER.c.filter_number == filter_number)).first()
+    return filter_data[FILTER.c.filter_id]
+
+
 class ImageBuilder:
     """
     This class scales each colour such that the median is centered on 1, and them applies the
@@ -97,9 +103,9 @@ class ImageBuilder:
         self._image = Image.new("RGB", (self._width, self._height), self._black_RGB)
 
         # Get the id's before we build as SqlAlchemy flushes which will cause an error
-        filter_id_red = self._get_filter_id(connection, red_filter)
-        filter_id_blue = self._get_filter_id(connection, blue_filter)
-        filter_id_green = self._get_filter_id(connection, green_filter)
+        filter_id_red = _get_filter_id(connection, red_filter)
+        filter_id_blue = _get_filter_id(connection, blue_filter)
+        filter_id_green = _get_filter_id(connection, green_filter)
 
         image_filters_used = connection.execute(select([IMAGE_FILTERS_USED])
                                                 .where(and_(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id, IMAGE_FILTERS_USED.c.image_number == image_number))).first()
@@ -118,11 +124,6 @@ class ImageBuilder:
                                        filter_id_red=filter_id_red,
                                        filter_id_blue=filter_id_blue,
                                        filter_id_green=filter_id_green))
-
-    def _get_filter_id(self, connection, filter_number):
-        LOG.info('filter_number: {0}'.format(filter_number))
-        filter_data = connection.execute(select([FILTER]).where(FILTER.c.filter_number == filter_number)).first()
-        return filter_data[FILTER.c.filter_id]
 
     def set_data(self, filter_band, data):
         values = []
@@ -257,12 +258,13 @@ class FitsImage:
         :param fits_file_name:
         :param image_key_stub:
         :param galaxy_id:
-        :param bucket:
+        :param bucket_name:
         """
         # Use the new asinh algorithm.
         self._build_image_asinh(fits_file_name, image_key_stub, self.centre, galaxy_id, bucket_name)
 
-    def _get_image_filters(self, hdulist):
+    @staticmethod
+    def _get_image_filters(hdulist):
         """
         Get the combinations to use
         :param hdulist:
@@ -318,7 +320,7 @@ class FitsImage:
         :param galaxy_key_stub:
         :param centre:
         :param galaxy_id:
-        :param bucket:
+        :param bucket_name:
         """
         hdulist = pyfits.open(fits_file_name, memmap=True)
 
@@ -419,7 +421,8 @@ class FitsImage:
 
         image.save(out_image_file_name)
 
-    def _mark_pixel(self, image, x, y):
+    @staticmethod
+    def _mark_pixel(image, x, y):
         """
         Mark the specified pixel to highlight the area where the user has
         generated results.

@@ -217,7 +217,7 @@ def build_png_image_ami():
             galaxy_count += 1
 
             # Now write the files
-            blackRGB = (0, 0, 0)
+            black_rgb = (0, 0, 0)
             for name in PNG_IMAGE_NAMES:
                 value = 0
                 height = galaxy[GALAXY.c.dimension_y]
@@ -257,7 +257,7 @@ def build_png_image_ami():
                 sigma = 1 / median_value
                 multiplier = 255.0 / math.asinh(top_value * sigma)
 
-                image = Image.new("RGB", (width, height), blackRGB)
+                image = Image.new("RGB", (width, height), black_rgb)
                 for x in range(0, width - 1):
                     for y in range(0, height - 1):
                         value = array[y, x, idx]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-'''
+"""
 Generic Assimilator framework
-'''
+"""
 
 import os, re, signal, sys, time, hashlib
 from Boinc import database, boinc_db, boinc_project_path, configxml, sched_messages
@@ -22,13 +22,13 @@ def abstract():
 
 
 class Assimilator():
-    '''
+    """
     Use this class to create new pure-Python Assimilators.
     To create a new assimilator:
       1) call __init__ from the new child class' __init__ method
       2) override the assimilate_handler method
       3) add the standard if __name__ == "__main__" bootstrap (see end of this file)
-    '''
+    """
 
     def __init__(self):
         # Be sure to call Assimilator.__init__(self) from child classes
@@ -40,7 +40,7 @@ class Assimilator():
         self.config = None
         self.STOP_TRIGGER_FILENAME = boinc_project_path.project_path('stop_daemons')
         self.caught_sig_int = False
-        self.log=sched_messages.SchedMessages()
+        self.log = sched_messages.SchedMessages()
         self.pass_count = 0
         self.update_db = True
         self.noinsert = False
@@ -77,7 +77,8 @@ class Assimilator():
         self.logDebug("Handled SIGINT\n")
         self.caught_sig_int = True
 
-    def filename_hash(self, name, hash_fanout):
+    @staticmethod
+    def filename_hash(name, hash_fanout):
         """
         Accepts a filename (without path) and the hash fanout.
         Returns the directory bucket where the file will reside.
@@ -97,11 +98,11 @@ class Assimilator():
         This method accounts for file hashing and includes the directory
         bucket in the path returned.
         """
-        name = re.search('<file_name>(.*)</file_name>',result.xml_doc_in).group(1)
+        name = re.search('<file_name>(.*)</file_name>', result.xml_doc_in).group(1)
         fanout = int(self.config.uldl_dir_fanout)
         hashed = self.filename_hash(name, fanout)
         updir = self.config.upload_dir
-        result = os.path.join(updir,hashed,name)
+        result = os.path.join(updir, hashed, name)
         return result
 
     def assimilate_handler(self, wu, results, canonical_result):
@@ -121,16 +122,16 @@ class Assimilator():
         Writes error logs based on the workunit (wu) error_mask field.
         Returns True if errors were present, False otherwise.
         """
-        if wu.error_mask&boinc_db.WU_ERROR_COULDNT_SEND_RESULT:
+        if wu.error_mask & boinc_db.WU_ERROR_COULDNT_SEND_RESULT:
             self.logCritical("[%s] Error: couldn't send a result\n", wu.name)
             return True
-        if wu.error_mask&boinc_db.WU_ERROR_TOO_MANY_ERROR_RESULTS:
+        if wu.error_mask & boinc_db.WU_ERROR_TOO_MANY_ERROR_RESULTS:
             self.logCritical("[%s] Error: too many error results\n", wu.name)
             return True
-        if wu.error_mask&boinc_db.WU_ERROR_TOO_MANY_TOTAL_RESULTS:
+        if wu.error_mask & boinc_db.WU_ERROR_TOO_MANY_TOTAL_RESULTS:
             self.logCritical("[%s] Error: too many total results\n", wu.name)
             return True
-        if wu.error_mask&boinc_db.WU_ERROR_TOO_MANY_SUCCESS_RESULTS:
+        if wu.error_mask & boinc_db.WU_ERROR_TOO_MANY_SUCCESS_RESULTS:
             self.logCritical("[%s] Error: too many success results\n", wu.name)
             return True
         return False
@@ -143,13 +144,13 @@ class Assimilator():
         Calls check_stop_trigger before doing any work.
         """
 
-        did_something=False
+        did_something = False
         # check for stop trigger
         self.check_stop_trigger()
         self.pass_count += 1
         n = 0
 
-        units = database.Workunits.find(app=app,assimilate_state=boinc_db.ASSIMILATE_READY)
+        units = database.Workunits.find(app=app, assimilate_state=boinc_db.ASSIMILATE_READY)
 
         self.logDebug("pass %d, units %d\n", self.pass_count, len(units))
 
@@ -169,19 +170,18 @@ class Assimilator():
 
             # only mark as dirty if the database is modified
             if self.update_db:
-                did_something=True
+                did_something = True
 
             canonical_result = None
-            results = None
             self.logDebug("[%s] assimilating: state=%d\n", wu.name, wu.assimilate_state)
             results = database.Results.find(workunit=wu)
 
             # look for canonical result for workunit in results
             for result in results:
                 if result == wu.canonical_result:
-                    canonical_result=result
+                    canonical_result = result
 
-            if canonical_result == None and wu.error_mask == 0:
+            if canonical_result is None and wu.error_mask == 0:
                 # If no canonical result found and WU had no other errors,
                 # something is wrong, e.g. result records got deleted prematurely.
                 # This is probably unrecoverable, so mark the WU as having
@@ -212,7 +212,7 @@ class Assimilator():
         """
 
         args.reverse()
-        while(len(args)):
+        while len(args):
             arg = args.pop()
             if arg == '-sleep_interval':
                 arg = args.pop()
@@ -250,7 +250,7 @@ class Assimilator():
 
         # retrieve app where name = app.name
         database.connect()
-        app=database.Apps.find1(name=self.appname)
+        app = database.Apps.find1(name=self.appname)
         database.close()
 
         signal.signal(signal.SIGINT, self.sigint_handler)
@@ -260,7 +260,7 @@ class Assimilator():
             self.do_pass(app)
         else:
             # main loop
-            while(1):
+            while 1:
                 database.connect()
                 workdone = self.do_pass(app)
                 database.close()
@@ -294,7 +294,7 @@ class Assimilator():
 # --------------------------------------------
 # Add the following to your assimilator file:
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    asm = YourAssimilator()
 #    asm.run()
 

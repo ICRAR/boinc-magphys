@@ -85,7 +85,7 @@ if len(features) == 0 or len(layers) == 0:
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 
-generate_files(connection, galaxy_id=args['galaxy_id'][0], email=args['email'][0], features=features, layers=layers)
+generate_files(connection, hdf5_request_galaxy_ids=args['galaxy_id'][0], email=args['email'][0], features=features, layers=layers)
 
 LOG.info('All done')
 connection.close()

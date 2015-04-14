@@ -36,17 +36,15 @@ sys.path.append(os.path.abspath(os.path.join(base_path, '../../../../boinc/py'))
 
 import argparse
 from utils.logging_helper import config_logger, add_special_handler_to_root
-from utils.ec2_helper import EC2Helper
 from utils.sanity_checks import pass_sanity_checks
 from image.build_png_image_mod import build_png_image_boinc, build_png_image_ami
 from config import LOGGER_SERVER_ADDRESS, LOGGER_SERVER_PORT
 
-import time
 
 LOG = config_logger(__name__)
 
 parser = argparse.ArgumentParser('Build the intermediary images to show how the work is progressing')
-parser.add_argument('option', choices=['boinc','ami'], help='are we running on the BOINC server or the AMI server')
+parser.add_argument('option', choices=['boinc', 'ami'], help='are we running on the BOINC server or the AMI server')
 args = vars(parser.parse_args())
 
 if args['option'] == 'boinc':

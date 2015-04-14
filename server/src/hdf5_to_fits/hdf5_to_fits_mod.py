@@ -42,7 +42,7 @@ from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORM
 from config import DELETED, STORED
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY
 from utils.logging_helper import config_logger
-from utils.name_builder import get_key_hdf5, get_files_bucket, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url, get_galaxy_file_name
+from utils.name_builder import get_key_hdf5, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url, get_galaxy_file_name, get_saved_files_bucket
 from utils.s3_helper import S3Helper
 from os.path import dirname, exists
 from configobj import ConfigObj
@@ -228,7 +228,7 @@ def get_features_and_layers_cmd_line(args):
     return features, layers
 
 
-def get_hdf5_file(s3Helper, output_dir, galaxy_name, run_id, galaxy_id):
+def get_hdf5_file(s3_helper, output_dir, galaxy_name, run_id, galaxy_id):
     """
     Get the HDF file
 
@@ -237,11 +237,11 @@ def get_hdf5_file(s3Helper, output_dir, galaxy_name, run_id, galaxy_id):
     :param galaxy_id: the galaxy id
     :return:
     """
-    bucket_name = get_files_bucket()
+    bucket_name = get_saved_files_bucket()
     key = get_key_hdf5(galaxy_name, run_id, galaxy_id)
     tmp_file = get_temp_file('.hdf5', 'pogs', output_dir)
 
-    s3Helper.get_file_from_bucket(bucket_name=bucket_name, key_name=key, file_name=tmp_file)
+    s3_helper.get_file_from_bucket(bucket_name=bucket_name, key_name=key, file_name=tmp_file)
     return tmp_file
 
 
@@ -324,11 +324,11 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
     send_email(email, results, features, layers)
 
 
-def zip_files(s3Helper, galaxy_name, uuid_string, file_names, output_dir):
+def zip_files(s3_helper, galaxy_name, uuid_string, file_names, output_dir):
     """
     Zip the files and send the email
 
-    :param s3Helper: the S3 helper
+    :param s3_helper: the S3 helper
     :param galaxy_name: the galaxy to process
     :param file_names: the fits files to be bundled
     :return:
@@ -339,7 +339,7 @@ def zip_files(s3Helper, galaxy_name, uuid_string, file_names, output_dir):
     # Copy to S3
     bucket_name = get_downloads_bucket()
     key = get_hdf5_to_fits_key(uuid_string, galaxy_name)
-    s3Helper.add_file_to_bucket(bucket_name, key, tar_file)
+    s3_helper.add_file_to_bucket(bucket_name, key, tar_file)
     url = '{0}/{1}'.format(get_downloads_url(), key)
 
     return url

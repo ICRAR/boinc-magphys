@@ -51,7 +51,7 @@ for file_name_stub in args['file_names']:
             end_y = hdu_list[0].data.shape[0]
             end_x = hdu_list[0].data.shape[1]
 
-            LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x': end_x,'y': end_y,'z': layer_count,'pix': end_x * end_y/1000000.0})
+            LOG.info("Image dimensions: %(x)d x %(y)d x %(z)d => %(pix).2f Mpixels" % {'x': end_x, 'y': end_y, 'z': layer_count, 'pix': end_x * end_y/1000000.0})
 
             # Read the fits headers
             for layer in range(layer_count):

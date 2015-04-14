@@ -44,7 +44,7 @@ from sqlalchemy.sql.expression import select, func
 from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 from image.fitsimage import FitsImage
-from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
+from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_key_fits, get_key_sigma_fits, get_saved_files_bucket
 from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
@@ -169,7 +169,7 @@ class Fit2Wu:
         self._optical_bands = {}
         self._infrared_bands = {}
 
-        self._num_optical_bands_model = 0       #Total number of filters of this each type in the model (filters.dat)
+        self._num_optical_bands_model = 0       # Total number of filters of this each type in the model (filters.dat)
         self._num_infrared_bands_model = 0
         self._num_ultraviolet_bands_model = 0
 
@@ -244,21 +244,22 @@ class Fit2Wu:
             self._galaxy_id = 0
 
         self._galaxy_id += 1
-        self._database_insert_queue.append(GALAXY.insert().values(name=self._galaxy_name,
-                                                                  dimension_x=self._end_x,
-                                                                  dimension_y=self._end_y,
-                                                                  dimension_z=self._layer_count,
-                                                                  redshift=self._redshift,
-                                                                  sigma=self._sigma,
-                                                                  create_time=datetime_now,
-                                                                  image_time=datetime_now,
-                                                                  galaxy_type=self._galaxy_type,
-                                                                  ra_cent=0,
-                                                                  dec_cent=0,
-                                                                  pixel_count=0,
-                                                                  pixels_processed=0,
-                                                                  run_id=self._run_id,
-                                                                  galaxy_id=self._galaxy_id))
+        self._database_insert_queue.append(
+            GALAXY.insert().values(name=self._galaxy_name,
+                                   dimension_x=self._end_x,
+                                   dimension_y=self._end_y,
+                                   dimension_z=self._layer_count,
+                                   redshift=self._redshift,
+                                   sigma=self._sigma,
+                                   create_time=datetime_now,
+                                   image_time=datetime_now,
+                                   galaxy_type=self._galaxy_type,
+                                   ra_cent=0,
+                                   dec_cent=0,
+                                   pixel_count=0,
+                                   pixels_processed=0,
+                                   run_id=self._run_id,
+                                   galaxy_id=self._galaxy_id))
 
         # Area and Pixel PKs are needed multiple times.
         self._areaPK = self._connection.execute(select([func.max(AREA.c.area_id)])).first()[0]
@@ -328,7 +329,7 @@ class Fit2Wu:
         image.build_image(self._filename, galaxy_file_name, self._galaxy_id, get_galaxy_image_bucket())
 
         # Copy the fits file to S3 - renamed to make it unique
-        bucket_name = get_files_bucket()
+        bucket_name = get_saved_files_bucket()
         s3helper.add_file_to_bucket(bucket_name, get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
         if self._sigma_filename is not None:
             s3helper.add_file_to_bucket(bucket_name, get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
@@ -396,22 +397,23 @@ class Fit2Wu:
         for query in self._boinc_insert_queue:
 
             py_boinc.boinc_db_transaction_start()
-            retval = py_boinc.boinc_create_work(app_name=query.app_name,
-                                                min_quorom=query.min_quorom,
-                                                max_success_results=query.max_success_results,
-                                                delay_bound=query.delay_bound,
-                                                target_nresults=query.target_nresults,
-                                                wu_name=query.wu_name,
-                                                wu_template=query.wu_template,
-                                                result_template=query.result_template,
-                                                rsc_fpops_est=query.rsc_fpops_est,
-                                                rsc_fpops_bound=query.rsc_fpops_bound,
-                                                rsc_memory_bound=query.rsc_memory_bound,
-                                                rsc_disk_bound=query.rsc_disk_bound,
-                                                additional_xml=query.additional_xml,
-                                                opaque=query.opaque,
-                                                priority=query.priority,
-                                                list_input_files=query.list_input_files)
+            retval = py_boinc.boinc_create_work(
+                app_name=query.app_name,
+                min_quorom=query.min_quorom,
+                max_success_results=query.max_success_results,
+                delay_bound=query.delay_bound,
+                target_nresults=query.target_nresults,
+                wu_name=query.wu_name,
+                wu_template=query.wu_template,
+                result_template=query.result_template,
+                rsc_fpops_est=query.rsc_fpops_est,
+                rsc_fpops_bound=query.rsc_fpops_bound,
+                rsc_memory_bound=query.rsc_memory_bound,
+                rsc_disk_bound=query.rsc_disk_bound,
+                additional_xml=query.additional_xml,
+                opaque=query.opaque,
+                priority=query.priority,
+                list_input_files=query.list_input_files)
             if retval != 0:
                 py_boinc.boinc_db_transaction_rollback()
                 LOG.error('Error writing to boinc database. boinc_create_work return value = {0}'.format(retval))
@@ -551,12 +553,13 @@ class Fit2Wu:
 
                 # Enqueue this insert
                 self._total_areas += 1
-                self._database_insert_queue.append(area_insert.values(galaxy_id=self._galaxy_id,
-                                                                      top_x=area.top_x,
-                                                                      top_y=area.top_y,
-                                                                      bottom_x=area.bottom_x,
-                                                                      bottom_y=area.bottom_y,
-                                                                      area_id=self._areaPK))
+                self._database_insert_queue.append(
+                    area_insert.values(galaxy_id=self._galaxy_id,
+                                       top_x=area.top_x,
+                                       top_y=area.top_y,
+                                       bottom_x=area.bottom_x,
+                                       bottom_y=area.bottom_y,
+                                       area_id=self._areaPK))
 
                 for pixel in pixels:
                     # Needs to be incremented before use
@@ -565,11 +568,12 @@ class Fit2Wu:
 
                     # Enqueue this insert
                     self._total_pixels += 1
-                    self._database_insert_queue.append(pixel_result_insert.values(galaxy_id=self._galaxy_id,
-                                                                                  area_id=area.area_id,
-                                                                                  y=pixel.y,
-                                                                                  x=pixel.x,
-                                                                                  pxresult_id=self._pixelPK))
+                    self._database_insert_queue.append(
+                        pixel_result_insert.values(galaxy_id=self._galaxy_id,
+                                                   area_id=area.area_id,
+                                                   y=pixel.y,
+                                                   x=pixel.x,
+                                                   pxresult_id=self._pixelPK))
                     self._pixel_count += 1
 
                 # Write the pixels, at this point the area has been fully created
@@ -629,10 +633,10 @@ class Fit2Wu:
         row_num = 0
         for pixel in pixels:
             outfile.write('pix%(id)s %(pixel_redshift)s ' % {'id': pixel.pixel_id, 'pixel_redshift': self._redshift})
-            for pixel_value in pixel.pixels: ## Should be placed here in same order as LayerOrder
-                if pixel_value.value is None or pixel_value.value <= 0:                         ## added
-                    outfile.write("{0}  {1}  ".format(-1, -1))                                  ## added
-                else:                                                                           ## added
+            for pixel_value in pixel.pixels:  # Should be placed here in same order as LayerOrder
+                if pixel_value.value is None or pixel_value.value <= 0:                         # added
+                    outfile.write("{0}  {1}  ".format(-1, -1))                                  # added
+                else:                                                                           # added
                     outfile.write("{0}  {1}  ".format(pixel_value.value, pixel_value.sigma))
 
             outfile.write('\n')
@@ -785,7 +789,7 @@ class Fit2Wu:
                 filter_name_magphysn = hdu.header['MAGPHYSN']
                 if filter_name_magphysn is None:
                     raise LookupError('The layer {0} does not have MAGPHYSN in it'.format(layer))
-                names_snr.append(filter_name_magphysn) # list of all filters that appear in the sigma file
+                names_snr.append(filter_name_magphysn)  # list of all filters that appear in the sigma file
 
                 found_filter = False
                 for filter_name in list_filter_names:
@@ -803,7 +807,6 @@ class Fit2Wu:
                         LOG.info('The list of bands are not the same order. Index:{0}, {1} vs {2}'.format(index, names[index], names_snr[index]))
             else:
                 LOG.info('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
-
 
         layers = []
         sigma_layers = []
@@ -1077,4 +1080,3 @@ class Fit2Wu:
 
         self._cobblestone_scaling_factor = modified_cobblestone
         self._fpops_est_per_pixel = modified_fpops
-

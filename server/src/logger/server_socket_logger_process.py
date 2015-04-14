@@ -79,7 +79,6 @@ def main():
         5.Clean up any defunct processes
 
     Will only exit when stop trigger identified or an error occurs
-    :param argv: command line args
     :return: void
     """
 
@@ -192,7 +191,7 @@ def handle_client(save_directory, c_socket, l_number, client_addr):
         # Try to receive a log from the client
         try:
             chunk = c_socket.recv(4)
-            
+
             if len(chunk) < 4:
                 server_log.info('Connection terminated normally')
                 c_socket.close()

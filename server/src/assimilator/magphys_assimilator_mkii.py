@@ -47,7 +47,7 @@ from config import DB_LOGIN
 from sqlalchemy import create_engine
 from sqlalchemy.sql import select
 from database.database_support_core import PARAMETER_NAME, PIXEL_RESULT, AREA, AREA_USER, GALAXY, GALAXY_USER
-from utils.name_builder import get_files_bucket, get_key_sed
+from utils.name_builder import get_sed_files_bucket, get_key_sed
 from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
@@ -97,14 +97,13 @@ class MagphysAssimilator(assimilator.Assimilator):
                 self._galaxy_id = galaxy[GALAXY.c.galaxy_id]
                 self._run_id = galaxy[GALAXY.c.run_id]
 
-    def _save_results(self, connection, map_pixel_results):
+    def _save_results(self, map_pixel_results):
         """
         Add the pixel to the database
         """
         if self._pxresult_id is not None and not self.noinsert:
             # Update the filters
             self._database_queue.append(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == self._pxresult_id).values(map_pixel_results))
-            # connection.execute(PIXEL_RESULT.update().where(PIXEL_RESULT.c.pxresult_id == self._pxresult_id).values(map_pixel_results))
 
     def _process_result(self, connection, out_file, wu):
         """
@@ -118,7 +117,7 @@ class MagphysAssimilator(assimilator.Assimilator):
 
         self._area_id = None
         self._pxresult_id = None
-        lineNo = 0
+        line_number = 0
         percentiles_next = False
         histogram_next = False
         skynet_next1 = False
@@ -129,34 +128,34 @@ class MagphysAssimilator(assimilator.Assimilator):
         start_time = None
         try:
             for line in f:
-                lineNo += 1
+                line_number += 1
 
                 if line.startswith(" ####### "):
                     if self._pxresult_id is not None:
-                        self._save_results(connection, map_pixel_results)
-                        #self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
+                        self._save_results(map_pixel_results)
+                        # self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
                     map_pixel_results = {}
                     start_time = time.time()
                     values = line.split()
-                    pointName = values[1]
-                    pxresult_id = pointName[3:].rstrip()
+                    point_name = values[1]
+                    pxresult_id = point_name[3:].rstrip()
                     self._get_pixel_result(connection, pxresult_id)
                     if self._pxresult_id is not None:
                         map_pixel_results['workunit_id'] = wu.id
-                    lineNo = 0
+                    line_number = 0
                     percentiles_next = False
                     histogram_next = False
                     skynet_next1 = False
                     skynet_next2 = False
                     result_count += 1
                 elif self._pxresult_id is not None:
-                    if lineNo == 9:
+                    if line_number == 9:
                         # We can ignore these
                         pass
-                    elif lineNo == 11:
+                    elif line_number == 11:
                         # We prefer the median values
                         pass
-                    elif lineNo > 13:
+                    elif line_number > 13:
                         if line.startswith("# ..."):
                             parts = line.split('...')
                             parameter_name = parts[1].strip()
@@ -193,11 +192,11 @@ class MagphysAssimilator(assimilator.Assimilator):
                             skynet_next2 = False
 
         except IOError:
-            self.logCritical('IOError after %d lines\n', lineNo)
+            self.logCritical('IOError after %d lines\n', line_number)
         finally:
             f.close()
         if self._pxresult_id is not None:
-            self._save_results(connection, map_pixel_results)
+            self._save_results(map_pixel_results)
             # self.logDebug('%.3f seconds for %d\n', time.time() - start_time, self._pxresult_id)
         return result_count
 
@@ -245,19 +244,19 @@ class MagphysAssimilator(assimilator.Assimilator):
                     start = time.time()
                     connection = ENGINE.connect()
 
-                    resultCount = self._process_result(connection, out_file, wu)
+                    result_count = self._process_result(connection, out_file, wu)
                     if self.noinsert:
                         pass
                     else:
-                        if not resultCount:
+                        if not result_count:
                             self.logCritical("No results were found in the output file\n")
 
                         if self._area_id is None:
                             self.logDebug("The Area was not found\n")
                         else:
                             self._database_queue.append(AREA.update()
-                                                               .where(AREA.c.area_id == self._area_id)
-                                                               .values(workunit_id=wu.id, update_time=datetime.datetime.now()))
+                                                            .where(AREA.c.area_id == self._area_id)
+                                                            .values(workunit_id=wu.id, update_time=datetime.datetime.now()))
 
                             user_id_set = set()
                             for result in results:
@@ -276,13 +275,13 @@ class MagphysAssimilator(assimilator.Assimilator):
 
                             # Copy the file to S3
                             s3helper = S3Helper()
-                            s3helper.add_file_to_bucket(get_files_bucket(),
+                            s3helper.add_file_to_bucket(get_sed_files_bucket(),
                                                         get_key_sed(self._galaxy_name, self._run_id, self._galaxy_id, self._area_id),
                                                         out_file,
                                                         reduced_redundancy=True)
 
                         time_taken = '{0:.2f}'.format(time.time() - start)
-                        self.logDebug("Saving %d results for workunit %d in %s seconds\n", resultCount, wu.id, time_taken)
+                        self.logDebug("Saving %d results for workunit %d in %s seconds\n", result_count, wu.id, time_taken)
 
                     self._run_pending_db_tasks(connection)
                     connection.close()
@@ -292,7 +291,6 @@ class MagphysAssimilator(assimilator.Assimilator):
                 self.logDebug("No canonical_result for workunit\n")
                 self.report_errors(wu)
         except:
-
             if connection is not None:
                 connection.close()
             print "Unexpected error:", sys.exc_info()[0]
