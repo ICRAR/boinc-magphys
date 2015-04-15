@@ -1031,19 +1031,19 @@ class Fit2Wu:
         optic_model = 0
 
         if self._num_ultraviolet_bands_model > 0:
-            uv_model = self._num_ultraviolet_bands_model * 1.0
+            uv_model = self._num_ultraviolet_bands_model * 0.01
             LOG.info('+ {0} for {1} UV bands in model'.format(uv_model, self._num_ultraviolet_bands_model))
         else:
             LOG.info('No ultraviolet bands in model for credit scaling')
 
         if self._num_infrared_bands_model > 0:
-            ir_model = self._num_infrared_bands_model * 1.2
+            ir_model = self._num_infrared_bands_model * 0.012
             LOG.info('+ {0} for {1} IR bands in model'.format(ir_model, self._num_infrared_bands_model))
         else:
             LOG.info('No infrared bands in model for credit scaling')
 
-        if self._num_infrared_bands_model > 0:
-            optic_model = self._num_optical_bands_model * 1.0
+        if self._num_optical_bands_model > 0:
+            optic_model = self._num_optical_bands_model * 0.01
             LOG.info('+ {0} for {1} optical bands in model'.format(optic_model, self._num_optical_bands_model))
         else:
             LOG.info('No optical bands in model for credit scaling')
@@ -1053,24 +1053,24 @@ class Fit2Wu:
         optic = 0
 
         if len(self._ultraviolet_bands) > 0:
-            uv = len(self._ultraviolet_bands) * 0.15
+            uv = len(self._ultraviolet_bands) * 0.015
             LOG.info('+ {0} for {1} UV bands in file'.format(uv, len(self._ultraviolet_bands)))
         else:
             LOG.info('No ultraviolet bands in file for credit scaling')
 
         if len(self._infrared_bands) > 0:
-            ir = len(self._infrared_bands) * 0.2
+            ir = len(self._infrared_bands) * 0.02
             LOG.info('+ {0} for {1} IR bands in file'.format(ir, len(self._infrared_bands)))
         else:
             LOG.info('No infrared bands in file for credit scaling')
 
         if len(self._optical_bands) > 0:
-            optic = len(self._optical_bands) * 0.15
+            optic = len(self._optical_bands) * 0.015
             LOG.info('+ {0} for {1} optical bands in file'.format(optic, len(self._optical_bands)))
         else:
             LOG.info('No optical bands in file for credit scaling')
 
-        total_scaling = uv + ir + optic + uv_model + ir_model + optic_model
+        total_scaling = 1.0 + uv + ir + optic + uv_model + ir_model + optic_model
 
         modified_cobblestone = self._cobblestone_scaling_factor * total_scaling
         modified_fpops = self._fpops_est_per_pixel * total_scaling
