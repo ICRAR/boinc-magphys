@@ -680,8 +680,8 @@ class Fit2Wu:
                           result_template=TEMPLATES_PATH1 + "/fitsed_result.xml",
                           rsc_fpops_est=self._fpops_est_per_pixel * pixels_in_area * 1e12,
                           rsc_fpops_bound=self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area * 1e12,
-                          rsc_memory_bound=1e8,
-                          rsc_disk_bound=1e8,
+                          rsc_memory_bound=2e8,
+                          rsc_disk_bound=3e8,
                           additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
                           opaque=area.area_id,
                           priority=self._priority,
@@ -1070,7 +1070,7 @@ class Fit2Wu:
         else:
             LOG.info('No optical bands in file for credit scaling')
 
-        total_scaling = 1.0 + uv + ir + optic + uv_model + ir_model + optic_model
+        total_scaling = 5.0 + uv + ir + optic + uv_model + ir_model + optic_model
 
         modified_cobblestone = self._cobblestone_scaling_factor * total_scaling
         modified_fpops = self._fpops_est_per_pixel * total_scaling
