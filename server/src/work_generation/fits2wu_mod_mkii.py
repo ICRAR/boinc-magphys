@@ -1070,7 +1070,7 @@ class Fit2Wu:
         else:
             LOG.info('No optical bands in file for credit scaling')
 
-        total_scaling = 5.0 + uv + ir + optic + uv_model + ir_model + optic_model
+        total_scaling = 1.0 + uv + ir + optic + uv_model + ir_model + optic_model
 
         modified_cobblestone = self._cobblestone_scaling_factor * total_scaling
         modified_fpops = self._fpops_est_per_pixel * total_scaling
