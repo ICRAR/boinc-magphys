@@ -77,9 +77,6 @@ def base_install():
     """
     Perform the basic install
     """
-    # Install the 5.6 version of MySQL
-    #sudo('yum --assumeyes --quiet localinstall http://repo.mysql.com/mysql-community-release-el6-5.noarch.rpm')
-    #sudo('yum --assumeyes --quiet install mysql-community-server mysql-community-devel')
     # Install the 5.5 version
     sudo('yum --assumeyes --quiet install mysql mysql-devel')
 
@@ -119,9 +116,9 @@ def base_install():
 
     # Now install the H5py
     with cd('/tmp'):
-        run('wget --no-verbose https://pypi.python.org/packages/source/h/h5py/h5py-2.4.0.tar.gz')
-        run('tar -xvzf h5py-2.4.0.tar.gz')
-    with cd('/tmp/h5py-2.4.0'):
+        run('wget --no-verbose https://pypi.python.org/packages/source/h/h5py/h5py-2.5.0.tar.gz')
+        run('tar -xvzf h5py-2.5.0.tar.gz')
+    with cd('/tmp/h5py-2.5.0'):
         sudo('python2.7 setup.py configure --hdf5=/usr/local/hdf5')
         sudo('python2.7 setup.py build')
         sudo('python2.7 setup.py install')
