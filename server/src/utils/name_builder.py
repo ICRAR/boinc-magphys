@@ -47,13 +47,22 @@ def get_galaxy_image_bucket():
     return 'icrar.{0}.galaxy-images'.format(POGS_PROJECT_NAME)
 
 
-def get_files_bucket():
+def get_saved_files_bucket():
     """
     Return the name of the bucket to hold sed files
 
     :return: the bucket name
     """
     return 'icrar.{0}.files'.format(POGS_PROJECT_NAME)
+
+
+def get_sed_files_bucket():
+    """
+    Return the name of the bucket to hold sed files
+
+    :return: the bucket name
+    """
+    return 'icrar.{0}.sedfiles'.format(POGS_PROJECT_NAME)
 
 
 def get_archive_bucket():
@@ -151,7 +160,7 @@ def get_key_sed(galaxy_name, run_id, galaxy_id, area_id):
     :param run_id:
     :return: the key to the fits file
     """
-    return '{0}/sed/{1}.sed'.format(get_galaxy_file_name(galaxy_name, run_id, galaxy_id), area_id)
+    return '{0}/{1}.sed'.format(get_galaxy_file_name(galaxy_name, run_id, galaxy_id), area_id)
 
 
 def get_colour_image_key(galaxy_key_prefix, colour):

@@ -35,6 +35,7 @@ so we must ensure the download server runs last as it actually adds things to th
 fab prod_env prod_deploy_stage01 prod_deploy_stage02 prod_deploy_stage03 prod_deploy_stage04
 """
 import glob
+from os.path import expanduser, join, exists
 import boto
 import os
 import time
@@ -49,35 +50,44 @@ from fabric.utils import puts, abort, fastprint
 
 USERNAME = 'ec2-user'
 AMI_ID = 'ami-05355a6c'
-INSTANCE_TYPE = 'm1.small'
+INSTANCE_TYPE = 't2.small'
 INSTANCES_FILE = os.path.expanduser('~/.aws/aws_instances')
 AWS_KEY = os.path.expanduser('~/.ssh/icrar-boinc.pem')
 KEY_NAME = 'icrar-boinc'
 KEY_NAME_VPC = 'icrar_theskynet_public_prod'
 SECURITY_GROUPS = ['icrar-boinc-server']  # Security group allows SSH
+SYDNEY_AWS_KEY = os.path.expanduser('~/.ssh/icrar_sydney.pem')
+SYDNEY_REGION = 'ap-southeast-2'
+SYDNEY_AMI_ID = 'ami-fd9cecc7'
+SYDNEY_KEY_NAME = 'icrar_sydney'
+SYDNEY_SECURITY_GROUPS = ['sg-be7ccfdb']
+SYDNEY_SUBNET = 'subnet-878cc2ee'
 PROD_SECURITY_GROUPS_VPC = ['sg-d608dbb9', 'sg-b23defdd']  # Security group for the VPC
 TEST_SECURITY_GROUPS_VPC = ['sg-dd33e0b2', 'sg-9408dbfb']  # Security group for the VPC
 PUBLIC_KEYS = os.path.expanduser('~/Keys/magphys')
-PIP_PACKAGES = 'sqlalchemy Numpy pyfits pil fabric configobj MySQL-python boto astropy cython'
-YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel libstdc++46-static gdb libtool gcc-gfortran git openssl-devel mysql mysql-devel python-devel python27 python27-devel curl-devel '
-YUM_BOINC_PACKAGES = 'httpd httpd-devel mysql-server php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates MySQL-python'
+PIP_PACKAGES1 = 'Numpy'
+PIP_PACKAGES2 = 'sqlalchemy pyfits Pillow fabric configobj boto astropy cython MySQL-python'
+YUM_BASE_PACKAGES = 'autoconf automake binutils gcc gcc-c++ libpng-devel gdb libtool gcc-gfortran git openssl-devel curl-devel python27-devel '
+YUM_BOINC_PACKAGES = 'httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm postfix ca-certificates'
+#YUM_BOINC_PACKAGES_TEST = 'httpd httpd-devel php php-cli php-gd php-mysqlnd mod_fcgid php-fpm ca-certificates'
+YUM_BOINC_PACKAGES_TEST = 'mysql-server httpd httpd-devel php php-cli php-gd php-mysql mod_fcgid php-fpm ca-certificates'
 
 
 def base_install():
     """
     Perform the basic install
     """
-    # Install the bits we need - we need the MySQL so the python connector will build
+    # Install the 5.5 version
+    sudo('yum --assumeyes --quiet install mysql mysql-devel')
+
+    # Install the bits we need - we need the so the python connector will build
     sudo('yum --assumeyes --quiet install {0}'.format(YUM_BASE_PACKAGES))
 
     # Setup the python
-    run('wget http://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
-    sudo('sh setuptools-0.6c11-py2.7.egg')
-    run('rm setuptools-0.6c11-py2.7.egg')
-    sudo('rm -f /usr/bin/easy_install')
+    sudo('wget https://bootstrap.pypa.io/ez_setup.py -O - | python2.7')
     sudo('easy_install-2.7 pip')
-    sudo('rm -f /usr/bin/pip')
-    sudo('pip-2.7 install {0}'.format(PIP_PACKAGES))
+    sudo('/usr/local/bin/pip install --quiet {0}'.format(PIP_PACKAGES1))
+    sudo('/usr/local/bin/pip install --quiet {0}'.format(PIP_PACKAGES2))
 
     # Setup the pythonpath
     append('/home/ec2-user/.bash_profile',
@@ -87,16 +97,16 @@ def base_install():
 
     # Setup the HDF5
     with cd('/usr/local/src'):
-        sudo('wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
+        sudo('wget --no-verbose http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz')
         sudo('tar -xvzf szip-2.1.tar.gz')
-        sudo('wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.11.tar.gz')
-        sudo('tar -xvzf hdf5-1.8.11.tar.gz')
+        sudo('wget --no-verbose http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.14.tar.gz')
+        sudo('tar -xvzf hdf5-1.8.14.tar.gz')
         sudo('rm *.gz')
     with cd('/usr/local/src/szip-2.1'):
         sudo('./configure --prefix=/usr/local/szip')
         sudo('make')
         sudo('make install')
-    with cd('/usr/local/src/hdf5-1.8.11'):
+    with cd('/usr/local/src/hdf5-1.8.14'):
         sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
         sudo('make')
         sudo('make install')
@@ -106,10 +116,11 @@ def base_install():
 
     # Now install the H5py
     with cd('/tmp'):
-        run('wget https://h5py.googlecode.com/files/h5py-2.1.0.tar.gz')
-        run('tar -xvzf h5py-2.1.0.tar.gz')
-    with cd('/tmp/h5py-2.1.0'):
-        sudo('python2.7 setup.py build --hdf5=/usr/local/hdf5')
+        run('wget --no-verbose https://pypi.python.org/packages/source/h/h5py/h5py-2.5.0.tar.gz')
+        run('tar -xvzf h5py-2.5.0.tar.gz')
+    with cd('/tmp/h5py-2.5.0'):
+        sudo('python2.7 setup.py configure --hdf5=/usr/local/hdf5')
+        sudo('python2.7 setup.py build')
         sudo('python2.7 setup.py install')
 
 
@@ -125,21 +136,39 @@ def copy_public_keys():
         put(key_file, filename)
 
 
-def create_instance(ebs_size, ami_name):
+def create_instance(ebs_size, ami_name, sydney=False):
     """
     Create the AWS instance
     :param ebs_size:
     """
     puts('Creating the instance {1} with disk size {0} GB'.format(ebs_size, ami_name))
 
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_connection = boto.connect_ec2()
+    if exists(join(expanduser('~'), '.aws/credentials')):
+        # This relies on a ~/.aws/credentials file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.aws/credentials")
+        if sydney:
+            ec2_connection = boto.ec2.connect_to_region(SYDNEY_REGION, profile_name='theSkyNet')
+        else:
+            ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    else:
+        # This relies on a ~/.boto or /etc/boto.cfg file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.boto or /etc/boto.cfg")
+        ec2_connection = boto.connect_ec2()
 
-    dev_sda1 = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
-    dev_sda1.size = int(ebs_size)  # size in Gigabytes
+    dev_xvda = blockdevicemapping.EBSBlockDeviceType(delete_on_termination=True)
+    dev_xvda.size = int(ebs_size)  # size in Gigabytes
     bdm = blockdevicemapping.BlockDeviceMapping()
-    bdm['/dev/sda1'] = dev_sda1
-    reservations = ec2_connection.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, block_device_map=bdm)
+    bdm['/dev/xvda'] = dev_xvda
+    if sydney:
+        reservations = ec2_connection.run_instances(
+            SYDNEY_AMI_ID,
+            subnet_id=SYDNEY_SUBNET,
+            instance_type=INSTANCE_TYPE,
+            key_name=SYDNEY_KEY_NAME,
+            security_group_ids=SYDNEY_SECURITY_GROUPS,
+            block_device_map=bdm)
+    else:
+        reservations = ec2_connection.run_instances(AMI_ID, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS, block_device_map=bdm)
     instance = reservations.instances[0]
     # Sleep so Amazon recognizes the new instance
     for i in range(4):
@@ -178,8 +207,14 @@ def start_ami_instance(ami_id, instance_name):
     """
     puts('Starting the instance {0} from id {1}'.format(instance_name, ami_id))
 
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_connection = boto.connect_ec2()
+    if exists(join(expanduser('~'), '.aws/credentials')):
+        # This relies on a ~/.aws/credentials file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.aws/credentials")
+        ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    else:
+        # This relies on a ~/.boto or /etc/boto.cfg file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.boto or /etc/boto.cfg")
+        ec2_connection = boto.connect_ec2()
 
     if env.subnet_id == '':
         reservations = ec2_connection.run_instances(ami_id, instance_type=INSTANCE_TYPE, key_name=KEY_NAME, security_groups=SECURITY_GROUPS)
@@ -238,25 +273,29 @@ def make_swap():
     sudo('swapon /swapfile')
 
 
-def boinc_install():
+def boinc_install(test_server=False):
     """
     Perform the tasks to install the whole BOINC server on a single machine
     """
     # Get the packages
-    sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
+    if test_server:
+        sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES_TEST))
+    else:
+        sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
 
-    # Setup postfix
-    sudo('service sendmail stop')
-    sudo('service postfix stop')
-    sudo('chkconfig sendmail off')
-    sudo('chkconfig sendmail --del')
+    if not test_server:
+        # Setup postfix
+        sudo('service sendmail stop')
+        sudo('service postfix stop')
+        sudo('chkconfig sendmail off')
+        sudo('chkconfig sendmail --del')
 
-    sudo('chkconfig postfix --add')
-    sudo('chkconfig postfix on')
+        sudo('chkconfig postfix --add')
+        sudo('chkconfig postfix on')
 
-    sudo('service postfix start')
+        sudo('service postfix start')
 
-    sudo('''echo "relayhost = [smtp.gmail.com]:587
+        sudo('''echo "relayhost = [smtp.gmail.com]:587
 smtp_sasl_auth_enable = yes
 smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
 smtp_sasl_security_options = noanonymous
@@ -267,12 +306,12 @@ smtp_use_tls = yes
 smtp_generic_maps = hash:/etc/postfix/generic
 default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
 
-    sudo('echo "[smtp.gmail.com]:587 {0}@gmail.com:{1}" > /etc/postfix/sasl_passwd'.format(env.gmail_account, env.gmail_password))
-    sudo('chmod 400 /etc/postfix/sasl_passwd')
-    sudo('postmap /etc/postfix/sasl_passwd')
+        sudo('echo "[smtp.gmail.com]:587 {0}@gmail.com:{1}" > /etc/postfix/sasl_passwd'.format(env.gmail_account, env.gmail_password))
+        sudo('chmod 400 /etc/postfix/sasl_passwd')
+        sudo('postmap /etc/postfix/sasl_passwd')
 
     # Grab the latest trunk from GIT
-    run('git clone git://boinc.berkeley.edu/boinc-v2.git boinc')
+    run('git clone --quiet git://boinc.berkeley.edu/boinc-v2.git boinc')
 
     with cd('/home/ec2-user/boinc'):
         run('./_autosetup')
@@ -283,38 +322,49 @@ default_destination_concurrency_limit = 1" >> /etc/postfix/main.cf''')
     sudo('usermod -a -G ec2-user apache')
 
 
-def pogs_install(with_db):
+def pogs_install(with_db, test_server=False):
     """
     Perform the tasks to install the whole BOINC server on a single machine
     """
     # Get the packages
-    sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
+    if test_server:
+        sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES_TEST))
+    else:
+        sudo('yum --assumeyes --quiet install {0}'.format(YUM_BOINC_PACKAGES))
 
     # Setup Users
-    for user in env.list_of_users:
-        sudo('useradd {0}'.format(user))
-        sudo('mkdir /home/{0}/.ssh'.format(user))
-        sudo('chmod 700 /home/{0}/.ssh'.format(user))
-        sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
-        sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
-        sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
-        sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
+    if test_server:
+        puts('No users on the test server')
+    else:
+        for user in env.list_of_users:
+            sudo('useradd {0}'.format(user))
+            sudo('mkdir /home/{0}/.ssh'.format(user))
+            sudo('chmod 700 /home/{0}/.ssh'.format(user))
+            sudo('chown {0}:{0} /home/{0}/.ssh'.format(user))
+            sudo('mv /home/ec2-user/{0}.pub /home/{0}/.ssh/authorized_keys'.format(user))
+            sudo('chmod 700 /home/{0}/.ssh/authorized_keys'.format(user))
+            sudo('chown {0}:{0} /home/{0}/.ssh/authorized_keys'.format(user))
 
-        # Add them to the sudoers
-        sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
+            # Add them to the sudoers
+            sudo('''su -l root -c 'echo "{0} ALL = NOPASSWD: ALL" >> /etc/sudoers' '''.format(user))
 
-    nfs_mkdir('archive')
-    nfs_mkdir('boinc-magphys')
-    nfs_mkdir('galaxies')
-    nfs_mkdir('projects')
-    nfs_mkdir('logs_ami')
+    if test_server:
+        run('mkdir -p /home/ec2-user/archive')
+        run('mkdir -p /home/ec2-user/boinc-magphys')
+        run('mkdir -p /home/ec2-user/galaxies')
+        run('mkdir -p /home/ec2-user/projects')
+    else:
+        nfs_mkdir('archive')
+        nfs_mkdir('boinc-magphys')
+        nfs_mkdir('galaxies')
+        nfs_mkdir('projects')
     run('mkdir -p /home/ec2-user/archive/to_store')
 
     # Clone our code
     if env.branch == '':
-        run('git clone git://github.com/ICRAR/boinc-magphys.git')
+        run('git clone --quiet git://github.com/ICRAR/boinc-magphys.git')
     else:
-        run('git clone -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
+        run('git clone --quiet -b {0} git://github.com/ICRAR/boinc-magphys.git'.format(env.branch))
 
     # Create the .boto file
     run('''echo "[Credentials]
@@ -324,7 +374,7 @@ aws_secret_access_key = {1}" >> /home/ec2-user/.boto'''.format(env.aws_access_ke
     # Setup the S3 environment
     if to_boolean(env.create_s3):
         with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
-            run('fab --set project_name={0} create_s3'.format(env.project_name))
+            run('/usr/local/bin/fab --set project_name={0} create_s3'.format(env.project_name))
 
     if with_db:
         # Activate the DB
@@ -374,6 +424,7 @@ row_height = "7"
 threshold = "1000"
 high_water_mark = "400"
 report_deadline = "7"
+pixel_commit_threshold = "76"
 
 # Archive settings
 delete_delay = "5"
@@ -391,6 +442,15 @@ instance_type = "m1.small"
 key_name = "XXX"
 security_groups = "XXX","YYY"
 subnet_ids = "XXX","YYY"
+spot_price_multiplier = "2.0"
+ec2_ips_archive = "","","",""
+ec2_ips_build_image = "",""
+
+# Logging settings
+logger_port = "9020"
+logger_address = "XX.XX.XX.XX"
+logger_max_requests = "100"
+logger_directory = "/home/ec2-user/projects/{0}/log_ip-XX-XX-XX-XX"
 
 [build_png_image]
     instance_type = "m1.small"
@@ -412,11 +472,23 @@ subnet_ids = "XXX","YYY"
 
 ' >> /home/ec2-user/boinc-magphys/server/src/config/pogs.settings'''.format(env.project_name))
 
+    # Setup the permissions
+    with cd('/home/ec2-user/projects/{0}'.format(env.project_name)):
+        run('chmod 02770 upload')
+        run('chmod 02770 html/cache')
+        run('chmod 02770 html/inc')
+        run('chmod 02770 html/languages')
+        run('chmod 02770 html/languages/compiled')
+        run('chmod 02770 html/user_profile')
+
     # Copy the config files
-    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
-    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/* /home/ec2-user/projects/{0}/html/user/'.format(env.project_name))
-    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/hr_info.txt /home/ec2-user/projects/{0}/hr_info.txt'.format(env.project_name))
-    run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/project_files.xml /home/ec2-user/projects/{0}/project_files.xml'.format(env.project_name))
+    if not test_server:
+        run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/db_dump_spec.xml /home/ec2-user/projects/{0}/db_dump_spec.xml'.format(env.project_name))
+        run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/html/user/* /home/ec2-user/projects/{0}/html/user/'.format(env.project_name))
+        run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/hr_info.txt /home/ec2-user/projects/{0}/hr_info.txt'.format(env.project_name))
+        run('cp /home/ec2-user/boinc-magphys/server/config/boinc_files/project_files.xml /home/ec2-user/projects/{0}/project_files.xml'.format(env.project_name))
+
+    # Create the directories we need
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_archive'.format(env.project_name))
     run('mkdir -p /home/ec2-user/projects/{0}/html/stats_tmp'.format(env.project_name))
 
@@ -429,14 +501,21 @@ subnet_ids = "XXX","YYY"
     with cd('/home/ec2-user/boinc-magphys/server/src/magphys_validator'):
         run('make')
 
+    with cd('/home/ec2-user/boinc-magphys/py_boinc/cy_project/src'):
+        sudo('python2.7 setup.py install')
+
     # Setup the ops area password
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
 
-    with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
-        run('fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
-        run('fab --set project_name={0} edit_files'.format(env.project_name))
-        sudo('fab --set project_name={0} setup_website'.format(env.project_name))
+    if test_server:
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
+            sudo('/usr/local/bin/fab --set project_name={0} setup_website'.format(env.project_name))
+    else:
+        with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
+            run('/usr/local/bin/fab --set project_name={0},gmail_account={1} setup_postfix'.format(env.project_name, env.gmail_account))
+            run('/usr/local/bin/fab --set project_name={0} edit_files'.format(env.project_name))
+            sudo('/usr/local/bin/fab --set project_name={0} setup_website'.format(env.project_name))
 
     # This is needed because the files that Apache serve are inside the user's home directory.
     run('chmod 711 /home/ec2-user')
@@ -449,15 +528,16 @@ subnet_ids = "XXX","YYY"
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('php create_forums.php')
 
-    # Save the instance as an AMI
-    puts("Stopping the instance")
-    env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
-    while not env.ec2_instance.update() == 'stopped':
-        fastprint('.')
-        time.sleep(5)
+    if not test_server:
+        # Save the instance as an AMI
+        puts("Stopping the instance")
+        env.ec2_connection.stop_instances(env.ec2_instance.id, force=True)
+        while not env.ec2_instance.update() == 'stopped':
+            fastprint('.')
+            time.sleep(5)
 
-    puts("The AMI is being created. Don't forget to terminate the instance if not needed")
-    env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base MAGPHYS AMI')
+        puts("The AMI is being created. Don't forget to terminate the instance if not needed")
+        env.ec2_connection.create_image(env.ec2_instance.id, env.ami_name, description='The base MAGPHYS AMI')
 
     puts('All done')
 
@@ -527,7 +607,8 @@ def yum_pip_update():
     sudo('yum --assumeyes --quiet update')
 
     # Update the pip install
-    sudo('pip-2.7 install -U {0}'.format(PIP_PACKAGES))
+    sudo('/usr/local/bin/pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES1))
+    sudo('/usr/local/bin/pip2.7 install -U --quiet {0}'.format(PIP_PACKAGES2))
 
 
 @task
@@ -590,8 +671,15 @@ def boinc_setup_env():
 
     Allow the user to select if a Elastic IP address is to be used
     """
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_connection = boto.connect_ec2()
+    if exists(join(expanduser('~'), '.aws/credentials')):
+        # This relies on a ~/.aws/credentials file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.aws/credentials")
+        ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    else:
+        # This relies on a ~/.boto or /etc/boto.cfg file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.boto or /etc/boto.cfg")
+        ec2_connection = boto.connect_ec2()
+
     if 'ami_id' not in env:
         images = ec2_connection.get_all_images(owners=['self'])
         puts('Available images')
@@ -657,14 +745,70 @@ def boinc_build_ami():
 
 @task
 @serial
+def build_beta_server():
+    """
+    Build a test server in the Sydney region
+    """
+    # Create the instance in AWS
+    ec2_instance, ec2_connection = create_instance(30, 'POGS Beta Test Server', True)
+    env.ec2_instance = ec2_instance
+    env.ec2_connection = ec2_connection
+    env.host_string = 'ec2-user@{0}'.format(ec2_instance.ip_address)
+    env.branch = 'develop'
+    env.create_s3 = 'no'
+    env.aws_access_key_id = 'key_id'
+    env.aws_secret_access_key = 'secret_access_key'
+    env.project_name = 'pogsbeta'
+    env.ops_username = 'user'
+    env.ops_password = 'user'
+    env.hosts = ['pogsbeta.theskynet.org']
+
+    # Add these to so we connect magically
+    env.user = USERNAME
+    env.key_filename = SYDNEY_AWS_KEY
+
+    puts('env: {0}'.format(env))
+
+    # Make sure the FS is resized
+    resize_file_system()
+
+    # Make the swap we might need
+    make_swap()
+
+    # Perform the base install
+    yum_update()
+    base_install()
+
+    # Wait for things to settle down
+    time.sleep(5)
+
+    boinc_install(test_server=True)
+
+    # Wait for things to settle down
+    time.sleep(5)
+    pogs_install(with_db=True, test_server=True)
+
+    # Now set up the remain POGS bits
+    start_pogs()
+
+
+@task
+@serial
 def pogs_setup_env():
     """
     Ask a series of questions before deploying to the cloud.
 
     Allow the user to select if a Elastic IP address is to be used
     """
-    # This relies on a ~/.boto file holding the '<aws access key>', '<aws secret key>'
-    ec2_connection = boto.connect_ec2()
+    if exists(join(expanduser('~'), '.aws/credentials')):
+        # This relies on a ~/.aws/credentials file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.aws/credentials")
+        ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    else:
+        # This relies on a ~/.boto or /etc/boto.cfg file holding the '<aws access key>', '<aws secret key>'
+        puts("Using ~/.boto or /etc/boto.cfg")
+        ec2_connection = boto.connect_ec2()
+
     if 'ami_id' not in env:
         images = ec2_connection.get_all_images(owners=['self'])
         puts('Available images')
@@ -800,13 +944,13 @@ BOINC
 def start_pogs():
     # Copy files into place
     with cd('/home/ec2-user/boinc-magphys/machine-setup/boinc-pogs'):
-        run('fab --set project_name={0} create_first_version'.format(env.project_name))
-        run('fab --set project_name={0} start_daemons'.format(env.project_name))
+        run('/usr/local/bin/fab --set project_name={0} create_first_version'.format(env.project_name))
+        run('/usr/local/bin/fab --set project_name={0} start_daemons'.format(env.project_name))
 
     # Setup the crontab job to keep things ticking
-    run('''echo 'MAILTO=""
+    run('''echo "MAILTO=\\"\\"
 PYTHONPATH=/home/ec2-user/boinc/py:/home/ec2-user/boinc-magphys/server/src
-echo "0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'''.format(env.project_name))
+0,5,10,15,20,25,30,35,40,45,50,55 * * * * cd /home/ec2-user/projects/{0} ; /home/ec2-user/projects/{0}/bin/start --cron" >> /tmp/crontab.txt'''.format(env.project_name))
     run('crontab /tmp/crontab.txt')
 
     # Setup the logrotation

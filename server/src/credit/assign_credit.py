@@ -47,11 +47,14 @@ from database.database_support_core import AREA_USER, AREA, GALAXY_USER
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
+
 class AssignCredit:
     def __init__(self):
         # Login is set in the database package
         engine = create_engine(DB_LOGIN)
         self._connection = engine.connect()
+        self.appname = None
+        self.config = None
 
     def parse_args(self, args):
         """
@@ -60,7 +63,6 @@ class AssignCredit:
         are parsed as their true types, so integers will be ints,
         not strings.
         """
-
         args.reverse()
         while len(args):
             arg = args.pop()

@@ -26,7 +26,7 @@
 Functions used to delete a galaxy
 """
 from database.database_support_core import PIXEL_RESULT, IMAGE_FILTERS_USED, AREA, FITS_HEADER, GALAXY
-from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket
+from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 from boto.s3.key import Key
 

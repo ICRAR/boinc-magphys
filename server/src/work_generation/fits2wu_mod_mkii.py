@@ -35,7 +35,6 @@ import shutil
 import math
 import pyfits
 import py_boinc
-import subprocess
 import multiprocessing
 
 import time
@@ -45,12 +44,11 @@ from sqlalchemy.sql.expression import select, func
 from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 from image.fitsimage import FitsImage
-from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_files_bucket, get_key_fits, get_key_sigma_fits
+from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_key_fits, get_key_sigma_fits, get_saved_files_bucket
 from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
 
-OLD_WAY = False
 APP_NAME = 'magphys_wrapper'
 BIN_PATH = POGS_BOINC_PROJECT_ROOT + '/bin'
 TEMPLATES_PATH1 = 'templates'                                          # In true BOINC style, this is magically relative to the project root
@@ -80,6 +78,9 @@ class PixelValue:
     def __init__(self, value, sigma):
         self.value = value
         self.sigma = sigma
+
+    def __str__(self):
+        return 'Value: {0}, Sigma: {1}'.format(self.value, self.sigma)
 
 
 class Pixel:
@@ -154,15 +155,23 @@ class Fit2Wu:
         self._rounded_redshift = None
         self._hdu_list = None
         self._layer_count = None
+        self._sigma_layer_count = None  # number of layers in the sigma file
         self._end_y = None
         self._end_x = None
         self._fpops_est_per_pixel = None
         self._cobblestone_scaling_factor = None
         self._template_file = None
         self._layer_order = None
+        self._sigma_layer_order = None  # order of layers in the sigma file.
+                                        # Each layer here corresponds to the same filter as in layer order.
+                                        # e.g. sigma_layer_order[1] = same filter as layer_order[1]
         self._ultraviolet_bands = {}
         self._optical_bands = {}
         self._infrared_bands = {}
+
+        self._num_optical_bands_model = 0       # Total number of filters of this each type in the model (filters.dat)
+        self._num_infrared_bands_model = 0
+        self._num_ultraviolet_bands_model = 0
 
         ### New variables for bulk database inserts ###
         self._areaPK = None  # Primary Key to use when inserting area into db. Increment BEFORE use
@@ -206,9 +215,13 @@ class Fit2Wu:
         if self._sigma_filename is not None:
             self._sigma = 0.0
             self._signal_noise_hdu = pyfits.open(self._sigma_filename, memmap=True)
+            self._sigma_layer_count = len(self._signal_noise_hdu)
+            """
             if self._layer_count != len(self._signal_noise_hdu):
+                no longer need this!
                 LOG.error('The layer counts do not match %d vs %d', self._layer_count, len(self._signal_noise_hdu))
                 return 0, 0
+            """
         else:
             self._sigma = float(self._sigma)
 
@@ -231,21 +244,22 @@ class Fit2Wu:
             self._galaxy_id = 0
 
         self._galaxy_id += 1
-        self._database_insert_queue.append(GALAXY.insert().values(name=self._galaxy_name,
-                                                                  dimension_x=self._end_x,
-                                                                  dimension_y=self._end_y,
-                                                                  dimension_z=self._layer_count,
-                                                                  redshift=self._redshift,
-                                                                  sigma=self._sigma,
-                                                                  create_time=datetime_now,
-                                                                  image_time=datetime_now,
-                                                                  galaxy_type=self._galaxy_type,
-                                                                  ra_cent=0,
-                                                                  dec_cent=0,
-                                                                  pixel_count=0,
-                                                                  pixels_processed=0,
-                                                                  run_id=self._run_id,
-                                                                  galaxy_id=self._galaxy_id))
+        self._database_insert_queue.append(
+            GALAXY.insert().values(name=self._galaxy_name,
+                                   dimension_x=self._end_x,
+                                   dimension_y=self._end_y,
+                                   dimension_z=self._layer_count,
+                                   redshift=self._redshift,
+                                   sigma=self._sigma,
+                                   create_time=datetime_now,
+                                   image_time=datetime_now,
+                                   galaxy_type=self._galaxy_type,
+                                   ra_cent=0,
+                                   dec_cent=0,
+                                   pixel_count=0,
+                                   pixels_processed=0,
+                                   run_id=self._run_id,
+                                   galaxy_id=self._galaxy_id))
 
         # Area and Pixel PKs are needed multiple times.
         self._areaPK = self._connection.execute(select([func.max(AREA.c.area_id)])).first()[0]
@@ -268,6 +282,9 @@ class Fit2Wu:
 
         # Get the filters we're using for this run and sort the layers
         self._get_filters_sort_layers()
+
+        # Scales the credit values depending on what's in the file
+        self._calculate_credit()
 
         # Build the template file we need if necessary
         self._build_template_file()
@@ -312,7 +329,7 @@ class Fit2Wu:
         image.build_image(self._filename, galaxy_file_name, self._galaxy_id, get_galaxy_image_bucket())
 
         # Copy the fits file to S3 - renamed to make it unique
-        bucket_name = get_files_bucket()
+        bucket_name = get_saved_files_bucket()
         s3helper.add_file_to_bucket(bucket_name, get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
         if self._sigma_filename is not None:
             s3helper.add_file_to_bucket(bucket_name, get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
@@ -369,7 +386,7 @@ class Fit2Wu:
         self._db_access_time.append(time.time() - start)
         # Reset queue to none
         self._database_insert_queue = []
-        
+
     def _run_pending_boinc_db_tasks(self):
         """
         Runs all of the queued boinc db tasks as one transaction.
@@ -380,22 +397,23 @@ class Fit2Wu:
         for query in self._boinc_insert_queue:
 
             py_boinc.boinc_db_transaction_start()
-            retval = py_boinc.boinc_create_work(app_name=query.app_name,
-                                                min_quorom=query.min_quorom,
-                                                max_success_results=query.max_success_results,
-                                                delay_bound=query.delay_bound,
-                                                target_nresults=query.target_nresults,
-                                                wu_name=query.wu_name,
-                                                wu_template=query.wu_template,
-                                                result_template=query.result_template,
-                                                rsc_fpops_est=query.rsc_fpops_est,
-                                                rsc_fpops_bound=query.rsc_fpops_bound,
-                                                rsc_memory_bound=query.rsc_memory_bound,
-                                                rsc_disk_bound=query.rsc_disk_bound,
-                                                additional_xml=query.additional_xml,
-                                                opaque=query.opaque,
-                                                priority=query.priority,
-                                                list_input_files=query.list_input_files)
+            retval = py_boinc.boinc_create_work(
+                app_name=query.app_name,
+                min_quorom=query.min_quorom,
+                max_success_results=query.max_success_results,
+                delay_bound=query.delay_bound,
+                target_nresults=query.target_nresults,
+                wu_name=query.wu_name,
+                wu_template=query.wu_template,
+                result_template=query.result_template,
+                rsc_fpops_est=query.rsc_fpops_est,
+                rsc_fpops_bound=query.rsc_fpops_bound,
+                rsc_memory_bound=query.rsc_memory_bound,
+                rsc_disk_bound=query.rsc_disk_bound,
+                additional_xml=query.additional_xml,
+                opaque=query.opaque,
+                priority=query.priority,
+                list_input_files=query.list_input_files)
             if retval != 0:
                 py_boinc.boinc_db_transaction_rollback()
                 LOG.error('Error writing to boinc database. boinc_create_work return value = {0}'.format(retval))
@@ -535,12 +553,13 @@ class Fit2Wu:
 
                 # Enqueue this insert
                 self._total_areas += 1
-                self._database_insert_queue.append(area_insert.values(galaxy_id=self._galaxy_id,
-                                                                      top_x=area.top_x,
-                                                                      top_y=area.top_y,
-                                                                      bottom_x=area.bottom_x,
-                                                                      bottom_y=area.bottom_y,
-                                                                      area_id=self._areaPK))
+                self._database_insert_queue.append(
+                    area_insert.values(galaxy_id=self._galaxy_id,
+                                       top_x=area.top_x,
+                                       top_y=area.top_y,
+                                       bottom_x=area.bottom_x,
+                                       bottom_y=area.bottom_y,
+                                       area_id=self._areaPK))
 
                 for pixel in pixels:
                     # Needs to be incremented before use
@@ -549,11 +568,12 @@ class Fit2Wu:
 
                     # Enqueue this insert
                     self._total_pixels += 1
-                    self._database_insert_queue.append(pixel_result_insert.values(galaxy_id=self._galaxy_id,
-                                                                                  area_id=area.area_id,
-                                                                                  y=pixel.y,
-                                                                                  x=pixel.x,
-                                                                                  pxresult_id=self._pixelPK))
+                    self._database_insert_queue.append(
+                        pixel_result_insert.values(galaxy_id=self._galaxy_id,
+                                                   area_id=area.area_id,
+                                                   y=pixel.y,
+                                                   x=pixel.x,
+                                                   pxresult_id=self._pixelPK))
                     self._pixel_count += 1
 
                 # Write the pixels, at this point the area has been fully created
@@ -581,7 +601,7 @@ class Fit2Wu:
         job_file.write('<job_desc>\n')
         for i in range(1, pixels_in_file + 1):
             job_file.write('''   <task>
-      <application>fit_sed</application>
+      <application>./fit_sed</application>
       <command_line>{0} filters.dat observations.dat</command_line>
       <stdout_filename>stdout_file</stdout_filename>
       <stderr_filename>stderr_file</stderr_filename>
@@ -589,7 +609,7 @@ class Fit2Wu:
 '''.format(i))
 
         job_file.write('''   <task>
-      <application>concat</application>
+      <application>./concat</application>
       <command_line>{0} output.fit</command_line>
       <stdout_filename>stdout_file</stdout_filename>
       <stderr_filename>stderr_file</stderr_filename>
@@ -613,8 +633,11 @@ class Fit2Wu:
         row_num = 0
         for pixel in pixels:
             outfile.write('pix%(id)s %(pixel_redshift)s ' % {'id': pixel.pixel_id, 'pixel_redshift': self._redshift})
-            for pixel_value in pixel.pixels:
-                outfile.write("{0}  {1}  ".format(pixel_value.value, pixel_value.sigma))
+            for pixel_value in pixel.pixels:  # Should be placed here in same order as LayerOrder
+                if pixel_value.value is None or pixel_value.value <= 0:                         # added
+                    outfile.write("{0}  {1}  ".format(-1, -1))                                  # added
+                else:                                                                           # added
+                    outfile.write("{0}  {1}  ".format(pixel_value.value, pixel_value.sigma))
 
             outfile.write('\n')
             row_num += 1
@@ -647,49 +670,23 @@ class Fit2Wu:
 
         # And "create work" = create the work unit
         args_files = [work_unit_name, file_name_job, self._filter_file, self._zlib_file, self._sfh_model_file, self._ir_model_file]
-        if OLD_WAY:
-            args_params = [
-                "--appname",         APP_NAME,
-                "--min_quorum",      "%(min_quorum)s" % {'min_quorum': MIN_QUORUM},
-                "--max_success_results", "4",
-                "--delay_bound",     "%(delay_bound)s" % {'delay_bound': DELAY_BOUND},
-                "--target_nresults", "%(target_nresults)s" % {'target_nresults': TARGET_NRESULTS},
-                "--wu_name",         work_unit_name,
-                "--wu_template",     self._template_file,
-                "--result_template", TEMPLATES_PATH1 + "/fitsed_result.xml",
-                "--rsc_fpops_est",   "%(est).4f%(exp)s" % {'est': self._fpops_est_per_pixel * pixels_in_area, 'exp': FPOPS_EXP},
-                "--rsc_fpops_bound", "%(bound).4f%(exp)s" % {'bound': self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area, 'exp': FPOPS_EXP},
-                "--rsc_memory_bound", "1e8",
-                "--rsc_disk_bound", "1e8",
-                "--additional_xml", "<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
-                "--opaque",   str(area.area_id),
-                "--priority", '{0}'.format(self._priority)
-            ]
-            cmd_create_work = [
-                BIN_PATH + "/create_work"
-            ]
-            cmd_create_work.extend(args_params)
-            cmd_create_work.extend(args_files)
-            subprocess.call(cmd_create_work)
-
-        else:
-            entry = PyBoincWu(app_name=APP_NAME,
-                              min_quorom=MIN_QUORUM,
-                              max_success_results=4,
-                              delay_bound=DELAY_BOUND,
-                              target_nresults=TARGET_NRESULTS,
-                              wu_name=work_unit_name,
-                              wu_template=self._template_file,
-                              result_template=TEMPLATES_PATH1 + "/fitsed_result.xml",
-                              rsc_fpops_est=self._fpops_est_per_pixel * pixels_in_area * 1e12,
-                              rsc_fpops_bound=self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area * 1e12,
-                              rsc_memory_bound=1e8,
-                              rsc_disk_bound=1e8,
-                              additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
-                              opaque=area.area_id,
-                              priority=self._priority,
-                              list_input_files=args_files)
-            self._boinc_insert_queue.append(entry)
+        entry = PyBoincWu(app_name=APP_NAME,
+                          min_quorom=MIN_QUORUM,
+                          max_success_results=4,
+                          delay_bound=DELAY_BOUND,
+                          target_nresults=TARGET_NRESULTS,
+                          wu_name=work_unit_name,
+                          wu_template=self._template_file,
+                          result_template=TEMPLATES_PATH1 + "/fitsed_result.xml",
+                          rsc_fpops_est=self._fpops_est_per_pixel * pixels_in_area * 1e12,
+                          rsc_fpops_bound=self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area * 1e12,
+                          rsc_memory_bound=2e8,
+                          rsc_disk_bound=3e8,
+                          additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
+                          opaque=area.area_id,
+                          priority=self._priority,
+                          list_input_files=args_files)
+        self._boinc_insert_queue.append(entry)
 
     def _enough_layers(self, pixels):
         """
@@ -755,6 +752,17 @@ class Fit2Wu:
         for filter_name in self._connection.execute(select([FILTER], distinct=True, from_obj=FILTER.join(RUN_FILTER)).where(RUN_FILTER.c.run_id == self._run_id).order_by(FILTER.c.eff_lambda)):
             list_filter_names.append(filter_name)
 
+        # Count the number of filters of each type in the model
+        for filter_entry in list_filter_names:
+            if filter_entry[FILTER.c.optical] == 1:
+                self._num_optical_bands_model += 1
+
+            if filter_entry[FILTER.c.infrared] == 1:
+                self._num_infrared_bands_model += 1
+
+            if filter_entry[FILTER.c.ultraviolet] == 1:
+                self._num_ultraviolet_bands_model += 1
+
         # The order of the filters will be there order in the fits file so record the name and its position
         names = []
         for layer in range(self._layer_count):
@@ -776,42 +784,95 @@ class Fit2Wu:
         # If the fit is using a S/N ratio file check the order is correct
         if self._signal_noise_hdu is not None:
             names_snr = []
-            for layer in range(self._layer_count):
+            for layer in range(self._sigma_layer_count):
                 hdu = self._signal_noise_hdu[layer]
-                filter_name = hdu.header['MAGPHYSN']
-                if filter_name is None:
+                filter_name_magphysn = hdu.header['MAGPHYSN']
+                if filter_name_magphysn is None:
                     raise LookupError('The layer {0} does not have MAGPHYSN in it'.format(layer))
-                names_snr.append(filter_name)
+                names_snr.append(filter_name_magphysn)  # list of all filters that appear in the sigma file
 
-            # Make sure they match
+                found_filter = False
+                for filter_name in list_filter_names:
+                    if filter_name_magphysn == filter_name[FILTER.c.name]:
+                        found_filter = True
+                        break
+
+                if not found_filter:
+                    raise LookupError('The filter {0} in the fits sigma file is not expected'.format(filter_name_magphysn))
+
+            # No longer matters if main file and sigma have matching layers/bands.
             if len(names) == len(names_snr):
                 for index in range(len(names)):
                     if names[index] != names_snr[index]:
-                        raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
+                        LOG.info('The list of bands are not the same order. Index:{0}, {1} vs {2}'.format(index, names[index], names_snr[index]))
             else:
-                raise LookupError('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
+                LOG.info('The list of bands are not the same size {0} vs {1}'.format(names, names_snr))
 
         layers = []
-        for filter_name in list_filter_names:
+        sigma_layers = []
+        for j in range(len(list_filter_names)):
+            filter_name = list_filter_names[j]
             found_it = False
             for i in range(len(names)):
                 if names[i] == filter_name[FILTER.c.name]:
                     layers.append(i)
                     if filter_name[FILTER.c.infrared] == 1:
-                        self._infrared_bands[filter_name[FILTER.c.name]] = i
+                        self._infrared_bands[filter_name[FILTER.c.name]] = j
 
                     if filter_name[FILTER.c.optical] == 1:
-                        self._optical_bands[filter_name[FILTER.c.name]] = i
+                        self._optical_bands[filter_name[FILTER.c.name]] = j
 
                     if filter_name[FILTER.c.ultraviolet] == 1:
-                        self._ultraviolet_bands[filter_name[FILTER.c.name]] = i
+                        self._ultraviolet_bands[filter_name[FILTER.c.name]] = j
                     found_it = True
                     break
 
             if not found_it:
                 layers.append(-1)
 
+            """
+            Search the sigma hdu for the current filter name.
+            If it does exist, then add add its id to the sigma_layer_order
+            If it does not exist, then add -1.
+            sigma_layer_order will be in the same order as layer_order, meaning if a value exists for layer_order, there will be one for sigma_layer_order
+            and both of these layers will be for the same filter. only if a sigma file exists.
+
+            """
+            if self._signal_noise_hdu is not None:
+                found_it = False
+                for i in range(len(names_snr)):
+                    if names_snr[i] == filter_name[FILTER.c.name]:
+                        sigma_layers.append(i)
+                        found_it = True
+                        break
+                if not found_it:
+                    sigma_layers.append(-1)
+
+        LOG.info('Optical bands found: {0}'.format(len(self._optical_bands)))
+        LOG.info('Infrared bands found: {0}'.format(len(self._infrared_bands)))
+        LOG.info('Ultraviolet bands found: {0}'.format(len(self._ultraviolet_bands)))
+
+        LOG.info('Ordered layers from database:')
+        i = 0
+        for item in list_filter_names:
+            LOG.info('{0}: {1}'.format(i, item[FILTER.c.name]))
+            i += 1
+
+        i = 0
+        LOG.info('layer_order:')
+        for item in layers:
+            LOG.info('{0}: {1}'.format(i, item))
+            i += 1
+
+        i = 0
+        if self._signal_noise_hdu is not None:
+            LOG.info('sigma_order:')
+            for item in sigma_layers:
+                LOG.info('{0}: {1}'.format(i, item))
+                i += 1
+
         self._layer_order = layers
+        self._sigma_layer_order = sigma_layers
 
     def _get_pixels(self, pix_x, pix_y):
         """
@@ -842,10 +903,26 @@ class Fit2Wu:
                             # A zero tells MAGPHYS - we have no value here
                             pixels.append(PixelValue(0, 0))
                         else:
-                            if self._signal_noise_hdu is not None:
-                                sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
-                            else:
-                                sigma = pixel * self._sigma
+                            """
+                            If there is no sigma file at all, use self._sigma.
+                            If there is a sigma file,
+                            check whether the sigma_layer_order contains the layer in the sigma that corresponds to the current layer.
+                            if there is no layer in the sigma (-1), use 10% or whatever is defined as self._sigma.
+                            """
+                            if self._signal_noise_hdu is None:  # If there is no signal to noise file, use the sigma value.
+
+                                if self._sigma is not None:
+                                    sigma = pixel * self._sigma
+                                else:  # If there is no sigma value, use 0.1
+                                    sigma = pixel * 0.1
+
+                            else:  # if we do have a signal to noise file, use it
+
+                                if self._sigma_layer_order[layer] != -1:
+                                    sigma = pixel / self._signal_noise_hdu[layer].data[y, x]
+                                else:  # If there is no value for the current layer, use 0.1
+                                    sigma = pixel * 0.1
+
                             pixels.append(PixelValue(pixel, sigma))
 
                 if self._enough_layers(pixels):
@@ -941,3 +1018,65 @@ class Fit2Wu:
         for tag_register in self._connection.execute(select([TAG_REGISTER]).where(TAG_REGISTER.c.register_id == register_id)):
             LOG.info('tag_id: {0}, galaxy_id: {1}, register_id: {2}'.format(tag_register[TAG_REGISTER.c.tag_id], self._galaxy_id, register_id))
             self._database_insert_queue.append(TAG_GALAXY.insert().values(galaxy_id=self._galaxy_id, tag_id=tag_register[TAG_REGISTER.c.tag_id]))
+
+    def _calculate_credit(self):
+        """
+        Determined additional credit that a user should get depending on the
+        number of layers in the fits file
+        Originally 5 layers
+        :return:
+        """
+        uv_model = 0
+        ir_model = 0
+        optic_model = 0
+
+        if self._num_ultraviolet_bands_model > 0:
+            uv_model = self._num_ultraviolet_bands_model * 0.01
+            LOG.info('+ {0} for {1} UV bands in model'.format(uv_model, self._num_ultraviolet_bands_model))
+        else:
+            LOG.info('No ultraviolet bands in model for credit scaling')
+
+        if self._num_infrared_bands_model > 0:
+            ir_model = self._num_infrared_bands_model * 0.012
+            LOG.info('+ {0} for {1} IR bands in model'.format(ir_model, self._num_infrared_bands_model))
+        else:
+            LOG.info('No infrared bands in model for credit scaling')
+
+        if self._num_optical_bands_model > 0:
+            optic_model = self._num_optical_bands_model * 0.01
+            LOG.info('+ {0} for {1} optical bands in model'.format(optic_model, self._num_optical_bands_model))
+        else:
+            LOG.info('No optical bands in model for credit scaling')
+
+        uv = 0
+        ir = 0
+        optic = 0
+
+        if len(self._ultraviolet_bands) > 0:
+            uv = len(self._ultraviolet_bands) * 0.015
+            LOG.info('+ {0} for {1} UV bands in file'.format(uv, len(self._ultraviolet_bands)))
+        else:
+            LOG.info('No ultraviolet bands in file for credit scaling')
+
+        if len(self._infrared_bands) > 0:
+            ir = len(self._infrared_bands) * 0.02
+            LOG.info('+ {0} for {1} IR bands in file'.format(ir, len(self._infrared_bands)))
+        else:
+            LOG.info('No infrared bands in file for credit scaling')
+
+        if len(self._optical_bands) > 0:
+            optic = len(self._optical_bands) * 0.015
+            LOG.info('+ {0} for {1} optical bands in file'.format(optic, len(self._optical_bands)))
+        else:
+            LOG.info('No optical bands in file for credit scaling')
+
+        total_scaling = 1.0 + uv + ir + optic + uv_model + ir_model + optic_model
+
+        modified_cobblestone = self._cobblestone_scaling_factor * total_scaling
+        modified_fpops = self._fpops_est_per_pixel * total_scaling
+
+        LOG.info('Scaling cobblestone value from {0} to {1}'.format(self._cobblestone_scaling_factor, modified_cobblestone))
+        LOG.info('Scaling fpops_est value from {0} to {1}'.format(self._fpops_est_per_pixel, modified_fpops))
+
+        self._cobblestone_scaling_factor = modified_cobblestone
+        self._fpops_est_per_pixel = modified_fpops

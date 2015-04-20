@@ -26,7 +26,10 @@
 Functions used my register
 """
 from decimal import Decimal
-import os, gzip, tarfile, shutil
+import os
+import gzip
+import tarfile
+import shutil
 from utils.logging_helper import config_logger
 from datetime import datetime
 from sqlalchemy import select
@@ -99,12 +102,12 @@ def decompress_gz_files(location):
     num_files_decompressed = 0
     files = os.listdir(location)
     LOG.info('Decompressing now...')
-    
+
     files_to_decompress = []
     for f in files:
         if f.endswith('gz'):
             files_to_decompress.append(f)
-    
+
     if len(files_to_decompress) is 0:
         LOG.info('No gz files to extract in {0}'.format(location))
     else:
@@ -145,15 +148,15 @@ def extract_tar_file(tar_file, location):
     """
     num_files_extracted = 0
     galaxy_archive = tarfile.open(tar_file, 'r')
-    
+
     LOG.info('{0} total files (approx {1} galaxies) to extract'.format(len(galaxy_archive.getnames()), len(galaxy_archive.getnames())/2))
     LOG.info('Extracting now...')
-    
+
     if os.path.isdir(location):
         LOG.info('{0} directory already exists'.format(location))
     else:
         os.mkdir(location)
-    
+
     for f in galaxy_archive.getmembers():
         if os.path.exists('{0}/{1}'.format(location, f.name)) or os.path.exists('{0}/{1}'.format(location, f.name[:-3])):
             LOG.info('{0} already exists'.format(f.name))
@@ -287,40 +290,41 @@ def add_to_database(connection, galaxy):
     :param galaxy:
     :return:
     """
-    GALAXY_NAME = galaxy['name']
-    REDSHIFT = galaxy['redshift']
-    GALAXY_TYPE = galaxy['type']
-    INPUT_FILE = galaxy['input_file']
-    PRIORITY = galaxy['priority']
-    RUN_ID = galaxy['run_id']
-    SIGMA = galaxy['sigma']
-    TAGS = galaxy['tags']
+    galaxy_name = galaxy['name']
+    redshift = galaxy['redshift']
+    galaxy_type = galaxy['type']
+    input_file = galaxy['input_file']
+    priority = galaxy['priority']
+    run_id = galaxy['run_id']
+    sigma = galaxy['sigma']
+    tags = galaxy['tags']
 
     transaction = connection.begin()
     try:
         try:
-            sigma = float(SIGMA)
+            sigma = float(sigma)
             sigma_filename = None
         except ValueError:
             sigma = 0.0
-            sigma_filename = SIGMA
+            sigma_filename = sigma
 
-        result = connection.execute(REGISTER.insert(),
-                                    galaxy_name=GALAXY_NAME,
-                                    redshift=REDSHIFT,
-                                    galaxy_type=GALAXY_TYPE,
-                                    filename=INPUT_FILE,
-                                    priority=PRIORITY,
-                                    register_time=datetime.now(),
-                                    run_id=RUN_ID,
-                                    sigma=sigma,
-                                    sigma_filename=sigma_filename)
+        result = connection.execute(
+            REGISTER.insert(),
+            galaxy_name=galaxy_name,
+            redshift=redshift,
+            galaxy_type=galaxy_type,
+            filename=input_file,
+            priority=priority,
+            register_time=datetime.now(),
+            run_id=run_id,
+            sigma=sigma,
+            sigma_filename=sigma_filename)
 
         register_id = result.inserted_primary_key[0]
 
         # Get the tag ids
         tag_ids = set()
-        for tag_text in TAGS:
+        for tag_text in tags:
             tag_text = tag_text.strip()
             if len(tag_text) > 0:
                 tag = connection.execute(select([TAG]).where(TAG.c.tag_text == tag_text)).first()
@@ -340,8 +344,8 @@ def add_to_database(connection, galaxy):
                                register_id=register_id)
 
         transaction.commit()
-        LOG.info('Registered %s %s %f %s %d %d', GALAXY_NAME, GALAXY_TYPE, REDSHIFT, INPUT_FILE, PRIORITY, RUN_ID)
-        for tag_text in TAGS:
+        LOG.info('Registered %s %s %f %s %d %d', galaxy_name, galaxy_type, redshift, input_file, priority, run_id)
+        for tag_text in tags:
             LOG.info('Tag: {0}'.format(tag_text))
     except Exception:
         transaction.rollback()

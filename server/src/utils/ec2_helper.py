@@ -32,7 +32,8 @@ import datetime
 from boto.exception import EC2ResponseError
 from boto.utils import get_instance_metadata
 from utils.logging_helper import config_logger
-from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT, SPOT_PRICE_MULTIPLIER, EC2_IP_ARCHIVE_ADDRESSES, EC2_IP_BUILD_IMAGE_ADDRESSES, BUILD_PNG_IMAGE_DICT, ARCHIVE_DATA_DICT
+from config import AWS_AMI_ID, AWS_KEY_NAME, AWS_SECURITY_GROUPS, AWS_SUBNET_IDS, AWS_SUBNET_DICT, \
+    SPOT_PRICE_MULTIPLIER, EC2_IP_ARCHIVE_ADDRESSES, EC2_IP_BUILD_IMAGE_ADDRESSES, BUILD_PNG_IMAGE_DICT, ARCHIVE_DATA_DICT
 
 LOG = config_logger(__name__)
 
@@ -55,7 +56,8 @@ class EC2Helper:
         """
         return self.ec2_connection.get_all_instances(filters={'tag:BOINC': boinc_value})
 
-    def wait_for_running(self, instance):
+    @staticmethod
+    def wait_for_running(instance):
         """
         Waits until the instance specified is actually running.
         Times out after 10 mins or after several attempts if instance.update() causes an exception
@@ -181,7 +183,6 @@ class EC2Helper:
             LOG.info('Disassociating...')
             self.ec2_connection.disassociate_address(association_id=association_id)
             LOG.info('Disassociated successfully {0}'.format(public_ip))
-
 
     def get_allocation_id(self):
         """
@@ -346,7 +347,8 @@ class EC2Helper:
         LOG.info('bid_price: {0}, subnet_id: {1}'.format(bid_price, subnet_id))
         return bid_price, subnet_id
 
-    def get_next_available_address(self, remainder, instance_type):
+    @staticmethod
+    def get_next_available_address(remainder, instance_type):
         """
         Out of the ip addresses in the config file, return the one associated with this instance
         If there are none, return None
@@ -372,11 +374,6 @@ class EC2Helper:
             return EC2_IP_BUILD_IMAGE_ADDRESSES[remainder]
 
         return None
-
-    def print_log(self):
-        LOG.info('This is text')
-        LOG.error('This is error text')
-        LOG.debug('This is debug text')
 
 
 class CancelledException(Exception):

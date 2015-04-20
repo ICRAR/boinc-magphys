@@ -27,11 +27,14 @@
 Register a FITS file ready to be converted into Work Units
 """
 
-import os, sys, shutil
+import os
+import sys
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
-import argparse, time
+import argparse
+import time
+import shutil
 
 from utils.logging_helper import config_logger
 
@@ -40,7 +43,7 @@ from config import DB_LOGIN
 
 from work_generation.register_fits_file_mod import fix_redshift, get_data_from_galaxy_txt, \
     decompress_gz_files, extract_tar_file, find_input_filename, find_sigma_filename, add_to_database, \
-    save_data_to_file, clean_unused_fits, move_fits_files
+    clean_unused_fits, move_fits_files
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))

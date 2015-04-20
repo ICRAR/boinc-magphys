@@ -1,0 +1,2 @@
+These were the files used to determine the speed increase cython would give to fits2wu.
+They will need to be modified slightly and recompiled to be usable

@@ -41,7 +41,7 @@ if os.path.exists('/home/ec2-user'):
                     '/home/ec2-user/boinc/db',
                     '/home/ec2-user/boinc/tools',
                     '/home/ec2-user/boinc',
-                    '/usr/include/mysql55']
+                    '/usr/include/mysql']
     LIBRARY_DIRS = ['/usr/lib64/mysql/']
     extensions = [Extension(PY_BOINC,
                             sources=SOURCES,
@@ -51,7 +51,7 @@ if os.path.exists('/home/ec2-user'):
                                            '/home/ec2-user/boinc/lib/libboinc.a',
                                            '/home/ec2-user/boinc/lib/libboinc_crypt.a',
                                            '/home/ec2-user/boinc/api/libboinc_api.a'],
-                            libraries=["mysqlclient"],
+                            libraries=['mysqlclient', 'ssl', 'crypto'],
                             )]
 else:
     INCLUDE_DIRS = ['/Users/kevinvinsen/Documents/ICRAR/work/boinc',
@@ -68,7 +68,7 @@ else:
                             sources=SOURCES,
                             include_dirs=INCLUDE_DIRS,
                             library_dirs=LIBRARY_DIRS,
-                            libraries=["boinc", "boinc_api", "mysqlclient"],
+                            libraries=['boinc', 'boinc_api', 'mysqlclient', 'ssl', 'crypto'],
                             )]
 setup(
     name=PY_BOINC,

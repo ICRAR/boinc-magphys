@@ -29,11 +29,10 @@ import glob
 import os
 import datetime
 
-from sqlalchemy import create_engine
 from utils.logging_helper import config_logger
-from config import DB_LOGIN, STORED, HDF5_OUTPUT_DIRECTORY
+from config import STORED, HDF5_OUTPUT_DIRECTORY
 from database.database_support_core import GALAXY
-from utils.name_builder import get_files_bucket
+from utils.name_builder import get_saved_files_bucket
 from utils.s3_helper import S3Helper
 from utils.shutdown_detection import shutdown
 
@@ -65,8 +64,6 @@ def store_files(connection, modulus, remainder):
     """
     Scan a directory for files and send them to the archive
 
-    :param hdf5_dir:  the directory to scan
-    :return:
     """
     LOG.info('Directory: %s', HDF5_OUTPUT_DIRECTORY)
 
@@ -75,7 +72,7 @@ def store_files(connection, modulus, remainder):
     file_count = 0
 
     s3helper = S3Helper()
-    bucket_name = get_files_bucket()
+    bucket_name = get_saved_files_bucket()
 
     for file_name in glob.glob(files):
         galaxy_id, galaxy_name = get_galaxy_id_and_name(file_name)
@@ -91,7 +88,10 @@ def store_files(connection, modulus, remainder):
                 s3helper.add_file_to_bucket(bucket_name, key, file_name)
                 file_count += 1
                 os.remove(file_name)
-                connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id).values(status_id=STORED, status_time=datetime.datetime.now()))
+                connection.execute(
+                    GALAXY.update()
+                          .where(GALAXY.c.galaxy_id == galaxy_id)
+                          .values(status_id=STORED, status_time=datetime.datetime.now()))
 
         else:
             LOG.error('File name: %s', file_name)

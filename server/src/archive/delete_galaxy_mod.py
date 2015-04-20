@@ -32,7 +32,7 @@ from sqlalchemy.sql import select, func, and_
 from utils.logging_helper import config_logger
 from config import DELETED, ARC_DELETE_DELAY, STORED
 from database.database_support_core import GALAXY, AREA, PIXEL_RESULT, FITS_HEADER, REGISTER, TAG_REGISTER
-from utils.name_builder import get_files_bucket, get_galaxy_file_name
+from utils.name_builder import get_galaxy_file_name, get_sed_files_bucket
 from utils.s3_helper import S3Helper
 from utils.shutdown_detection import shutdown
 
@@ -67,9 +67,9 @@ def delete_galaxy(connection, galaxy_ids):
 
             # Now empty the bucket of the sed files
             s3helper = S3Helper()
-            bucket = s3helper.get_bucket(get_files_bucket())
+            bucket = s3helper.get_bucket(get_sed_files_bucket())
             galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
-            for key in bucket.list(prefix='{0}/sed/'.format(galaxy_file_name)):
+            for key in bucket.list(prefix='{0}/'.format(galaxy_file_name)):
                 # Ignore the key
                 if key.key.endswith('/'):
                     continue
@@ -82,7 +82,7 @@ def delete_galaxy(connection, galaxy_ids):
 
             # Now the folder
             key = Key(bucket)
-            key.key = '{0}/sed/'.format(galaxy_file_name)
+            key.key = '{0}/'.format(galaxy_file_name)
             bucket.delete_key(key)
 
         LOG.info('Galaxy with galaxy_id of %d was deleted', galaxy_id)

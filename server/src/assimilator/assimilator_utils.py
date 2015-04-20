@@ -27,7 +27,7 @@ Some utilities for the Assimilator
 """
 
 
-def is_gzip(outFile):
+def is_gzip(out_file):
     """
     Test if the file is a gzip file by opening it and reading the magic number
 
@@ -43,7 +43,7 @@ def is_gzip(outFile):
     False
     """
     result = False
-    f = open(outFile, "rb")
+    f = open(out_file, "rb")
     try:
         magic = f.read(2)
         if len(magic) == 2:

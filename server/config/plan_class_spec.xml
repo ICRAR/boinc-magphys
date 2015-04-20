@@ -1,0 +1,11 @@
+<plan_classes>
+    <plan_class>
+        <name>android_arm_pie</name>
+        <min_android_version>40100</min_android_version>
+    </plan_class>
+
+    <plan_class>
+        <name>android_arm_non_pie</name>
+        <max_android_version>40099</max_android_version>
+    </plan_class>
+</plan_classes>
