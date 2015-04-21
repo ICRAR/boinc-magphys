@@ -77,7 +77,7 @@ c     model libraries, parameters, etc.
       real*8 ldust(nmod),mstr1(nmod),logldust(nmod),lssfr(nmod)
       real*8 flux_ir(nmod,nmax),tvism(nmod),tauv(nmod),mu(nmod)
       real*8 tbg1(nmod),tbg2(nmod),xi1(nmod),xi2(nmod),xi3(nmod)
-      real*8 fmu_ism(nmod),mdust(nmod),lmdust(nmod)
+      real*8 fmu_ism(nmod),mdust(nmod),lmdust(nmod),logmdust(nmod)
 c     chi2, scaling factors, etc.
       real*8 flux_mod(nmax)
       real*8 chi2,chi2_sav,chi2_new,df
@@ -126,6 +126,7 @@ c theSkyNet
       integer nbin2_fmu,nbin2_mu,nbin2_tv,nbin2_a,nbin_fmu_ism
       integer nbin2_fmu_ism,nbin_md,nbin2_md,nbin_ssfr,nbin2_ssfr
       integer nbin2_tbg1,nbin2_tbg2,nbin2_xi,nbin2_sfr,nbin2_ld
+      real*8 sfh_hist(nmod),ir_hist(nmod)
       real*8 fmu_hist(nbinmax1),psfh(nbinmax1),pism(nbinmax1)
       real*8 pir(nbinmax1),ptbg1(nbinmax1)
       real*8 mu_hist(nbinmax1),pmu(nbinmax1),ptbg2(nbinmax1)
@@ -184,6 +185,8 @@ c     --------------------------------------------------------------------------
       character*100 buffer1, buffer2
       logical found_old_entry
       integer gal_number_found
+      integer nfilt_dust,n_irbysfh
+      real*8 logldusta
 
       numargs = iargc ( )
       if (numargs .eq. 0) then
@@ -365,6 +368,7 @@ c     --------------------------------------------------------------------------
                nfilt_mix=nfilt_mix+1
             endif
          enddo
+         nfilt_dust=nfilt_ir+nfilt_mix
 
          write(*,*) '   '
          write(*,*) 'At this redshift: '
@@ -450,7 +454,8 @@ c     IR model parameters
                xi1(i_ir)=fprop_ir(i_ir,5)          ! xi_PAH^BC Ld(PAH)/Ld(BC)
                xi2(i_ir)=fprop_ir(i_ir,6)          ! xi_MIR^BC Ld(MIR)/Ld(BC)
                xi3(i_ir)=fprop_ir(i_ir,7)          ! xi_W^BC Ld(warm)/Ld(BC)
-               mdust(i_ir)=fprop_ir(i_ir,8) !dust mass
+               mdust(i_ir)=fprop_ir(i_ir,8)        !dust mass
+               logmdust(i_ir)=dlog10(mdust(i_ir))  !dust mass log10
 c     .lbr contains absolute AB magnitudes -> convert to fluxes Fnu in Lo/Hz
 c     Convert all magnitudes to Lo/Hz
                do k=1,nfilt_ir
@@ -515,9 +520,12 @@ c     Initialize variables:
          do k=1,nfilt
             flux_mod(k)=0.
          enddo
-
+	 do i=1,nmod
+	    sfh_hist(i)=0.
+	    ir_hist(i)=0.
+	 enddo
 c theSkyNet do i=1,1500
-         do i=1,3000
+         do i=1,nbinmax1
             psfh(i)=0.
             pir(i)=0.
             pmu(i)=0.
@@ -575,45 +583,57 @@ c     Compute histogram indexes for each parameter value
 c     [makes code faster -- implemented by the Nottingham people]
          do i_sfh=1, n_sfh
             aux=((fmu_sfh(i_sfh)-fmu_min)/(fmu_max-fmu_min))*nbin_fmu
-            i_fmu_sfh(i_sfh) = 1 + dint(aux)
+            ibin=1 + dint(aux)
+            i_fmu_sfh(i_sfh) = max(1,min(ibin,nbin_fmu))
 
             aux = ((mu(i_sfh)-mu_min)/(mu_max-mu_min)) * nbin_mu
-            i_mu(i_sfh) = 1 + dint(aux)
+            ibin=1 + dint(aux)
+            i_mu(i_sfh) = max(1,min(ibin,nbin_mu))
 
             aux=((tauv(i_sfh)-tv_min)/(tv_max-tv_min)) * nbin_tv
-            i_tauv(i_sfh) = 1 + dint(aux)
+            ibin=1 + dint(aux)
+            i_tauv(i_sfh) = max(1,min(ibin,nbin_tv))
 
             aux=((tvism(i_sfh)-tv_min)/(tv_max-tv_min)) * nbin_tv
-            i_tvism(i_sfh) = 1 + dint(aux)
+            ibin=1 + dint(aux)
+            i_tvism(i_sfh) = max(1,min(ibin,nbin_tv))
 
             if (lssfr(i_sfh).lt.ssfr_min) then
                lssfr(i_sfh)=ssfr_min !set small sfrs to sfr_min
             endif
             aux=((lssfr(i_sfh)-ssfr_min)/(ssfr_max-ssfr_min))* nbin_ssfr
-            i_lssfr(i_sfh) = 1 + dint(aux)
+            ibin=1 + dint(aux)
+            i_lssfr(i_sfh) = max(1,min(ibin,nbin_sfr))
          enddo
 
          do i_ir=1, n_ir
             aux=((fmu_ir(i_ir)-fmu_min)/(fmu_max-fmu_min)) * nbin_fmu
-            i_fmu_ir(i_ir) = 1+dint(aux)
+            ibin=1 + dint(aux)
+            i_fmu_ir(i_ir) = max(1,min(ibin,nbin_fmu))
 
             aux=((fmu_ism(i_ir)-fmuism_min)/(fmuism_max-fmuism_min))*nbin_fmu_ism
-            i_fmu_ism(i_ir) = 1+dint(aux)
+            ibin=1 + dint(aux)
+            i_fmu_ism(i_ir) = max(1,min(ibin,nbin_fmu_ism))
 
             aux=((tbg1(i_ir)-tbg1_min)/(tbg1_max-tbg1_min))* nbin_tbg1
-            i_tbg1(i_ir) = 1+dint(aux)
+            ibin=1 + dint(aux)
+            i_tbg1(i_ir) = max(1,min(ibin,nbin_tbg1))
 
             aux=((tbg2(i_ir)-tbg2_min)/(tbg2_max-tbg2_min))* nbin_tbg2
-            i_tbg2(i_ir) = 1+dint(aux)
+            ibin=1 + dint(aux)
+            i_tbg2(i_ir) = max(1,min(ibin,nbin_tbg2))
 
             aux=((xi1(i_ir)-xi_min)/(xi_max-xi_min)) * nbin_xi
-            i_xi1(i_ir) = 1+dint(aux)
+            ibin=1 + dint(aux)
+            i_xi1(i_ir) = max(1,min(ibin,nbin_xi))
 
             aux=((xi2(i_ir)-xi_min)/(xi_max-xi_min)) * nbin_xi
-            i_xi2(i_ir) = 1+dint(aux)
+            ibin=1 + dint(aux)
+            i_xi2(i_ir) = max(1,min(ibin,nbin_xi))
 
             aux=((xi3(i_ir)-xi_min)/(xi_max-xi_min)) * nbin_xi
-            i_xi3(i_ir) = 1+dint(aux)
+            ibin=1 + dint(aux)
+            i_xi3(i_ir) = max(1,min(ibin,nbin_xi))
          enddo
 
 c     ---------------------------------------------------------------------------
@@ -651,6 +671,7 @@ c     Check progress of the fit...
             endif
 
             df=0.15             !fmu_opt=fmu_ir +/- dfmu
+            n_irbysfh=0
 
 c     Search for the IR models with f_mu within the range set by df
             DO i_ir=1,n_ir
@@ -664,60 +685,83 @@ c     Search for the IR models with f_mu within the range set by df
                if (abs(fmu_sfh(i_sfh)-fmu_ir(i_ir)).le.df) then
 
                   n_models=n_models+1 !to keep track of total number of combinations
+                  n_irbysfh=n_irbysfh+1
 
+c     Only Compute flux_mod, chi, prob, bestfit Once per SFH, if no Dust Filters.
+                  if ( (nfilt_dust.ne.0).or.((nfilt_dust.eq.0).and.(n_irbysfh.eq.1)) ) then
+            	
 c     Build the model flux array by adding SFH & IR
-                  do k=1,nfilt_sfh-nfilt_mix
-                     flux_mod(k)=flux_sfh(i_sfh,k)
-                  enddo
-                  do k=nfilt_sfh-nfilt_mix+1,nfilt_sfh
-                     flux_mod(k)=flux_sfh(i_sfh,k)+
-     +                    ldust(i_sfh)*flux_ir(i_ir,k-nfilt_sfh+nfilt_mix) !k-(nfilt_sfh-nfilt_mix)
-                  enddo
-                  do k=nfilt_sfh+1,nfilt
-                     flux_mod(k)=ldust(i_sfh)*flux_ir(i_ir,k-nfilt_sfh+nfilt_mix)
-                  enddo
-c     Compute scaling factor "a" - this is the number that minimizes chi^2
-                  do k=1,nfilt
-                     if (flux_obs(i_gal,k).gt.0) then
-                        num=num+(flux_mod(k)*flux_obs(i_gal,k)*w(i_gal,k))
-                        den=den+((flux_mod(k)**2)*w(i_gal,k))
-                     endif
-                  enddo
-                  a=num/den
-c     Compute chi^2 goodness-of-fit
-                  do k=1,nfilt_sfh
-                     if (flux_obs(i_gal,k).gt.0) then
-                        chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
-     +                       **2)*w(i_gal,k))
-                        chi2_opt=chi2
-                     endif
-                  enddo
-
-                  if (chi2.lt.600.) then
+                     do k=1,nfilt_sfh-nfilt_mix
+                        flux_mod(k)=flux_sfh(i_sfh,k)
+                     enddo
+                     do k=nfilt_sfh-nfilt_mix+1,nfilt_sfh
+                        flux_mod(k)=flux_sfh(i_sfh,k)+
+     +                       ldust(i_sfh)*flux_ir(i_ir,k-nfilt_sfh+nfilt_mix) !k-(nfilt_sfh-nfilt_mix)
+                     enddo
                      do k=nfilt_sfh+1,nfilt
+                        flux_mod(k)=ldust(i_sfh)*flux_ir(i_ir,k-nfilt_sfh+nfilt_mix)
+                     enddo
+c     Compute scaling factor "a" - this is the number that minimizes chi^2
+                     do k=1,nfilt
+                        if (flux_obs(i_gal,k).gt.0) then
+                           num=num+(flux_mod(k)*flux_obs(i_gal,k)*w(i_gal,k))
+                           den=den+((flux_mod(k)*flux_mod(k))*w(i_gal,k))
+c                       den=den+((flux_mod(k)**2)*w(i_gal,k))
+                     endif
+                     enddo
+                     a=num/den
+c     Compute chi^2 goodness-of-fit
+                     do k=1,nfilt_sfh
                         if (flux_obs(i_gal,k).gt.0) then
                            chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
-     +                          **2)*w(i_gal,k))
-                           chi2_ir=chi2_ir+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
-     +                          **2)*w(i_gal,k))
+     +                          *(flux_obs(i_gal,k)-(a*flux_mod(k))))*w(i_gal,k))
+c                          chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
+c    +                       **2)*w(i_gal,k))
+                           chi2_opt=chi2
                         endif
-                     enddo
-                  endif
+                      enddo
+
+                     if (chi2.lt.600.) then
+                        do k=nfilt_sfh+1,nfilt
+                           if (flux_obs(i_gal,k).gt.0) then
+                              chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
+     +                             *(flux_obs(i_gal,k)-(a*flux_mod(k))))*w(i_gal,k))
+c                             chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
+c    +                             **2)*w(i_gal,k))
+c                             chi2_ir=chi2_ir+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
+c    +                             **2)*w(i_gal,k))
+                           endif
+                        enddo
+                     endif
 c     Probability
-                  prob=dexp(-0.5*chi2)
-                  ptot=ptot+prob
+                     prob=dexp(-0.5*chi2)
 c     Best fit model
-                  chi2_new=chi2
-                  chi2_new_opt=chi2_opt
-                  chi2_new_ir=chi2_ir
-                  if (chi2_new.lt.chi2_sav) then
-                     chi2_sav=chi2_new
-                     sfh_sav=i_sfh
-                     ir_sav=i_ir
-                     a_sav=a
-                     chi2_sav_opt=chi2_new_opt
-                     chi2_sav_ir=chi2_new_ir
-                  endif
+                     chi2_new=chi2
+                     chi2_new_opt=chi2_opt
+                     chi2_new_ir=chi2_ir
+                     if (chi2_new.lt.chi2_sav) then
+                        chi2_sav=chi2_new
+                        sfh_sav=i_sfh
+                        ir_sav=i_ir
+                        a_sav=a
+                        chi2_sav_opt=chi2_new_opt
+c     Only Compute chi2_sav_ir if needed.
+                        chi2_sav_ir=0.
+                        if (chi2.lt.600.) then
+                           do k=nfilt_sfh+1,nfilt
+                              if (flux_obs(i_gal,k).gt.0) then
+                                 chi2_sav_ir=chi2_sav_ir+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
+     +                                *(flux_obs(i_gal,k)-(a*flux_mod(k))))*w(i_gal,k))
+c                                chi2_sav_ir=chi2_sav_ir+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
+c    +                                   **2)*w(i_gal,k))
+                              endif
+                           enddo
+                        endif
+                     endif
+
+                     a=dlog10(a)
+                     logldusta=logldust(i_sfh)+dlog10(exp(a*2.30258509299404568402D0)) !Part of MDust
+                  endif             !nfilt_dust condition
 
 c     MARGINAL PROBABILITY DENSITY FUNCTIONS
 c     Locate each value on the corresponding histogram bin
@@ -725,74 +769,35 @@ c     and compute probability histogram
 c     (normalize only in the end of the big loop)
 c     for now just add up probabilities in each bin
 
-c     f_mu (SFH)
-                  ibin= i_fmu_sfh(i_sfh)
-                  ibin = max(1,min(ibin,nbin_fmu))
-                  psfh(ibin)=psfh(ibin)+prob
-c     f_mu (IR)
-                  ibin = i_fmu_ir(i_ir)
-                  ibin = max(1,min(ibin,nbin_fmu))
-                  pir(ibin)=pir(ibin)+prob
-c     mu
-                  ibin= i_mu(i_sfh)
-                  ibin = max(1,min(ibin,nbin_mu))
-                  pmu(ibin)=pmu(ibin)+prob
-c     tauV
-                  ibin= i_tauv(i_sfh)
-                  ibin = max(1,min(ibin,nbin_tv))
-                  ptv(ibin)=ptv(ibin)+prob
-c     tvism
-                  ibin= i_tvism(i_sfh)
-                  ibin = max(1,min(ibin,nbin_tv))
-                  ptvism(ibin)=ptvism(ibin)+prob
-c     sSFR_0.1Gyr
-                  ibin= i_lssfr(i_sfh)
-                  ibin = max(1,min(ibin,nbin_sfr))
-                  pssfr(ibin)=pssfr(ibin)+prob
+                  if (nfilt_dust.ne.0) then !has dust must calc for each i_ir since prob will change.
+                     ptot=ptot+prob
+                     sfh_hist(i_sfh)=sfh_hist(i_sfh)+prob
 c     Mstar
-                  a=dlog10(a)
-                  aux=((a-a_min)/(a_max-a_min)) * nbin_a
-                  ibin=1+dint(aux)
-                  ibin = max(1,min(ibin,nbin_a))
-                  pa(ibin)=pa(ibin)+prob
+                     aux=((a-a_min)/(a_max-a_min)) * nbin_a
+                     ibin=1+dint(aux)
+                     ibin = max(1,min(ibin,nbin_a))
+                     pa(ibin)=pa(ibin)+prob
 c     SFR_0.1Gyr
-                  aux=((lssfr(i_sfh)+a-sfr_min)/(sfr_max-sfr_min))
-     +                 * nbin_sfr
-                  ibin= 1+dint(aux)
-                  ibin = max(1,min(ibin,nbin_sfr))
-                  psfr(ibin)=psfr(ibin)+prob
+                     aux=((lssfr(i_sfh)+a-sfr_min)/(sfr_max-sfr_min))
+     +                    * nbin_sfr
+                     ibin= 1+dint(aux)
+                     ibin = max(1,min(ibin,nbin_sfr))
+                     psfr(ibin)=psfr(ibin)+prob
 c     Ldust
-                  aux=((logldust(i_sfh)+a-ld_min)/(ld_max-ld_min))
-     +                 * nbin_ld
-                  ibin=1+dint(aux)
-                  ibin = max(1,min(ibin,nbin_ld))
-                  pldust(ibin)=pldust(ibin)+prob
-c     xi_C^tot
-                  ibin= i_fmu_ism(i_ir)
-                  ibin = max(1,min(ibin,nbin_fmu_ism))
-                  pism(ibin)=pism(ibin)+prob
-c     T_C^ISM
-                  ibin= i_tbg1(i_ir)
-                  ibin = max(1,min(ibin,nbin_tbg1))
-                  ptbg1(ibin)=ptbg1(ibin)+prob
-c     T_W^BC
-                  ibin= i_tbg2(i_ir)
-                  ibin = max(1,min(ibin,nbin_tbg2))
-                  ptbg2(ibin)=ptbg2(ibin)+prob
-c     xi_PAH^tot
-                  ibin= i_xi1(i_ir)
-                  ibin = max(1,min(ibin,nbin_xi))
-                  pxi1(ibin)=pxi1(ibin)+prob
-c     xi_MIR^tot
-                  ibin= i_xi2(i_ir)
-                  ibin = max(1,min(ibin,nbin_xi))
-                  pxi2(ibin)=pxi2(ibin)+prob
-c     xi_W^tot
-                  ibin= i_xi3(i_ir)
-                  ibin = max(1,min(ibin,nbin_xi))
-                  pxi3(ibin)=pxi3(ibin)+prob
-c     Mdust
-                  lmdust(i_ir)=dlog10(mdust(i_ir)*ldust(i_sfh)*10.0**a)
+                     aux=((logldust(i_sfh)+a-ld_min)/(ld_max-ld_min))
+     +                    * nbin_ld
+                     ibin=1+dint(aux)
+                     ibin = max(1,min(ibin,nbin_ld))
+                     pldust(ibin)=pldust(ibin)+prob
+
+                  endif         !has dust condition
+
+                  ir_hist(i_ir)=ir_hist(i_ir)+prob
+                  
+c     Mdust. Replaced 10.0**a with exp(a*log(10)) using a constant for log(10).
+                  lmdust(i_ir)=logmdust(i_ir)+logldusta
+c                  lmdust(i_ir)=dlog10(mdust(i_ir)*ldusta)
+c                  lmdust(i_ir)=dlog10(mdust(i_ir)*ldust(i_sfh)*10.0**a)
                   aux=((lmdust(i_ir)-md_min)/(md_max-md_min))*nbin_md
                   ibin=1+dint(aux)
                   ibin = max(1,min(ibin,nbin_md))
@@ -800,8 +805,64 @@ c     Mdust
 
                endif            !df condition
             ENDDO               !loop in i_ir
+            
+            if (nfilt_dust.eq.0) then !has no dust, Save prob * n_irbysfh
+
+               ptot=ptot+(prob*n_irbysfh)
+               sfh_hist(i_sfh)=sfh_hist(i_sfh)+(prob*n_irbysfh)
+c     Mstar
+               aux=((a-a_min)/(a_max-a_min)) * nbin_a
+               ibin=1+dint(aux)
+               ibin = max(1,min(ibin,nbin_a))
+               pa(ibin)=pa(ibin)+(prob*n_irbysfh)
+c     SFR_0.1Gyr
+               aux=((lssfr(i_sfh)+a-sfr_min)/(sfr_max-sfr_min))
+     +              * nbin_sfr
+               ibin= 1+dint(aux)
+               ibin = max(1,min(ibin,nbin_sfr))
+               psfr(ibin)=psfr(ibin)+(prob*n_irbysfh)
+c     Ldust
+               aux=((logldust(i_sfh)+a-ld_min)/(ld_max-ld_min))
+     +              * nbin_ld
+               ibin=1+dint(aux)
+               ibin = max(1,min(ibin,nbin_ld))
+               pldust(ibin)=pldust(ibin)+(prob*n_irbysfh)
+
+            endif         !has no dust condition
+            
          ENDDO                  !loop in i_sfh
 
+c Expand sfh_hist
+         do i_sfh=1,n_sfh
+c     f_mu (SFH)
+            psfh(i_fmu_sfh(i_sfh))=psfh(i_fmu_sfh(i_sfh))+sfh_hist(i_sfh)
+c     mu
+            pmu(i_mu(i_sfh))=pmu(i_mu(i_sfh))+sfh_hist(i_sfh)
+c     tauV
+            ptv(i_tauv(i_sfh))=ptv(i_tauv(i_sfh))+sfh_hist(i_sfh)
+c     tvism
+            ptvism(i_tvism(i_sfh))=ptvism(i_tvism(i_sfh))+sfh_hist(i_sfh)
+c     sSFR_0.1Gyr
+            pssfr(i_lssfr(i_sfh))=pssfr(i_lssfr(i_sfh))+sfh_hist(i_sfh)
+         enddo
+         
+         do i_ir=1,n_ir
+c     f_mu (IR)
+            pir(i_fmu_ir(i_ir))=pir(i_fmu_ir(i_ir))+ir_hist(i_ir)
+c     xi_C^tot
+            pism(i_fmu_ism(i_ir))=pism(i_fmu_ism(i_ir))+ir_hist(i_ir)
+c     T_C^ISM
+            ptbg1(i_tbg1(i_ir))=ptbg1(i_tbg1(i_ir))+ir_hist(i_ir)
+c     T_W^BC
+            ptbg2(i_tbg2(i_ir))=ptbg2(i_tbg2(i_ir))+ir_hist(i_ir)
+c     xi_PAH^tot
+            pxi1(i_xi1(i_ir))=pxi1(i_xi1(i_ir))+ir_hist(i_ir)
+c     xi_MIR^tot
+            pxi2(i_xi2(i_ir))=pxi2(i_xi2(i_ir))+ir_hist(i_ir)
+c     xi_W^tot
+            pxi3(i_xi3(i_ir))=pxi3(i_xi3(i_ir))+ir_hist(i_ir)         
+         enddo
+	
 c     Chi2-weighted models: normalize to total probability ptot
          write(*,*) 'Number of random SFH models:       ', n_sfh
          write(*,*) 'Number of IR dust emission models: ', n_ir
@@ -1917,5 +1978,6 @@ c     accumulate sum of expansion
 
  61                  return
                      end
+
 
 
