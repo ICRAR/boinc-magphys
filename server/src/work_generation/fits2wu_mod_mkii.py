@@ -496,7 +496,7 @@ class Fit2Wu:
             <open_name>infrared_dce08_z{0}.lbr</open_name>
             <copy_file/>
         </file_ref>
-        <rsc_disk_bound>500000000</rsc_disk_bound>
+        <rsc_disk_bound>1000000000</rsc_disk_bound>
     </workunit>
 </input_template>'''.format(self._rounded_redshift))
             template_file.close()
