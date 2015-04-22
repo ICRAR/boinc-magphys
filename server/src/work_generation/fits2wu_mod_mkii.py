@@ -681,7 +681,7 @@ class Fit2Wu:
                           rsc_fpops_est=self._fpops_est_per_pixel * pixels_in_area * 1e12,
                           rsc_fpops_bound=self._fpops_est_per_pixel * FPOPS_BOUND_PER_PIXEL * pixels_in_area * 1e12,
                           rsc_memory_bound=2e8,
-                          rsc_disk_bound=3e8,
+                          rsc_disk_bound=1e9,
                           additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
                           opaque=area.area_id,
                           priority=self._priority,
