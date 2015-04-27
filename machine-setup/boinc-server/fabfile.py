@@ -504,6 +504,9 @@ logger_directory = "/home/ec2-user/projects/{0}/log_ip-XX-XX-XX-XX"
     with cd('/home/ec2-user/boinc-magphys/py_boinc/cy_project/src'):
         sudo('python2.7 setup.py install')
 
+    # Copy the plan class
+    run('cp /home/ec2-user/boinc-magphys/server/config/plan_class_spec.xml /home/ec2-user/projects/{0}'.format(env.project_name))
+
     # Setup the ops area password
     with cd('/home/ec2-user/projects/{0}/html/ops'.format(env.project_name)):
         run('htpasswd -bc .htpasswd {0} {1}'.format(env.ops_username, env.ops_password))
