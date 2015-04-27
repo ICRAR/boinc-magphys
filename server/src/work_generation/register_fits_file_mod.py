@@ -296,17 +296,17 @@ def add_to_database(connection, galaxy):
     input_file = galaxy['input_file']
     priority = galaxy['priority']
     run_id = galaxy['run_id']
-    sigma = galaxy['sigma']
+    sigma_in = galaxy['sigma']
     tags = galaxy['tags']
 
     transaction = connection.begin()
     try:
         try:
-            sigma = float(sigma)
+            sigma = float(sigma_in)
             sigma_filename = None
         except ValueError:
             sigma = 0.0
-            sigma_filename = sigma
+            sigma_filename = sigma_in
 
         result = connection.execute(
             REGISTER.insert(),
