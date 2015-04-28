@@ -41,7 +41,7 @@ import time
 
 from datetime import datetime
 from sqlalchemy.sql.expression import select, func
-from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD
+from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD, WG_SIZE_CLASS
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_key_fits, get_key_sigma_fits, get_saved_files_bucket
@@ -670,12 +670,12 @@ class Fit2Wu:
         self._create_observation_file(work_unit_name, data, pixels)
         self._create_job_xml(file_name_job, pixels_in_area)
 
-        if pixels_in_area < 5:
-            size_class = 0
-        elif pixels_in_area < 10:
-            size_class = 1
-        else:
-            size_class = 2
+        # Work out the size class
+        size_class = len(WG_SIZE_CLASS)
+        for i in range(0, size_class):
+            if pixels_in_area < WG_SIZE_CLASS[i]:
+                size_class = i
+                break
 
         # And "create work" = create the work unit
         args_files = [work_unit_name, file_name_job, self._filter_file, self._zlib_file, self._sfh_model_file, self._ir_model_file]

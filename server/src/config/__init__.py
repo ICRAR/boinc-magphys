@@ -51,6 +51,9 @@ if exists(config_file_name):
     WG_HIGH_WATER_MARK = int(config['high_water_mark'])
     WG_REPORT_DEADLINE = int(config['report_deadline'])
     WG_PIXEL_COMMIT_THRESHOLD = int(config['pixel_commit_threshold'])
+    WG_SIZE_CLASS = []
+    for size in config['size_classes']:
+        WG_SIZE_CLASS.append(int(size))
 
     ############### ARCHIVE Settings ###############
     ARC_DELETE_DELAY = config['delete_delay']
