@@ -101,7 +101,7 @@ class PyBoincWu:
 
     def __init__(self, app_name, min_quorom, max_success_results, delay_bound, target_nresults, wu_name,
                  wu_template, result_template, rsc_fpops_est, rsc_fpops_bound, rsc_memory_bound,
-                 rsc_disk_bound, additional_xml, opaque, priority, list_input_files):
+                 rsc_disk_bound, additional_xml, opaque, priority, size_class, list_input_files):
 
         self.app_name = app_name
         self.min_quorom = min_quorom
@@ -118,6 +118,7 @@ class PyBoincWu:
         self.additional_xml = additional_xml
         self.opaque = opaque
         self.priority = priority
+        self.size_class = size_class
         self.list_input_files = list_input_files
 
 
@@ -413,6 +414,7 @@ class Fit2Wu:
                 additional_xml=query.additional_xml,
                 opaque=query.opaque,
                 priority=query.priority,
+                size_class=query.size_class,
                 list_input_files=query.list_input_files)
             if retval != 0:
                 py_boinc.boinc_db_transaction_rollback()
@@ -668,6 +670,13 @@ class Fit2Wu:
         self._create_observation_file(work_unit_name, data, pixels)
         self._create_job_xml(file_name_job, pixels_in_area)
 
+        if pixels_in_area < 5:
+            size_class = 0
+        elif pixels_in_area < 10:
+            size_class = 1
+        else:
+            size_class = 2
+
         # And "create work" = create the work unit
         args_files = [work_unit_name, file_name_job, self._filter_file, self._zlib_file, self._sfh_model_file, self._ir_model_file]
         entry = PyBoincWu(app_name=APP_NAME,
@@ -685,6 +694,7 @@ class Fit2Wu:
                           additional_xml="<credit>%(credit).03f</credit>" % {'credit': pixels_in_area * self._cobblestone_scaling_factor},
                           opaque=area.area_id,
                           priority=self._priority,
+                          size_class=size_class,
                           list_input_files=args_files)
         self._boinc_insert_queue.append(entry)
 

@@ -61,6 +61,7 @@ cdef extern from "c_project/create_work.h":
                     char* additional_xml,
                     int opaque,
                     int priority,
+                    int size_class,
                     char** input_files,
                     int number_input_files)
 
@@ -94,6 +95,7 @@ cpdef int boinc_create_work(char* app_name,
                       char* additional_xml,
                       int opaque,
                       int priority,
+                      int size_class,
                       list_input_files):
     cdef char **c_input_files = to_cstring_array(list_input_files)
     cdef int retval = create_work(app_name,
@@ -111,6 +113,7 @@ cpdef int boinc_create_work(char* app_name,
                        additional_xml,
                        opaque,
                        priority,
+                       size_class,
                        c_input_files,
                        len(list_input_files))
 

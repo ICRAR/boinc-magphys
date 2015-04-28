@@ -151,6 +151,7 @@ int create_work(char* app_name,
         char* additional_xml_in,
         int opaque,
         int priority,
+        int size_class,
         char** input_files,
         int number_input_files) {
     DB_APP app;
@@ -184,6 +185,7 @@ int create_work(char* app_name,
     wu.rsc_bandwidth_bound = 0.0;
     wu.delay_bound = delay_bound;
     wu.priority = priority;
+    wu.size_class = size_class;
     wu.max_success_results = max_success_results;
     wu.opaque = opaque;
     safe_strcpy(wu.name, wu_name);
