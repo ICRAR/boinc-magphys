@@ -45,8 +45,12 @@ if exists(config_file_name):
     BOINC_DB_LOGIN = "mysql://" + DB_USER_ID + ":" + DB_PASSWORD + "@" + DB_HOSTNAME + "/" + BOINC_DB_NAME
 
     ############### Work Generation Settings ###############
-    WG_MIN_PIXELS_PER_FILE = int(config['min_pixels_per_file'])
-    WG_ROW_HEIGHT = int(config['row_height'])
+    WG_MIN_PIXELS_PER_FILE = []
+    for size in config['min_pixels_per_file']:
+        WG_MIN_PIXELS_PER_FILE.append(int(size))
+    WG_ROW_HEIGHT = []
+    for size in config['row_height']:
+        WG_ROW_HEIGHT = int(size)
     WG_THRESHOLD = int(config['threshold'])
     WG_HIGH_WATER_MARK = int(config['high_water_mark'])
     WG_REPORT_DEADLINE = int(config['report_deadline'])

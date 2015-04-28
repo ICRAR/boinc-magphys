@@ -44,7 +44,7 @@ from utils.logging_helper import config_logger
 from utils.shutdown_detection import signal_handler, check_stop_trigger
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import func, select
-from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
+from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import REGISTER, TAG_REGISTER
 from work_generation.fits2wu_mod_mkii import Fit2Wu, MIN_QUORUM
@@ -87,7 +87,8 @@ else:
     download_dir = boinc_config.config.download_dir
     fanout = long(boinc_config.config.uldl_dir_fanout)
     LOG.info("download_dir: %s, fanout: %d", download_dir, fanout)
-    ## Database + program performance variables ##
+
+    # Database + program performance variables
     total_db_time = 0
     areaave = []
     total_boinc_db_time = 0
@@ -125,11 +126,19 @@ else:
                     LOG.error('The file %s does not exist', registration[REGISTER.c.sigma_filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 else:
-                    LOG.info('Processing %s %d', registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority])
-                    fit2wu = Fit2Wu(connection, download_dir, fanout)
+                    offset = registration[REGISTER.c.register_id] % len(WG_MIN_PIXELS_PER_FILE)
+                    LOG.info('Processing {0} {1} {2}'.format(registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority], registration[REGISTER.c.register_id]))
+
+                    fit2wu = Fit2Wu(
+                        connection,
+                        download_dir,
+                        fanout,
+                        WG_MIN_PIXELS_PER_FILE[offset],
+                        WG_ROW_HEIGHT[offset])
                     try:
                         (work_units_added, pixel_count, sum, ave, bsum, bave, areas, pixels) = fit2wu.process_file(registration)
-                        ## Calculate performance information ##
+
+                        # Calculate performance information
                         total_db_time += sum
                         total_boinc_db_time += bsum
                         areaave.append(ave)

@@ -41,7 +41,7 @@ import time
 
 from datetime import datetime
 from sqlalchemy.sql.expression import select, func
-from config import WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD, WG_SIZE_CLASS
+from config import POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD, WG_SIZE_CLASS
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_key_fits, get_key_sigma_fits, get_saved_files_bucket
@@ -126,7 +126,7 @@ class Fit2Wu:
     """
     Convert a fit file to a wu
     """
-    def __init__(self, connection, download_dir, fanout):
+    def __init__(self, connection, download_dir, fanout, min_pixels_per_file, row_height):
         """
         Initialise the class
 
@@ -140,6 +140,9 @@ class Fit2Wu:
         self._connection = connection
         self._download_dir = download_dir
         self._fanout = fanout
+        self._min_pixels_per_file = min_pixels_per_file
+        self._row_height = row_height
+
         self._filter_file = None
         self._sfh_model_file = None
         self._ir_model_file = None
@@ -163,9 +166,10 @@ class Fit2Wu:
         self._cobblestone_scaling_factor = None
         self._template_file = None
         self._layer_order = None
+
+        # Each layer here corresponds to the same filter as in layer order.
+        # e.g. sigma_layer_order[1] = same filter as layer_order[1]
         self._sigma_layer_order = None  # order of layers in the sigma file.
-                                        # Each layer here corresponds to the same filter as in layer order.
-                                        # e.g. sigma_layer_order[1] = same filter as layer_order[1]
         self._ultraviolet_bands = {}
         self._optical_bands = {}
         self._infrared_bands = {}
@@ -174,14 +178,14 @@ class Fit2Wu:
         self._num_infrared_bands_model = 0
         self._num_ultraviolet_bands_model = 0
 
-        ### New variables for bulk database inserts ###
+        # New variables for bulk database inserts
         self._areaPK = None  # Primary Key to use when inserting area into db. Increment BEFORE use
         self._pixelPK = None  # Primary Key to use when inserting pixel into db. Increment BEFORE use
         self._database_insert_queue = []  # List of inserts for database, should be executable by sqlalchemy
         self._boinc_insert_queue = []  # List of PyBoincWu objects, each representing one insert into the boinc db
         self._pixels_processed = 0  # Number of pixels processed since last database insert
 
-        ### Variables for calculating database average and total access time ###
+        # Variables for calculating database average and total access time
         self._db_access_time = []  # List of each db access time. Can be totalled and averaged.
         self._boinc_db_access_time = []  # List of each boinc db access time. Can be totalled and averaged
 
@@ -304,6 +308,7 @@ class Fit2Wu:
 
         LOG.info('Total number of areas for this galaxy {0}'.format(self._total_areas))
         LOG.info('Total number of pixels for this galaxy {0}'.format(self._total_pixels))
+
         # Now calculate the amount of time spent in the db...
         sum = 0
         for rtime in self._db_access_time:
@@ -363,7 +368,7 @@ class Fit2Wu:
         Break up the galaxy into small pieces
         """
         start_y = 0
-        for pix_y in range(start_y, self._end_y, WG_ROW_HEIGHT):
+        for pix_y in range(start_y, self._end_y, self._row_height):
             self._create_areas(pix_y)
 
     def _run_pending_db_tasks(self):
@@ -547,7 +552,7 @@ class Fit2Wu:
             max_x, pixels = self._get_pixels(pix_x, pix_y)
 
             if len(pixels) > 0:
-                area = Area(pix_x, pix_y, max_x, min(pix_y + WG_ROW_HEIGHT, self._end_y))
+                area = Area(pix_x, pix_y, max_x, min(pix_y + self._row_height, self._end_y))
 
                 # Needs to be incremented before use
                 self._areaPK += 1
@@ -895,7 +900,7 @@ class Fit2Wu:
         max_x = pix_x
         x = pix_x
         while x < self._end_x:
-            for y in range(pix_y, pix_y + WG_ROW_HEIGHT):
+            for y in range(pix_y, pix_y + self._row_height):
                 # Have we moved off the edge
                 if y >= self._end_y:
                     continue
@@ -939,7 +944,7 @@ class Fit2Wu:
                     result.append(Pixel(x, y, pixels))
 
             max_x = x
-            if len(result) > WG_MIN_PIXELS_PER_FILE:
+            if len(result) > self._min_pixels_per_file:
                 break
 
             x += 1
