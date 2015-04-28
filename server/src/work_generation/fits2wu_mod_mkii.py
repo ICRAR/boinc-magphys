@@ -673,7 +673,7 @@ class Fit2Wu:
         # Work out the size class
         size_class = len(WG_SIZE_CLASS)
         for i in range(0, size_class):
-            if pixels_in_area < WG_SIZE_CLASS[i]:
+            if pixels_in_area <= WG_SIZE_CLASS[i]:
                 size_class = i
                 break
 
