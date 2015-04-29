@@ -128,7 +128,7 @@ class EC2Helper:
         """
         subnet_id = AWS_SUBNETS[zone]
         now_plus = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
-        spot_request = self.ec2_connection.request_spot_instances(
+        spot_requests = self.ec2_connection.request_spot_instances(
             spot_price,
             image_id=ami_id,
             count=number,
@@ -141,52 +141,54 @@ class EC2Helper:
 
         # Wait for EC2 to provision the instance
         time.sleep(10)
-        instance_id = None
-        error_count = 0
+        instances = []
 
         # Has it been provisioned yet - we allow 3 errors before aborting
-        while instance_id is None and error_count < 3:
-            spot_request_id = spot_request[0].id
-            requests = None
-            try:
-                requests = self.ec2_connection.get_all_spot_instance_requests(request_ids=[spot_request_id])
-            except EC2ResponseError:
-                LOG.exception('Error count = {0}'.format(error_count))
-                error_count += 1
+        for spot_request in spot_requests:
+            error_count = 0
+            instance_id = None
+            while instance_id is None and error_count < 3:
+                spot_request_id = spot_request.id
+                requests = None
+                try:
+                    requests = self.ec2_connection.get_all_spot_instance_requests(request_ids=[spot_request_id])
+                except EC2ResponseError:
+                    LOG.exception('Error count = {0}'.format(error_count))
+                    error_count += 1
 
-            if requests is None:
-                # Wait for AWS to catch up
-                time.sleep(10)
-            else:
-                LOG.info('{0}, state: {1}, status:{2}'.format(spot_request_id, requests[0].state, requests[0].status))
-                if requests[0].state == 'active' and requests[0].status.code == 'fulfilled':
-                    instance_id = requests[0].instance_id
-                elif requests[0].state == 'cancelled':
-                    raise CancelledException('Request {0} cancelled. Status: {1}'.format(spot_request_id, requests[0].status))
-                elif requests[0].state == 'failed':
-                    raise CancelledException('Request {0} failed. Status: {1}. Fault: {2}'.format(spot_request_id, requests[0].status, requests[0].fault))
-                else:
+                if requests is None:
+                    # Wait for AWS to catch up
                     time.sleep(10)
+                else:
+                    LOG.info('{0}, state: {1}, status:{2}'.format(spot_request_id, requests[0].state, requests[0].status))
+                    if requests[0].state == 'active' and requests[0].status.code == 'fulfilled':
+                        instance_id = requests[0].instance_id
+                    elif requests[0].state == 'cancelled':
+                        raise CancelledException('Request {0} cancelled. Status: {1}'.format(spot_request_id, requests[0].status))
+                    elif requests[0].state == 'failed':
+                        raise CancelledException('Request {0} failed. Status: {1}. Fault: {2}'.format(spot_request_id, requests[0].status, requests[0].fault))
+                    else:
+                        time.sleep(10)
 
-        reservations = self.ec2_connection.get_all_instances(instance_ids=[instance_id])
-        instance = reservations[0].instances[0]
+            reservations = self.ec2_connection.get_all_instances(instance_ids=[instance_id])
+            instances.append(reservations[0].instances[0])
 
         LOG.info('Waiting to start up')
-        while not instance.update() == 'running':
-            LOG.info('Not running yet')
-            time.sleep(5)
+        for instance in instances:
+            while not instance.update() == 'running':
+                LOG.info('Not running yet')
+                time.sleep(5)
 
         # Give it time to settle down
         LOG.info('Assigning the tags')
-        self.ec2_connection.create_tags(
-            [instance_id],
-            {
-                'AMI': '{0}'.format(ami_id),
-                'Name': '{0}'.format(name),
-                'Created By': '{0}'.format(created_by)
-            })
-
-        return instance
+        for instance in instances:
+            self.ec2_connection.create_tags(
+                [instance.id],
+                {
+                    'AMI': '{0}'.format(ami_id),
+                    'Name': '{0}'.format(name),
+                    'Created By': '{0}'.format(created_by)
+                })
 
 
 def user_data_mime(url, authenticator):
@@ -263,5 +265,5 @@ def main():
     start_servers(parser.parse_args())
 
 if __name__ == "__main__":
-    # c4.xlarge kevin 'BOINC Client' 0.05 1 http://pogsbeta.theskynet.org/pogsbeta/ <weak-auth>
+    # ami-69631053 c4.xlarge kevin 'BOINC Client' 0.05 3 http://pogs.theskynet.org/pogs/ <weak-auth>
     main()
