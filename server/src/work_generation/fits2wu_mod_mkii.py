@@ -58,7 +58,8 @@ TARGET_NRESULTS = MIN_QUORUM                                           # Initial
 DELAY_BOUND = 86400 * WG_REPORT_DEADLINE                               # Clients must report results within WG_REPORT_DEADLINE days
 FPOPS_BOUND_PER_PIXEL = 50                                             # Maximum number of gigaflops per pixel client will allow before terminating job
 FPOPS_EXP = "e12"
-
+MAX_SUCCESS_RESULTS = 4
+MAX_ERROR_RESULTS = 8
 
 class Area:
     """
@@ -99,13 +100,14 @@ class PyBoincWu:
     Used to encapsulate a single insert into the Boinc database
     """
 
-    def __init__(self, app_name, min_quorom, max_success_results, delay_bound, target_nresults, wu_name,
+    def __init__(self, app_name, min_quorom, max_success_results, max_error_results, delay_bound, target_nresults, wu_name,
                  wu_template, result_template, rsc_fpops_est, rsc_fpops_bound, rsc_memory_bound,
                  rsc_disk_bound, additional_xml, opaque, priority, size_class, list_input_files):
 
         self.app_name = app_name
         self.min_quorom = min_quorom
         self.max_success_results = max_success_results
+        self.max_error_results = max_error_results
         self.delay_bound = delay_bound
         self.target_nresults = target_nresults
         self.wu_name = wu_name
@@ -407,6 +409,7 @@ class Fit2Wu:
                 app_name=query.app_name,
                 min_quorom=query.min_quorom,
                 max_success_results=query.max_success_results,
+                max_error_results=query.max_error_results,
                 delay_bound=query.delay_bound,
                 target_nresults=query.target_nresults,
                 wu_name=query.wu_name,
@@ -686,7 +689,8 @@ class Fit2Wu:
         args_files = [work_unit_name, file_name_job, self._filter_file, self._zlib_file, self._sfh_model_file, self._ir_model_file]
         entry = PyBoincWu(app_name=APP_NAME,
                           min_quorom=MIN_QUORUM,
-                          max_success_results=4,
+                          max_success_results=MAX_SUCCESS_RESULTS,
+                          max_error_results=MAX_ERROR_RESULTS,
                           delay_bound=DELAY_BOUND,
                           target_nresults=TARGET_NRESULTS,
                           wu_name=work_unit_name,

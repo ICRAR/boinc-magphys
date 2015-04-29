@@ -139,6 +139,7 @@ int transaction_commit(){
 int create_work(char* app_name,
         int min_quorom,
         int max_success_results,
+        int max_error_results,
         int delay_bound,
         int target_nresults,
         char* wu_name,
@@ -175,7 +176,7 @@ int create_work(char* app_name,
     wu.id = 0;
     wu.min_quorum = min_quorom;
     wu.target_nresults = target_nresults;
-    wu.max_error_results = 3;
+    wu.max_error_results = max_error_results;
     wu.max_total_results = 10;
     wu.max_success_results = 6;
     wu.rsc_fpops_est = rsc_fpops_est;

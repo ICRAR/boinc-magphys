@@ -65,6 +65,7 @@ int transaction_commit();
 int create_work(char* app_name,
     int min_quorom,
     int max_success_results,
+    int max_error_results,
     int delay_bound,
     int target_nresults,
     char* wu_name,
