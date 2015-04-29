@@ -1,5 +1,10 @@
 <plan_classes>
     <plan_class>
+        <name>android_arm_pie_old_client</name>
+        <os_regex>/.*3\.4\.0.*/</os_regex>
+    </plan_class>
+
+    <plan_class>
         <name>android_arm_pie</name>
         <min_android_version>40100</min_android_version>
     </plan_class>
