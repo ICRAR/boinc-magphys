@@ -948,7 +948,7 @@ class Fit2Wu:
                     result.append(Pixel(x, y, pixels))
 
             max_x = x
-            if len(result) > self._min_pixels_per_file:
+            if len(result) >= self._min_pixels_per_file:
                 break
 
             x += 1
