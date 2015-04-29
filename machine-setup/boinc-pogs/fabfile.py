@@ -48,8 +48,10 @@ PLATFORMS = [
     "x86_64-apple-darwin",
     "x86_64-pc-linux-gnu",
     "i686-pc-linux-gnu",
+    "arm-android-linux-gnu",
     "arm-android-linux-gnu__android_arm_non_pie",
-    "arm-android-linux-gnu__android_arm_pie"]
+    "arm-android-linux-gnu__android_arm_pie",
+    "arm-android-linux-gnu__android_arm_pie_old_client"]
 WINDOWS_PLATFORMS = ["windows_x86_64", "windows_intelx86"]
 
 
@@ -96,6 +98,8 @@ def copy_files(app_version):
         local('mkdir -p /home/ec2-user/projects/{3}/apps/{0}/{1}/{2}'.format(APP_NAME, app_version, platform, env.project_name))
 
         for filename in glob('/home/ec2-user/boinc-magphys/client/platforms/{0}/*'.format(platform)):
+            if filename.endswith('.markdown'):
+                continue
             head, tail = split(filename)
             local('cp {0} /home/ec2-user/projects/{4}/apps/{1}/{2}/{3}/{5}_{2}'.format(filename, APP_NAME, app_version, platform, env.project_name, tail))
         if platform in WINDOWS_PLATFORMS:
