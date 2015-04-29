@@ -1,7 +1,7 @@
 <plan_classes>
     <plan_class>
         <name>android_arm_pie_old_client</name>
-        <os_regex>/.*3\.4\.0.*/</os_regex>
+        <os_regex>/.*3\.4.*/</os_regex>
     </plan_class>
 
     <plan_class>
