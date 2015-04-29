@@ -1097,10 +1097,13 @@ class Fit2Wu:
         else:
             LOG.info('No optical bands in file for credit scaling')
 
-        total_scaling = 1.0 + uv + ir + optic + uv_model + ir_model + optic_model
+        sum_scales = uv + ir + optic + uv_model + ir_model + optic_model
+        total_scaling_cobblestone = 1.0 + sum_scales
+        total_scaling_fpops_est = 1.0 + (sum_scales * 0.3)
 
-        modified_cobblestone = self._cobblestone_scaling_factor * total_scaling
-        modified_fpops = self._fpops_est_per_pixel * total_scaling
+        LOG.info('Total scaling cobblestone: {0} fpops_est: {1}'.format(total_scaling_cobblestone, total_scaling_fpops_est))
+        modified_cobblestone = self._cobblestone_scaling_factor * total_scaling_cobblestone
+        modified_fpops = self._fpops_est_per_pixel * total_scaling_fpops_est
 
         LOG.info('Scaling cobblestone value from {0} to {1}'.format(self._cobblestone_scaling_factor, modified_cobblestone))
         LOG.info('Scaling fpops_est value from {0} to {1}'.format(self._fpops_est_per_pixel, modified_fpops))
