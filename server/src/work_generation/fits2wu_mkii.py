@@ -44,7 +44,7 @@ from utils.logging_helper import config_logger
 from utils.shutdown_detection import signal_handler, check_stop_trigger
 from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.expression import func, select
-from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT
+from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import REGISTER, TAG_REGISTER
 from work_generation.fits2wu_mod_mkii import Fit2Wu, MIN_QUORUM
@@ -126,15 +126,12 @@ else:
                     LOG.error('The file %s does not exist', registration[REGISTER.c.sigma_filename])
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
                 else:
-                    offset = registration[REGISTER.c.register_id] % len(WG_MIN_PIXELS_PER_FILE)
                     LOG.info('Processing {0} {1} {2}'.format(registration[REGISTER.c.galaxy_name], registration[REGISTER.c.priority], registration[REGISTER.c.register_id]))
 
                     fit2wu = Fit2Wu(
                         connection,
                         download_dir,
-                        fanout,
-                        WG_MIN_PIXELS_PER_FILE[offset],
-                        WG_ROW_HEIGHT[offset])
+                        fanout)
                     try:
                         (work_units_added, pixel_count, sum, ave, bsum, bave, areas, pixels) = fit2wu.process_file(registration)
 

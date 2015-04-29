@@ -41,7 +41,7 @@ import time
 
 from datetime import datetime
 from sqlalchemy.sql.expression import select, func
-from config import POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD, WG_SIZE_CLASS
+from config import POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD, WG_SIZE_CLASS, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_key_fits, get_key_sigma_fits, get_saved_files_bucket
@@ -60,6 +60,7 @@ FPOPS_BOUND_PER_PIXEL = 50                                             # Maximum
 FPOPS_EXP = "e12"
 MAX_SUCCESS_RESULTS = 4
 MAX_ERROR_RESULTS = 8
+
 
 class Area:
     """
@@ -128,7 +129,7 @@ class Fit2Wu:
     """
     Convert a fit file to a wu
     """
-    def __init__(self, connection, download_dir, fanout, min_pixels_per_file, row_height):
+    def __init__(self, connection, download_dir, fanout):
         """
         Initialise the class
 
@@ -142,8 +143,6 @@ class Fit2Wu:
         self._connection = connection
         self._download_dir = download_dir
         self._fanout = fanout
-        self._min_pixels_per_file = min_pixels_per_file
-        self._row_height = row_height
 
         self._filter_file = None
         self._sfh_model_file = None
@@ -312,21 +311,21 @@ class Fit2Wu:
         LOG.info('Total number of pixels for this galaxy {0}'.format(self._total_pixels))
 
         # Now calculate the amount of time spent in the db...
-        sum = 0
-        for rtime in self._db_access_time:
-            sum += rtime
+        pogs_sum = 0
+        for access_time in self._db_access_time:
+            pogs_sum += access_time
 
-        ave = sum / len(self._db_access_time)
-        LOG.info('Total time in DB for this galaxy {0}'.format(sum))
+        ave = pogs_sum / len(self._db_access_time)
+        LOG.info('Total time in DB for this galaxy {0}'.format(pogs_sum))
         LOG.info('Average time in DB for each transaction {0}'.format(ave))
 
         # ... And the amount of time spent in the boinc db
-        bsum = 0
+        boinc_sum = 0
         for rtime in self._boinc_db_access_time:
-            bsum += rtime
+            boinc_sum += rtime
 
-        bave = bsum / len(self._boinc_db_access_time)
-        LOG.info('Total time in BOINC DB for this galaxy {0}'.format(bsum))
+        bave = boinc_sum / len(self._boinc_db_access_time)
+        LOG.info('Total time in BOINC DB for this galaxy {0}'.format(boinc_sum))
         LOG.info('Average time in BOINC DB for each transaction {0}'.format(bave))
 
         LOG.info('Building the images')
@@ -345,7 +344,7 @@ class Fit2Wu:
         # Store the pixel count as the last thing to stop the original_image_checker going off
         # too soon for BIG galaxies
         self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
-        return self._work_units_added, self._pixel_count, sum, ave, bsum, bave, self._total_areas, self._total_pixels
+        return self._work_units_added, self._pixel_count, pogs_sum, ave, boinc_sum, bave, self._total_areas, self._total_pixels
 
     def _run_db_tasks_parallel(self):
         """
@@ -369,9 +368,18 @@ class Fit2Wu:
         """
         Break up the galaxy into small pieces
         """
-        start_y = 0
-        for pix_y in range(start_y, self._end_y, self._row_height):
-            self._create_areas(pix_y)
+        pix_y = 0
+        slice_counter = 0
+
+        length_min_pixels = len(WG_MIN_PIXELS_PER_FILE)
+
+        while pix_y < self._end_y:
+            offset = slice_counter % length_min_pixels
+            min_pixels_per_file = WG_MIN_PIXELS_PER_FILE[offset]
+            row_height = WG_ROW_HEIGHT[offset]
+            self._create_areas(pix_y, row_height, min_pixels_per_file)
+            slice_counter += 1
+            pix_y += row_height
 
     def _run_pending_db_tasks(self):
         """
@@ -544,7 +552,7 @@ class Fit2Wu:
             zlib_file.write(' 1  {0}'.format(self._rounded_redshift))
             zlib_file.close()
 
-    def _create_areas(self, pix_y):
+    def _create_areas(self, pix_y, row_height, min_pixels_per_file):
         """
         Create a area - we try to make them squares, but they aren't as the images have dead zones
         """
@@ -552,10 +560,10 @@ class Fit2Wu:
         pixel_result_insert = PIXEL_RESULT.insert()
         pix_x = 0
         while pix_x < self._end_x:
-            max_x, pixels = self._get_pixels(pix_x, pix_y)
+            max_x, pixels = self._get_pixels(pix_x, pix_y, row_height, min_pixels_per_file)
 
             if len(pixels) > 0:
-                area = Area(pix_x, pix_y, max_x, min(pix_y + self._row_height, self._end_y))
+                area = Area(pix_x, pix_y, max_x, min(pix_y + row_height, self._end_y))
 
                 # Needs to be incremented before use
                 self._areaPK += 1
@@ -893,7 +901,7 @@ class Fit2Wu:
         self._layer_order = layers
         self._sigma_layer_order = sigma_layers
 
-    def _get_pixels(self, pix_x, pix_y):
+    def _get_pixels(self, pix_x, pix_y, row_height, min_pixels_per_file):
         """
         Retrieves pixels from each pair of (x, y) coordinates specified in pix_x and pix_y.
         Returns pixels only from those coordinates where there is data in more than
@@ -904,7 +912,7 @@ class Fit2Wu:
         max_x = pix_x
         x = pix_x
         while x < self._end_x:
-            for y in range(pix_y, pix_y + self._row_height):
+            for y in range(pix_y, pix_y + row_height):
                 # Have we moved off the edge
                 if y >= self._end_y:
                     continue
@@ -948,7 +956,7 @@ class Fit2Wu:
                     result.append(Pixel(x, y, pixels))
 
             max_x = x
-            if len(result) >= self._min_pixels_per_file:
+            if len(result) >= min_pixels_per_file:
                 break
 
             x += 1
