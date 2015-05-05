@@ -1,8 +1,4 @@
 <plan_classes>
-    <plan_class>
-        <name>android_arm_pie_old_client</name>
-        <os_regex>.*3\.4.*</os_regex>
-    </plan_class>
 
     <plan_class>
         <name>android_arm_pie</name>
@@ -13,4 +9,14 @@
         <name>android_arm_non_pie</name>
         <max_android_version>40099</max_android_version>
     </plan_class>
+
+    <plan_class>
+        <name>android_arm_pie_old_client</name>
+        <min_os_version>30400</min_os_version>
+    </plan_class>
+    <plan_class>
+        <name>android_arm_non_pie_old_client</name>
+        <max_os_version>30399</max_os_version>
+    </plan_class>
+
 </plan_classes>

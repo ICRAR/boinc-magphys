@@ -48,7 +48,7 @@ PLATFORMS = [
     "x86_64-apple-darwin",
     "x86_64-pc-linux-gnu",
     "i686-pc-linux-gnu",
-    "arm-android-linux-gnu",
+    "arm-android-linux-gnu__android_arm_non_pie_old_client",
     "arm-android-linux-gnu__android_arm_non_pie",
     "arm-android-linux-gnu__android_arm_pie",
     "arm-android-linux-gnu__android_arm_pie_old_client"]
