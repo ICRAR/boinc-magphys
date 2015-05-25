@@ -39,7 +39,7 @@ from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from sqlalchemy import select
 from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
-from config import DELETED, STORED
+from config import DELETED, STORED, GALAXY_EMAIL_THRESHOLD
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY
 from utils.logging_helper import config_logger
 from utils.name_builder import get_key_hdf5, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url, get_galaxy_file_name, get_saved_files_bucket
@@ -267,61 +267,97 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
     """
     uuid_string = str(uuid.uuid4())
     results = []
+    available_galaxies = []
+    s3_helper = S3Helper()
+    bucket_name = get_saved_files_bucket()
+
+    # Check whether all the requested galaxies are available or not.
     for hdf5_request_galaxy in hdf5_request_galaxy_ids:
-        result = HDF5ToFitsResult()
-        results.append(result)
-        connection.execute(HDF5_REQUEST_GALAXY.update().where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).values(state=1))
-        try:
-            galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
-            result.galaxy_name = galaxy[GALAXY.c.name]
-            LOG.info('Processing {0} ({1}) for {2}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], email))
+        galaxy = connection.execute(select[GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)
 
-            # make sure the galaxy is available
-            if galaxy[GALAXY.c.status_id] == STORED or galaxy[GALAXY.c.status_id] == DELETED:
-                output_dir = tempfile.mkdtemp()
-                try:
-                    s3_helper = S3Helper()
-                    LOG.info('Getting HDF5 file to {0}'.format(output_dir))
-                    tmp_file = get_hdf5_file(s3_helper, output_dir, galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
-                    LOG.info('File stored in {0}'.format(tmp_file))
+        key = get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
 
-                    # We have the file
-                    if os.path.isfile(tmp_file):
-                        h5_file = h5py.File(tmp_file, 'r')
-                        galaxy_group = h5_file['galaxy']
-                        pixel_group = galaxy_group['pixel']
-
-                        file_names = []
-                        for feature in features:
-                            for layer in layers:
-                                LOG.info('Processing {0} - {1}'.format(feature, layer))
-                                file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
-
-                        h5_file.close()
-                        url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
-                        connection.execute(HDF5_REQUEST_GALAXY.update().
-                                           where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
-                                           values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))
-                        result.error = None
-                        result.link = url
-                finally:
-                    # Delete the temp files now we're done
-                    shutil.rmtree(output_dir)
-
+        if s3_helper.file_exists(bucket_name, key):
+            if s3_helper.file_archived(bucket_name, key):
+                # file is archived
+                LOG.info('Galaxy {0} is archived on glacier'.format(galaxy[GALAXY.c.name]))
+                if s3_helper.file_restoring(bucket_name, key):
+                    # if file is restoring, just need to wait for it
+                    LOG.info('Galaxy {0} is still restoring from glacier'.format(galaxy[GALAXY.c.name]))
+                else:
+                    # if file is not restoring, need to request.
+                    LOG.info('Making request for archived galaxy {0}'.format(galaxy[GALAXY.c.name]))
+                    s3_helper.restore_archived_file(bucket_name, key)
             else:
+                # file is not archived
+                LOG.info('Galaxy {0} is available in s3'.format(galaxy[GALAXY.c.name]))
+                available_galaxies.append(hdf5_request_galaxy)
+        else:
+            LOG.error('Galaxy {0} does not exist on s3 or glacier!'.format(galaxy[GALAXY.c.name]))
+
+    total_request_galaxies = len(hdf5_request_galaxy_ids)
+    LOG.info('Need to have {0} galaxies available'.format(total_request_galaxies * GALAXY_EMAIL_THRESHOLD))
+    if len(available_galaxies) >= total_request_galaxies * GALAXY_EMAIL_THRESHOLD:  # Only proceed if more than the threshold of galaxies are available
+        LOG.info('{0}/{1} (> {2}%) galaxies are available. Email will be sent'.format(available_galaxies,
+                                                                                      total_request_galaxies,
+                                                                                      GALAXY_EMAIL_THRESHOLD * 100))
+        remaining_galaxies = total_request_galaxies - len(available_galaxies)
+
+        for hdf5_request_galaxy in available_galaxies:
+            result = HDF5ToFitsResult()
+            results.append(result)
+            connection.execute(HDF5_REQUEST_GALAXY.update().where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).values(state=1))
+            try:
+                galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
+                result.galaxy_name = galaxy[GALAXY.c.name]
+                LOG.info('Processing {0} ({1}) for {2}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id], email))
+
+                # make sure the galaxy is available
+                if galaxy[GALAXY.c.status_id] == STORED or galaxy[GALAXY.c.status_id] == DELETED:
+                    output_dir = tempfile.mkdtemp()
+                    try:
+                        s3_helper = S3Helper()
+                        LOG.info('Getting HDF5 file to {0}'.format(output_dir))
+                        tmp_file = get_hdf5_file(s3_helper, output_dir, galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+                        LOG.info('File stored in {0}'.format(tmp_file))
+
+                        # We have the file
+                        if os.path.isfile(tmp_file):
+                            h5_file = h5py.File(tmp_file, 'r')
+                            galaxy_group = h5_file['galaxy']
+                            pixel_group = galaxy_group['pixel']
+
+                            file_names = []
+                            for feature in features:
+                                for layer in layers:
+                                    LOG.info('Processing {0} - {1}'.format(feature, layer))
+                                    file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
+
+                            h5_file.close()
+                            url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
+                            connection.execute(HDF5_REQUEST_GALAXY.update().
+                                               where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
+                                               values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))
+                            result.error = None
+                            result.link = url
+                    finally:
+                        # Delete the temp files now we're done
+                        shutil.rmtree(output_dir)
+
+                else:
+                    connection.execute(HDF5_REQUEST_GALAXY.update().
+                                       where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
+                                       values(state=3))
+                    result.error = 'Cannot process {0} ({1}) as the HDF5 file has not been generated'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id])
+                    LOG.info(result.error)
+            except:
+                LOG.error('Major error')
+                result.error = traceback.format_exc()
                 connection.execute(HDF5_REQUEST_GALAXY.update().
                                    where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
                                    values(state=3))
-                result.error = 'Cannot process {0} ({1}) as the HDF5 file has not been generated'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.galaxy_id])
-                LOG.info(result.error)
-        except:
-            LOG.error('Major error')
-            result.error = traceback.format_exc()
-            connection.execute(HDF5_REQUEST_GALAXY.update().
-                               where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
-                               values(state=3))
 
-    send_email(email, results, features, layers)
+        send_email(email, results, features, layers, remaining_galaxies)
 
 
 def zip_files(s3_helper, galaxy_name, uuid_string, file_names, output_dir):
@@ -345,7 +381,7 @@ def zip_files(s3_helper, galaxy_name, uuid_string, file_names, output_dir):
     return url
 
 
-def send_email(email, results, features, layers):
+def send_email(email, results, features, layers, remaining_galaxies):
     """
     Send and email to the user with a message
     :param email: the users email address
@@ -354,7 +390,7 @@ def send_email(email, results, features, layers):
     :param layers: the layers
     :return:
     """
-    subject, message = get_final_message(results, features, layers)
+    subject, message = get_final_message(results, features, layers, remaining_galaxies)
     # Build the message
     LOG.info('''send_email {0}
 {1}
@@ -392,7 +428,7 @@ def zip_up_files(galaxy_name, file_names, output_dir):
     return tar_file_name
 
 
-def get_final_message(results, features, layers):
+def get_final_message(results, features, layers, remaining_galaxies):
     """
     Build the email message to send
 
@@ -433,6 +469,12 @@ These files have been put in a gzip files one per galaxy. The files will be avai
             string += '   * {0} http://{1}\n'.format(result.galaxy_name, result.link)
         else:
             errors = True
+
+    if remaining_galaxies:
+        string += '''
+    You also requested {0} additional galaxies that are currently in long term storage.
+    They will be made available in the next 4 hours and one or more follow up emails will be sent containing these galaxies.\n
+    '''.format(remaining_galaxies)
 
     if errors:
         string += '''
