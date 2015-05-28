@@ -43,7 +43,7 @@ from datetime import datetime
 from utils.logging_helper import config_logger
 from utils.shutdown_detection import signal_handler, check_stop_trigger
 from sqlalchemy.engine import create_engine
-from sqlalchemy.sql.expression import func, select
+from sqlalchemy.sql.expression import func, select, or_
 from config import BOINC_DB_LOGIN, WG_THRESHOLD, WG_HIGH_WATER_MARK, DB_LOGIN, POGS_BOINC_PROJECT_ROOT
 from database.boinc_database_support_core import RESULT
 from database.database_support_core import REGISTER, TAG_REGISTER
@@ -62,7 +62,7 @@ args = vars(parser.parse_args())
 # select count(*) from result where server_state = 2
 ENGINE = create_engine(BOINC_DB_LOGIN)
 connection = ENGINE.connect()
-count = connection.execute(select([func.count(RESULT.c.id)]).where(RESULT.c.server_state == 2)).first()[0]
+count = connection.execute(select([func.count(RESULT.c.id)]).where(or_(RESULT.c.server_state == 2, RESULT.c.server_state == 1))).first()[0]
 connection.close()
 
 LOG.info('Checking pending = %d : threshold = %d', count, WG_THRESHOLD)
