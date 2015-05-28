@@ -29,6 +29,7 @@ import ssl
 import boto
 from boto.s3.key import Key
 from utils.logging_helper import config_logger
+from config import S3_FILE_RESTORE_TIME
 
 LOG = config_logger(__name__)
 
@@ -81,3 +82,59 @@ class S3Helper:
         key = Key(bucket)
         key.key = key_name
         key.get_contents_to_filename(file_name)
+
+    def file_exists(self, bucket_name, key_name):
+        """
+        Check whether a file exists on s3 by key name.
+        :param bucket_name:
+        :param key_name:
+        :return:
+        """
+
+        bucket = self.get_bucket(bucket_name)
+        key = Key(bucket)
+        key.key = key_name
+
+        return key.exists()
+
+    def file_archived(self, bucket_name, key_name):
+        """
+        Check whether a file is currenly archived on glacier and NOT available on s3
+        :param bucket_name:
+        :param key_name:
+        :return:
+        """
+        bucket = self.get_bucket(bucket_name)
+        key = Key(bucket)
+        key.key = key_name
+
+        if key.storage_class == 'GLACIER' and key.expiry_date is None:
+            return True
+        else:
+            return False
+
+    def file_restoring(self, bucket_name, key_name):
+        """
+        Check whether a file is currently being restored from glacier to s3
+        :param bucket_name:
+        :param key_name:
+        :return:
+        """
+        bucket = self.get_bucket(bucket_name)
+        key = Key(bucket)
+        key.key = key_name
+
+        return key.ongoing_restore
+
+    def restore_archived_file(self, bucket_name, key_name):
+        """
+        Restores a file that has been archived to glacier back to s3. Can take up to 4 hours
+        :param bucket_name:
+        :param key_name:
+        :return:
+        """
+        bucket = self.get_bucket(bucket_name)
+        key = Key(bucket)
+        key.key = key_name
+
+        key.restore(days=S3_FILE_RESTORE_TIME)

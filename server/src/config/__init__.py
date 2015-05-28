@@ -58,6 +58,7 @@ if exists(config_file_name):
     WG_SIZE_CLASS = []
     for size in config['size_classes']:
         WG_SIZE_CLASS.append(int(size))
+    RADIAL_AREA_SIZE = int(config['radial_area_size'])
 
     ############### ARCHIVE Settings ###############
     ARC_DELETE_DELAY = config['delete_delay']
@@ -104,6 +105,11 @@ if exists(config_file_name):
         EC2_IP_BUILD_IMAGE_ADDRESSES[i] = ip
         i += 1
 
+    ############### HDF5 to FITS ###############
+    S3_FILE_RESTORE_TIME = int(config['s3_file_restore_time'])  # How long a file should be restored from glacier for (days)
+    GALAXY_EMAIL_THRESHOLD = float(config['galaxy_email_threshold'])  # What % of galaxies from an order should be avaiable before an email is sent
+
+
 ############### Archive Settings ###############
 
 # Any probability in the pixel histogram less than this is considered to be 0 and ignored
@@ -115,4 +121,3 @@ PROCESSED = 1
 ARCHIVED = 2
 STORED = 3
 DELETED = 4
-
