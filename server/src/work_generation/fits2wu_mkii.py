@@ -59,7 +59,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-l', '--limit', type=int, help='only generate N workunits from this galaxy (for testing)')
 args = vars(parser.parse_args())
 
-# select count(*) from result where server_state = 2
+# select count(*) from result where server_state = 2 or server_state = 1
 ENGINE = create_engine(BOINC_DB_LOGIN)
 connection = ENGINE.connect()
 count = connection.execute(select([func.count(RESULT.c.id)]).where(or_(RESULT.c.server_state == 2, RESULT.c.server_state == 1))).first()[0]
