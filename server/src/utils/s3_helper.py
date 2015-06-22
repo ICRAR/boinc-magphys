@@ -124,6 +124,9 @@ class S3Helper:
         key = Key(bucket)
         key.key = key_name
 
+        # Work around to silly bug in boto
+        key = bucket.get_key(key_name)
+
         return key.ongoing_restore
 
     def restore_archived_file(self, bucket_name, key_name):
