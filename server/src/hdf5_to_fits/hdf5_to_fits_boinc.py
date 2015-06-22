@@ -42,6 +42,7 @@ from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_layers_ga
 from utils.logging_helper import config_logger
 
 LOG = config_logger(__name__)
+LOG.info('Starting HDF5 to FITS')
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
 # First check the galaxy exists in the database
@@ -53,12 +54,14 @@ for request in connection.execute(select([HDF5_REQUEST], distinct=True, from_obj
     request_id = request[HDF5_REQUEST.c.hdf5_request_id]
     features, layers, hdf5_request_galaxy_ids = get_features_layers_galaxies(connection, request_id)
     if len(features) > 0 and len(layers) > 0 and len(hdf5_request_galaxy_ids) > 0:
+        LOG.info('{0} features, {1} layers {2} galaxies'.format(len(features), len(layers), len(hdf5_request_galaxy_ids)))
         generate_files(connection=connection,
                        hdf5_request_galaxy_ids=hdf5_request_galaxy_ids,
                        email=request[HDF5_REQUEST.c.email],
                        features=features,
                        layers=layers)
         connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(updated_at=datetime.datetime.now()))
-
+    else:
+        LOG.info('Nothing to do')
 LOG.info('All done')
 connection.close()
