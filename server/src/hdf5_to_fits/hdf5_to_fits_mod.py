@@ -273,7 +273,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
 
     # Check whether all the requested galaxies are available or not.
     for hdf5_request_galaxy in hdf5_request_galaxy_ids:
-        galaxy = connection.execute(select[GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)
+        galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
 
         key = get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
 
