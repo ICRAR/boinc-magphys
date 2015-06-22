@@ -276,6 +276,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
         galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
 
         key = get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+        LOG.info('{0}, {1}, {2}'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]))
 
         if s3_helper.file_exists(bucket_name, key):
             if s3_helper.file_archived(bucket_name, key):
