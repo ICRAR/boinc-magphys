@@ -297,7 +297,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
             LOG.error('Galaxy {0} does not exist on s3 or glacier!'.format(galaxy[GALAXY.c.name]))
 
     total_request_galaxies = len(hdf5_request_galaxy_ids)
-    LOG.info('Need to have {0} galaxies available'.format(total_request_galaxies * GALAXY_EMAIL_THRESHOLD))
+    LOG.info('Need to have {0} galaxies available ({1} currently available)'.format(total_request_galaxies * GALAXY_EMAIL_THRESHOLD, len(available_galaxies)))
     if len(available_galaxies) >= total_request_galaxies * GALAXY_EMAIL_THRESHOLD:  # Only proceed if more than the threshold of galaxies are available
         LOG.info('{0}/{1} (> {2}%) galaxies are available. Email will be sent'.format(available_galaxies,
                                                                                       total_request_galaxies,
