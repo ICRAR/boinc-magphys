@@ -108,7 +108,9 @@ class S3Helper:
         key = Key(bucket)
         key.key = key_name
 
-        if key.storage_class == 'GLACIER' and key.expiry_date is None:
+        key = bucket.get_key(key_name)
+
+        if key.storage_class == 'GLACIER' and key.ongoing_restore is None:
             return True
         else:
             return False
