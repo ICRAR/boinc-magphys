@@ -54,6 +54,7 @@ for request in connection.execute(select([HDF5_REQUEST], distinct=True, from_obj
     request_id = request[HDF5_REQUEST.c.hdf5_request_id]
     features, layers, hdf5_request_galaxy_ids = get_features_layers_galaxies(connection, request_id)
     if len(features) > 0 and len(layers) > 0 and len(hdf5_request_galaxy_ids) > 0:
+        LOG.info('Processing request from profile id: {0}, request made at {1}'.format(request[HDF5_REQUEST.c.profile_id], request[HDF5_REQUEST.c.created_at]))
         LOG.info('{0} features, {1} layers {2} galaxies'.format(len(features), len(layers), len(hdf5_request_galaxy_ids)))
         generate_files(connection=connection,
                        hdf5_request_galaxy_ids=hdf5_request_galaxy_ids,
