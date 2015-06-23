@@ -49,11 +49,6 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 
-request = connection.execute(select([HDF5_REQUEST], distinct=True, from_obj=HDF5_REQUEST.join(HDF5_REQUEST_GALAXY)).where(HDF5_REQUEST_GALAXY.c.state == 0))
-
-for item in request:
-    LOG.info(str(item))
-
 for request in connection.execute(select([HDF5_REQUEST], distinct=True, from_obj=HDF5_REQUEST.join(HDF5_REQUEST_GALAXY)).where(HDF5_REQUEST_GALAXY.c.state == 0)):
     # Mark the request as being processed
     request_id = request[HDF5_REQUEST.c.hdf5_request_id]
