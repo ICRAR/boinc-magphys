@@ -99,7 +99,7 @@ class S3Helper:
 
     def file_archived(self, bucket_name, key_name):
         """
-        Check whether a file is currenly archived on glacier and NOT available on s3
+        Check whether a file is currently archived on glacier and NOT available on s3
         :param bucket_name:
         :param key_name:
         :return:
@@ -110,10 +110,11 @@ class S3Helper:
 
         key = bucket.get_key(key_name)
 
-        if key.storage_class == 'GLACIER' and key.ongoing_restore is None:
-            return True
-        else:
-            return False
+        if key.storage_class == 'GLACIER':
+            if key.ongoing_restore is None or key.ongoing_restore is True:
+                return True
+
+        return False
 
     def file_restoring(self, bucket_name, key_name):
         """

@@ -44,6 +44,7 @@ from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, H
 from utils.logging_helper import config_logger
 from utils.name_builder import get_key_hdf5, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url, get_galaxy_file_name, get_saved_files_bucket
 from utils.s3_helper import S3Helper
+from boto.exception import S3ResponseError
 from os.path import dirname, exists
 from configobj import ConfigObj
 
@@ -339,6 +340,10 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
                                                values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))
                             result.error = None
                             result.link = url
+
+                    except S3ResponseError:  # Handling for a strange s3 error
+                        LOG.error('Error retrieving galaxy {0} from s3. Retrying next run'.format(galaxy[GALAXY.c.name]))
+                        remaining_galaxies += 1
                     finally:
                         # Delete the temp files now we're done
                         shutil.rmtree(output_dir)
