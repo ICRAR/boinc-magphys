@@ -276,7 +276,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
     for hdf5_request_galaxy in hdf5_request_galaxy_ids:
         galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
         status = connection.execute(select([HDF5_REQUEST_GALAXY]).where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id))
-        LOG.info('Status = {0}'.format(status.c.state))
+        LOG.info('Status = {0}'.format(status.first().c.state))
 
         key = get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
 
