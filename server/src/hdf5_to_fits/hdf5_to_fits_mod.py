@@ -166,7 +166,6 @@ def get_features_layers_galaxies(connection, request_id):
     hdf5_request_galaxy_ids = []
     for galaxy_request in connection.execute(select([HDF5_REQUEST_GALAXY], distinct=True).where(HDF5_REQUEST_GALAXY.c.hdf5_request_id == request_id)):
         state = galaxy_request[HDF5_REQUEST_GALAXY.c.state]
-        LOG.info('State {0}'.format(state))
         if state == 0:
             hdf5_request_galaxy_ids.append(HDF5RequestDetails(galaxy_request[HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id], galaxy_request[HDF5_REQUEST_GALAXY.c.galaxy_id]))
 
