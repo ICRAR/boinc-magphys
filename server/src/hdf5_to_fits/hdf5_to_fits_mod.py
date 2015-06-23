@@ -275,6 +275,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
     # Check whether all the requested galaxies are available or not.
     for hdf5_request_galaxy in hdf5_request_galaxy_ids:
         galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
+        LOG.info('State = {0}'.format(hdf5_request_galaxy.state))
 
         key = get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
 
@@ -338,6 +339,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
                             connection.execute(HDF5_REQUEST_GALAXY.update().
                                                where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
                                                values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))
+
                             result.error = None
                             result.link = url
 
@@ -455,6 +457,12 @@ def get_final_message(results, features, layers, remaining_galaxies):
             subject += ', ...'
         galaxy_count += 1
 
+    if remaining_galaxies == 1:
+        string += 'And {0} additional galaxy\n'
+
+    if remaining_galaxies > 1:
+        string += 'And {0} additional galaxies\n'
+
     string += '\nThe following features:\n'
     for feature in features:
         string += '   * {0}\n'.format(feature)
@@ -464,8 +472,7 @@ def get_final_message(results, features, layers, remaining_galaxies):
         string += '   * {0}\n'.format(layer)
 
     string += '''
-
-These files have been put in a gzip files one per galaxy. The files will be available for 10 days and will then be deleted. The links are as follows:
+These files have been put in one or more gzip files, one per galaxy. The files will be available for 10 days and will then be deleted. The links are as follows:
 '''
     errors = False
     for result in results:
@@ -474,10 +481,16 @@ These files have been put in a gzip files one per galaxy. The files will be avai
         else:
             errors = True
 
-    if remaining_galaxies:
+    if remaining_galaxies == 1:
+        string += '''
+    You also requested {0} additional galaxy that is currently in long term storage.
+    It will be made available in the next 4 hours and one follow up email will be sent containing this galaxy.\n
+    '''.format(remaining_galaxies)
+
+    if remaining_galaxies > 1:
         string += '''
     You also requested {0} additional galaxies that are currently in long term storage.
-    They will be made available in the next 4 hours and one or more follow up emails will be sent containing these galaxies.\n
+    These will be made available in the next 4 hours and one or more follow up emails will be sent containing these galaxies.\n
     '''.format(remaining_galaxies)
 
     if errors:
