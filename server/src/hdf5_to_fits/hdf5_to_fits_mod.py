@@ -278,6 +278,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
         state = connection.execute(select([HDF5_REQUEST_GALAXY]).where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id)).first().state
 
         if state is not 0:
+            LOG.info('Skipping {0}, state is {1}'.format(galaxy[GALAXY.c.name], state))
             continue  # Skip
 
         key = get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
