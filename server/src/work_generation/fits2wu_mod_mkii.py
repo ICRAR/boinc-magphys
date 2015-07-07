@@ -377,7 +377,7 @@ class Fit2Wu:
             px_list.append(Pixel(x, y, pixel_data))
             px_count += 1
 
-            if px_count == RADIAL_AREA_SIZE or y == max_y:
+            if px_count == RADIAL_AREA_SIZE or y == max_y - 1:
                 LOG.info('Creating a radial area of size {0}'.format(px_count))
                 self._custom_create_area(px_list, y - px_count + 1, y, x, x)
                 px_list = []
