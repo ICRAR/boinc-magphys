@@ -42,7 +42,7 @@ from sqlalchemy.engine import create_engine
 from config import DB_LOGIN
 
 from work_generation.register_fits_file_mod import fix_redshift, get_data_from_galaxy_txt, \
-    decompress_gz_files, extract_tar_file, find_input_filename, find_sigma_filename, add_to_database, \
+    decompress_gz_files, extract_tar_file, find_files, add_to_database, \
     clean_unused_fits, move_fits_files
 
 LOG = config_logger(__name__)
@@ -112,17 +112,19 @@ for txt_line_info in all_txt_file_data:
     single_galaxy_data = dict()
     single_galaxy_data['name'] = txt_line_info[0]
 
-    input_file = find_input_filename(txt_line_info[0], WORKING_DIRECTORY)
-    if input_file is None:
+    input_files = find_files(txt_line_info[0], WORKING_DIRECTORY)
+
+    if input_files['img'] is None:
         LOG.error('Galaxy {0} has an input file of None!'.format(single_galaxy_data['name']))
         num_galaxies_without_file += 1
         continue
 
-    sigma = find_sigma_filename(txt_line_info[0], WORKING_DIRECTORY)
-    if sigma is None:
+    if input_files['img_snr'] is None:
         LOG.error('Galaxy {0} has a sigma file of None!'.format(single_galaxy_data['name']))
         sigma = 0.1
         num_galaxies_without_sigma += 1
+    else:
+        sigma = input_files['img_snr']
 
     gal_type = txt_line_info[4]
     if gal_type is '':
@@ -130,11 +132,16 @@ for txt_line_info in all_txt_file_data:
 
     single_galaxy_data['sigma'] = sigma
     single_galaxy_data['redshift'] = float(fix_redshift(txt_line_info[3]))
-    single_galaxy_data['input_file'] = input_file
+    single_galaxy_data['input_file'] = input_files['img']
     single_galaxy_data['type'] = gal_type
     single_galaxy_data['priority'] = PRIORITY
     single_galaxy_data['run_id'] = RUN_ID
     single_galaxy_data['tags'] = TAGS
+
+    single_galaxy_data['int'] = input_files['int']
+    single_galaxy_data['int_snr'] = input_files['int_snr']
+    single_galaxy_data['rad'] = input_files['rad']
+    single_galaxy_data['rad_snr'] = input_files['rad_snr']
 
     all_galaxy_data.append(single_galaxy_data)
 

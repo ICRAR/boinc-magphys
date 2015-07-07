@@ -193,7 +193,7 @@ def build_png_image_ami():
             # Return the rows
             pixel_count = 0
             pixels_processed = 0
-            for row in connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.galaxy_id == galaxy[GALAXY.c.galaxy_id])):
+            for row in connection.execute(select([PIXEL_RESULT]).where((PIXEL_RESULT.c.galaxy_id == galaxy[GALAXY.c.galaxy_id]) and PIXEL_RESULT.c.x > -1)):
                 row__x = row[PIXEL_RESULT.c.x]
                 row__y = row[PIXEL_RESULT.c.y]
                 pixel_count += 1

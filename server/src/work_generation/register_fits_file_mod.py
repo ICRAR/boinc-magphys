@@ -169,38 +169,54 @@ def extract_tar_file(tar_file, location):
     return num_files_extracted
 
 
-def find_input_filename(galaxy_name, location):
+def noext(filename):
     """
-    Finds the main fits file for the specified galaxy name
+    Remove the extension from a filename
+    :param filename:
+    :return:
+    """
+    ext_start = filename.find('.')
+    return filename[:ext_start]
+
+
+def find_files(galaxy_name, location):
+    """
+    Finds any input files
     :param galaxy_name:
     :param location:
     :return:
     """
+    galaxy_data = {}
+
     all_files = os.listdir(location)
 
     for one_file in all_files:
-        if one_file.startswith('POGS_'):
-            ext_start = one_file.rfind('.')
-            if one_file[:ext_start].endswith(galaxy_name):
-                return os.path.abspath(location + '/' + one_file)
+        filename = noext(one_file)
+        if filename.startswith('POGS_'):
+            if filename.endswith(galaxy_name):
+                galaxy_data['img'] = os.path.abspath(location + '/' + one_file)
 
-    return None
+        if filename.startswith('POGSSNR_'):
+            if filename.endswith(galaxy_name):
+                galaxy_data['img_snr'] = os.path.abspath(location + '/' + one_file)
 
+        if filename.startswith('POGSint_'):
+            if filename.endswith(galaxy_name):
+                galaxy_data['int'] = os.path.abspath(location + '/' + one_file)
 
-def find_sigma_filename(galaxy_name, location):
-    """
-    Finds the sigma filename for the specified galaxy name
-    :param galaxy_name:
-    :param location:
-    :return:
-    """
-    all_files = os.listdir(location)
+        if filename.startswith('POGSintSNR_'):
+            if filename.endswith(galaxy_name):
+                galaxy_data['int_snr'] = os.path.abspath(location + '/' + one_file)
 
-    for one_file in all_files:
-        if one_file.startswith('POGSSNR_'):
-            ext_start = one_file.find('.')
-            if one_file[:ext_start].endswith(galaxy_name):
-                return os.path.abspath(location + '/' + one_file)
+        if filename.startswith('POGSrad_'):
+            if filename.endswith(galaxy_name):
+                galaxy_data['rad'] = os.path.abspath(location + '/' + one_file)
+
+        if filename.startswith('POGSradSNR_'):
+            if filename.endswith(galaxy_name):
+                galaxy_data['irad_snr'] = os.path.abspath(location + '/' + one_file)
+
+    return galaxy_data
 
 
 def save_data_to_file(galaxies, filename):
@@ -298,6 +314,10 @@ def add_to_database(connection, galaxy):
     run_id = galaxy['run_id']
     sigma_in = galaxy['sigma']
     tags = galaxy['tags']
+    int = galaxy['int']
+    int_snr = galaxy['int_snr']
+    rad = galaxy['rad']
+    rad_snr = galaxy['rad_snr']
 
     transaction = connection.begin()
     try:
@@ -318,7 +338,12 @@ def add_to_database(connection, galaxy):
             register_time=datetime.now(),
             run_id=run_id,
             sigma=sigma,
-            sigma_filename=sigma_filename)
+            sigma_filename=sigma_filename,
+            int_filename=int,
+            int_sigma_filename=int_snr,
+            rad_filename=rad,
+            rad_sigma_filename=rad_snr
+        )
 
         register_id = result.inserted_primary_key[0]
 

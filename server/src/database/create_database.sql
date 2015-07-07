@@ -93,6 +93,12 @@ CREATE TABLE register (
   sigma          DECIMAL(3,2) NOT NULL,
   filename       VARCHAR(1000) NOT NULL,
   sigma_filename VARCHAR(1000) NULL,
+
+  rad_filename VARCHAR(1000) NULL,
+  rad_sigma_filename VARCHAR(1000) NULL,
+  int_filename VARCHAR(1000) NULL,
+  int_sigma_filename VARCHAR(1000) NULL,
+
   priority       INTEGER NOT NULL,
   register_time  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   create_time    TIMESTAMP NULL DEFAULT NULL,

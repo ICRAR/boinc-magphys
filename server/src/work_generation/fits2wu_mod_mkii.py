@@ -41,7 +41,7 @@ import time
 
 from datetime import datetime
 from sqlalchemy.sql.expression import select, func
-from config import POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD, WG_SIZE_CLASS, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT
+from config import POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD, WG_SIZE_CLASS, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, RADIAL_AREA_SIZE
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 from image.fitsimage import FitsImage
 from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_key_fits, get_key_sigma_fits, get_saved_files_bucket
@@ -345,6 +345,167 @@ class Fit2Wu:
         # too soon for BIG galaxies
         self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
         return self._work_units_added, self._pixel_count, pogs_sum, ave, boinc_sum, bave, self._total_areas, self._total_pixels
+
+    def _build_radial_areas(self, registration):
+        """
+        Creates all of the radial areas for this galaxy.
+        :return:
+        """
+        LOG.info('Building radial areas for this galaxy.')
+
+        rad = registration[REGISTER.c.rad_filename]
+        rad_snr = registration[REGISTER.c.rad_sigma_filename]
+
+        rad_hdu = pyfits.open(rad, memmap=True)
+
+        if rad_snr is not None:
+            rad_snr_hdu = pyfits.open(rad_snr, memmap=True)
+        else:
+            rad_snr_hdu = None
+
+        max_y = rad_hdu[0].data.shape[0]  # How many radial pixels are there?
+        LOG.info('{0} radial pixels.'.format(max_y))
+        x = -2  # TODO put in config file that all pixels/areas at x = -2 are radial areas.
+
+        px_count = 0
+        px_list = []
+        for y in range(0, max_y):
+            pixel_data = self._custom_get_pixel(rad_hdu, rad_snr_hdu, y)
+            px_list.append(Pixel(x, y, pixel_data))
+            px_count += 1
+
+            if px_count == RADIAL_AREA_SIZE or y == max_y:
+                LOG.info('Creating a radial area of size {0}'.format(px_count))
+                self._custom_create_area(px_list, y - px_count + 1, y, x, x)
+                px_list = []
+                px_count = 0
+
+        LOG.info('Radial areas built!')
+
+    def _build_integrated_flux_area(self, registration):
+        """
+        Creates an area for the integrated flux value.
+        :param registration:
+        :return:
+        """
+        LOG.info('Building integrated flux area for this galaxy.')
+
+        intf = registration[REGISTER.c.int_filename]
+        intf_snr = registration[REGISTER.c.int_sigma_filename]
+
+        intf_hdu = pyfits.open(intf, memmap=True)
+
+        if intf_snr is not None:
+            intf_snr_hdu = pyfits.open(intf_snr, memmap=True)
+        else:
+            intf_snr_hdu = None
+
+        x = -1
+
+        px_list = []
+
+        pixel_data = self._custom_get_pixel(intf_hdu, intf_snr_hdu, 1)
+        px_list.append(pixel_data)
+
+        self._custom_create_area(px_list, 0, 0, x, x)
+        LOG.info('Integrated flux area built!')
+
+    def _custom_get_pixel(self, input_file, input_sigma=None, x=None, y=None):
+        """
+        Retrieves all the layer data for a single pixel from the specified x, y location in the specified files.
+        """
+        pixels = []
+
+        for layer in self._layer_order:
+            if layer == -1:
+                # The layer is missing
+                pixels.append(PixelValue(0, 0))
+            else:
+                # A vagary of PyFits/NumPy is the order of the x & y indexes is reversed
+                # See page 13 of the PyFITS User Guide
+                pixel = input_file[layer].data[y, x]
+                if math.isnan(pixel) or pixel == 0.0:
+                    # A zero tells MAGPHYS - we have no value here
+                    pixels.append(PixelValue(0, 0))
+                else:
+                    """
+                    If there is no sigma file at all, use self._sigma.
+                    If there is a sigma file,
+                    check whether the sigma_layer_order contains the layer in the sigma that corresponds to the current layer.
+                    if there is no layer in the sigma (-1), use 10% or whatever is defined as self._sigma.
+                    """
+                    if input_sigma is None:  # If there is no signal to noise file, use the sigma value.
+
+                        if self._sigma is not None:
+                            sigma = pixel * self._sigma
+                        else:  # If there is no sigma value, use 0.1
+                            sigma = pixel * 0.1
+
+                    else:  # if we do have a signal to noise file, use it
+
+                        if self._sigma_layer_order[layer] != -1:  # TODO Currently making assumption that layer order for the main file is globally correct!
+                            sigma = pixel / input_sigma[layer].data[y, x]
+                        else:  # If there is no value for the current layer, use 0.1
+                            sigma = pixel * 0.1
+
+                    pixels.append(PixelValue(pixel, sigma))
+
+        if self._enough_layers(pixels):
+            return pixels
+        else:
+            return None
+
+    def _custom_create_area(self, pixels, min_y, max_y, min_x, max_x):
+        """
+        Creates a rectangular area from the given pixels.
+        Can specify custom x, y bounds for this area. Be careful to not have two areas that overlap.
+        :param pixels:
+        :return:
+        """
+
+        area_insert = AREA.insert()
+        pixel_result_insert = PIXEL_RESULT.insert()
+
+        if len(pixels) > 0:
+            area = Area(max_x, max_y, min_x, min_y)
+
+            self._areaPK += 1
+            area.area_id = self._areaPK
+
+            self._total_areas += 1
+
+            self._database_insert_queue.append(
+                area_insert.values(galaxy_id=self._galaxy_id,
+                                   top_x=area.top_x,
+                                   top_y=area.top_y,
+                                   bottom_x=area.bottom_x,
+                                   bottom_y=area.bottom_y,
+                                   area_id=self._areaPK))
+            for pixel in pixels:
+                # Needs to be incremented before use
+                self._pixelPK += 1
+                pixel.pixel_id = self._pixelPK
+
+                # Enqueue this insert
+                self._total_pixels += 1
+                self._database_insert_queue.append(
+                    pixel_result_insert.values(galaxy_id=self._galaxy_id,
+                                               area_id=area.area_id,
+                                               y=pixel.y,
+                                               x=pixel.x,
+                                               pxresult_id=self._pixelPK))
+                self._pixel_count += 1
+
+                # Write the pixels, at this point the area has been fully created
+                self._create_output_file(area, pixels)
+                self._work_units_added += 1
+                self._pixels_processed += len(pixels)
+
+                # Once we've processed more pixels then the commit threshold, we commit everything to both dbs
+                if self._pixels_processed > WG_PIXEL_COMMIT_THRESHOLD:
+                    self._run_pending_db_tasks()
+                    self._run_pending_boinc_db_tasks()
+                    self._pixels_processed = 0  # reset for next areas
 
     def _run_db_tasks_parallel(self):
         """
