@@ -302,7 +302,7 @@ class Fit2Wu:
         self._build_radial_areas(registration)
 
         # Now break up the galaxy into chunks
-        self._break_up_galaxy()
+        #self._break_up_galaxy()
 
         # Sometimes there will be some remaining inserts to perform, so perform them now
         if len(self._database_insert_queue) > 0:
