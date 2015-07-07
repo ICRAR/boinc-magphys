@@ -280,9 +280,6 @@ class Fit2Wu:
 
         LOG.info("Writing %s to database", self._galaxy_name)
 
-        self._build_integrated_flux_area(registration)
-        self._build_radial_areas(registration)
-
         # Store the tags
         self._store_tags(registration[REGISTER.c.register_id])
 
@@ -300,6 +297,9 @@ class Fit2Wu:
 
         # Copy the filter and model files we need
         self._copy_important_files()
+
+        self._build_integrated_flux_area(registration)
+        self._build_radial_areas(registration)
 
         # Now break up the galaxy into chunks
         self._break_up_galaxy()
