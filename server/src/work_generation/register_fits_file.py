@@ -152,7 +152,7 @@ for txt_line_info in all_txt_file_data:
         single_galaxy_data['rad'] = input_files['rad']
     except KeyError:
         single_galaxy_data['rad'] = None
-        
+
     try:
         single_galaxy_data['rad_snr'] = input_files['rad_snr']
     except KeyError:
