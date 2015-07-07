@@ -499,16 +499,16 @@ class Fit2Wu:
                                                pxresult_id=self._pixelPK))
                 self._pixel_count += 1
 
-                # Write the pixels, at this point the area has been fully created
-                self._create_output_file(area, pixels)
-                self._work_units_added += 1
-                self._pixels_processed += len(pixels)
+            # Write the pixels, at this point the area has been fully created
+            self._create_output_file(area, pixels)
+            self._work_units_added += 1
+            self._pixels_processed += len(pixels)
 
-                # Once we've processed more pixels then the commit threshold, we commit everything to both dbs
-                if self._pixels_processed > WG_PIXEL_COMMIT_THRESHOLD:
-                    self._run_pending_db_tasks()
-                    self._run_pending_boinc_db_tasks()
-                    self._pixels_processed = 0  # reset for next areas
+            # Once we've processed more pixels then the commit threshold, we commit everything to both dbs
+            if self._pixels_processed > WG_PIXEL_COMMIT_THRESHOLD:
+                self._run_pending_db_tasks()
+                self._run_pending_boinc_db_tasks()
+                self._pixels_processed = 0  # reset for next areas
 
     def _run_db_tasks_parallel(self):
         """
