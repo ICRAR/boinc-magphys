@@ -138,10 +138,25 @@ for txt_line_info in all_txt_file_data:
     single_galaxy_data['run_id'] = RUN_ID
     single_galaxy_data['tags'] = TAGS
 
-    single_galaxy_data['int'] = input_files['int']
-    single_galaxy_data['int_snr'] = input_files['int_snr']
-    single_galaxy_data['rad'] = input_files['rad']
-    single_galaxy_data['rad_snr'] = input_files['rad_snr']
+    try:
+        single_galaxy_data['int'] = input_files['int']
+    except KeyError:
+        single_galaxy_data['int'] = None
+
+    try:
+        single_galaxy_data['int_snr'] = input_files['int_snr']
+    except KeyError:
+        single_galaxy_data['int_snr'] = None
+
+    try:
+        single_galaxy_data['rad'] = input_files['rad']
+    except KeyError:
+        single_galaxy_data['rad'] = None
+        
+    try:
+        single_galaxy_data['rad_snr'] = input_files['rad_snr']
+    except KeyError:
+        single_galaxy_data['rad_snr'] = None
 
     all_galaxy_data.append(single_galaxy_data)
 
