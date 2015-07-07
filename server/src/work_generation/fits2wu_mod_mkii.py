@@ -407,7 +407,7 @@ class Fit2Wu:
 
         px_list = []
 
-        pixel_data = self._custom_get_pixel(intf_hdu, intf_snr_hdu, 1)
+        pixel_data = self._custom_get_pixel(intf_hdu, intf_snr_hdu, 0)
         px_list.append(pixel_data)
 
         self._custom_create_area(px_list, 0, 0, x, x)
