@@ -195,26 +195,32 @@ def find_files(galaxy_name, location):
         if filename.startswith('POGS_'):
             if filename.endswith(galaxy_name):
                 galaxy_data['img'] = os.path.abspath(location + '/' + one_file)
+                LOG.info('Found image')
 
         if filename.startswith('POGSSNR_'):
             if filename.endswith(galaxy_name):
                 galaxy_data['img_snr'] = os.path.abspath(location + '/' + one_file)
+                LOG.info('Found image snr')
 
         if filename.startswith('POGSint_'):
             if filename.endswith(galaxy_name):
                 galaxy_data['int'] = os.path.abspath(location + '/' + one_file)
+                LOG.info('Found int flux')
 
         if filename.startswith('POGSintSNR_'):
             if filename.endswith(galaxy_name):
                 galaxy_data['int_snr'] = os.path.abspath(location + '/' + one_file)
+                LOG.info('Found int flux snr')
 
         if filename.startswith('POGSrad_'):
             if filename.endswith(galaxy_name):
                 galaxy_data['rad'] = os.path.abspath(location + '/' + one_file)
+                LOG.info('Found rad')
 
         if filename.startswith('POGSradSNR_'):
             if filename.endswith(galaxy_name):
                 galaxy_data['irad_snr'] = os.path.abspath(location + '/' + one_file)
+                LOG.info('Found rad snr')
 
     return galaxy_data
 
