@@ -408,7 +408,7 @@ class Fit2Wu:
         px_list = []
 
         pixel_data = self._custom_get_pixel(intf_hdu, intf_snr_hdu, 0)
-        px_list.append(pixel_data)
+        px_list.append(Pixel(-1, 0, pixel_data))
 
         self._custom_create_area(px_list, 0, 0, x, x)
         LOG.info('Integrated flux area built!')
