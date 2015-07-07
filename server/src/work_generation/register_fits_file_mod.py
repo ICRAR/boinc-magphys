@@ -86,6 +86,8 @@ def get_data_from_galaxy_txt(text_file):
                 txt_line_info[curr_field] += char
                 next_blank_is_delimit = True
 
+        LOG.info(txt_line_info)
+
         all_txt_file_data.append(txt_line_info)
 
         line = galaxy_txt.readline()
