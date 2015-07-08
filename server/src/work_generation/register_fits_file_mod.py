@@ -306,7 +306,6 @@ def clean_unused_fits(location, galaxies):
 
     return len(files_to_delete)
 
-
 def add_to_database(connection, galaxy):
     """
     Adds the specified galaxies to the database
