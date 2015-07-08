@@ -144,13 +144,13 @@ for txt_line_info in all_txt_file_data:
         single_galaxy_data['rad_snr'] = input_files['rad_snr']
     except KeyError:
         single_galaxy_data['rad_snr'] = None
-        
-    if input_files['img'] is None:
+
+    if single_galaxy_data['img'] is None:
         LOG.error('Galaxy {0} has an input file of None!'.format(single_galaxy_data['name']))
         num_galaxies_without_file += 1
         continue
 
-    if input_files['img_snr'] is None:
+    if single_galaxy_data['img_snr'] is None:
         LOG.error('Galaxy {0} has a sigma file of None!'.format(single_galaxy_data['name']))
         sigma = 0.1
         num_galaxies_without_sigma += 1
