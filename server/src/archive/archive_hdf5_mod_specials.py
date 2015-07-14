@@ -164,7 +164,7 @@ def store_area(connection, galaxy_id, group):
     """
     LOG.info('Storing the areas')
     count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id)).first()[0]
-    rad_count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id and AREA.c.top_x == -2)).first()[0]
+    rad_count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id).where(AREA.c.top_x == -2)).first()[0]
     int_flux_count = 0
 
     count = count - rad_count - 1  # Remove the radial and int flux areas from the count
