@@ -169,6 +169,8 @@ def store_area(connection, galaxy_id, group):
 
     count = count - rad_count - 1  # Remove the radial and int flux areas from the count
 
+    LOG.info('Count {0}'.format(count))
+
     data = numpy.zeros(count, dtype=data_type_area)
 
     rad_data = None
