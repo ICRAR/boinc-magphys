@@ -14,9 +14,10 @@ h5_file = h5py.File('testfile', 'w')
 galaxy_group = h5_file.create_group('galaxy')
 area_group = galaxy_group.create_group('area')
 
-
-
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 
 store_area(connection, galaxy_id, area_group)
+
+h5_file.flush()
+h5_file.close()
