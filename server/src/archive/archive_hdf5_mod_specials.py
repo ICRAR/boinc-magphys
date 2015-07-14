@@ -506,24 +506,24 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             special_group = group.create_group('special_pixels')
 
         rad_pixel_details = special_group.create_dataset(
-            'pixel_details_int_flux',
+            'pixel_details_rad',
             (1,rad_pixels,),
             dtype=data_type_pixel,
             compression='gzip')
         rad_pixel_parameters = special_group.create_dataset(
-            'pixel_parameters_int_flux',
+            'pixel_parameters_rad',
             (1,rad_pixels, NUMBER_PARAMETERS),
             dtype=data_type_pixel_parameter,
             compression='gzip')
 
         # We can't use the z dimension as blank layers show up in the SED file
         rad_pixel_filter = special_group.create_dataset(
-            'pixel_filters_int_flux',
+            'pixel_filters_rad',
             (1,rad_pixels, number_filters),
             dtype=data_type_pixel_filter,
             compression='gzip')
         rad_pixel_histograms_grid = special_group.create_dataset(
-            'pixel_histograms_int_flux',
+            'pixel_histograms_rad',
             (1,rad_pixels, NUMBER_PARAMETERS),
             dtype=data_type_block_details,
             compression='gzip')
