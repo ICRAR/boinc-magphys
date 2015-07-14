@@ -498,7 +498,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
         # We have radial pixels to process
 
         # Get the number of radial pixels for this galaxy
-        rad_pixels = connection.execute(select([func.count(PIXEL_RESULT.c.pxresult_id)]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id and PIXEL_RESULT.c.x == -2)).first()[0]
+        rad_pixels = connection.execute(select([func.count(PIXEL_RESULT.c.pxresult_id)]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id).where(PIXEL_RESULT.c.x == -2)).first()[0]
 
         rad_data = numpy.empty((1, rad_pixels, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
         rad_data = rad_data.fill(numpy.NaN)
