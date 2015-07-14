@@ -483,6 +483,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     keys = []
     map_areas = {}
     pixel_count = 0
+    pixel_type = 0
     rad_pixel_count = 0
     int_flux_pixel_count = 0
     
