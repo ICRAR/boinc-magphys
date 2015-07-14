@@ -9,7 +9,7 @@ from config import DB_LOGIN
 from sqlalchemy import create_engine
 import h5py
 
-galaxy_id = 276
+galaxy_id = 277
 h5_file = h5py.File('testfile', 'w')
 galaxy_group = h5_file.create_group('galaxy')
 area_group = galaxy_group.create_group('area')
