@@ -507,24 +507,24 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
         rad_pixel_details = special_group.create_dataset(
             'pixel_details_int_flux',
-            (rad_pixels),
+            (1,rad_pixels,),
             dtype=data_type_pixel,
             compression='gzip')
         rad_pixel_parameters = special_group.create_dataset(
             'pixel_parameters_int_flux',
-            (rad_pixels, NUMBER_PARAMETERS),
+            (1,rad_pixels, NUMBER_PARAMETERS),
             dtype=data_type_pixel_parameter,
             compression='gzip')
 
         # We can't use the z dimension as blank layers show up in the SED file
         rad_pixel_filter = special_group.create_dataset(
             'pixel_filters_int_flux',
-            (rad_pixels, number_filters),
+            (1,rad_pixels, number_filters),
             dtype=data_type_pixel_filter,
             compression='gzip')
         rad_pixel_histograms_grid = special_group.create_dataset(
             'pixel_histograms_int_flux',
-            (rad_pixels, NUMBER_PARAMETERS),
+            (1,rad_pixels, NUMBER_PARAMETERS),
             dtype=data_type_block_details,
             compression='gzip')
             
@@ -546,24 +546,24 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
         int_flux_pixel_details = special_group.create_dataset(
             'pixel_details_int_flux',
-            (1),
+            (1,1,),
             dtype=data_type_pixel,
             compression='gzip')
         int_flux_pixel_parameters = special_group.create_dataset(
             'pixel_parameters_int_flux',
-            (1, NUMBER_PARAMETERS),
+            (1,1, NUMBER_PARAMETERS),
             dtype=data_type_pixel_parameter,
             compression='gzip')
 
         # We can't use the z dimension as blank layers show up in the SED file
         int_flux_pixel_filter = special_group.create_dataset(
             'pixel_filters_int_flux',
-            (1, number_filters),
+            (1,1, number_filters),
             dtype=data_type_pixel_filter,
             compression='gzip')
         int_flux_pixel_histograms_grid = special_group.create_dataset(
             'pixel_histograms_int_flux',
-            (1, NUMBER_PARAMETERS),
+            (1,1, NUMBER_PARAMETERS),
             dtype=data_type_block_details,
             compression='gzip')
 
