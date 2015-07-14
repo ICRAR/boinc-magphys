@@ -163,7 +163,7 @@ for txt_line_info in all_txt_file_data:
 
     single_galaxy_data['sigma'] = sigma
     single_galaxy_data['redshift'] = float(fix_redshift(txt_line_info[3]))
-    single_galaxy_data['input_file'] = input_files['img']
+    single_galaxy_data['input_file'] = single_galaxy_data['img']
     single_galaxy_data['type'] = gal_type
     single_galaxy_data['priority'] = PRIORITY
     single_galaxy_data['run_id'] = RUN_ID
