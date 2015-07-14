@@ -967,7 +967,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             elif pixel_type == 1:
                 special_group.create_dataset('pixels', data=int_flux_data, compression='gzip')
             else:
-                group.create_dataset('pixels_{0}_{1}'.format(block_x, block_y), data=_data, compression='gzip')
+                group.create_dataset('pixels_{0}_{1}'.format(block_x, block_y), data=data, compression='gzip')
 
     LOG.info('histogram_blocks: {0}, x_blocks: {1}, y_blocks: {2}'.format(histogram_block_id, block_x, block_y))
 
