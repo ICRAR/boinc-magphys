@@ -11,7 +11,7 @@ from sqlalchemy import select
 from database.database_support_core import GALAXY, PARAMETER_NAME
 import h5py
 
-galaxy_id = 277
+galaxy_id = 94655
 h5_file = h5py.File('testfile', 'w')
 galaxy_group = h5_file.create_group('galaxy')
 area_group = galaxy_group.create_group('area')
