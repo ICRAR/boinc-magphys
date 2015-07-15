@@ -488,9 +488,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     int_flux_pixel_count = 0
     
     area_count = 0
-    rad_area_count = 0
-    int_flux_area_count = 0  # if this ever goes above 1, something strange happened
-
 
     special_group = None
 
@@ -769,28 +766,58 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                                 # Work out where this stuff needs to go.
                                 if pixel_type == 0:
-                                    place_to_load = data
-                                elif pixel_type == 2:
-                                    place_to_load = rad_data
-                                elif pixel_type == 1:
-                                    place_to_load = int_flux_data
+                                    data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
+                                    data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
+                                    data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
+                                    data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
+                                    data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
+                                    data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
+                                    data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
+                                    data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
+                                    data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
+                                    data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
+                                    data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
+                                    data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
+                                    data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
+                                    data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
+                                    data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
+                                    data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
 
-                                place_to_load[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
-                                place_to_load[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
-                                place_to_load[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
-                                place_to_load[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
-                                place_to_load[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
-                                place_to_load[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
-                                place_to_load[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
-                                place_to_load[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
-                                place_to_load[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
-                                place_to_load[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
-                                place_to_load[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
-                                place_to_load[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
-                                place_to_load[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
-                                place_to_load[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
-                                place_to_load[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
-                                place_to_load[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
+                                elif pixel_type == 2:
+                                    rad_data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
+                                    rad_data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
+                                    rad_data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
+                                    rad_data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
+                                    rad_data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
+                                    rad_data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
+                                    rad_data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
+                                    rad_data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
+                                    rad_data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
+                                    rad_data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
+                                    rad_data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
+                                    rad_data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
+                                    rad_data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
+                                    rad_data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
+                                    rad_data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
+                                    rad_data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
+
+                                elif pixel_type == 1:
+                                    int_flux_data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
+                                    int_flux_data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
+                                    int_flux_data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
+                                    int_flux_data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
+                                    int_flux_data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
+                                    int_flux_data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
+                                    int_flux_data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
+                                    int_flux_data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
+                                    int_flux_data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
+                                    int_flux_data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
+                                    int_flux_data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
+                                    int_flux_data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
+                                    int_flux_data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
+                                    int_flux_data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
+                                    int_flux_data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
+                                    int_flux_data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
 
                             elif line_number == 13:
                                 filter_layer = 0
@@ -865,6 +892,21 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                                             histogram_block_index += 1
 
+                                    elif pixel_type == 2:
+                                        rad_pixel_histograms_grid[x, y, parameter_name_id - 1] = (rad_histogram_block_id, rad_histogram_block_index, len(rad_histogram_list))
+                                        for rad_pixel_histogram_item in rad_histogram_list:
+                                            rad_histogram_data[rad_histogram_block_index] = (
+                                                rad_pixel_histogram_item[0],
+                                                rad_pixel_histogram_item[1],
+                                            )
+                                    elif pixel_type == 1:
+                                        int_flux_pixel_histograms_grid[x, y, parameter_name_id - 1] = (int_flux_histogram_block_id, int_flux_histogram_block_index, len(int_flux_histogram_list))
+                                        for int_flux_pixel_histogram_item in int_flux_histogram_list:
+                                            int_flux_histogram_data[int_flux_histogram_block_index] = (
+                                                int_flux_pixel_histogram_item[0],
+                                                int_flux_pixel_histogram_item[1],
+                                            )
+
                                 elif line.startswith(" #...theSkyNet"):
                                     percentiles_next = False
                                     histogram_next = False
@@ -883,17 +925,27 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                                     # Work out where this stuff needs to go.
                                     if pixel_type == 0:
-                                        place_to_load = data
+                                        data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
+                                        data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
+                                        data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
+                                        data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
+                                        data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
                                     elif pixel_type == 2:
-                                        place_to_load = rad_data
-                                    elif pixel_type == 1:
-                                        place_to_load = int_flux_data
 
-                                    place_to_load[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
-                                    place_to_load[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
-                                    place_to_load[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
-                                    place_to_load[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
-                                    place_to_load[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+                                        rad_data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
+                                        rad_data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
+                                        rad_data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
+                                        rad_data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
+                                        rad_data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+                                    elif pixel_type == 1:
+
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+
+
                                     percentiles_next = False
                                 elif histogram_next:
                                     values = line.split()
@@ -910,24 +962,45 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                                     # Work out where this stuff needs to go.
                                     if pixel_type == 0:
-                                        place_to_load = data_pixel_details
+                                        data_pixel_details[x, y] = (
+                                            pxresult_id,
+                                            area_id,
+                                            map_pixel_results['i_sfh'],
+                                            map_pixel_results['i_ir'],
+                                            map_pixel_results['chi2'],
+                                            map_pixel_results['redshift'],
+                                            float(values[0]),
+                                            float(values[2]),
+                                            float(values[3]),
+                                            float(values[4]),
+                                        )
                                     elif pixel_type == 2:
-                                        place_to_load = rad_pixel_details
+                                        rad_pixel_details[x, y] = (
+                                            pxresult_id,
+                                            area_id,
+                                            map_pixel_results['i_sfh'],
+                                            map_pixel_results['i_ir'],
+                                            map_pixel_results['chi2'],
+                                            map_pixel_results['redshift'],
+                                            float(values[0]),
+                                            float(values[2]),
+                                            float(values[3]),
+                                            float(values[4]),
+                                        )
                                     elif pixel_type == 1:
-                                        place_to_load = int_flux_pixel_details
+                                        int_flux_pixel_details[x, y] = (
+                                            pxresult_id,
+                                            area_id,
+                                            map_pixel_results['i_sfh'],
+                                            map_pixel_results['i_ir'],
+                                            map_pixel_results['chi2'],
+                                            map_pixel_results['redshift'],
+                                            float(values[0]),
+                                            float(values[2]),
+                                            float(values[3]),
+                                            float(values[4]),
+                                        )
 
-                                    place_to_load[x, y] = (
-                                        pxresult_id,
-                                        area_id,
-                                        map_pixel_results['i_sfh'],
-                                        map_pixel_results['i_ir'],
-                                        map_pixel_results['chi2'],
-                                        map_pixel_results['redshift'],
-                                        float(values[0]),
-                                        float(values[2]),
-                                        float(values[3]),
-                                        float(values[4]),
-                                    )
                                     skynet_next1 = False
                                 elif skynet_next2:
                                     # We have the highest bin probability values which require the parameter_id
@@ -940,27 +1013,27 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                                     # Work out where this stuff needs to go.
                                     if pixel_type == 0:
-                                        place_to_load = data
+                                        data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
+                                        data_pixel_parameters[x, y, z] = (
+                                            first_prob_bin,
+                                            last_prob_bin,
+                                            bin_step,
+                                        )
                                     elif pixel_type == 2:
-                                        place_to_load = rad_data
+                                        rad_data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
+                                        rad_pixel_parameters[x, y, z] = (
+                                            first_prob_bin,
+                                            last_prob_bin,
+                                            bin_step,
+                                        )
                                     elif pixel_type == 1:
-                                        place_to_load = int_flux_data
+                                        int_flux_data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
+                                        int_flux_pixel_parameters[x, y, z] = (
+                                            first_prob_bin,
+                                            last_prob_bin,
+                                            bin_step,
+                                        )
 
-                                    place_to_load[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
-
-                                    # Work out where this stuff needs to go.
-                                    if pixel_type == 0:
-                                        place_to_load = data_pixel_parameters
-                                    elif pixel_type == 2:
-                                        place_to_load = rad_pixel_parameters
-                                    elif pixel_type == 1:
-                                        place_to_load = int_flux_pixel_parameters
-
-                                    place_to_load[x, y, z] = (
-                                        first_prob_bin,
-                                        last_prob_bin,
-                                        bin_step,
-                                    )
                                     skynet_next2 = False
 
                 except IOError:
@@ -971,12 +1044,12 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 area_count += 1
                 LOG.info('{0:0.3f} seconds for file {1}. {2} of {3} areas.'.format(time.time() - start_time, key.key, area_count, area_total))
 
-            if pixel_type == 2:
+            if rad_pixel_count > 0:
                 special_group.create_dataset('pixels', data=rad_data, compression='gzip')
-            elif pixel_type == 1:
+            if int_flux_pixel_count >0:
                 special_group.create_dataset('pixels', data=int_flux_data, compression='gzip')
-            else:
-                group.create_dataset('pixels_{0}_{1}'.format(block_x, block_y), data=data, compression='gzip')
+
+            group.create_dataset('pixels_{0}_{1}'.format(block_x, block_y), data=data, compression='gzip')
 
     LOG.info('histogram_blocks: {0}, x_blocks: {1}, y_blocks: {2}'.format(histogram_block_id, block_x, block_y))
 
