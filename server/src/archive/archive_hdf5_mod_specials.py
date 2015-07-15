@@ -856,11 +856,13 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                                     dtype=data_type_pixel_histogram,
                                                     compression='gzip')
 
+                                                LOG.info('Created new histogram block_{0}'.format(histogram_block_id))
+
                                             histogram_data[histogram_block_index] = (
                                                 pixel_histogram_item[0],
                                                 pixel_histogram_item[1],
                                             )
-                                            LOG.info('Created new histogram block_{0}'.format(histogram_block_id))
+
                                             histogram_block_index += 1
 
                                 elif line.startswith(" #...theSkyNet"):
