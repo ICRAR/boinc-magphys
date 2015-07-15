@@ -684,7 +684,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             else:
                                 # just a standard pixel
                                 pixel_type = 0
-                                LOG.info('Normal pixel')
                               
                             if pixel_type == 0:  # Only standard pixels are in blocks
                                 # The pixel could be out of this block as the cutting up is not uniform
@@ -693,7 +692,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     x = raw_x - (block_x * MAX_X_Y_BLOCK)
                                     y = raw_y - (block_y * MAX_X_Y_BLOCK)
                                     # TODO next line commented out
-                                    LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
+                                    #LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
                                     line_number = 0
                                     percentiles_next = False
                                     histogram_next = False
@@ -706,6 +705,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     # TODO next line commented out
                                     LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
                                     skip_this_pixel = True
+                                skip_this_pixel = True  # todo remove
                                     
                             else:  # Still need these set for non-standard pixels
                                 x = 0
@@ -762,7 +762,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                             elif line_number == 11:
                                 values = line.split()
-                                place_to_load = None
 
                                 # Work out where this stuff needs to go.
                                 if pixel_type == 0:
