@@ -360,8 +360,8 @@ def area_intersects_block1(block_x, block_y, area_details):
     False
     """
     x1 = area_details[0]
-    if x1 < 0:  # areas with negative x are special and should be disregarded here.
-        return False
+    if x1 < 0:  # areas with negative x are special and should always be processed
+        return True
     y1 = area_details[1]
     x2 = area_details[2]
     y2 = area_details[3]
