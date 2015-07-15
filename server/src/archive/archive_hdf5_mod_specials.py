@@ -592,9 +592,9 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     histogram_group = group.create_group('histogram_blocks')
     histogram_data = histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
     # At this point, the containers for all histograms have been built
-    
     for block_x in get_chunks(dimension_x):  # Loop all pixels in the block.
         for block_y in get_chunks(dimension_y):
+            LOG.info('block x = {0}, y = {1}'.format(block_x, block_y))
 
             if shutdown() is True:
                 raise SystemExit
@@ -640,7 +640,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                 # Now process the file
                 start_time = time.time()
-                LOG.info('Processing file {0}'.format(key.key))
+                LOG.info('Processing file {0} / {1}'.format(key.key, len(keys)))
                 temp_file = os.path.join(POGS_TMP, 'temp.sed')
                 key.get_contents_to_filename(temp_file)
 
@@ -679,12 +679,15 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             if raw_x == -1:
                                 # this pixel is for integrated flux
                                 pixel_type = 1
+                                LOG.info('Int flux')
                             elif raw_x == -2:
                                 # this pixel is for radial 
                                 pixel_type = 2
+                                LOG.info('Radial pixel')
                             else:
                                 # just a standard pixel
                                 pixel_type = 0
+                                LOG.info('Normal pixel')
                               
                             if pixel_type == 0:  # Only standard pixels are in blocks
                                 # The pixel could be out of this block as the cutting up is not uniform
@@ -692,7 +695,8 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     # correct x & y for this block
                                     x = raw_x - (block_x * MAX_X_Y_BLOCK)
                                     y = raw_y - (block_y * MAX_X_Y_BLOCK)
-                                    # LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
+                                    # TODO next line commented out
+                                    LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
                                     line_number = 0
                                     percentiles_next = False
                                     histogram_next = False
@@ -702,7 +706,8 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     pixel_count += 1
                                 
                                 else:
-                                    # LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
+                                    # TODO next line commented out
+                                    LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
                                     skip_this_pixel = True
                                     
                             else:  # Still need these set for non-standard pixels
@@ -842,6 +847,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                         data_pixel_histograms_grid[x, y, parameter_name_id - 1] = (histogram_block_id, histogram_block_index, len(histogram_list))
                                         for pixel_histogram_item in histogram_list:
                                             if histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
+
                                                 histogram_block_id += 1
                                                 histogram_block_index = 0
                                                 histogram_data = histogram_group.create_dataset(
@@ -854,6 +860,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                                 pixel_histogram_item[0],
                                                 pixel_histogram_item[1],
                                             )
+                                            LOG.info('Created new histogram block_{0}'.format(histogram_block_id))
                                             histogram_block_index += 1
 
                                 elif line.startswith(" #...theSkyNet"):
