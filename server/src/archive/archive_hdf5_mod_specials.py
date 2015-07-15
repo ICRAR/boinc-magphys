@@ -1046,9 +1046,9 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 LOG.info('{0:0.3f} seconds for file {1}. {2} of {3} areas.'.format(time.time() - start_time, key.key, area_count, area_total))
 
             if rad_pixel_count > 0:
-                special_group.create_dataset('pixels', data=rad_data, compression='gzip')
+                special_group.create_dataset('rad_pixels', data=rad_data, compression='gzip')
             if int_flux_pixel_count >0:
-                special_group.create_dataset('pixels', data=int_flux_data, compression='gzip')
+                special_group.create_dataset('int_flux_pixels', data=int_flux_data, compression='gzip')
 
             group.create_dataset('pixels_{0}_{1}'.format(block_x, block_y), data=data, compression='gzip')
 
