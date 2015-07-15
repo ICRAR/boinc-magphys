@@ -698,14 +698,13 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     histogram_next = False
                                     skynet_next1 = False
                                     skynet_next2 = False
-                                    skip_this_pixel = False
+                                    skip_this_pixel = True #todo skipping now
                                     pixel_count += 1
                                 
                                 else:
                                     # TODO next line commented out
                                     LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
                                     skip_this_pixel = True
-                                skip_this_pixel = True  # todo remove
                                     
                             else:  # Still need these set for non-standard pixels
                                 x = 0
