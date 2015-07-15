@@ -492,6 +492,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     special_group = None
 
     if rad_area_total > 0:
+        LOG.info('Radial areas to process')
         # We have radial pixels to process
 
         # Get the number of radial pixels for this galaxy
@@ -535,6 +536,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
     if int_flux_area_total > 0:
         # We have an integrated flux area to process
+        LOG.info('Int flux areas to process')
 
         if special_group is None:
             special_group = group.create_group('special_pixels')
