@@ -672,6 +672,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             point_name = values[1]
                             pxresult_id = point_name[3:].rstrip()
                             (raw_x, raw_y, area_id) = get_pixel_result(connection, pxresult_id)
+                            LOG.info('rawx = {0} rawy = {1}'.format(raw_x, raw_y))
                             
                             if raw_x == -1:
                                 # this pixel is for integrated flux
