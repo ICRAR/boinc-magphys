@@ -499,7 +499,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
         rad_pixels = connection.execute(select([func.count(PIXEL_RESULT.c.pxresult_id)]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id).where(PIXEL_RESULT.c.x == -2)).first()[0]
 
         rad_data = numpy.empty((1, rad_pixels, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
-        rad_data = rad_data.fill(numpy.NaN)
+        rad_data.fill(numpy.NaN)
     
         if special_group is None:
             special_group = group.create_group('special_pixels')
@@ -542,7 +542,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             special_group = group.create_group('special_pixels')
 
         int_flux_data = numpy.empty((1, 1, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
-        int_flux_data = int_flux_data.fill(numpy.NaN)
+        int_flux_data.fill(numpy.NaN)
 
         int_flux_pixel_details = special_group.create_dataset(
             'pixel_details_int_flux',
