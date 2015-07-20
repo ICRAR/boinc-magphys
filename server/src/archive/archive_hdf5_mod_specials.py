@@ -221,9 +221,9 @@ def store_area(connection, galaxy_id, group):
                 str(area[AREA.c.update_time]),
                 )
             count += 1
+
     if rad_data is not None:
         group.create_dataset('area_rad', data=rad_data, compression='gzip')
-
     group.create_dataset('area', data=data, compression='gzip')
     return count, rad_count, int_flux_count  # now return the radial area count too. Int flux count will be 0 or 1
 
@@ -505,6 +505,8 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             special_group = group.create_group('special_pixels')
 
         rad_group = special_group.create_group('rad')
+        rad_group.attrs['dimension_x'] = 1
+        rad_group.attrs['dimension_y'] = rad_pixels
 
         rad_pixel_details = rad_group.create_dataset(
             'pixel_details_0_0',
@@ -546,6 +548,8 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             special_group = group.create_group('special_pixels')
 
         int_group = special_group.create_group('int_flux')
+        int_group.attrs['dimension_x'] = 1
+        int_group.attrs['dimension_y'] = 1
 
         int_flux_data = numpy.empty((1, 1, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
         int_flux_data.fill(numpy.NaN)
@@ -1085,7 +1089,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             if rad_pixel_count > 0:
                 rad_group.create_dataset('pixels_0_0', data=rad_data, compression='gzip')
             if int_flux_pixel_count > 0:
-                int_group.create_dataset('_0_0', data=int_flux_data, compression='gzip')
+                int_group.create_dataset('pixels_0_0', data=int_flux_data, compression='gzip')
 
             group.create_dataset('pixels_{0}_{1}'.format(block_x, block_y), data=data, compression='gzip')
 
