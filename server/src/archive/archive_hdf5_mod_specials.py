@@ -509,6 +509,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             (1,rad_pixels,),
             dtype=data_type_pixel,
             compression='gzip')
+
         rad_pixel_parameters = special_group.create_dataset(
             'pixel_parameters_rad',
             (1,rad_pixels, NUMBER_PARAMETERS),
@@ -521,6 +522,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             (1,rad_pixels, number_filters),
             dtype=data_type_pixel_filter,
             compression='gzip')
+
         rad_pixel_histograms_grid = special_group.create_dataset(
             'pixel_histograms_rad',
             (1,rad_pixels, NUMBER_PARAMETERS),
@@ -549,6 +551,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             (1,1,),
             dtype=data_type_pixel,
             compression='gzip')
+
         int_flux_pixel_parameters = special_group.create_dataset(
             'pixel_parameters_int_flux',
             (1,1, NUMBER_PARAMETERS),
@@ -561,6 +564,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             (1,1, number_filters),
             dtype=data_type_pixel_filter,
             compression='gzip')
+
         int_flux_pixel_histograms_grid = special_group.create_dataset(
             'pixel_histograms_int_flux',
             (1,1, NUMBER_PARAMETERS),
@@ -606,11 +610,13 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             # Create the arrays for this block
             data = numpy.empty((size_x, size_y, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
             data.fill(numpy.NaN)
+
             data_pixel_details = group.create_dataset(
                 'pixel_details_{0}_{1}'.format(block_x, block_y),
                 (size_x, size_y),
                 dtype=data_type_pixel,
                 compression='gzip')
+
             data_pixel_parameters = group.create_dataset(
                 'pixel_parameters_{0}_{1}'.format(block_x, block_y),
                 (size_x, size_y, NUMBER_PARAMETERS),
@@ -623,6 +629,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 (size_x, size_y, number_filters),
                 dtype=data_type_pixel_filter,
                 compression='gzip')
+
             data_pixel_histograms_grid = group.create_dataset(
                 'pixel_histograms_grid_{0}_{1}'.format(block_x, block_y),
                 (size_x, size_y, NUMBER_PARAMETERS),
@@ -736,15 +743,14 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 filter_layer = 0
                                 for filter_name in filter_names:
                                     if filter_name != '#':
-                                        
                                         if pixel_type == 0:
                                             data_pixel_filter.attrs[filter_name] = filter_layer
                                         elif pixel_type == 2:
                                             rad_pixel_filter.attrs[filter_name] = filter_layer
                                         elif pixel_type == 1:
                                             int_flux_pixel_filter.attrs[filter_name] = filter_layer
-                                        filter_layer += 1 
-                                            
+                                        filter_layer += 1
+
                             elif line_number == 3:
                                 values = line.split()
                                 for value in values:
@@ -903,6 +909,8 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                                 rad_pixel_histogram_item[0],
                                                 rad_pixel_histogram_item[1],
                                             )
+                                            rad_histogram_block_index += 1
+
                                     elif pixel_type == 1:
                                         int_flux_pixel_histograms_grid[x, y, parameter_name_id - 1] = (int_flux_histogram_block_id, int_flux_histogram_block_index, len(int_flux_histogram_list))
                                         for int_flux_pixel_histogram_item in int_flux_histogram_list:
@@ -910,6 +918,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                                 int_flux_pixel_histogram_item[0],
                                                 int_flux_pixel_histogram_item[1],
                                             )
+                                            int_flux_histogram_block_index += 1
 
                                 elif line.startswith(" #...theSkyNet"):
                                     percentiles_next = False
