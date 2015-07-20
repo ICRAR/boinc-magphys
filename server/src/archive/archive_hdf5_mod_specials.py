@@ -530,7 +530,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             compression='gzip')
             
         rad_histogram_group = special_group.create_group('rad_histrogram')
-        rad_histogram_data = rad_histogram_group.create_dataset('histogram', (rad_pixels,), dtype=data_type_pixel_histogram, compression='gzip')
+        rad_histogram_data = rad_histogram_group.create_dataset('histogram_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
 
         rad_histogram_block_id = 1
         rad_histogram_block_index = 0
@@ -573,7 +573,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
         # A single pixel histogram?
         int_flux_histogram_group = special_group.create_group('int_flux_histrogram')
-        int_flux_histogram_data = int_flux_histogram_group.create_dataset('histogram', (1,), dtype=data_type_pixel_histogram, compression='gzip')
+        int_flux_histogram_data = int_flux_histogram_group.create_dataset('histogram_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
 
         int_flux_histogram_block_id = 1
         int_flux_histogram_block_index = 0
@@ -905,6 +905,18 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     elif pixel_type == 2:
                                         rad_pixel_histograms_grid[x, y, parameter_name_id - 1] = (rad_histogram_block_id, rad_histogram_block_index, len(rad_histogram_list))
                                         for rad_pixel_histogram_item in rad_histogram_list:
+                                            if rad_histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
+
+                                                rad_histogram_block_id += 1
+                                                rad_histogram_block_index = 0
+                                                rad_histogram_data = histogram_group.create_dataset(
+                                                    'block_{0}'.format(rad_histogram_block_id),
+                                                    (HISTOGRAM_BLOCK_SIZE,),
+                                                    dtype=data_type_pixel_histogram,
+                                                    compression='gzip')
+
+                                                LOG.info('Created new rad histogram block_{0}'.format(rad_histogram_block_id))
+
                                             rad_histogram_data[rad_histogram_block_index] = (
                                                 rad_pixel_histogram_item[0],
                                                 rad_pixel_histogram_item[1],
@@ -914,6 +926,18 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     elif pixel_type == 1:
                                         int_flux_pixel_histograms_grid[x, y, parameter_name_id - 1] = (int_flux_histogram_block_id, int_flux_histogram_block_index, len(int_flux_histogram_list))
                                         for int_flux_pixel_histogram_item in int_flux_histogram_list:
+                                            if int_flux_histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
+
+                                                int_flux_histogram_block_id += 1
+                                                int_flux_histogram_block_index = 0
+                                                int_flux_histogram_data = histogram_group.create_dataset(
+                                                    'block_{0}'.format(int_flux_histogram_block_id),
+                                                    (HISTOGRAM_BLOCK_SIZE,),
+                                                    dtype=data_type_pixel_histogram,
+                                                    compression='gzip')
+
+                                                LOG.info('Created new int flux histogram block_{0}'.format(int_flux_histogram_block_id))
+
                                             int_flux_histogram_data[int_flux_histogram_block_index] = (
                                                 int_flux_pixel_histogram_item[0],
                                                 int_flux_pixel_histogram_item[1],
