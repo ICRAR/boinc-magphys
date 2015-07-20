@@ -504,33 +504,35 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
         if special_group is None:
             special_group = group.create_group('special_pixels')
 
-        rad_pixel_details = special_group.create_dataset(
-            'pixel_details_rad',
+        rad_group = special_group.create_group('rad')
+
+        rad_pixel_details = rad_group.create_dataset(
+            'pixel_details_0_0',
             (1,rad_pixels,),
             dtype=data_type_pixel,
             compression='gzip')
 
-        rad_pixel_parameters = special_group.create_dataset(
-            'pixel_parameters_rad',
+        rad_pixel_parameters = rad_group.create_dataset(
+            'pixel_parameters_0_0',
             (1,rad_pixels, NUMBER_PARAMETERS),
             dtype=data_type_pixel_parameter,
             compression='gzip')
 
         # We can't use the z dimension as blank layers show up in the SED file
-        rad_pixel_filter = special_group.create_dataset(
-            'pixel_filters_rad',
+        rad_pixel_filter = rad_group.create_dataset(
+            'pixel_filters_0_0',
             (1,rad_pixels, number_filters),
             dtype=data_type_pixel_filter,
             compression='gzip')
 
-        rad_pixel_histograms_grid = special_group.create_dataset(
-            'pixel_histograms_rad',
+        rad_pixel_histograms_grid = rad_group.create_dataset(
+            'pixel_histograms_0_0',
             (1,rad_pixels, NUMBER_PARAMETERS),
             dtype=data_type_block_details,
             compression='gzip')
             
-        rad_histogram_group = special_group.create_group('rad_histrogram')
-        rad_histogram_data = rad_histogram_group.create_dataset('histogram_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
+        rad_histogram_group = rad_group.create_group('histrogram_blocks')
+        rad_histogram_data = rad_histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
 
         rad_histogram_block_id = 1
         rad_histogram_block_index = 0
@@ -543,37 +545,39 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
         if special_group is None:
             special_group = group.create_group('special_pixels')
 
+        int_group = special_group.create_group('int_flux')
+
         int_flux_data = numpy.empty((1, 1, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
         int_flux_data.fill(numpy.NaN)
 
-        int_flux_pixel_details = special_group.create_dataset(
-            'pixel_details_int_flux',
+        int_flux_pixel_details = int_group.create_dataset(
+            'pixel_details_0_0',
             (1,1,),
             dtype=data_type_pixel,
             compression='gzip')
 
-        int_flux_pixel_parameters = special_group.create_dataset(
-            'pixel_parameters_int_flux',
+        int_flux_pixel_parameters = int_group.create_dataset(
+            'pixel_parameters_0_0',
             (1,1, NUMBER_PARAMETERS),
             dtype=data_type_pixel_parameter,
             compression='gzip')
 
         # We can't use the z dimension as blank layers show up in the SED file
-        int_flux_pixel_filter = special_group.create_dataset(
-            'pixel_filters_int_flux',
+        int_flux_pixel_filter = int_group.create_dataset(
+            'pixel_filters_0_0',
             (1,1, number_filters),
             dtype=data_type_pixel_filter,
             compression='gzip')
 
-        int_flux_pixel_histograms_grid = special_group.create_dataset(
-            'pixel_histograms_int_flux',
+        int_flux_pixel_histograms_grid = int_group.create_dataset(
+            'pixel_histograms_0_0',
             (1,1, NUMBER_PARAMETERS),
             dtype=data_type_block_details,
             compression='gzip')
 
         # A single pixel histogram?
-        int_flux_histogram_group = special_group.create_group('int_flux_histrogram')
-        int_flux_histogram_data = int_flux_histogram_group.create_dataset('histogram_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
+        int_flux_histogram_group = int_group.create_group('histrogram_blocks')
+        int_flux_histogram_data = int_flux_histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
 
         int_flux_histogram_block_id = 1
         int_flux_histogram_block_index = 0
@@ -909,7 +913,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                                                 rad_histogram_block_id += 1
                                                 rad_histogram_block_index = 0
-                                                rad_histogram_data = histogram_group.create_dataset(
+                                                rad_histogram_data = rad_histogram_group.create_dataset(
                                                     'block_{0}'.format(rad_histogram_block_id),
                                                     (HISTOGRAM_BLOCK_SIZE,),
                                                     dtype=data_type_pixel_histogram,
@@ -930,7 +934,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                                                 int_flux_histogram_block_id += 1
                                                 int_flux_histogram_block_index = 0
-                                                int_flux_histogram_data = histogram_group.create_dataset(
+                                                int_flux_histogram_data = int_flux_histogram_group.create_dataset(
                                                     'block_{0}'.format(int_flux_histogram_block_id),
                                                     (HISTOGRAM_BLOCK_SIZE,),
                                                     dtype=data_type_pixel_histogram,
@@ -958,8 +962,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     values = line.split()
                                     z = parameter_name_id - 1
 
-                                    place_to_load = None
-
                                     # Work out where this stuff needs to go.
                                     if pixel_type == 0:
                                         data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
@@ -981,7 +983,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                         int_flux_data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
                                         int_flux_data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
                                         int_flux_data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
-
 
                                     percentiles_next = False
                                 elif histogram_next:
@@ -1082,9 +1083,9 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 LOG.info('{0:0.3f} seconds for file {1}. {2} of {3} areas.'.format(time.time() - start_time, key.key, area_count, area_total))
 
             if rad_pixel_count > 0:
-                special_group.create_dataset('rad_pixels', data=rad_data, compression='gzip')
-            if int_flux_pixel_count >0:
-                special_group.create_dataset('int_flux_pixels', data=int_flux_data, compression='gzip')
+                rad_group.create_dataset('pixels_0_0', data=rad_data, compression='gzip')
+            if int_flux_pixel_count > 0:
+                int_group.create_dataset('_0_0', data=int_flux_data, compression='gzip')
 
             group.create_dataset('pixels_{0}_{1}'.format(block_x, block_y), data=data, compression='gzip')
 
