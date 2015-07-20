@@ -707,7 +707,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     histogram_next = False
                                     skynet_next1 = False
                                     skynet_next2 = False
-                                    skip_this_pixel = True  # TODO change to false for release
+                                    skip_this_pixel = False
                                     pixel_count += 1
                                 
                                 else:
