@@ -191,7 +191,7 @@ def store_area(connection, galaxy_id, group):
                            area[AREA.c.workunit_id] if area[AREA.c.workunit_id] is not None else -1,
                            str(area[AREA.c.update_time]),
                            )
-            group.create_dataset('int_flux', data=int_flux, compression='gzip')
+            group.create_dataset('area_int', data=int_flux, compression='gzip')
             int_flux_count = 1
 
         elif area[AREA.c.top_x] == -2:
@@ -222,7 +222,7 @@ def store_area(connection, galaxy_id, group):
                 )
             count += 1
     if rad_data is not None:
-        group.create_dataset('rad_area', data=rad_data, compression='gzip')
+        group.create_dataset('area_rad', data=rad_data, compression='gzip')
 
     group.create_dataset('area', data=data, compression='gzip')
     return count, rad_count, int_flux_count  # now return the radial area count too. Int flux count will be 0 or 1
@@ -536,7 +536,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
     if int_flux_area_total > 0:
         # We have an integrated flux area to process
-        LOG.info('Int flux areas to process')
+        LOG.info('Int flux area to process')
 
         if special_group is None:
             special_group = group.create_group('special_pixels')
@@ -674,7 +674,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             point_name = values[1]
                             pxresult_id = point_name[3:].rstrip()
                             (raw_x, raw_y, area_id) = get_pixel_result(connection, pxresult_id)
-                            LOG.info('rawx = {0} rawy = {1}'.format(raw_x, raw_y))
+                            # LOG.info('rawx = {0} rawy = {1}'.format(raw_x, raw_y))
                             
                             if raw_x == -1:
                                 # this pixel is for integrated flux
@@ -694,14 +694,13 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     # correct x & y for this block
                                     x = raw_x - (block_x * MAX_X_Y_BLOCK)
                                     y = raw_y - (block_y * MAX_X_Y_BLOCK)
-                                    # TODO next line commented out
                                     #LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
                                     line_number = 0
                                     percentiles_next = False
                                     histogram_next = False
                                     skynet_next1 = False
                                     skynet_next2 = False
-                                    skip_this_pixel = True #todo skipping now
+                                    skip_this_pixel = True  # TODO change to false for release
                                     pixel_count += 1
                                 
                                 else:
@@ -720,7 +719,11 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 skip_this_pixel = False
                                 
                                 if pixel_type == 1:
-                                    int_flux_pixel_count += 1
+                                    if int_flux_pixel_count > 0:
+                                        LOG.error('More than one integrated flux pixel found, skipping.')
+                                        skip_this_pixel = True
+                                    else:
+                                        int_flux_pixel_count += 1
                                 elif pixel_type == 2:
                                     rad_pixel_count += 1
                                     
