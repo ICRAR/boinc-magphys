@@ -252,6 +252,22 @@ HDF5_REQUEST_LAYER = Table('hdf5_request_layer',
                            Column('hdf5_layer_id', BigInteger, ForeignKey('hdf5_layer.hdf5_layer_id')),
                            )
 
+HDF5_REQUEST_PIXEL_TYPE = Table('hdf5_request_pixel_type',
+                                MAGPHYS_METADATA,
+                                Column('hdf5_request_pixel_type_id', BigInteger, primary_key=True),
+                                Column('hdf5_request_id', BigInteger, ForeignKey('hdf5_request.hdf5_request_id')),
+                                Column('hdf5_pixel_type_id', BigInteger, ForeignKey('hdf5_pixel_type.hdf5_pixel_type_id')),
+                                )
+
+HDF5_PIXEL_TYPE = Table('hdf5_pixel_type',
+                        MAGPHYS_METADATA,
+                        Column('hdf5_pixel_type_id', BigInteger, primary_key=True),
+                        Column('argument_name', String(100), nullable=False),
+                        Column('description', String(100), nullable=False),
+                        Column('created_at', TIMESTAMP, nullable=False),
+                        Column('updated_at', TIMESTAMP, nullable=False),
+                        )
+
 TAG = Table('tag',
             MAGPHYS_METADATA,
             Column('tag_id', BigInteger, primary_key=True),
