@@ -38,7 +38,8 @@ import uuid
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from sqlalchemy import select
-from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, OUTPUT_FORMAT_1_04, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
+from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
+from archive.archive_hdf5_mod_specials import OUTPUT_FORMAT_1_04
 from config import DELETED, STORED, GALAXY_EMAIL_THRESHOLD
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY, HDF5_REQUEST_PIXEL_TYPE, HDF5_PIXEL_TYPE
 from utils.logging_helper import config_logger
@@ -517,10 +518,10 @@ def get_final_message(results, features, layers, remaining_galaxies):
         galaxy_count += 1
 
     if remaining_galaxies == 1:
-        string += 'And {0} additional galaxy\n'
+        string += 'And 1 additional galaxy\n'
 
     if remaining_galaxies > 1:
-        string += 'And {0} additional galaxies\n'
+        string += 'And {0} additional galaxies\n'.format(remaining_galaxies)
 
     string += '\nThe following features:\n'
     for feature in features:
@@ -587,7 +588,7 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, dimension_x
 
     output_format = galaxy_group.attrs['output_format']
 
-    if output_format == OUTPUT_FORMAT_1_03:
+    if output_format == OUTPUT_FORMAT_1_04:
         # If we only have one block then quickly copy it
         if dimension_x <= MAX_X_Y_BLOCK and dimension_y <= MAX_X_Y_BLOCK:
             pixel_data = pixel_group['pixels_0_0']
