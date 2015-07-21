@@ -425,8 +425,9 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             result.error = None
                             result.link = url
 
-                    except S3ResponseError:  # Handling for a strange s3 error
+                    except S3ResponseError as e:  # Handling for a strange s3 error
                         LOG.error('Error retrieving galaxy {0} from s3. Retrying next run'.format(galaxy[GALAXY.c.name]))
+                        LOG.error('{0}'.format(str(e)))
                         remaining_galaxies += 1
                     finally:
                         # Delete the temp files now we're done

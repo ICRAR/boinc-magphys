@@ -80,7 +80,7 @@ parser.add_argument('-t2', '--rad', action='store_true', help='get radial pixels
 
 args = vars(parser.parse_args())
 
-features, layers = get_features_and_layers_pixeltypes_cmd_line(args)
+features, layers, pixel_types = get_features_and_layers_pixeltypes_cmd_line(args)
 if len(features) == 0 or len(layers) == 0:
     parser.print_help()
     exit(1)
@@ -89,7 +89,7 @@ if len(features) == 0 or len(layers) == 0:
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 
-generate_files(connection, hdf5_request_galaxy_ids=args['galaxy_id'][0], email=args['email'][0], features=features, layers=layers)
+generate_files(connection, hdf5_request_galaxy_ids=args['galaxy_id'][0], email=args['email'][0], features=features, layers=layers, pixel_types=pixel_types)
 
 LOG.info('All done')
 connection.close()
