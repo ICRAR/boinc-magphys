@@ -9,6 +9,7 @@ from config import DB_LOGIN
 from sqlalchemy import create_engine
 from sqlalchemy import select
 from database.database_support_core import GALAXY, PARAMETER_NAME
+from archive_hdf5_mod_specials import archive_to_hdf5
 import h5py
 
 galaxy_id = 94655
@@ -21,6 +22,9 @@ engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == galaxy_id)).first()
 
+archive_to_hdf5(connection, None, None)
+
+"""
 map_parameter_name = {}
 for parameter_name in connection.execute(select([PARAMETER_NAME])):
     map_parameter_name[parameter_name[PARAMETER_NAME.c.name]] = parameter_name[PARAMETER_NAME.c.parameter_name_id]
@@ -43,3 +47,4 @@ pixel_count = store_pixels(connection,
 
 h5_file.flush()
 h5_file.close()
+"""
