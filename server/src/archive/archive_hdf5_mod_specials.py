@@ -607,9 +607,6 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
         for block_y in get_chunks(dimension_y):
             LOG.info('block x = {0}, y = {1}'.format(block_x, block_y))
 
-            if shutdown() is True:
-                raise SystemExit
-
             LOG.info('Starting {0} : {1}.'.format(block_x, block_y))
 
             size_x = get_size(block_x, dimension_x)
@@ -645,6 +642,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 compression='gzip')
 
             for key in keys:
+                # This is where significant things start, so check for shutdown here.
                 if shutdown() is True:
                     raise SystemExit
 
@@ -658,6 +656,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 temp_file = os.path.join(POGS_TMP, 'temp.sed')
                 key.get_contents_to_filename(temp_file)
 
+                # .sed files are usually compressed even though they don't have the .gz extention
                 if is_gzip(temp_file):
                     f = gzip.open(temp_file, "rb")
                 else:
@@ -665,7 +664,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                 area_id = None
                 pxresult_id = None
-                pixel_type = 0  #0 for normal, 1 for int flux, 2 for radial
+                pixel_type = 0  # 0 for normal, 1 for int flux, 2 for radial
                 line_number = 0
                 percentiles_next = False
                 histogram_next = False
@@ -694,11 +693,11 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             if raw_x == -1:
                                 # this pixel is for integrated flux
                                 pixel_type = 1
-                                LOG.info('Int flux')
+                                LOG.info('Int flux {0}:{1}'.format(raw_x, raw_y))
                             elif raw_x == -2:
                                 # this pixel is for radial 
                                 pixel_type = 2
-                                LOG.info('Radial pixel')
+                                LOG.info('Radial pixel {0}:{1}'.format(raw_x, raw_y))
                             else:
                                 # just a standard pixel
                                 pixel_type = 0
@@ -723,7 +722,8 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
                                     skip_this_pixel = True
                                     
-                            else:  # Still need these set for non-standard pixels
+                            else:
+                                # Still need these set for non-standard pixels
                                 x = 0
                                 y = raw_y
                                 line_number = 0
@@ -734,6 +734,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 skip_this_pixel = False
                                 
                                 if pixel_type == 1:
+                                    # There should only ever be one int flux pixel. If there is more than one, it's either an error or a new system has been implemented
                                     if int_flux_pixel_count > 0:
                                         LOG.error('More than one integrated flux pixel found, skipping.')
                                         skip_this_pixel = True
@@ -751,6 +752,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 filter_layer = 0
                                 for filter_name in filter_names:
                                     if filter_name != '#':
+                                        # The attributes of each of these items will be the same, but are all kept for consistency.
                                         if pixel_type == 0:
                                             data_pixel_filter.attrs[filter_name] = filter_layer
                                         elif pixel_type == 2:
@@ -782,7 +784,8 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             elif line_number == 11:
                                 values = line.split()
 
-                                # Work out where this stuff needs to go.
+                                # Work out where this data needs to go.
+                                # A lot of code copy-paste, but it's the smoothest and quickest way of doing this.
                                 if pixel_type == 0:
                                     data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
                                     data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
@@ -891,6 +894,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     if pixel_type == 0:
                                         data_pixel_histograms_grid[x, y, parameter_name_id - 1] = (histogram_block_id, histogram_block_index, len(histogram_list))
                                         for pixel_histogram_item in histogram_list:
+                                            # Need a new histogram container as the current one is full.
                                             if histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
 
                                                 histogram_block_id += 1
@@ -913,6 +917,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     elif pixel_type == 2:
                                         rad_pixel_histograms_grid[x, y, parameter_name_id - 1] = (rad_histogram_block_id, rad_histogram_block_index, len(rad_histogram_list))
                                         for rad_pixel_histogram_item in rad_histogram_list:
+                                            # On the off chance we have a lot of radial pixels, we might need another histogram block.
                                             if rad_histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
 
                                                 rad_histogram_block_id += 1
@@ -934,6 +939,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     elif pixel_type == 1:
                                         int_flux_pixel_histograms_grid[x, y, parameter_name_id - 1] = (int_flux_histogram_block_id, int_flux_histogram_block_index, len(int_flux_histogram_list))
                                         for int_flux_pixel_histogram_item in int_flux_histogram_list:
+                                            # We should literally never need more than one histogram for the int flux pixel, but it never hurts to be careful.
                                             if int_flux_histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
 
                                                 int_flux_histogram_block_id += 1
@@ -1084,7 +1090,8 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                     f.close()
 
                 area_count += 1
-                LOG.info('{0:0.3f} seconds for file {1}. {2} of {3} areas.'.format(time.time() - start_time, key.key, area_count, area_total))
+                LOG.info('{0:0.3f} seconds for file {1}. {2} of {3} areas.'.format(time.time() - start_time, key.key, area_count,
+                                                                                   area_total + rad_area_total + int_flux_area_total))
 
             if rad_pixel_count > 0:
                 rad_group.create_dataset('pixels_0_0', data=rad_data, compression='gzip')
