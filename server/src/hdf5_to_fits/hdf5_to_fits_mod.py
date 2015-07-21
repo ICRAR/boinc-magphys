@@ -38,9 +38,9 @@ import uuid
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from sqlalchemy import select
-from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
+from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, OUTPUT_FORMAT_1_04, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
 from config import DELETED, STORED, GALAXY_EMAIL_THRESHOLD
-from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY
+from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY, HDF5_REQUEST_PIXEL_TYPE, HDF5_PIXEL_TYPE
 from utils.logging_helper import config_logger
 from utils.name_builder import get_key_hdf5, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url, get_galaxy_file_name, get_saved_files_bucket
 from utils.s3_helper import S3Helper
@@ -102,6 +102,38 @@ LAYERS = {
     'm_dust': 14,
     'sfr_0_1gyr': 15,
 }
+
+PIXEL_TYPES = {
+    'normal': 0,
+    'int': 1,
+    'rad': 2,
+}
+TYPE_NORMAL = 0
+TYPE_INT = 1
+TYPE_RAD = 2
+
+
+def get_pixel_types(connection, request_id):
+    """
+    Get the pixel types associated with this request (rad, int flux, normal)
+    :param connection: db connection
+    :param request_id: request id
+    :return:
+    """
+
+    pixel_types = []
+    for pixel_type in connection.execute(select([HDF5_PIXEL_TYPE], distinct=True).select_from(HDF5_PIXEL_TYPE.join(HDF5_REQUEST_PIXEL_TYPE)).where(HDF5_REQUEST_PIXEL_TYPE.c.hdf5_request_id == request_id)):
+        if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't0':
+            pixel_types.append(TYPE_NORMAL)
+        if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't1':
+            pixel_types.append(TYPE_INT)
+        if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't2':
+            pixel_types.append(TYPE_RAD)
+    if len(pixel_types) == 0:
+        # If, for whatever reason, this request has no pixel types then just give the requester the normal pixels
+        # Although this should never happen (but we all know how computers can be eh?)
+        pixel_types.append(TYPE_NORMAL)
+    return pixel_types
 
 
 def get_features_layers_galaxies(connection, request_id):
@@ -258,7 +290,7 @@ def get_temp_file(extension, file_name, output_dir):
     return tmp[1]
 
 
-def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers):
+def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers, pixel_types):
     """
     Get the FITS files for this request
 
@@ -332,13 +364,34 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers)
                         if os.path.isfile(tmp_file):
                             h5_file = h5py.File(tmp_file, 'r')
                             galaxy_group = h5_file['galaxy']
-                            pixel_group = galaxy_group['pixel']
 
                             file_names = []
+                            int_file_names = []
+                            rad_file_names = []
+                            normal_file_names = []
+
                             for feature in features:
                                 for layer in layers:
-                                    LOG.info('Processing {0} - {1}'.format(feature, layer))
-                                    file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group, pixel_group, galaxy[GALAXY.c.name]))
+                                    for pixel_type in pixel_types:
+                                        LOG.info('Processing {0} - {1} - {2}'.format(feature, layer, pixel_type))
+                                        if pixel_type == TYPE_NORMAL:
+                                            pixel_group = galaxy_group['pixel']
+                                            normal_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                                                                                      galaxy_group.attrs['dimension_x'], galaxy_group.attrs['dimension_y'],
+                                                                                      pixel_group, galaxy[GALAXY.c.name]))
+
+                                        elif pixel_type == TYPE_INT:
+                                            pixel_group = galaxy_group['pixel']['special_pixels']['int_flux'] # galaxy/pixel/special_pixels/int_flux
+                                            int_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                                                                                   pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
+                                                                                   pixel_group, galaxy[GALAXY.c.name]))
+
+                                        elif pixel_type == TYPE_RAD:
+                                            pixel_group = galaxy_group['pixel']['special_pixels']['rad'] # galaxy/pixel/special_pixels/rad
+
+                                            rad_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                                                                                   pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
+                                                                                   pixel_group, galaxy[GALAXY.c.name]))
 
                             h5_file.close()
                             url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
@@ -489,14 +542,14 @@ These files have been put in one or more gzip files, one per galaxy. The files w
 
     if remaining_galaxies == 1:
         string += '''
-    You also requested {0} additional galaxy that is currently in long term storage.
-    It will be made available in the next 4 hours and one follow up email will be sent containing this galaxy.\n
-    '''.format(remaining_galaxies)
+    You also requested 1 additional galaxy that is currently in long term storage.
+    It will be made available within the next 4 hours and one follow up email will be sent containing this galaxy.\n
+    '''
 
     if remaining_galaxies > 1:
         string += '''
     You also requested {0} additional galaxies that are currently in long term storage.
-    These will be made available in the next 4 hours and one or more follow up emails will be sent containing these galaxies.\n
+    These will be made available within the next 4 hours and one or more follow up emails will be sent containing these galaxies.\n
     '''.format(remaining_galaxies)
 
     if errors:
@@ -511,13 +564,16 @@ The following errors occurred:
     return subject, string
 
 
-def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group, galaxy_name):
+def build_fits_image(feature, layer, output_directory, galaxy_group, dimension_x, dimension_y, pixel_group, galaxy_name):
     """
     Extract a feature from the HDF5 file into a FITS file
 
     :param feature: the feature we want
     :param layer: the layer we want
+    :param pixel_type: the pixel type we want (int, rad, normal)
     :param output_directory: where to write the result
+    :param dimension_x: x dimension of the hdf5 pixel array
+    :param dimension_y: y dimension of the hdf5 pixel array
     :param galaxy_group: the hdf5 galaxy_group
     :param pixel_group: the hdf5 pixel_group
     :return:
@@ -526,12 +582,11 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, pixel_group
     layer_index = LAYERS[layer]
 
     # I need to reshape the array as pyfits uses y, x whilst the hdf5 uses x, y
-    dimension_x = galaxy_group.attrs['dimension_x']
-    dimension_y = galaxy_group.attrs['dimension_y']
     data = numpy.empty((dimension_y, dimension_x), dtype=numpy.float)
     data.fill(numpy.NaN)
 
     output_format = galaxy_group.attrs['output_format']
+
     if output_format == OUTPUT_FORMAT_1_03:
         # If we only have one block then quickly copy it
         if dimension_x <= MAX_X_Y_BLOCK and dimension_y <= MAX_X_Y_BLOCK:
