@@ -47,6 +47,7 @@ OUTPUT_FORMAT_1_00 = 'Version 1.00'
 OUTPUT_FORMAT_1_01 = 'Version 1.01'
 OUTPUT_FORMAT_1_02 = 'Version 1.02'
 OUTPUT_FORMAT_1_03 = 'Version 1.03'
+OUTPUT_FORMAT_1_04 = 'Version 1.04'
 
 PARAMETER_TYPES = ['f_mu (SFH)',
                    'f_mu (IR)',
@@ -162,22 +163,69 @@ def store_area(connection, galaxy_id, group):
     Store the areas associated with a galaxy
     """
     LOG.info('Storing the areas')
-    count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id)).first()[0]
+    count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id).where(AREA.c.top_x >= 0)).first()[0]
+    rad_count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id).where(AREA.c.top_x == -2)).first()[0]
+    int_flux_count = 0
+
+    LOG.info('Count {0}'.format(count))
+
     data = numpy.zeros(count, dtype=data_type_area)
+
+    rad_data = None
+    if rad_count > 0:
+        # if there are radial areas, create the array for them
+        rad_data = numpy.zeros(rad_count, dtype=data_type_area)
+        rad_count = 0
+
     count = 0
     for area in connection.execute(select([AREA]).where(AREA.c.galaxy_id == galaxy_id).order_by(AREA.c.area_id)):
-        data[count] = (
-            area[AREA.c.area_id],
-            area[AREA.c.top_x],
-            area[AREA.c.top_y],
-            area[AREA.c.bottom_x],
-            area[AREA.c.bottom_y],
-            area[AREA.c.workunit_id] if area[AREA.c.workunit_id] is not None else -1,
-            str(area[AREA.c.update_time]),
+        if area[AREA.c.top_x] == -1:
+            # This is an integrated flux area
+            LOG.info('Integrated flux area found (id={0})'.format(area[AREA.c.area_id]))
+            int_flux = numpy.zeros(1, dtype=data_type_area)  # Can only ever be 1 integrated flux area
+            int_flux[0] = (area[AREA.c.area_id],
+                           area[AREA.c.top_x],
+                           area[AREA.c.top_y],
+                           area[AREA.c.bottom_x],
+                           area[AREA.c.bottom_y],
+                           area[AREA.c.workunit_id] if area[AREA.c.workunit_id] is not None else -1,
+                           str(area[AREA.c.update_time]),
+                           )
+            group.create_dataset('area_int', data=int_flux, compression='gzip')
+            int_flux_count = 1
+
+        elif area[AREA.c.top_x] == -2:
+            # This is a radial area
+            LOG.info('Radial area {0} found (id={1})'.format(rad_count+1, area[AREA.c.area_id]))
+            rad_data[rad_count] = (
+                area[AREA.c.area_id],
+                area[AREA.c.top_x],
+                area[AREA.c.top_y],
+                area[AREA.c.bottom_x],
+                area[AREA.c.bottom_y],
+                area[AREA.c.workunit_id] if area[AREA.c.workunit_id] is not None else -1,
+                str(area[AREA.c.update_time]),
             )
-        count += 1
+
+            rad_count += 1
+
+        else:
+            # This is a standard area
+            data[count] = (
+                area[AREA.c.area_id],
+                area[AREA.c.top_x],
+                area[AREA.c.top_y],
+                area[AREA.c.bottom_x],
+                area[AREA.c.bottom_y],
+                area[AREA.c.workunit_id] if area[AREA.c.workunit_id] is not None else -1,
+                str(area[AREA.c.update_time]),
+                )
+            count += 1
+
+    if rad_data is not None:
+        group.create_dataset('area_rad', data=rad_data, compression='gzip')
     group.create_dataset('area', data=data, compression='gzip')
-    return count
+    return count, rad_count, int_flux_count  # now return the radial area count too. Int flux count will be 0 or 1
 
 
 def store_area_user(connection, galaxy_id, group):
@@ -312,6 +360,8 @@ def area_intersects_block1(block_x, block_y, area_details):
     False
     """
     x1 = area_details[0]
+    if x1 < 0:  # areas with negative x are special and should always be processed
+        return True
     y1 = area_details[1]
     x2 = area_details[2]
     y2 = area_details[3]
@@ -398,7 +448,7 @@ def pixel_in_block(raw_x, raw_y, block_x, block_y):
     return block_top_x <= raw_x <= block_bottom_x and block_top_y <= raw_y <= block_bottom_y
 
 
-def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, number_filters, area_total, galaxy_id, map_parameter_name):
+def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, number_filters, area_total, rad_area_total, int_flux_area_total, galaxy_id, map_parameter_name):
     """
     Store the pixel data
     """
@@ -433,7 +483,110 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     keys = []
     map_areas = {}
     pixel_count = 0
+    pixel_type = 0
+    rad_pixel_count = 0
+    int_flux_pixel_count = 0
+    
     area_count = 0
+
+    special_group = None
+
+    if rad_area_total > 0:
+        LOG.info('Radial areas to process')
+        # We have radial pixels to process
+
+        # Get the number of radial pixels for this galaxy
+        rad_pixels = connection.execute(select([func.count(PIXEL_RESULT.c.pxresult_id)]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id).where(PIXEL_RESULT.c.x == -2)).first()[0]
+
+        rad_data = numpy.empty((1, rad_pixels, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
+        rad_data.fill(numpy.NaN)
+    
+        if special_group is None:
+            special_group = group.create_group('special_pixels')
+
+        rad_group = special_group.create_group('rad')
+        rad_group.attrs['dimension_x'] = 1
+        rad_group.attrs['dimension_y'] = rad_pixels
+
+        rad_pixel_details = rad_group.create_dataset(
+            'pixel_details_0_0',
+            (1,rad_pixels,),
+            dtype=data_type_pixel,
+            compression='gzip')
+
+        rad_pixel_parameters = rad_group.create_dataset(
+            'pixel_parameters_0_0',
+            (1,rad_pixels, NUMBER_PARAMETERS),
+            dtype=data_type_pixel_parameter,
+            compression='gzip')
+
+        # We can't use the z dimension as blank layers show up in the SED file
+        rad_pixel_filter = rad_group.create_dataset(
+            'pixel_filters_0_0',
+            (1,rad_pixels, number_filters),
+            dtype=data_type_pixel_filter,
+            compression='gzip')
+
+        rad_pixel_histograms_grid = rad_group.create_dataset(
+            'pixel_histograms_0_0',
+            (1,rad_pixels, NUMBER_PARAMETERS),
+            dtype=data_type_block_details,
+            compression='gzip')
+            
+        rad_histogram_group = rad_group.create_group('histrogram_blocks')
+        rad_histogram_data = rad_histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
+
+        rad_histogram_block_id = 1
+        rad_histogram_block_index = 0
+        rad_histogram_list = []
+
+    if int_flux_area_total > 0:
+        # We have an integrated flux area to process
+        LOG.info('Int flux area to process')
+
+        if special_group is None:
+            special_group = group.create_group('special_pixels')
+
+        int_group = special_group.create_group('int_flux')
+        int_group.attrs['dimension_x'] = 1
+        int_group.attrs['dimension_y'] = 1
+
+        int_flux_data = numpy.empty((1, 1, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
+        int_flux_data.fill(numpy.NaN)
+
+        int_flux_pixel_details = int_group.create_dataset(
+            'pixel_details_0_0',
+            (1,1,),
+            dtype=data_type_pixel,
+            compression='gzip')
+
+        int_flux_pixel_parameters = int_group.create_dataset(
+            'pixel_parameters_0_0',
+            (1,1, NUMBER_PARAMETERS),
+            dtype=data_type_pixel_parameter,
+            compression='gzip')
+
+        # We can't use the z dimension as blank layers show up in the SED file
+        int_flux_pixel_filter = int_group.create_dataset(
+            'pixel_filters_0_0',
+            (1,1, number_filters),
+            dtype=data_type_pixel_filter,
+            compression='gzip')
+
+        int_flux_pixel_histograms_grid = int_group.create_dataset(
+            'pixel_histograms_0_0',
+            (1,1, NUMBER_PARAMETERS),
+            dtype=data_type_block_details,
+            compression='gzip')
+
+        # A single pixel histogram?
+        int_flux_histogram_group = int_group.create_group('histrogram_blocks')
+        int_flux_histogram_data = int_flux_histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
+
+        int_flux_histogram_block_id = 1
+        int_flux_histogram_block_index = 0
+        int_flux_histogram_list = []
+
     histogram_block_id = 1
     histogram_block_index = 0
     s3helper = S3Helper()
@@ -449,12 +602,10 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
     histogram_group = group.create_group('histogram_blocks')
     histogram_data = histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
-
-    for block_x in get_chunks(dimension_x):
+    # At this point, the containers for all histograms have been built
+    for block_x in get_chunks(dimension_x):  # Loop all pixels in the block.
         for block_y in get_chunks(dimension_y):
-
-            if shutdown() is True:
-                raise SystemExit
+            LOG.info('block x = {0}, y = {1}'.format(block_x, block_y))
 
             LOG.info('Starting {0} : {1}.'.format(block_x, block_y))
 
@@ -464,11 +615,13 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             # Create the arrays for this block
             data = numpy.empty((size_x, size_y, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
             data.fill(numpy.NaN)
+
             data_pixel_details = group.create_dataset(
                 'pixel_details_{0}_{1}'.format(block_x, block_y),
                 (size_x, size_y),
                 dtype=data_type_pixel,
                 compression='gzip')
+
             data_pixel_parameters = group.create_dataset(
                 'pixel_parameters_{0}_{1}'.format(block_x, block_y),
                 (size_x, size_y, NUMBER_PARAMETERS),
@@ -481,6 +634,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 (size_x, size_y, number_filters),
                 dtype=data_type_pixel_filter,
                 compression='gzip')
+
             data_pixel_histograms_grid = group.create_dataset(
                 'pixel_histograms_grid_{0}_{1}'.format(block_x, block_y),
                 (size_x, size_y, NUMBER_PARAMETERS),
@@ -488,6 +642,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 compression='gzip')
 
             for key in keys:
+                # This is where significant things start, so check for shutdown here.
                 if shutdown() is True:
                     raise SystemExit
 
@@ -497,10 +652,11 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                 # Now process the file
                 start_time = time.time()
-                LOG.info('Processing file {0}'.format(key.key))
+                LOG.info('Processing file {0} / {1}'.format(key.key, len(keys)))
                 temp_file = os.path.join(POGS_TMP, 'temp.sed')
                 key.get_contents_to_filename(temp_file)
 
+                # .sed files are usually compressed even though they don't have the .gz extention
                 if is_gzip(temp_file):
                     f = gzip.open(temp_file, "rb")
                 else:
@@ -508,6 +664,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                 area_id = None
                 pxresult_id = None
+                pixel_type = 0  # 0 for normal, 1 for int flux, 2 for radial
                 line_number = 0
                 percentiles_next = False
                 histogram_next = False
@@ -531,22 +688,61 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             point_name = values[1]
                             pxresult_id = point_name[3:].rstrip()
                             (raw_x, raw_y, area_id) = get_pixel_result(connection, pxresult_id)
-                            # The pixel could be out of this block as the cutting up is not uniform
-                            if pixel_in_block(raw_x, raw_y, block_x, block_y):
-                                # correct x & y for this block
-                                x = raw_x - (block_x * MAX_X_Y_BLOCK)
-                                y = raw_y - (block_y * MAX_X_Y_BLOCK)
-                                # LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
+                            # LOG.info('rawx = {0} rawy = {1}'.format(raw_x, raw_y))
+                            
+                            if raw_x == -1:
+                                # this pixel is for integrated flux
+                                pixel_type = 1
+                                LOG.info('Int flux {0}:{1}'.format(raw_x, raw_y))
+                            elif raw_x == -2:
+                                # this pixel is for radial 
+                                pixel_type = 2
+                                LOG.info('Radial pixel {0}:{1}'.format(raw_x, raw_y))
+                            else:
+                                # just a standard pixel
+                                pixel_type = 0
+                              
+                            if pixel_type == 0:  # Only standard pixels are in blocks
+                                # The pixel could be out of this block as the cutting up is not uniform
+                                if pixel_in_block(raw_x, raw_y, block_x, block_y):
+                                    # correct x & y for this block
+                                    x = raw_x - (block_x * MAX_X_Y_BLOCK)
+                                    y = raw_y - (block_y * MAX_X_Y_BLOCK)
+                                    #LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
+                                    line_number = 0
+                                    percentiles_next = False
+                                    histogram_next = False
+                                    skynet_next1 = False
+                                    skynet_next2 = False
+                                    skip_this_pixel = False
+                                    pixel_count += 1
+                                
+                                else:
+                                    # TODO next line commented out
+                                    LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
+                                    skip_this_pixel = True
+                                    
+                            else:
+                                # Still need these set for non-standard pixels
+                                x = 0
+                                y = raw_y
                                 line_number = 0
                                 percentiles_next = False
                                 histogram_next = False
                                 skynet_next1 = False
                                 skynet_next2 = False
                                 skip_this_pixel = False
-                                pixel_count += 1
-                            else:
-                                # LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
-                                skip_this_pixel = True
+                                
+                                if pixel_type == 1:
+                                    # There should only ever be one int flux pixel. If there is more than one, it's either an error or a new system has been implemented
+                                    if int_flux_pixel_count > 0:
+                                        LOG.error('More than one integrated flux pixel found, skipping.')
+                                        skip_this_pixel = True
+                                    else:
+                                        int_flux_pixel_count += 1
+                                elif pixel_type == 2:
+                                    rad_pixel_count += 1
+                                    
                         elif skip_this_pixel:
                             # Do nothing as we're skipping this pixel
                             pass
@@ -556,12 +752,20 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 filter_layer = 0
                                 for filter_name in filter_names:
                                     if filter_name != '#':
-                                        data_pixel_filter.attrs[filter_name] = filter_layer
+                                        # The attributes of each of these items will be the same, but are all kept for consistency.
+                                        if pixel_type == 0:
+                                            data_pixel_filter.attrs[filter_name] = filter_layer
+                                        elif pixel_type == 2:
+                                            rad_pixel_filter.attrs[filter_name] = filter_layer
+                                        elif pixel_type == 1:
+                                            int_flux_pixel_filter.attrs[filter_name] = filter_layer
                                         filter_layer += 1
+
                             elif line_number == 3:
                                 values = line.split()
                                 for value in values:
                                     list_filters.append([float(value)])
+
                             elif line_number == 4:
                                 filter_layer = 0
                                 values = line.split()
@@ -569,42 +773,100 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     filter_description = list_filters[filter_layer]
                                     filter_description.append(float(value))
                                     filter_layer += 1
+
                             elif line_number == 9:
                                 values = line.split()
                                 map_pixel_results['i_sfh'] = float(values[0])
                                 map_pixel_results['i_ir'] = float(values[1])
                                 map_pixel_results['chi2'] = float(values[2])
                                 map_pixel_results['redshift'] = float(values[3])
+
                             elif line_number == 11:
                                 values = line.split()
-                                data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
-                                data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
-                                data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
-                                data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
-                                data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
-                                data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
-                                data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
-                                data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
-                                data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
-                                data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
-                                data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
-                                data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
-                                data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
-                                data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
-                                data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
-                                data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
+
+                                # Work out where this data needs to go.
+                                # A lot of code copy-paste, but it's the smoothest and quickest way of doing this.
+                                if pixel_type == 0:
+                                    data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
+                                    data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
+                                    data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
+                                    data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
+                                    data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
+                                    data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
+                                    data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
+                                    data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
+                                    data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
+                                    data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
+                                    data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
+                                    data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
+                                    data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
+                                    data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
+                                    data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
+                                    data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
+
+                                elif pixel_type == 2:
+                                    rad_data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
+                                    rad_data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
+                                    rad_data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
+                                    rad_data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
+                                    rad_data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
+                                    rad_data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
+                                    rad_data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
+                                    rad_data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
+                                    rad_data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
+                                    rad_data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
+                                    rad_data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
+                                    rad_data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
+                                    rad_data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
+                                    rad_data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
+                                    rad_data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
+                                    rad_data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
+
+                                elif pixel_type == 1:
+                                    int_flux_data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
+                                    int_flux_data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
+                                    int_flux_data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
+                                    int_flux_data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
+                                    int_flux_data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
+                                    int_flux_data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
+                                    int_flux_data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
+                                    int_flux_data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
+                                    int_flux_data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
+                                    int_flux_data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
+                                    int_flux_data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
+                                    int_flux_data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
+                                    int_flux_data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
+                                    int_flux_data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
+                                    int_flux_data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
+                                    int_flux_data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
+
                             elif line_number == 13:
                                 filter_layer = 0
                                 values = line.split()
                                 for value in values:
                                     filter_description = list_filters[filter_layer]
                                     if filter_layer < number_filters:
-                                        data_pixel_filter[x, y, filter_layer] = (
-                                            filter_description[0],
-                                            filter_description[1],
-                                            float(value),
-                                        )
+                                        if pixel_type == 0:
+                                            data_pixel_filter[x, y, filter_layer] = (
+                                                filter_description[0],
+                                                filter_description[1],
+                                                float(value),
+                                            )
+                                        elif pixel_type == 2:
+                                            rad_pixel_filter[x, y, filter_layer] = (
+                                                filter_description[0],
+                                                filter_description[1],
+                                                float(value),
+                                            )
+                                        elif pixel_type == 1:
+                                            int_flux_pixel_filter[x, y, filter_layer] = (
+                                                filter_description[0],
+                                                filter_description[1],
+                                                float(value),
+                                            )
+
                                         filter_layer += 1
+
                             elif line_number > 13:
                                 if line.startswith("# ..."):
                                     parts = line.split('...')
@@ -614,7 +876,14 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     histogram_next = True
                                     skynet_next1 = False
                                     skynet_next2 = False
-                                    histogram_list = []
+
+                                    if pixel_type == 0:
+                                        histogram_list = []
+                                    elif pixel_type == 2:
+                                        rad_histogram_list = []
+                                    elif pixel_type == 1:
+                                        int_flux_histogram_list = []
+
                                 elif line.startswith("#....percentiles of the PDF......"):
                                     percentiles_next = True
                                     histogram_next = False
@@ -622,23 +891,73 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     skynet_next2 = False
 
                                     # Write out the histogram into a block for compression improvement
-                                    data_pixel_histograms_grid[x, y, parameter_name_id - 1] = (histogram_block_id, histogram_block_index, len(histogram_list))
-                                    for pixel_histogram_item in histogram_list:
-                                        # Do we need a new block
-                                        if histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
-                                            histogram_block_id += 1
-                                            histogram_block_index = 0
-                                            histogram_data = histogram_group.create_dataset(
-                                                'block_{0}'.format(histogram_block_id),
-                                                (HISTOGRAM_BLOCK_SIZE,),
-                                                dtype=data_type_pixel_histogram,
-                                                compression='gzip')
+                                    if pixel_type == 0:
+                                        data_pixel_histograms_grid[x, y, parameter_name_id - 1] = (histogram_block_id, histogram_block_index, len(histogram_list))
+                                        for pixel_histogram_item in histogram_list:
+                                            # Need a new histogram container as the current one is full.
+                                            if histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
 
-                                        histogram_data[histogram_block_index] = (
-                                            pixel_histogram_item[0],
-                                            pixel_histogram_item[1],
-                                        )
-                                        histogram_block_index += 1
+                                                histogram_block_id += 1
+                                                histogram_block_index = 0
+                                                histogram_data = histogram_group.create_dataset(
+                                                    'block_{0}'.format(histogram_block_id),
+                                                    (HISTOGRAM_BLOCK_SIZE,),
+                                                    dtype=data_type_pixel_histogram,
+                                                    compression='gzip')
+
+                                                LOG.info('Created new histogram block_{0}'.format(histogram_block_id))
+
+                                            histogram_data[histogram_block_index] = (
+                                                pixel_histogram_item[0],
+                                                pixel_histogram_item[1],
+                                            )
+
+                                            histogram_block_index += 1
+
+                                    elif pixel_type == 2:
+                                        rad_pixel_histograms_grid[x, y, parameter_name_id - 1] = (rad_histogram_block_id, rad_histogram_block_index, len(rad_histogram_list))
+                                        for rad_pixel_histogram_item in rad_histogram_list:
+                                            # On the off chance we have a lot of radial pixels, we might need another histogram block.
+                                            if rad_histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
+
+                                                rad_histogram_block_id += 1
+                                                rad_histogram_block_index = 0
+                                                rad_histogram_data = rad_histogram_group.create_dataset(
+                                                    'block_{0}'.format(rad_histogram_block_id),
+                                                    (HISTOGRAM_BLOCK_SIZE,),
+                                                    dtype=data_type_pixel_histogram,
+                                                    compression='gzip')
+
+                                                LOG.info('Created new rad histogram block_{0}'.format(rad_histogram_block_id))
+
+                                            rad_histogram_data[rad_histogram_block_index] = (
+                                                rad_pixel_histogram_item[0],
+                                                rad_pixel_histogram_item[1],
+                                            )
+                                            rad_histogram_block_index += 1
+
+                                    elif pixel_type == 1:
+                                        int_flux_pixel_histograms_grid[x, y, parameter_name_id - 1] = (int_flux_histogram_block_id, int_flux_histogram_block_index, len(int_flux_histogram_list))
+                                        for int_flux_pixel_histogram_item in int_flux_histogram_list:
+                                            # We should literally never need more than one histogram for the int flux pixel, but it never hurts to be careful.
+                                            if int_flux_histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
+
+                                                int_flux_histogram_block_id += 1
+                                                int_flux_histogram_block_index = 0
+                                                int_flux_histogram_data = int_flux_histogram_group.create_dataset(
+                                                    'block_{0}'.format(int_flux_histogram_block_id),
+                                                    (HISTOGRAM_BLOCK_SIZE,),
+                                                    dtype=data_type_pixel_histogram,
+                                                    compression='gzip')
+
+                                                LOG.info('Created new int flux histogram block_{0}'.format(int_flux_histogram_block_id))
+
+                                            int_flux_histogram_data[int_flux_histogram_block_index] = (
+                                                int_flux_pixel_histogram_item[0],
+                                                int_flux_pixel_histogram_item[1],
+                                            )
+                                            int_flux_histogram_block_index += 1
+
                                 elif line.startswith(" #...theSkyNet"):
                                     percentiles_next = False
                                     histogram_next = False
@@ -652,31 +971,84 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 elif percentiles_next:
                                     values = line.split()
                                     z = parameter_name_id - 1
-                                    data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
-                                    data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
-                                    data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
-                                    data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
-                                    data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+
+                                    # Work out where this stuff needs to go.
+                                    if pixel_type == 0:
+                                        data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
+                                        data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
+                                        data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
+                                        data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
+                                        data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+                                    elif pixel_type == 2:
+
+                                        rad_data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
+                                        rad_data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
+                                        rad_data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
+                                        rad_data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
+                                        rad_data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+                                    elif pixel_type == 1:
+
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
+                                        int_flux_data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+
                                     percentiles_next = False
                                 elif histogram_next:
                                     values = line.split()
                                     hist_value = float(values[1])
                                     if hist_value > MIN_HIST_VALUE and not math.isnan(hist_value):
-                                        histogram_list.append((float(values[0]), hist_value))
+                                        if pixel_type == 0:
+                                            histogram_list.append((float(values[0]), hist_value))
+                                        elif pixel_type == 2:
+                                            rad_histogram_list.append((float(values[0]), hist_value))
+                                        elif pixel_type == 1:
+                                            int_flux_histogram_list.append((float(values[0]), hist_value))
                                 elif skynet_next1:
                                     values = line.split()
-                                    data_pixel_details[x, y] = (
-                                        pxresult_id,
-                                        area_id,
-                                        map_pixel_results['i_sfh'],
-                                        map_pixel_results['i_ir'],
-                                        map_pixel_results['chi2'],
-                                        map_pixel_results['redshift'],
-                                        float(values[0]),
-                                        float(values[2]),
-                                        float(values[3]),
-                                        float(values[4]),
-                                    )
+
+                                    # Work out where this stuff needs to go.
+                                    if pixel_type == 0:
+                                        data_pixel_details[x, y] = (
+                                            pxresult_id,
+                                            area_id,
+                                            map_pixel_results['i_sfh'],
+                                            map_pixel_results['i_ir'],
+                                            map_pixel_results['chi2'],
+                                            map_pixel_results['redshift'],
+                                            float(values[0]),
+                                            float(values[2]),
+                                            float(values[3]),
+                                            float(values[4]),
+                                        )
+                                    elif pixel_type == 2:
+                                        rad_pixel_details[x, y] = (
+                                            pxresult_id,
+                                            area_id,
+                                            map_pixel_results['i_sfh'],
+                                            map_pixel_results['i_ir'],
+                                            map_pixel_results['chi2'],
+                                            map_pixel_results['redshift'],
+                                            float(values[0]),
+                                            float(values[2]),
+                                            float(values[3]),
+                                            float(values[4]),
+                                        )
+                                    elif pixel_type == 1:
+                                        int_flux_pixel_details[x, y] = (
+                                            pxresult_id,
+                                            area_id,
+                                            map_pixel_results['i_sfh'],
+                                            map_pixel_results['i_ir'],
+                                            map_pixel_results['chi2'],
+                                            map_pixel_results['redshift'],
+                                            float(values[0]),
+                                            float(values[2]),
+                                            float(values[3]),
+                                            float(values[4]),
+                                        )
+
                                     skynet_next1 = False
                                 elif skynet_next2:
                                     # We have the highest bin probability values which require the parameter_id
@@ -686,12 +1058,30 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     last_prob_bin = float(values[2]) if float(values[2]) is not None else numpy.NaN
                                     bin_step = float(values[3]) if float(values[3]) is not None else numpy.NaN
                                     z = parameter_name_id - 1
-                                    data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
-                                    data_pixel_parameters[x, y, z] = (
-                                        first_prob_bin,
-                                        last_prob_bin,
-                                        bin_step,
-                                    )
+
+                                    # Work out where this stuff needs to go.
+                                    if pixel_type == 0:
+                                        data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
+                                        data_pixel_parameters[x, y, z] = (
+                                            first_prob_bin,
+                                            last_prob_bin,
+                                            bin_step,
+                                        )
+                                    elif pixel_type == 2:
+                                        rad_data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
+                                        rad_pixel_parameters[x, y, z] = (
+                                            first_prob_bin,
+                                            last_prob_bin,
+                                            bin_step,
+                                        )
+                                    elif pixel_type == 1:
+                                        int_flux_data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
+                                        int_flux_pixel_parameters[x, y, z] = (
+                                            first_prob_bin,
+                                            last_prob_bin,
+                                            bin_step,
+                                        )
+
                                     skynet_next2 = False
 
                 except IOError:
@@ -700,13 +1090,19 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                     f.close()
 
                 area_count += 1
-                LOG.info('{0:0.3f} seconds for file {1}. {2} of {3} areas.'.format(time.time() - start_time, key.key, area_count, area_total))
+                LOG.info('{0:0.3f} seconds for file {1}. {2} of {3} areas.'.format(time.time() - start_time, key.key, area_count,
+                                                                                   area_total + rad_area_total + int_flux_area_total))
+
+            if rad_pixel_count > 0:
+                rad_group.create_dataset('pixels_0_0', data=rad_data, compression='gzip')
+            if int_flux_pixel_count > 0:
+                int_group.create_dataset('pixels_0_0', data=int_flux_data, compression='gzip')
 
             group.create_dataset('pixels_{0}_{1}'.format(block_x, block_y), data=data, compression='gzip')
 
     LOG.info('histogram_blocks: {0}, x_blocks: {1}, y_blocks: {2}'.format(histogram_block_id, block_x, block_y))
 
-    return pixel_count
+    return pixel_count + int_flux_pixel_count + rad_pixel_count
 
 
 def is_gzip(file_to_check):
@@ -828,7 +1224,7 @@ def archive_to_hdf5(connection, modulus, remainder):
             galaxy_group.attrs['sigma'] = float(galaxy[GALAXY.c.sigma])
             galaxy_group.attrs['pixel_count'] = galaxy[GALAXY.c.pixel_count]
             galaxy_group.attrs['pixels_processed'] = galaxy[GALAXY.c.pixels_processed]
-            galaxy_group.attrs['output_format'] = OUTPUT_FORMAT_1_03
+            galaxy_group.attrs['output_format'] = OUTPUT_FORMAT_1_04
 
             galaxy_id_aws = galaxy[GALAXY.c.galaxy_id]
 
@@ -837,7 +1233,8 @@ def archive_to_hdf5(connection, modulus, remainder):
             store_image_filters(connection, galaxy_id_aws, galaxy_group)
 
             # Store the data associated with the areas
-            area_count = store_area(connection, galaxy_id_aws, area_group)
+            area_count, rad_area_count, int_flux_count = store_area(connection, galaxy_id_aws, area_group)
+            LOG.info('Stored {0} normal areas, {1} integrated flux areas, {2} radial areas'.format(area_count, rad_area_count, int_flux_count))
             store_area_user(connection, galaxy_id_aws, area_group)
             h5_file.flush()
 
@@ -850,7 +1247,7 @@ def archive_to_hdf5(connection, modulus, remainder):
                                        galaxy[GALAXY.c.dimension_x],
                                        galaxy[GALAXY.c.dimension_y],
                                        number_filters,
-                                       area_count,
+                                       area_count, rad_area_count, int_flux_count,  # Now send through the number of other areas
                                        galaxy[GALAXY.c.galaxy_id],
                                        map_parameter_name)
 

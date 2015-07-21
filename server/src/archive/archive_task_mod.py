@@ -26,7 +26,7 @@
 The routines used to archive the data
 """
 from sqlalchemy import create_engine
-from archive.archive_hdf5_mod import archive_to_hdf5
+from archive.archive_hdf5_mod import archive_to_hdf5 #TODO Change back to archive_hdf5_mod
 from archive.delete_galaxy_mod import delete_galaxy_data, delete_register_data
 from archive.processed_galaxy_mod import processed_data
 from archive.store_files_mod import store_files

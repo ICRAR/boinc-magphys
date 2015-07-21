@@ -4,12 +4,12 @@ __author__ = 'ict310'
 For testing the archiver on a single SED file.
 """
 
-from archive_hdf5_mod_specials import store_area, store_pixels, get_number_filters, get_galaxy_file_name
+from archive_hdf5_mod import store_area, store_pixels, get_number_filters, get_galaxy_file_name
 from config import DB_LOGIN
 from sqlalchemy import create_engine
 from sqlalchemy import select
 from database.database_support_core import GALAXY, PARAMETER_NAME
-from archive_hdf5_mod_specials import archive_to_hdf5
+from archive_hdf5_mod import archive_to_hdf5
 import h5py
 
 galaxy_id = 94655
