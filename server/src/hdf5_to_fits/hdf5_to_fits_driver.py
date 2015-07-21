@@ -13,8 +13,13 @@ galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == 94655))
 tmp_file = 'testfile.hdf5'
 
 output_dir = os.path.abspath('./output')
+int_flux_output = os.path.abspath('./output/intflux')
+rad_output = os.path.abspath('./output/rad')
+
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
+    os.mkdir(int_flux_output)
+    os.mkdir(rad_output)
 
 
 TYPE_NORMAL = 0
@@ -38,21 +43,22 @@ if os.path.isfile(tmp_file):
         for layer in layers:
             for pixel_type in pixel_types:
                 if pixel_type == TYPE_NORMAL:
-                    pixel_group = galaxy_group['pixel']
+                    pixel_group = galaxy_group['pixels']
+
                     normal_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
                                                               galaxy_group.attrs['dimension_x'], galaxy_group.attrs['dimension_y'],
                                                               pixel_group, galaxy[GALAXY.c.name]))
 
                 elif pixel_type == TYPE_INT:
                     pixel_group = galaxy_group['pixel']['special_pixels']['int_flux'] # galaxy/pixel/special_pixels/int_flux
-                    int_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                    int_file_names.append(build_fits_image(feature, layer, int_flux_output, galaxy_group,
                                                            pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
                                                            pixel_group, galaxy[GALAXY.c.name]))
 
                 elif pixel_type == TYPE_RAD:
                     pixel_group = galaxy_group['pixel']['special_pixels']['rad'] # galaxy/pixel/special_pixels/rad
 
-                    rad_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                    rad_file_names.append(build_fits_image(feature, layer, rad_output, galaxy_group,
                                                            pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
                                                            pixel_group, galaxy[GALAXY.c.name]))
 

@@ -39,7 +39,7 @@ from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from sqlalchemy import select
 from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
-from archive.archive_hdf5_mod_specials import OUTPUT_FORMAT_1_04 # TODO move to normal hdf5_to_fits_mod.py file
+from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_04 # TODO move to normal hdf5_to_fits_mod.py file
 from config import DELETED, STORED, GALAXY_EMAIL_THRESHOLD
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY, HDF5_REQUEST_PIXEL_TYPE, HDF5_PIXEL_TYPE
 from utils.logging_helper import config_logger

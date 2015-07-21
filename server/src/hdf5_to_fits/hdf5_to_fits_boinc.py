@@ -38,7 +38,7 @@ import datetime
 from config import DB_LOGIN
 from database.database_support_core import HDF5_REQUEST, HDF5_REQUEST_GALAXY
 from sqlalchemy import create_engine, select
-from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_layers_galaxies
+from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_layers_galaxies, get_pixel_types
 from utils.logging_helper import config_logger
 
 LOG = config_logger(__name__)
@@ -53,6 +53,7 @@ for request in connection.execute(select([HDF5_REQUEST], distinct=True, from_obj
     # Mark the request as being processed
     request_id = request[HDF5_REQUEST.c.hdf5_request_id]
     features, layers, hdf5_request_galaxy_ids = get_features_layers_galaxies(connection, request_id)
+    pixel_types = get_pixel_types(connection, request_id)
     if len(features) > 0 and len(layers) > 0 and len(hdf5_request_galaxy_ids) > 0:
         LOG.info('Processing request from profile id: {0}, request made at {1}'.format(request[HDF5_REQUEST.c.profile_id], request[HDF5_REQUEST.c.created_at]))
         LOG.info('{0} features, {1} layers {2} galaxies'.format(len(features), len(layers), len(hdf5_request_galaxy_ids)))
@@ -60,7 +61,8 @@ for request in connection.execute(select([HDF5_REQUEST], distinct=True, from_obj
                        hdf5_request_galaxy_ids=hdf5_request_galaxy_ids,
                        email=request[HDF5_REQUEST.c.email],
                        features=features,
-                       layers=layers)
+                       layers=layers,
+                       pixel_types=pixel_types)
         connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(updated_at=datetime.datetime.now()))
     else:
         LOG.info('Nothing to do')
