@@ -41,7 +41,7 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 import argparse
 from sqlalchemy import create_engine
 from config import DB_LOGIN
-from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_and_layers_cmd_line
+from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_and_layers_pixeltypes_cmd_line
 
 parser = argparse.ArgumentParser('Extract elements from an HDF5 file',
                                  epilog='You must select at least one feature parameter f0-f6 and one layer parameter l0-l15')
@@ -74,9 +74,13 @@ parser.add_argument('-l13', '--tau_v_ism', action='store_true', help='extract ta
 parser.add_argument('-l14', '--m_dust', action='store_true', help='extract M(dust)')
 parser.add_argument('-l15', '--sfr_0_1gyr', action='store_true', help='extract SFR_0.1Gyr')
 
+parser.add_argument('-t0', '--normal', action='store_true', help='get normal pixels')
+parser.add_argument('-t1', '--int_flux', action='store_true', help='get integrated flux pixels)')
+parser.add_argument('-t2', '--rad', action='store_true', help='get radial pixels')
+
 args = vars(parser.parse_args())
 
-features, layers = get_features_and_layers_cmd_line(args)
+features, layers = get_features_and_layers_pixeltypes_cmd_line(args)
 if len(features) == 0 or len(layers) == 0:
     parser.print_help()
     exit(1)

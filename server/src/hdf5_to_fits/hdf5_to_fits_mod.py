@@ -114,30 +114,7 @@ TYPE_INT = 1
 TYPE_RAD = 2
 
 
-def get_pixel_types(connection, request_id):
-    """
-    Get the pixel types associated with this request (rad, int flux, normal)
-    :param connection: db connection
-    :param request_id: request id
-    :return:
-    """
-
-    pixel_types = []
-    for pixel_type in connection.execute(select([HDF5_PIXEL_TYPE], distinct=True).select_from(HDF5_PIXEL_TYPE.join(HDF5_REQUEST_PIXEL_TYPE)).where(HDF5_REQUEST_PIXEL_TYPE.c.hdf5_request_id == request_id)):
-        if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't0':
-            pixel_types.append(TYPE_NORMAL)
-        if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't1':
-            pixel_types.append(TYPE_INT)
-        if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't2':
-            pixel_types.append(TYPE_RAD)
-    if len(pixel_types) == 0:
-        # If, for whatever reason, this request has no pixel types then just give the requester the normal pixels
-        # Although this should never happen (but we all know how computers can be eh?)
-        pixel_types.append(TYPE_NORMAL)
-    return pixel_types
-
-
-def get_features_layers_galaxies(connection, request_id):
+def get_features_layers_galaxies_pixeltypes(connection, request_id):
     """
     Get the features, layers and hdf5_request_galaxy_ids
     :param connection: the database connection
@@ -202,10 +179,23 @@ def get_features_layers_galaxies(connection, request_id):
         if state == 0:
             hdf5_request_galaxy_ids.append(HDF5RequestDetails(galaxy_request[HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id], galaxy_request[HDF5_REQUEST_GALAXY.c.galaxy_id]))
 
-    return features, layers, hdf5_request_galaxy_ids
+    pixel_types = []
+    for pixel_type in connection.execute(select([HDF5_PIXEL_TYPE], distinct=True).select_from(HDF5_PIXEL_TYPE.join(HDF5_REQUEST_PIXEL_TYPE)).where(HDF5_REQUEST_PIXEL_TYPE.c.hdf5_request_id == request_id)):
+        if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't0':
+            pixel_types.append(TYPE_NORMAL)
+        if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't1':
+            pixel_types.append(TYPE_INT)
+        if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't2':
+            pixel_types.append(TYPE_RAD)
+    if len(pixel_types) == 0:
+        # If, for whatever reason, this request has no pixel types then just give the requester the normal pixels
+        # Although this should never happen (but we all know how computers can be eh?)
+        pixel_types.append(TYPE_NORMAL)
+
+    return features, layers, hdf5_request_galaxy_ids, pixel_types
 
 
-def get_features_and_layers_cmd_line(args):
+def get_features_and_layers_pixeltypes_cmd_line(args):
     """
     Get the features and layers
     :param args:
@@ -261,7 +251,17 @@ def get_features_and_layers_cmd_line(args):
     if args['sfr_0_1gyr']:
         layers.append('sfr_0_1gyr')
 
-    return features, layers
+    pixel_types = []
+    if args['normal']:
+        pixel_types.append(TYPE_NORMAL)
+    if args['int_flux']:
+        pixel_types.append(TYPE_INT)
+    if args['rad']:
+        pixel_types.append(TYPE_RAD)
+    if len(pixel_types) == 0:
+        pixel_types.append(TYPE_NORMAL)
+
+    return features, layers, pixel_types
 
 
 def get_hdf5_file(s3_helper, output_dir, galaxy_name, run_id, galaxy_id):
@@ -363,6 +363,15 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
 
                         # We have the file
                         if os.path.isfile(tmp_file):
+                            int_flux_output = os.path.join(output_dir, 'intflux')
+                            rad_output = os.path.join(output_dir, 'rad')
+
+                            if not os.path.exists(int_flux_output):
+                                os.mkdir(int_flux_output)
+
+                            if not os.path.exists(rad_output):
+                                os.mkdir(rad_output)
+
                             h5_file = h5py.File(tmp_file, 'r')
                             galaxy_group = h5_file['galaxy']
 
@@ -371,31 +380,44 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             rad_file_names = []
                             normal_file_names = []
 
+                            # Get each feature, then each layer and finally each pixel type.
                             for feature in features:
                                 for layer in layers:
                                     for pixel_type in pixel_types:
-                                        LOG.info('Processing {0} - {1} - {2}'.format(feature, layer, pixel_type))
                                         if pixel_type == TYPE_NORMAL:
                                             pixel_group = galaxy_group['pixel']
+
                                             normal_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
                                                                                       galaxy_group.attrs['dimension_x'], galaxy_group.attrs['dimension_y'],
                                                                                       pixel_group, galaxy[GALAXY.c.name]))
 
                                         elif pixel_type == TYPE_INT:
                                             pixel_group = galaxy_group['pixel']['special_pixels']['int_flux'] # galaxy/pixel/special_pixels/int_flux
-                                            int_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                                            int_file_names.append(build_fits_image(feature, layer, int_flux_output, galaxy_group,
                                                                                    pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
                                                                                    pixel_group, galaxy[GALAXY.c.name]))
 
                                         elif pixel_type == TYPE_RAD:
                                             pixel_group = galaxy_group['pixel']['special_pixels']['rad'] # galaxy/pixel/special_pixels/rad
 
-                                            rad_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                                            rad_file_names.append(build_fits_image(feature, layer, rad_output, galaxy_group,
                                                                                    pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
                                                                                    pixel_group, galaxy[GALAXY.c.name]))
 
-                            h5_file.close()
+                            if len(int_file_names) > 0:
+                                file_names.append(zip_up_files('int_{0}'.format(galaxy[GALAXY.c.name]), int_file_names, output_dir))
+                            if len(rad_file_names) > 0:
+                                file_names.append(zip_up_files('rad_{0}'.format(galaxy[GALAXY.c.name]), rad_file_names, output_dir))
+                            if len(normal_file_names) > 0:
+                                file_names.append(zip_up_files(galaxy[GALAXY.c.name], normal_file_names, output_dir))
+
                             url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
+
+                            if os.path.exists(output_dir):
+                                shutil.rmtree(int_flux_output)
+                                shutil.rmtree(rad_output)
+
+                            h5_file.close()
                             connection.execute(HDF5_REQUEST_GALAXY.update().
                                                where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
                                                values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))

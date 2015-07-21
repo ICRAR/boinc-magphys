@@ -4,6 +4,7 @@ from database.database_support_core import GALAXY
 from hdf5_to_fits_mod import build_fits_image, zip_up_files
 import os
 import h5py
+import shutil
 from config import DB_LOGIN
 
 engine = create_engine(DB_LOGIN)
@@ -18,7 +19,11 @@ rad_output = os.path.abspath('./output/rad')
 
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
+
+if not os.path.exists(int_flux_output):
     os.mkdir(int_flux_output)
+
+if not os.path.exists(rad_output):
     os.mkdir(rad_output)
 
 
@@ -70,5 +75,9 @@ if os.path.isfile(tmp_file):
         file_names.append(zip_up_files(galaxy[GALAXY.c.name], normal_file_names, output_dir))
 
     zip_up_files(galaxy[GALAXY.c.name], file_names, output_dir)
+
+    if os.path.exists(output_dir):
+        shutil.rmtree(int_flux_output)
+        shutil.rmtree(rad_output)
 
     h5_file.close()
