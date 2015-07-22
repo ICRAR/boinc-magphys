@@ -512,7 +512,11 @@ def zip_up_files(galaxy_name, file_names, output_dir):
     with tarfile.open(tar_file_name, 'w:gz') as tar_file:
         for file_name in file_names:
             tar_file.add(file_name, arcname=os.path.basename(file_name))
-            os.remove(file_name)
+
+            if os.path.isdir(file_name):
+                shutil.rmtree(file_name)
+            else:
+                os.remove(file_name)
 
     return tar_file_name
 
