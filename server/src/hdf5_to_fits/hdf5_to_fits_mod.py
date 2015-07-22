@@ -339,7 +339,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
     total_request_galaxies = len(hdf5_request_galaxy_ids)
     LOG.info('Need to have {0} galaxies available ({1} currently available)'.format(total_request_galaxies * GALAXY_EMAIL_THRESHOLD, len(available_galaxies)))
     if len(available_galaxies) >= total_request_galaxies * GALAXY_EMAIL_THRESHOLD:  # Only proceed if more than the threshold of galaxies are available
-        LOG.info('{0}/{1} (> {2}%) galaxies are available. Email will be sent'.format(available_galaxies,
+        LOG.info('{0}/{1} (> {2}%) galaxies are available. Email will be sent'.format(len(available_galaxies),
                                                                                       total_request_galaxies,
                                                                                       GALAXY_EMAIL_THRESHOLD * 100))
         remaining_galaxies = total_request_galaxies - len(available_galaxies)
@@ -384,6 +384,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             for feature in features:
                                 for layer in layers:
                                     for pixel_type in pixel_types:
+                                        LOG.info('Feature: {0}. Layer: {1}. Pixel Type: {2}'.format(feature, layer, pixel_type))
 
                                         if pixel_type == TYPE_NORMAL:
                                             pixel_group = galaxy_group['pixel']
