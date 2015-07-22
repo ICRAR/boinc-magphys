@@ -71,6 +71,18 @@ select count(*)
 from register
 where create_time is null;
 
+--gets the count of integrated flux areas for this galaxy
+select count(*)
+from area
+where galaxy_id = GALAXY_ID /*replace with galaxy id*/
+AND area.top_x = -1;
+
+--gets the count of radial areas for this galaxy.
+select count(*)
+from area
+where galaxy_id = GALAXY_ID /*replace with galaxy id*/
+AND area.top_x = -2;
+
 
 -- pogs
 -- Number active users

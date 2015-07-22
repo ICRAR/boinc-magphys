@@ -258,6 +258,7 @@ def get_features_and_layers_pixeltypes_cmd_line(args):
         pixel_types.append(TYPE_INT)
     if args['rad']:
         pixel_types.append(TYPE_RAD)
+    # If for some reason the request had no pixel types, add the normal one
     if len(pixel_types) == 0:
         pixel_types.append(TYPE_NORMAL)
 
@@ -405,17 +406,15 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                                                                                    pixel_group, galaxy[GALAXY.c.name]))
 
                             if len(int_file_names) > 0:
-                                file_names.append(zip_up_files('int_{0}'.format(galaxy[GALAXY.c.name]), int_file_names, output_dir))
+                                file_names.append(int_flux_output)
+                                # file_names.append(zip_up_files('int_{0}'.format(galaxy[GALAXY.c.name]), int_file_names, output_dir))
                             if len(rad_file_names) > 0:
-                                file_names.append(zip_up_files('rad_{0}'.format(galaxy[GALAXY.c.name]), rad_file_names, output_dir))
+                                file_names.append(rad_output)
+                                # file_names.append(zip_up_files('rad_{0}'.format(galaxy[GALAXY.c.name]), rad_file_names, output_dir))
                             if len(normal_file_names) > 0:
                                 file_names.append(zip_up_files(galaxy[GALAXY.c.name], normal_file_names, output_dir))
 
                             url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
-
-                            if os.path.exists(output_dir):
-                                shutil.rmtree(int_flux_output)
-                                shutil.rmtree(rad_output)
 
                             h5_file.close()
                             connection.execute(HDF5_REQUEST_GALAXY.update().
@@ -428,6 +427,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                     except S3ResponseError as e:  # Handling for a strange s3 error
                         LOG.error('Error retrieving galaxy {0} from s3. Retrying next run'.format(galaxy[GALAXY.c.name]))
                         LOG.error('{0}'.format(str(e)))
+                        result.error = traceback.format_exc()
                         remaining_galaxies += 1
                     finally:
                         # Delete the temp files now we're done

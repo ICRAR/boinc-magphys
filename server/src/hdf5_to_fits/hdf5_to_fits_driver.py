@@ -36,6 +36,15 @@ layers = ['f_mu_sfh', 'f_mu_ir', 'mu_parameter', 'tau_v', 'ssfr_0_1gyr', 'm_star
 pixel_types = [TYPE_NORMAL, TYPE_RAD, TYPE_INT]
 
 if os.path.isfile(tmp_file):
+    int_flux_output = os.path.join(output_dir, 'intflux')
+    rad_output = os.path.join(output_dir, 'rad')
+
+    if not os.path.exists(int_flux_output):
+        os.mkdir(int_flux_output)
+
+    if not os.path.exists(rad_output):
+        os.mkdir(rad_output)
+
     h5_file = h5py.File(tmp_file, 'r')
     galaxy_group = h5_file['galaxy']
 
@@ -44,6 +53,7 @@ if os.path.isfile(tmp_file):
     rad_file_names = []
     normal_file_names = []
 
+    # Get each feature, then each layer and finally each pixel type.
     for feature in features:
         for layer in layers:
             for pixel_type in pixel_types:
@@ -68,16 +78,14 @@ if os.path.isfile(tmp_file):
                                                            pixel_group, galaxy[GALAXY.c.name]))
 
     if len(int_file_names) > 0:
-        file_names.append(zip_up_files('int_{0}'.format(galaxy[GALAXY.c.name]), int_file_names, output_dir))
+        file_names.append(int_flux_output)
+        # file_names.append(zip_up_files('int_{0}'.format(galaxy[GALAXY.c.name]), int_file_names, output_dir))
     if len(rad_file_names) > 0:
-        file_names.append(zip_up_files('rad_{0}'.format(galaxy[GALAXY.c.name]), rad_file_names, output_dir))
+        file_names.append(rad_output)
+        # file_names.append(zip_up_files('rad_{0}'.format(galaxy[GALAXY.c.name]), rad_file_names, output_dir))
     if len(normal_file_names) > 0:
         file_names.append(zip_up_files(galaxy[GALAXY.c.name], normal_file_names, output_dir))
 
     zip_up_files(galaxy[GALAXY.c.name], file_names, output_dir)
-
-    if os.path.exists(output_dir):
-        shutil.rmtree(int_flux_output)
-        shutil.rmtree(rad_output)
 
     h5_file.close()
