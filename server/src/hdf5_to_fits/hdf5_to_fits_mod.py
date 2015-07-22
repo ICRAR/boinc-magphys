@@ -416,9 +416,6 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             if rad_folder_added:
                                 file_names.append(rad_output)
 
-                            for filen in file_names:
-                                LOG.info(filen)
-
                             url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
 
                             h5_file.close()
