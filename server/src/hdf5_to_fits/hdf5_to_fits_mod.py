@@ -181,6 +181,7 @@ def get_features_layers_galaxies_pixeltypes(connection, request_id):
 
     pixel_types = []
     for pixel_type in connection.execute(select([HDF5_PIXEL_TYPE], distinct=True).select_from(HDF5_PIXEL_TYPE.join(HDF5_REQUEST_PIXEL_TYPE)).where(HDF5_REQUEST_PIXEL_TYPE.c.hdf5_request_id == request_id)):
+        LOG.info('Layer: {0}'.format(pixel_type[HDF5_PIXEL_TYPE.c.argument_name]))
         if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't0':
             pixel_types.append(TYPE_NORMAL)
         if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't1':
