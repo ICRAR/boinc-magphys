@@ -379,7 +379,6 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             file_names = []
                             int_file_names = []
                             rad_file_names = []
-                            normal_file_names = []
 
                             # Get each feature, then each layer and finally each pixel type.
                             for feature in features:
@@ -395,23 +394,24 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
 
                                         elif pixel_type == TYPE_INT:
                                             pixel_group = galaxy_group['pixel']['special_pixels']['int_flux'] # galaxy/pixel/special_pixels/int_flux
-                                            int_file_names.append(build_fits_image(feature, layer, int_flux_output, galaxy_group,
-                                                                                   pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
-                                                                                   pixel_group, galaxy[GALAXY.c.name]))
+
+                                            build_fits_image(feature, layer, int_flux_output, galaxy_group,
+                                                             pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
+                                                             pixel_group, galaxy[GALAXY.c.name])
 
                                         elif pixel_type == TYPE_RAD:
                                             pixel_group = galaxy_group['pixel']['special_pixels']['rad'] # galaxy/pixel/special_pixels/rad
 
-                                            rad_file_names.append(build_fits_image(feature, layer, rad_output, galaxy_group,
-                                                                                   pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
-                                                                                   pixel_group, galaxy[GALAXY.c.name]))
+                                            build_fits_image(feature, layer, rad_output, galaxy_group,
+                                                             pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
+                                                             pixel_group, galaxy[GALAXY.c.name])
 
                             if len(int_file_names) > 0:
                                 file_names.append(int_flux_output)
-                                # file_names.append(zip_up_files('int_{0}'.format(galaxy[GALAXY.c.name]), int_file_names, output_dir))
+
                             if len(rad_file_names) > 0:
                                 file_names.append(rad_output)
-                                # file_names.append(zip_up_files('rad_{0}'.format(galaxy[GALAXY.c.name]), rad_file_names, output_dir))
+
 
                             url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
 
