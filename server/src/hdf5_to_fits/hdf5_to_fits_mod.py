@@ -426,6 +426,9 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                     except S3ResponseError as e:  # Handling for a strange s3 error
                         LOG.error('Error retrieving galaxy {0} from s3. Retrying next run'.format(galaxy[GALAXY.c.name]))
                         LOG.error('{0}'.format(str(e)))
+                        key = get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
+                        LOG.info('Key: {0}'.format(key))
+                        LOG.info('Exists: {0}'.format(s3_helper.file_exists(bucket_name, key)))
                         result.error = traceback.format_exc()
                         remaining_galaxies += 1
                     finally:
