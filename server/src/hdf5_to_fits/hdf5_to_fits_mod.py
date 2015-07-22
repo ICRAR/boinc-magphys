@@ -378,8 +378,8 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             galaxy_group = h5_file['galaxy']
 
                             file_names = []
-                            int_file_names = []
-                            rad_file_names = []
+                            int_folder_added = False
+                            rad_folder_added = False
 
                             # Get each feature, then each layer and finally each pixel type.
                             for feature in features:
@@ -400,6 +400,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                                             build_fits_image(feature, layer, int_flux_output, galaxy_group,
                                                              pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
                                                              pixel_group, galaxy[GALAXY.c.name])
+                                            int_folder_added = True
 
                                         elif pixel_type == TYPE_RAD:
                                             pixel_group = galaxy_group['pixel']['special_pixels']['rad'] # galaxy/pixel/special_pixels/rad
@@ -407,11 +408,12 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                                             build_fits_image(feature, layer, rad_output, galaxy_group,
                                                              pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
                                                              pixel_group, galaxy[GALAXY.c.name])
+                                            rad_folder_added = True
 
-                            if len(int_file_names) > 0:
+                            if int_folder_added:
                                 file_names.append(int_flux_output)
 
-                            if len(rad_file_names) > 0:
+                            if rad_folder_added:
                                 file_names.append(rad_output)
 
                             for filen in file_names:
