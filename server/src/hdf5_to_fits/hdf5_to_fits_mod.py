@@ -385,10 +385,11 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             for feature in features:
                                 for layer in layers:
                                     for pixel_type in pixel_types:
+
                                         if pixel_type == TYPE_NORMAL:
                                             pixel_group = galaxy_group['pixel']
 
-                                            normal_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                                            file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
                                                                                       galaxy_group.attrs['dimension_x'], galaxy_group.attrs['dimension_y'],
                                                                                       pixel_group, galaxy[GALAXY.c.name]))
 
@@ -411,8 +412,6 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             if len(rad_file_names) > 0:
                                 file_names.append(rad_output)
                                 # file_names.append(zip_up_files('rad_{0}'.format(galaxy[GALAXY.c.name]), rad_file_names, output_dir))
-                            if len(normal_file_names) > 0:
-                                file_names.append(zip_up_files(galaxy[GALAXY.c.name], normal_file_names, output_dir))
 
                             url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
 

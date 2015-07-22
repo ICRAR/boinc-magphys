@@ -57,12 +57,13 @@ if os.path.isfile(tmp_file):
     for feature in features:
         for layer in layers:
             for pixel_type in pixel_types:
+
                 if pixel_type == TYPE_NORMAL:
                     pixel_group = galaxy_group['pixel']
 
-                    normal_file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
-                                                              galaxy_group.attrs['dimension_x'], galaxy_group.attrs['dimension_y'],
-                                                              pixel_group, galaxy[GALAXY.c.name]))
+                    file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                                                       galaxy_group.attrs['dimension_x'], galaxy_group.attrs['dimension_y'],
+                                                       pixel_group, galaxy[GALAXY.c.name]))
 
                 elif pixel_type == TYPE_INT:
                     pixel_group = galaxy_group['pixel']['special_pixels']['int_flux'] # galaxy/pixel/special_pixels/int_flux
@@ -82,9 +83,7 @@ if os.path.isfile(tmp_file):
         # file_names.append(zip_up_files('int_{0}'.format(galaxy[GALAXY.c.name]), int_file_names, output_dir))
     if len(rad_file_names) > 0:
         file_names.append(rad_output)
-        # file_names.append(zip_up_files('rad_{0}'.format(galaxy[GALAXY.c.name]), rad_file_names, output_dir))
-    if len(normal_file_names) > 0:
-        file_names.append(zip_up_files(galaxy[GALAXY.c.name], normal_file_names, output_dir))
+        # file_names.append(zip_up_files('rad_{0}'.format(galaxy[GALAXY.c.name]), rad_file_names, output_dir))r))
 
     zip_up_files(galaxy[GALAXY.c.name], file_names, output_dir)
 
