@@ -376,9 +376,13 @@ class Fit2Wu:
         px_count = 0
         px_list = []
         for y in range(0, max_y):
-            pixel_data = self._custom_get_pixel(rad_hdu, rad_snr_hdu, y)
-            px_list.append(Pixel(x, y, pixel_data))
-            px_count += 1
+            pixel_data = self._custom_get_pixel(rad_hdu, rad_snr_hdu, y, force=True)
+
+            if len(pixel_data) > 0:
+                px_list.append(Pixel(x, y, pixel_data))
+                px_count += 1
+            else:
+                LOG.info('No radial pixels pixels at {0}'.format(y))
 
             if px_count == RADIAL_AREA_SIZE or y == max_y - 1:
                 LOG.info('Creating a radial area of size {0}'.format(px_count))
@@ -410,15 +414,24 @@ class Fit2Wu:
 
         px_list = []
 
-        pixel_data = self._custom_get_pixel(intf_hdu, intf_snr_hdu, 0)
-        px_list.append(Pixel(-1, 0, pixel_data))
+        pixel_data = self._custom_get_pixel(intf_hdu, intf_snr_hdu, 0, force=True)
 
-        self._custom_create_area(px_list, 0, 0, x, x)
-        LOG.info('Integrated flux area built!')
+        if len(pixel_data) > 0:
+            px_list.append(Pixel(-1, 0, pixel_data))
+            self._custom_create_area(px_list, 0, 0, x, x)
+            LOG.info('Integrated flux area built!')
+        else:
+            LOG.info('No int flux pixels')
 
-    def _custom_get_pixel(self, input_file, input_sigma=None, x=None, y=None):
+    def _custom_get_pixel(self, input_file, input_sigma=None, x=None, y=None, force=False):
         """
-        Retrieves all the layer data for a single pixel from the specified x, y location in the specified files.
+        Retrieves all the pixels in the specified files from the specified x,y
+        :param input_file: The fits file to get pixels from
+        :param input_sigma: The fits file for SNR readings (or none)
+        :param x: x location to get pixels
+        :param y: y location to get pixels
+        :param force: force the program to return pixels even if _enough_layers returns false.
+        :return:
         """
         pixels = []
 
@@ -455,6 +468,9 @@ class Fit2Wu:
                             sigma = pixel * 0.1
 
                     pixels.append(PixelValue(pixel, sigma))
+
+        if force:
+            return pixels
 
         if self._enough_layers(pixels):
             return pixels
