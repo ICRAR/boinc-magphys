@@ -425,7 +425,7 @@ class Fit2Wu:
 
     def _custom_get_pixel(self, input_file, input_sigma=None, x=None, y=None, force=False):
         """
-        Retrieves all the pixels in the specified files from the specified x,y
+        Retrieves all the pixels in the specified files from the specified x,y coordinates
         :param input_file: The fits file to get pixels from
         :param input_sigma: The fits file for SNR readings (or none)
         :param x: x location to get pixels
@@ -475,7 +475,7 @@ class Fit2Wu:
         if self._enough_layers(pixels):
             return pixels
         else:
-            return None
+            return []
 
     def _custom_create_area(self, pixels, min_y, max_y, min_x, max_x):
         """
