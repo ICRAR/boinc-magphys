@@ -81,7 +81,7 @@ def sort_data(connection, current_jobs, modulus, remainder):
     cache_data = {}
     return_data = {}
     for job_name in current_jobs:
-        #LOG.info('Checking {0}'.format(job_name))
+        LOG.info('Checking {0}'.format(job_name))
         index = job_name.index('_area')
         galaxy_name = job_name[0:index]
 
@@ -89,7 +89,7 @@ def sort_data(connection, current_jobs, modulus, remainder):
         area_number = job_name[index + 5: index1]
 
         cached_galaxy = get_cached_galaxy(cache_data, galaxy_name, int(area_number))
-        # LOG.info('Cache check = {0}'.format(cached_galaxy))
+        LOG.info('Cache check = {0}'.format(cached_galaxy))
 
         if cached_galaxy is None:
             # Get the area
@@ -150,6 +150,7 @@ def processed_data(connection, modulus, remainder):
     LOG.info('Getting results from BOINC')
     # The use of appid ensures MySQL uses an index otherwise it does a full table scan
     for result in connection_boinc.execute(select([RESULT]).where(and_(RESULT.c.server_state != 5, RESULT.c.appid == 1))):
+        LOG.info('Result = {0}'.format(result[RESULT.c.name]))
         current_jobs.append(result[RESULT.c.name])
 
     connection_boinc.close()
