@@ -87,13 +87,13 @@ def sort_data(connection, current_jobs, modulus, remainder):
 
         index1 = job_name.index('_', index + 5)
         area_number = job_name[index + 5: index1]
-        LOG.info('Area Number = {0}'.format(area_number))
 
         cached_galaxy = get_cached_galaxy(cache_data, galaxy_name, int(area_number))
         LOG.info('Cache check = {0}'.format(cached_galaxy))
 
         if cached_galaxy is None:
             # Get the area
+            LOG.info('Area Number = {0}'.format(area_number))
             area = connection.execute(select([AREA]).where(AREA.c.area_id == area_number)).first()
             ignore = True
             galaxy_id = int(area[AREA.c.galaxy_id])
