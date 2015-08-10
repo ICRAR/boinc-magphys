@@ -95,6 +95,9 @@ def sort_data(connection, current_jobs, modulus, remainder):
             # Get the area
             LOG.info('Area Number = {0}'.format(area_number))
             area = connection.execute(select([AREA]).where(AREA.c.area_id == area_number)).first()
+            if area is None:
+                LOG.info('Area with id={0} does not exist'.format(area_number))
+                continue
             ignore = True
             galaxy_id = int(area[AREA.c.galaxy_id])
             if modulus is None or galaxy_id % modulus == remainder:
