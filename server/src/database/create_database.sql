@@ -316,15 +316,6 @@ CREATE TABLE hdf5_request_layer (
 
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
-CREATE TABLE hdf5_request_pixel_type (
-  hdf5_request_pixel_type_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  hdf5_request_id            BIGINT UNSIGNED NOT NULL,
-  hdf5_pixel_type_id         BIGINT UNSIGNED NOT NULL,
-
-  FOREIGN KEY (hdf5_request_id) REFERENCES hdf5_request(hdf5_request_id),
-  FOREIGN KEY (hdf5_pixel_type_id) REFERENCES hdf5_pixel_type(hdf5_pixel_type_id)
-) CHARACTER SET utf8 ENGINE=InnoDB;
-
 CREATE TABLE hdf5_pixel_type (
   hdf5_pixel_type_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
 
@@ -338,6 +329,15 @@ CREATE TABLE hdf5_pixel_type (
 INSERT INTO hdf5_pixel_type (argument_name, description) VALUES ('t0', 'normal area');
 INSERT INTO hdf5_pixel_type (argument_name, description) VALUES ('t1', 'integrated flux area');
 INSERT INTO hdf5_pixel_type (argument_name, description) VALUES ('t2', 'radial area');
+
+CREATE TABLE hdf5_request_pixel_type (
+  hdf5_request_pixel_type_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  hdf5_request_id            BIGINT UNSIGNED NOT NULL,
+  hdf5_pixel_type_id         BIGINT UNSIGNED NOT NULL,
+
+  FOREIGN KEY (hdf5_request_id) REFERENCES hdf5_request(hdf5_request_id),
+  FOREIGN KEY (hdf5_pixel_type_id) REFERENCES hdf5_pixel_type(hdf5_pixel_type_id)
+) CHARACTER SET utf8 ENGINE=InnoDB;
 
 INSERT INTO hdf5_feature (argument_name, description) VALUES ('f0', 'extract best fit');
 INSERT INTO hdf5_feature (argument_name, description) VALUES ('f1', 'extract percentile 50');

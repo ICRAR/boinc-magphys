@@ -144,9 +144,16 @@ else:
                         total_pixels += pixels
 
                         total_work_units_added += (work_units_added * MIN_QUORUM)
+                    except IOError:
+                        LOG.exception('An error occurred while trying to read from a fits file')
+
+                        connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
+                        continue
                     except Exception:
                         LOG.exception('An error occurred while processing {0}'.format(registration[REGISTER.c.galaxy_name]))
-                        break
+
+                        connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
+                        continue
                     # One WU = MIN_QUORUM Results
 
                     if os.path.exists(registration[REGISTER.c.filename]):
