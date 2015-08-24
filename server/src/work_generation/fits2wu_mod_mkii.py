@@ -44,7 +44,7 @@ from sqlalchemy.sql.expression import select, func
 from config import POGS_BOINC_PROJECT_ROOT, WG_REPORT_DEADLINE, WG_PIXEL_COMMIT_THRESHOLD, WG_SIZE_CLASS, WG_MIN_PIXELS_PER_FILE, WG_ROW_HEIGHT, RADIAL_AREA_SIZE
 from database.database_support_core import GALAXY, REGISTER, AREA, PIXEL_RESULT, FILTER, RUN_FILTER, FITS_HEADER, RUN, TAG_REGISTER, TAG_GALAXY
 from image.fitsimage import FitsImage
-from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_key_fits, get_key_sigma_fits, get_saved_files_bucket
+from utils.name_builder import get_galaxy_image_bucket, get_galaxy_file_name, get_key_fits, get_key_sigma_fits, get_saved_files_bucket, get_key_special_fits
 from utils.s3_helper import S3Helper
 
 LOG = config_logger(__name__)
@@ -337,20 +337,44 @@ class Fit2Wu:
         LOG.info('Building the images')
 
         galaxy_file_name = get_galaxy_file_name(self._galaxy_name, self._run_id, self._galaxy_id)
-        s3helper = S3Helper()
         image = FitsImage(self._connection)
         image.build_image(self._filename, galaxy_file_name, self._galaxy_id, get_galaxy_image_bucket())
 
-        # Copy the fits file to S3 - renamed to make it unique
-        bucket_name = get_saved_files_bucket()
-        s3helper.add_file_to_bucket(bucket_name, get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
-        if self._sigma_filename is not None:
-            s3helper.add_file_to_bucket(bucket_name, get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
+        self._add_files_to_bucket(registration)
 
         # Store the pixel count as the last thing to stop the original_image_checker going off
         # too soon for BIG galaxies
         self._connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == self._galaxy_id).values(pixel_count=self._pixel_count))
         return self._work_units_added, self._pixel_count, pogs_sum, ave, boinc_sum, bave, self._total_areas, self._total_pixels
+
+    def _add_files_to_bucket(self, registration):
+        """
+        Adds all of the fits files in this registration to the s3 bucket
+        :param registration:
+        :return:
+        """
+        int_flux = registration[REGISTER.c.int_filename]
+        int_flux_sigma = registration[REGISTER.c.int_sigma_filename]
+        rad = registration[REGISTER.c.rad_filename]
+        rad_sigma = registration[REGISTER.c.rad_sigma_filename]
+
+        # Copy the fits files to S3
+        s3helper = S3Helper()
+        bucket_name = get_saved_files_bucket()
+
+        s3helper.add_file_to_bucket(bucket_name, get_key_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._filename)
+        if self._sigma_filename is not None:
+            s3helper.add_file_to_bucket(bucket_name, get_key_sigma_fits(self._galaxy_name, self._run_id, self._galaxy_id), self._sigma_filename)
+
+        if int_flux is not None:
+            s3helper.add_file_to_bucket(bucket_name, get_key_special_fits(self._galaxy_name, self._run_id, self._galaxy_id, 'int', sigma=False), int_flux)
+            if int_flux_sigma is not None:
+                s3helper.add_file_to_bucket(bucket_name, get_key_special_fits(self._galaxy_name, self._run_id, self._galaxy_id, 'int', sigma=True), int_flux_sigma)
+
+        if rad is not None:
+            s3helper.add_file_to_bucket(bucket_name, get_key_special_fits(self._galaxy_name, self._run_id, self._galaxy_id, 'rad', sigma=False), rad)
+            if rad_sigma is not None:
+                s3helper.add_file_to_bucket(bucket_name, get_key_special_fits(self._galaxy_name, self._run_id, self._galaxy_id, 'rad', sigma=True), rad_sigma)
 
     def _build_radial_areas(self, registration):
         """
@@ -376,7 +400,7 @@ class Fit2Wu:
         px_count = 0
         px_list = []
         for y in range(0, max_y):
-            pixel_data = self._custom_get_pixel(rad_hdu, rad_snr_hdu, y, force=True)
+            pixel_data = self._custom_get_pixel(rad_hdu, rad_snr_hdu, y=0, force=True)
 
             if len(pixel_data) > 0:
                 px_list.append(Pixel(x, y, pixel_data))
@@ -414,10 +438,11 @@ class Fit2Wu:
 
         px_list = []
 
-        pixel_data = self._custom_get_pixel(intf_hdu, intf_snr_hdu, 0, force=True)
+        pixel_data = self._custom_get_pixel(intf_hdu, intf_snr_hdu, y=0, force=True)
 
         if len(pixel_data) > 0:
             px_list.append(Pixel(-1, 0, pixel_data))
+
             self._custom_create_area(px_list, 0, 0, x, x)
             LOG.info('Integrated flux area built!')
         else:
@@ -442,17 +467,11 @@ class Fit2Wu:
             else:
                 # A vagary of PyFits/NumPy is the order of the x & y indexes is reversed
                 # See page 13 of the PyFITS User Guide
-                pixel = input_file[layer].data[y, x]
+                pixel = input_file[layer].data[y]  # TODO only using y currently because there are never any x values here
                 if math.isnan(pixel) or pixel == 0.0:
                     # A zero tells MAGPHYS - we have no value here
                     pixels.append(PixelValue(0, 0))
                 else:
-                    """
-                    If there is no sigma file at all, use self._sigma.
-                    If there is a sigma file,
-                    check whether the sigma_layer_order contains the layer in the sigma that corresponds to the current layer.
-                    if there is no layer in the sigma (-1), use 10% or whatever is defined as self._sigma.
-                    """
                     if input_sigma is None:  # If there is no signal to noise file, use the sigma value.
 
                         if self._sigma is not None:
@@ -463,7 +482,7 @@ class Fit2Wu:
                     else:  # if we do have a signal to noise file, use it
 
                         if self._sigma_layer_order[layer] != -1:  # TODO Currently making assumption that layer order for the main file is globally correct!
-                            sigma = pixel / input_sigma[layer].data[y, x]
+                            sigma = pixel / input_sigma[layer].data[y]
                         else:  # If there is no value for the current layer, use 0.1
                             sigma = pixel * 0.1
 
@@ -528,24 +547,6 @@ class Fit2Wu:
                 self._run_pending_db_tasks()
                 self._run_pending_boinc_db_tasks()
                 self._pixels_processed = 0  # reset for next areas
-
-    def _run_db_tasks_parallel(self):
-        """
-        Runs both the normal DB and boinc DB inserts in parallel
-        **CURRENTLY NOT USED**
-        :return:
-        """
-        db_process = multiprocessing.Process(target=self._run_pending_db_tasks)
-        boinc_db_process = multiprocessing.Process(target=self._run_pending_boinc_db_tasks)
-
-        db_process.start()
-        boinc_db_process.start()
-
-        db_process.join()
-        boinc_db_process.join()
-
-        self._database_insert_queue = []
-        self._boinc_insert_queue = []
 
     def _break_up_galaxy(self):
         """
