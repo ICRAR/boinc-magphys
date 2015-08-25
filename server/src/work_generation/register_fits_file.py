@@ -29,169 +29,172 @@ Register a FITS file ready to be converted into Work Units
 
 import os
 import sys
+
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 
 import argparse
 import time
 import shutil
+import pyfits
 
 from utils.logging_helper import config_logger
 
 from sqlalchemy.engine import create_engine
 from config import DB_LOGIN
 
-from work_generation.register_fits_file_mod import fix_redshift, get_data_from_galaxy_txt, \
+from work_generation.register_fits_file_mod import fix_redshift, \
     decompress_gz_files, extract_tar_file, find_files, add_to_database, \
     clean_unused_fits, move_fits_files
 
 LOG = config_logger(__name__)
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-parser = argparse.ArgumentParser()
-parser.add_argument('working_directory', nargs=1, help='galaxies directory')
-parser.add_argument('TAR_file', nargs=1, help='the input tar containing the galaxies')
-parser.add_argument('TXT_file', nargs=1, help='the input text file containing galaxy summaries')
-parser.add_argument('priority', type=int, nargs=1, help='the higher the number the higher the priority')
-parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')
-parser.add_argument('tags', nargs='*', help='any tags to be associated with the galaxy')
 
-args = vars(parser.parse_args())
-WORKING_DIRECTORY = args['working_directory'][0]
-INPUT_FILE = args['TAR_file'][0]
-PRIORITY = args['priority'][0]
-RUN_ID = args['run_id'][0]
-GALAXY_TEXT_FILE = args['TXT_file'][0]
-TAGS = args['tags']
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('working_directory', nargs=1, help='galaxies directory')
+    parser.add_argument('TAR_file', nargs=1, help='the input tar containing the galaxies')
+    parser.add_argument('priority', type=int, nargs=1, help='the higher the number the higher the priority')
+    parser.add_argument('run_id', type=int, nargs=1, help='the run id to be used')
+    parser.add_argument('tags', nargs='*', help='any tags to be associated with the galaxy')
 
-# Make sure the file exists
-if not os.path.isfile(INPUT_FILE):
-    LOG.error('The file %s does not exist', INPUT_FILE)
-    exit(1)
+    args = vars(parser.parse_args())
+    working_directory = args['working_directory'][0]
+    input_file = args['TAR_file'][0]
+    priority = args['priority'][0]
+    run_id = args['run_id'][0]
+    tags = args['tags']
 
-if not WORKING_DIRECTORY.endswith('/'):
-    WORKING_DIRECTORY += '/'
+    # Make sure the file exists
+    if not os.path.isfile(input_file):
+        LOG.error('The file %s does not exist', input_file)
+        exit(1)
 
-(head, tail) = os.path.split(INPUT_FILE)
+    if not working_directory.endswith('/'):
+        working_directory += '/'
 
-TAR_EXTRACT_LOCATION = WORKING_DIRECTORY + os.path.splitext(tail)[0]
-LOG.info('Working Directory: {0}'.format(WORKING_DIRECTORY))
-LOG.info('TAR Extract Location: {0}'.format(TAR_EXTRACT_LOCATION))
-time.sleep(5)
+    (head, tail) = os.path.split(input_file)
 
-# Extract all fits.gz files from the specified TAR archive
-num_files_extracted = extract_tar_file(INPUT_FILE, TAR_EXTRACT_LOCATION)
+    tar_extract_location = working_directory + os.path.splitext(tail)[0]
+    LOG.info('Working Directory: {0}'.format(working_directory))
+    LOG.info('TAR Extract Location: {0}'.format(tar_extract_location))
+    time.sleep(5)
 
-# Decompress all the fits.gz files that are in the extract location
-num_files_decompressed = decompress_gz_files(TAR_EXTRACT_LOCATION)
+    # Extract all fits.gz files from the specified TAR archive
+    num_files_extracted, galaxy_names = extract_tar_file(input_file, tar_extract_location)
+    num_galaxies_in_tar = len(galaxy_names)
 
-# Parse the galaxy data from the txt file specified
-all_txt_file_data = get_data_from_galaxy_txt(GALAXY_TEXT_FILE)
-num_galaxies_in_txt = len(all_txt_file_data)
+    # Decompress all the fits.gz files that are in the extract location
+    num_files_decompressed = decompress_gz_files(tar_extract_location)
 
-# Delete any fits files that do not have an entry in the txt document
-num_unused_fits = clean_unused_fits(TAR_EXTRACT_LOCATION, all_txt_file_data)
+    # Delete any fits files that do not have an entry in the txt document
+    num_unused_fits = clean_unused_fits(tar_extract_location, galaxy_names)
 
-# Move all of the fits files into the working directory
-move_fits_files(TAR_EXTRACT_LOCATION, WORKING_DIRECTORY)
+    # Move all of the fits files into the working directory
+    move_fits_files(tar_extract_location, working_directory)
 
-# Remove all remaining files from the extract location
-shutil.rmtree(TAR_EXTRACT_LOCATION)
+    # Remove all remaining files from the extract location
+    shutil.rmtree(tar_extract_location)
 
-all_galaxy_data = []
+    all_galaxy_data = []
 
-num_galaxies_without_file = 0
-num_galaxies_without_sigma = 0
+    num_galaxies_without_file = 0
+    num_galaxies_without_sigma = 0
 
-# Loop through each of the lines in the parsed txt file
-# [0] is name
-# [3] is redshift
-# [4] is galaxy_type
+    # Loop through each of the galaxies
+    for galaxy_name in galaxy_names:
+        single_galaxy_data = dict()
+        single_galaxy_data['name'] = galaxy_name
 
-for txt_line_info in all_txt_file_data:
-    single_galaxy_data = dict()
-    single_galaxy_data['name'] = txt_line_info[0]
+        input_files = find_files(galaxy_name, working_directory)
 
-    input_files = find_files(txt_line_info[0], WORKING_DIRECTORY)
+        # Confirming that we have what we need.
+        try:
+            single_galaxy_data['img'] = input_files['img']
+        except KeyError:
+            single_galaxy_data['img'] = None
 
-    # Confirming that we have what we need.
-    try:
-        single_galaxy_data['img'] = input_files['img']
-    except KeyError:
-        single_galaxy_data['img'] = None
+        try:
+            single_galaxy_data['img_snr'] = input_files['img_snr']
+        except KeyError:
+            single_galaxy_data['img_snr'] = None
 
-    try:
-        single_galaxy_data['img_snr'] = input_files['img_snr']
-    except KeyError:
-        single_galaxy_data['img_snr'] = None
+        try:
+            single_galaxy_data['int'] = input_files['int']
+        except KeyError:
+            single_galaxy_data['int'] = None
 
-    try:
-        single_galaxy_data['int'] = input_files['int']
-    except KeyError:
-        single_galaxy_data['int'] = None
+        try:
+            single_galaxy_data['int_snr'] = input_files['int_snr']
+        except KeyError:
+            single_galaxy_data['int_snr'] = None
 
-    try:
-        single_galaxy_data['int_snr'] = input_files['int_snr']
-    except KeyError:
-        single_galaxy_data['int_snr'] = None
+        try:
+            single_galaxy_data['rad'] = input_files['rad']
+        except KeyError:
+            single_galaxy_data['rad'] = None
 
-    try:
-        single_galaxy_data['rad'] = input_files['rad']
-    except KeyError:
-        single_galaxy_data['rad'] = None
+        try:
+            single_galaxy_data['rad_snr'] = input_files['rad_snr']
+        except KeyError:
+            single_galaxy_data['rad_snr'] = None
 
-    try:
-        single_galaxy_data['rad_snr'] = input_files['rad_snr']
-    except KeyError:
-        single_galaxy_data['rad_snr'] = None
+        if single_galaxy_data['img'] is None:
+            LOG.error('Galaxy {0} has an input file of None!'.format(single_galaxy_data['name']))
+            num_galaxies_without_file += 1
+            continue
 
-    if single_galaxy_data['img'] is None:
-        LOG.error('Galaxy {0} has an input file of None!'.format(single_galaxy_data['name']))
-        num_galaxies_without_file += 1
-        continue
+        if single_galaxy_data['img_snr'] is None:
+            LOG.error('Galaxy {0} has a sigma file of None!'.format(single_galaxy_data['name']))
+            sigma = 0.1
+            num_galaxies_without_sigma += 1
+        else:
+            sigma = input_files['img_snr']
 
-    if single_galaxy_data['img_snr'] is None:
-        LOG.error('Galaxy {0} has a sigma file of None!'.format(single_galaxy_data['name']))
-        sigma = 0.1
-        num_galaxies_without_sigma += 1
-    else:
-        sigma = input_files['img_snr']
+        # Open the fits file and read the values
+        img_hdu_list = pyfits.open(single_galaxy_data['img'], memmap=True)
+        hdu = img_hdu_list[0]
+        gal_type = hdu.header['POGSOBJT'].strip()
+        if gal_type is '':
+            gal_type = 'Unk'
 
-    gal_type = txt_line_info[4]
-    if gal_type is '':
-        gal_type = 'Unk'
+        single_galaxy_data['sigma'] = sigma
+        single_galaxy_data['redshift'] = float(fix_redshift(hdu.header['POGSZ']))
+        single_galaxy_data['input_file'] = single_galaxy_data['img']
+        single_galaxy_data['type'] = gal_type
+        single_galaxy_data['priority'] = priority
+        single_galaxy_data['run_id'] = run_id
+        single_galaxy_data['tags'] = tags
 
-    single_galaxy_data['sigma'] = sigma
-    single_galaxy_data['redshift'] = float(fix_redshift(txt_line_info[3]))
-    single_galaxy_data['input_file'] = single_galaxy_data['img']
-    single_galaxy_data['type'] = gal_type
-    single_galaxy_data['priority'] = PRIORITY
-    single_galaxy_data['run_id'] = RUN_ID
-    single_galaxy_data['tags'] = TAGS
+        all_galaxy_data.append(single_galaxy_data)
 
-    all_galaxy_data.append(single_galaxy_data)
+    # Connect to the database - the login string is set in the database package
+    engine = create_engine(DB_LOGIN)
+    connection = engine.connect()
 
-# Connect to the database - the login string is set in the database package
-ENGINE = create_engine(DB_LOGIN)
-connection = ENGINE.connect()
+    num_galaxies_inserted = 0
 
-num_galaxies_inserted = 0
+    # Loop through all the galaxies and add them to the db
+    for galaxy in all_galaxy_data:
+        # noinspection PyBroadException
+        try:
+            add_to_database(connection, galaxy)
+            num_galaxies_inserted += 1
+        except Exception:
+            LOG.exception('An error occurred adding {0} to the database'.format(galaxy['name']))
 
-# Loop through all the galaxies and add them to the db
-for galaxy in all_galaxy_data:
-    try:
-        add_to_database(connection, galaxy)
-        num_galaxies_inserted += 1
-    except Exception:
-        LOG.exception('An error occurred adding {0} to the database'.format(galaxy['name']))
+    connection.close()
 
-connection.close()
+    LOG.info('Summary information: ')
+    LOG.info('Total files extracted from tar: {0}'.format(num_files_extracted))
+    LOG.info('Total gz files decompressed: {0}'.format(num_files_decompressed))
+    LOG.info('Total galaxies defined in tar file: {0}'.format(num_galaxies_in_tar))
+    LOG.info('Total fits files without an entry in text file: {0}'.format(num_unused_fits))
+    LOG.info('Total galaxies in text document with no fits file: {0}'.format(num_galaxies_without_file))
+    LOG.info('Total galaxies without a sigma file: {0}'.format(num_galaxies_without_sigma))
+    LOG.info('Total galaxies inserted into database: {0}'.format(num_galaxies_inserted))
 
-LOG.info('Summary information: ')
-LOG.info('Total files extracted from tar: {0}'.format(num_files_extracted))
-LOG.info('Total gz files decompressed: {0}'.format(num_files_decompressed))
-LOG.info('Total galaxies defined in text file: {0}'.format(num_galaxies_in_txt))
-LOG.info('Total fits files without an entry in text file: {0}'.format(num_unused_fits))
-LOG.info('Total galaxies in text document with no fits file: {0}'.format(num_galaxies_without_file))
-LOG.info('Total galaxies without a sigma file: {0}'.format(num_galaxies_without_sigma))
-LOG.info('Total galaxies inserted into database: {0}'.format(num_galaxies_inserted))
+
+if __name__ == "__main__":
+    main()

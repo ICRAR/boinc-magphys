@@ -122,6 +122,7 @@ def decompress_gz_files(location):
                 LOG.info('Decompressing {0}...'.format(f))
                 compressed = None
                 decompressed = None
+                # noinspection PyBroadException
                 try:
                     compressed = gzip.open(f, 'rb')
                     decompressed = open(f[:-3], 'w')
@@ -149,9 +150,10 @@ def extract_tar_file(tar_file, location):
     :return:
     """
     num_files_extracted = 0
+    galaxy_names = set()
     galaxy_archive = tarfile.open(tar_file, 'r')
 
-    LOG.info('{0} total files (approx {1} galaxies) to extract'.format(len(galaxy_archive.getnames()), len(galaxy_archive.getnames())/2))
+    LOG.info('{0} total files (approx {1} galaxies) to extract'.format(len(galaxy_archive.getnames()), len(galaxy_archive.getnames())/6))
     LOG.info('Extracting now...')
 
     if os.path.isdir(location):
@@ -167,8 +169,12 @@ def extract_tar_file(tar_file, location):
             LOG.info('Extracting...{0}'.format(f.name))
             num_files_extracted += 1
 
+            if f.name.startswith('POGS_'):
+                galaxy_name = f.name[5:-8]
+                galaxy_names.add(galaxy_name)
+
     galaxy_archive.close()
-    return num_files_extracted
+    return num_files_extracted, galaxy_names
 
 
 def noext(filename):
@@ -268,6 +274,7 @@ def move_fits_files(from_location, to_location):
 
     for item in files:
         if item.endswith('.fits'):
+            # noinspection PyBroadException
             try:
                 if os.path.exists(to_location + '/' + item):
                     os.remove(to_location + '/' + item)
@@ -277,11 +284,11 @@ def move_fits_files(from_location, to_location):
                 LOG.exception('Could not move file {0} to location {1}'.format(item, to_location))
 
 
-def clean_unused_fits(location, galaxies):
+def clean_unused_fits(location, galaxy_names):
     """
     Will delete any fits files in a directory that do NOT have a galaxy in the 'galaxies' dict
     :param location:
-    :param galaxies:
+    :param galaxy_names:
     :return:
     """
 
@@ -290,8 +297,8 @@ def clean_unused_fits(location, galaxies):
 
     for item in files:
         found = False
-        for galaxy in galaxies:
-            if item.endswith('.fits') and item[:-5].endswith(galaxy[0]):
+        for galaxy_name in galaxy_names:
+            if item.endswith('.fits') and item[:-5].endswith(galaxy_name):
                 found = True
                 break
         if found is False:
@@ -305,6 +312,7 @@ def clean_unused_fits(location, galaxies):
             os.remove(location + '/' + item)
 
     return len(files_to_delete)
+
 
 def add_to_database(connection, galaxy):
     """
@@ -321,8 +329,8 @@ def add_to_database(connection, galaxy):
     run_id = galaxy['run_id']
     sigma_in = galaxy['sigma']
     tags = galaxy['tags']
-    int = galaxy['int']
-    int_snr = galaxy['int_snr']
+    integrated = galaxy['int']
+    integrated_snr = galaxy['int_snr']
     rad = galaxy['rad']
     rad_snr = galaxy['rad_snr']
 
@@ -346,8 +354,8 @@ def add_to_database(connection, galaxy):
             run_id=run_id,
             sigma=sigma,
             sigma_filename=sigma_filename,
-            int_filename=int,
-            int_sigma_filename=int_snr,
+            int_filename=integrated,
+            int_sigma_filename=integrated_snr,
             rad_filename=rad,
             rad_sigma_filename=rad_snr
         )
@@ -361,8 +369,10 @@ def add_to_database(connection, galaxy):
             if len(tag_text) > 0:
                 tag = connection.execute(select([TAG]).where(TAG.c.tag_text == tag_text)).first()
                 if tag is None:
-                    result = connection.execute(TAG.insert(),
-                                                tag_text=tag_text)
+                    result = connection.execute(
+                        TAG.insert(),
+                        tag_text=tag_text
+                    )
                     tag_id = result.inserted_primary_key[0]
                 else:
                     tag_id = tag[TAG.c.tag_id]
@@ -371,9 +381,11 @@ def add_to_database(connection, galaxy):
 
         # Add the tag ids
         for tag_id in tag_ids:
-            connection.execute(TAG_REGISTER.insert(),
-                               tag_id=tag_id,
-                               register_id=register_id)
+            connection.execute(
+                TAG_REGISTER.insert(),
+                tag_id=tag_id,
+                register_id=register_id
+            )
 
         transaction.commit()
         LOG.info('Registered %s %s %f %s %d %d', galaxy_name, galaxy_type, redshift, input_file, priority, run_id)
