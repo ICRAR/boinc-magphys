@@ -20,6 +20,9 @@ using namespace std;
 #include "validate_util.h"
 #include "sched_msgs.h"
 
+//a fits file needs more lines than this in it to be considered valid
+#define BAD_FILE_TOLERANCE 20
+
 const std::string whiteSpaces( " \f\n\r\t\v" );
 
 
@@ -283,6 +286,10 @@ int init_result(RESULT& result, void*& data)
       trimRight(line);
       ft->push_back(line);
     }
+	
+	if(ft->size() < BAD_FILE_TOLERANCE)
+		return 1;
+	
     infile.close();
 
     data = (void*)ft;
