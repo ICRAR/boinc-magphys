@@ -109,7 +109,7 @@ for layer in layers:
     connection.execute(HDF5_REQUEST_LAYER.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_layer_id=LAYERS[layer]+1)
 
 for feature in features:
-    connection.execute(HDF5_REQUEST_FEATURE.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_layer_id=FEATURES[feature]+1)
+    connection.execute(HDF5_REQUEST_FEATURE.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_feature_id=FEATURES[feature]+1)
 transaction.commit()
 LOG.info('All done')
 connection.close()
