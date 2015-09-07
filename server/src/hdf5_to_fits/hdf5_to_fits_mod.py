@@ -452,7 +452,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                                    where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
                                    values(state=3))
 
-        send_email(email, results, features, layers, remaining_galaxies)
+        send_email(email, results, features, layers, pixel_types, remaining_galaxies)
 
 
 def zip_files(s3_helper, galaxy_name, uuid_string, file_names, output_dir):
@@ -476,16 +476,17 @@ def zip_files(s3_helper, galaxy_name, uuid_string, file_names, output_dir):
     return url
 
 
-def send_email(email, results, features, layers, remaining_galaxies):
+def send_email(email, results, features, layers, pixel_types, remaining_galaxies):
     """
     Send and email to the user with a message
     :param email: the users email address
     :param results: the results
     :param features: the features
+    :param pixel_types: the pixel types
     :param layers: the layers
     :return:
     """
-    subject, message = get_final_message(results, features, layers, remaining_galaxies)
+    subject, message = get_final_message(results, features, layers, pixel_types, remaining_galaxies)
     # Build the message
     LOG.info('''send_email {0}
 {1}
@@ -527,7 +528,7 @@ def zip_up_files(galaxy_name, file_names, output_dir):
     return tar_file_name
 
 
-def get_final_message(results, features, layers, remaining_galaxies):
+def get_final_message(results, features, layers, pixel_types, remaining_galaxies):
     """
     Build the email message to send
 
@@ -563,6 +564,10 @@ def get_final_message(results, features, layers, remaining_galaxies):
     string += '\nThe following layers:\n'
     for layer in layers:
         string += '   * {0}\n'.format(layer)
+
+    string += '\nThe following pixel types:\n'
+    for pixel_type in pixel_types:
+        string += '   * {0}\n'.format(pixel_type)
 
     string += '''
 These files have been put in one or more gzip files, one per galaxy. The files will be available for 10 days and will then be deleted. The links are as follows:
