@@ -287,7 +287,7 @@ int init_result(RESULT& result, void*& data)
       ft->push_back(line);
     }
 	
-	if(ft.size() < BAD_FILE_TOLERANCE)
+	if(ft->size() < BAD_FILE_TOLERANCE)
 		return 1;
 	
     infile.close();
