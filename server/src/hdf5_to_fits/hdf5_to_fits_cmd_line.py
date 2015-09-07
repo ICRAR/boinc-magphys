@@ -103,13 +103,13 @@ result = connection.execute(HDF5_REQUEST.insert(), profile_id=47016, email='sam6
 connection.execute(HDF5_REQUEST_GALAXY.insert(), hdf5_request_id=result.inserted_primary_key, galaxy_id=args['galaxy_id'])
 
 for pixel_type in pixel_types:
-    connection.execute(HDF5_REQUEST_PIXEL_TYPE.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_pixel_type_id=pixel_type)
+    connection.execute(HDF5_REQUEST_PIXEL_TYPE.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_pixel_type_id=pixel_type+1)
 
 for layer in layers:
     connection.execute(HDF5_REQUEST_LAYER.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_layer_id=LAYERS[layer])
 
 for feature in features:
-    connection.execute(HDF5_REQUEST_LAYER.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_layer_id=FEATURES[feature])
+    connection.execute(HDF5_REQUEST_FEATURE.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_layer_id=FEATURES[feature])
 transaction.commit()
 LOG.info('All done')
 connection.close()
