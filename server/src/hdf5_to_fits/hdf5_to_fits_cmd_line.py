@@ -38,10 +38,11 @@ base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
 LOG.info('PYTHONPATH = {0}'.format(sys.path))
 
-import argparse
+import argparse, time
 from sqlalchemy import create_engine
 from config import DB_LOGIN
-from hdf5_to_fits.hdf5_to_fits_mod import generate_files, get_features_and_layers_pixeltypes_cmd_line
+from hdf5_to_fits.hdf5_to_fits_mod import get_features_and_layers_pixeltypes_cmd_line, FEATURES, LAYERS
+from database.database_support_core import HDF5_REQUEST, HDF5_REQUEST_GALAXY, HDF5_REQUEST_PIXEL_TYPE, HDF5_REQUEST_LAYER, HDF5_REQUEST_FEATURE
 
 parser = argparse.ArgumentParser('Extract elements from an HDF5 file',
                                  epilog='You must select at least one feature parameter f0-f6 and one layer parameter l0-l15')
@@ -84,12 +85,31 @@ args = vars(parser.parse_args())
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 
-features, layers, pixel_types, galaxies = get_features_and_layers_pixeltypes_cmd_line(connection, args)
+features, layers, pixel_types, galaxies = get_features_and_layers_pixeltypes_cmd_line(args)
 if len(features) == 0 or len(layers) == 0:
     parser.print_help()
     exit(1)
 
-generate_files(connection, hdf5_request_galaxy_ids=galaxies, email=args['email'][0], features=features, layers=layers, pixel_types=pixel_types)
+# Create a new request
+# Need to make:
+# HDF5_request
+# HDF5_request_feature
+# HDF5_request_galaxy
+# HDF5_request_layer
+# HDF5_request_pixel
+transaction = connection.begin()
+result = connection.execute(HDF5_REQUEST.insert(), profile_id=47016, email='sam6321@live.com.au', created_at=time.time())
 
+connection.execute(HDF5_REQUEST_GALAXY.insert(), hdf5_request_id=result.inserted_primary_key, galaxy_id=args['galaxy_id'])
+
+for pixel_type in pixel_types:
+    connection.execute(HDF5_REQUEST_PIXEL_TYPE.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_pixel_type_id=pixel_type)
+
+for layer in layers:
+    connection.execute(HDF5_REQUEST_LAYER.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_layer_id=LAYERS[layer])
+
+for feature in features:
+    connection.execute(HDF5_REQUEST_LAYER.insert(), hdf5_request_id=result.inserted_primary_key, hdf5_layer_id=FEATURES[feature])
+transaction.commit()
 LOG.info('All done')
 connection.close()
