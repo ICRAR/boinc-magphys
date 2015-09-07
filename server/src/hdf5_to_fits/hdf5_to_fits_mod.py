@@ -196,12 +196,13 @@ def get_features_layers_galaxies_pixeltypes(connection, request_id):
     return features, layers, hdf5_request_galaxy_ids, pixel_types
 
 
-def get_features_and_layers_pixeltypes_cmd_line(args):
+def get_features_and_layers_pixeltypes_cmd_line( connection, args):
     """
     Get the features and layers
     :param args:
     :return:
     """
+
     features = []
     if args['best_fit']:
         features.append('best_fit')
@@ -252,6 +253,10 @@ def get_features_and_layers_pixeltypes_cmd_line(args):
     if args['sfr_0_1gyr']:
         layers.append('sfr_0_1gyr')
 
+    hdf5_request_galaxy_ids = []
+    for galaxy_request in connection.execute(select([GALAXY], distinct=True).where(GALAXY.c.galaxy_id == args['galaxy_id'][0])):
+        hdf5_request_galaxy_ids.append(galaxy_request)
+
     pixel_types = []
     if args['normal']:
         pixel_types.append(TYPE_NORMAL)
@@ -263,7 +268,7 @@ def get_features_and_layers_pixeltypes_cmd_line(args):
     if len(pixel_types) == 0:
         pixel_types.append(TYPE_NORMAL)
 
-    return features, layers, pixel_types
+    return features, layers, pixel_types, hdf5_request_galaxy_ids
 
 
 def get_hdf5_file(s3_helper, output_dir, galaxy_name, run_id, galaxy_id):
@@ -312,11 +317,11 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
     # Check whether all the requested galaxies are available or not.
     for hdf5_request_galaxy in hdf5_request_galaxy_ids:
         galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
-        state = connection.execute(select([HDF5_REQUEST_GALAXY]).where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id)).first().state
+        ##state = connection.execute(select([HDF5_REQUEST_GALAXY]).where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id)).first().state
 
-        if state is not 0:
-            LOG.info('Skipping {0}, state is {1}'.format(galaxy[GALAXY.c.name], state))
-            continue  # Skip
+        ##if state is not 0:
+        ##    LOG.info('Skipping {0}, state is {1}'.format(galaxy[GALAXY.c.name], state))
+        ##    continue  # Skip
 
         key = get_key_hdf5(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
 
