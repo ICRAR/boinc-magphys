@@ -400,7 +400,7 @@ class Fit2Wu:
         px_count = 0
         px_list = []
         for y in range(0, max_y):
-            pixel_data = self._custom_get_pixel(rad_hdu, rad_snr_hdu, y=0, force=True)
+            pixel_data = self._custom_get_pixel(rad_hdu, rad_snr_hdu, y=y, force=True)
 
             if len(pixel_data) > 0:
                 px_list.append(Pixel(x, y, pixel_data))
