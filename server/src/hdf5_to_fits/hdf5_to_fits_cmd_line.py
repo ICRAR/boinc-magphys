@@ -85,7 +85,7 @@ args = vars(parser.parse_args())
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 
-features, layers, pixel_types, galaxies = get_features_and_layers_pixeltypes_cmd_line(args)
+features, layers, pixel_types = get_features_and_layers_pixeltypes_cmd_line(args)
 if len(features) == 0 or len(layers) == 0:
     parser.print_help()
     exit(1)
