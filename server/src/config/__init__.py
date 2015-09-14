@@ -48,9 +48,8 @@ if exists(config_file_name):
     WG_MIN_PIXELS_PER_FILE = []
     for size in config['min_pixels_per_file']:
         WG_MIN_PIXELS_PER_FILE.append(int(size))
-    WG_ROW_HEIGHT = []
-    for size in config['row_height']:
-        WG_ROW_HEIGHT.append(int(size))
+
+    WG_ROW_HEIGHT = int(config['row_height'])
     WG_THRESHOLD = int(config['threshold'])
     WG_HIGH_WATER_MARK = int(config['high_water_mark'])
     WG_REPORT_DEADLINE = int(config['report_deadline'])
