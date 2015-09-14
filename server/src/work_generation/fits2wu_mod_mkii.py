@@ -555,8 +555,8 @@ class Fit2Wu:
         pix_y = 0
 
         while pix_y < self._end_y:
-            self._create_areas(pix_y, WG_ROW_HEIGHT)  # Min pixels per file is handled internally
-            pix_y += WG_ROW_HEIGHT
+            self._create_areas(pix_y, WG_ROW_HEIGHT[0])  # Min pixels per file is handled internally
+            pix_y += WG_ROW_HEIGHT[0]
 
     def _run_pending_db_tasks(self):
         """
