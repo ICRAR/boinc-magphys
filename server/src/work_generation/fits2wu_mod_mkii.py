@@ -124,7 +124,6 @@ class PyBoincWu:
         self.size_class = size_class
         self.list_input_files = list_input_files
 
-
 class Fit2Wu:
     """
     Convert a fit file to a wu
@@ -143,6 +142,7 @@ class Fit2Wu:
         self._connection = connection
         self._download_dir = download_dir
         self._fanout = fanout
+        self._min_pixels_per_file_itr = 0  # Added global min pixels per file, this is a list
 
         self._filter_file = None
         self._sfh_model_file = None
@@ -553,17 +553,10 @@ class Fit2Wu:
         Break up the galaxy into small pieces
         """
         pix_y = 0
-        slice_counter = 0
-
-        length_min_pixels = len(WG_MIN_PIXELS_PER_FILE)
 
         while pix_y < self._end_y:
-            offset = slice_counter % length_min_pixels
-            min_pixels_per_file = WG_MIN_PIXELS_PER_FILE[offset]
-            row_height = WG_ROW_HEIGHT[offset]
-            self._create_areas(pix_y, row_height, min_pixels_per_file)
-            slice_counter += 1
-            pix_y += row_height
+            self._create_areas(pix_y, WG_ROW_HEIGHT)  # Min pixels per file is handled internally
+            pix_y += WG_ROW_HEIGHT
 
     def _run_pending_db_tasks(self):
         """
@@ -736,7 +729,7 @@ class Fit2Wu:
             zlib_file.write(' 1  {0}'.format(self._rounded_redshift))
             zlib_file.close()
 
-    def _create_areas(self, pix_y, row_height, min_pixels_per_file):
+    def _create_areas(self, pix_y, row_height):
         """
         Create a area - we try to make them squares, but they aren't as the images have dead zones
         """
@@ -744,7 +737,7 @@ class Fit2Wu:
         pixel_result_insert = PIXEL_RESULT.insert()
         pix_x = 0
         while pix_x < self._end_x:
-            max_x, pixels = self._get_pixels(pix_x, pix_y, row_height, min_pixels_per_file)
+            max_x, pixels = self._get_pixels(pix_x, pix_y, row_height, WG_MIN_PIXELS_PER_FILE[self._min_pixels_per_file_itr])
 
             if len(pixels) > 0:
                 area = Area(pix_x, pix_y, max_x, min(pix_y + row_height, self._end_y))
@@ -782,6 +775,12 @@ class Fit2Wu:
                 self._create_output_file(area, pixels)
                 self._work_units_added += 1
                 self._pixels_processed += len(pixels)
+
+                # We made an area, so now we increment the min_pixels_per_file value
+                # This makes it so the next area will be made to the correct size.
+                self._min_pixels_per_file_itr += 1
+                if self._min_pixels_per_file_itr >= len(WG_MIN_PIXELS_PER_FILE):
+                    self._min_pixels_per_file_itr = 0  # back to zero
 
                 # Once we've processed more pixels then the commit threshold, we commit everything to both dbs
                 if self._pixels_processed > WG_PIXEL_COMMIT_THRESHOLD:
