@@ -387,29 +387,34 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                                 for layer in layers:
                                     for pixel_type in pixel_types:
                                         LOG.info('Feature: {0}. Layer: {1}. Pixel Type: {2}'.format(feature, layer, pixel_type))
+                                        try:
+                                            if pixel_type == TYPE_NORMAL:
+                                                pixel_group = galaxy_group['pixel']
 
-                                        if pixel_type == TYPE_NORMAL:
-                                            pixel_group = galaxy_group['pixel']
+                                                file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
+                                                                                          galaxy_group.attrs['dimension_x'], galaxy_group.attrs['dimension_y'],
+                                                                                          pixel_group, galaxy[GALAXY.c.name]))
 
-                                            file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
-                                                                                      galaxy_group.attrs['dimension_x'], galaxy_group.attrs['dimension_y'],
-                                                                                      pixel_group, galaxy[GALAXY.c.name]))
+                                            elif pixel_type == TYPE_INT:
+                                                pixel_group = galaxy_group['pixel']['special_pixels']['int_flux'] # galaxy/pixel/special_pixels/int_flux
 
-                                        elif pixel_type == TYPE_INT:
-                                            pixel_group = galaxy_group['pixel']['special_pixels']['int_flux'] # galaxy/pixel/special_pixels/int_flux
+                                                build_fits_image(feature, layer, int_flux_output, galaxy_group,
+                                                                 pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
+                                                                 pixel_group, galaxy[GALAXY.c.name])
+                                                int_folder_added = True
 
-                                            build_fits_image(feature, layer, int_flux_output, galaxy_group,
-                                                             pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
-                                                             pixel_group, galaxy[GALAXY.c.name])
-                                            int_folder_added = True
+                                            elif pixel_type == TYPE_RAD:
+                                                pixel_group = galaxy_group['pixel']['special_pixels']['rad'] # galaxy/pixel/special_pixels/rad
 
-                                        elif pixel_type == TYPE_RAD:
-                                            pixel_group = galaxy_group['pixel']['special_pixels']['rad'] # galaxy/pixel/special_pixels/rad
+                                                build_fits_image(feature, layer, rad_output, galaxy_group,
+                                                                 pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
+                                                                 pixel_group, galaxy[GALAXY.c.name])
+                                                rad_folder_added = True
 
-                                            build_fits_image(feature, layer, rad_output, galaxy_group,
-                                                             pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
-                                                             pixel_group, galaxy[GALAXY.c.name])
-                                            rad_folder_added = True
+                                        except KeyError as e:
+                                            LOG.error('Request for pixel type that this galaxy does not have!')
+                                            LOG.error('{0}'.format(str(e)))
+                                            result.error = 'Cannot find pixel type {0} for galaxy {0}'.format(pixel_type, galaxy[GALAXY.c.galaxy_id])
 
                             if int_folder_added:
                                 file_names.append(int_flux_output)
