@@ -54,6 +54,7 @@ show variables like 'innodb%';
 --update host
 --set max_results_day = -1
 --where userid = <blah>;
+--where id = <blah>;
 
 -- Number of Galaxies
 select max(galaxy_id)
@@ -86,12 +87,12 @@ AND area.top_x = -2;
 
 -- pogs
 -- Number active users
-select count(*) 
+select count(*)
 from pogs.user
 where expavg_credit > 0;
 
 -- Number active hosts
-select count(*) 
+select count(*)
 from pogs.host
 where expavg_credit > 0;
 

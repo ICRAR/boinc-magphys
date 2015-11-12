@@ -156,11 +156,22 @@ else:
                         continue
                     # One WU = MIN_QUORUM Results
 
+                    # Delete the files once we are done
                     if os.path.exists(registration[REGISTER.c.filename]):
                         os.remove(registration[REGISTER.c.filename])
-                    if registration.sigma_filename is not None and os.path.exists(registration.sigma_filename):
+                    if registration[REGISTER.c.sigma_filename] is not None and os.path.exists(registration[REGISTER.c.sigma_filename]):
                         os.remove(registration[REGISTER.c.sigma_filename])
+                    if registration[REGISTER.c.rad_filename] is not None and os.path.exists(registration[REGISTER.c.rad_filename]):
+                        os.remove(registration[REGISTER.c.rad_filename])
+                    if registration[REGISTER.c.rad_sigma_filename] is not None and os.path.exists(registration[REGISTER.c.rad_sigma_filename]):
+                        os.remove(registration[REGISTER.c.rad_sigma_filename])
+                    if registration[REGISTER.c.int_filename] is not None and os.path.exists(registration[REGISTER.c.int_filename]):
+                        os.remove(registration[REGISTER.c.int_filename])
+                    if registration[REGISTER.c.int_sigma_filename] is not None and os.path.exists(registration[REGISTER.c.int_sigma_filename]):
+                        os.remove(registration[REGISTER.c.int_sigma_filename])
+
                     connection.execute(REGISTER.update().where(REGISTER.c.register_id == registration[REGISTER.c.register_id]).values(create_time=datetime.now()))
+
                 connection.execute(TAG_REGISTER.delete().where(TAG_REGISTER.c.register_id == registration[REGISTER.c.register_id]))
 
         LOG.info('Total areas added {0}, pixels added {1}'.format(total_areas, total_pixels))

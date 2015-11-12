@@ -103,25 +103,16 @@ def base_install():
         sudo('tar -xvzf hdf5-1.8.14.tar.gz')
         sudo('rm *.gz')
     with cd('/usr/local/src/szip-2.1'):
-        sudo('./configure --prefix=/usr/local/szip')
+        sudo('./configure --prefix=/usr/local')
         sudo('make')
         sudo('make install')
     with cd('/usr/local/src/hdf5-1.8.14'):
-        sudo('./configure --prefix=/usr/local/hdf5 --with-szlib=/usr/local/szip --enable-production')
+        sudo('./configure --prefix=/usr/local --with-szlib=/usr/local --enable-production')
         sudo('make')
         sudo('make install')
-    sudo('''echo "/usr/local/hdf5/lib
-/usr/local/szip/lib" >> /etc/ld.so.conf.d/hdf5.conf''')
-    sudo('ldconfig')
 
     # Now install the H5py
-    with cd('/tmp'):
-        run('wget --no-verbose https://pypi.python.org/packages/source/h/h5py/h5py-2.5.0.tar.gz')
-        run('tar -xvzf h5py-2.5.0.tar.gz')
-    with cd('/tmp/h5py-2.5.0'):
-        sudo('python2.7 setup.py configure --hdf5=/usr/local/hdf5')
-        sudo('python2.7 setup.py build')
-        sudo('python2.7 setup.py install')
+    sudo('/usr/local/bin/pip install --quiet h5py')
 
 
 def copy_public_keys():
