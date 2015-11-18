@@ -74,16 +74,21 @@ if os.path.isfile(tmp_file):
                 elif pixel_type == TYPE_RAD:
                     pixel_group = galaxy_group['pixel']['special_pixels']['rad'] # galaxy/pixel/special_pixels/rad
 
-                    build_fits_image(feature, layer, rad_output, galaxy_group,
-                                     pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
-                                      pixel_group, galaxy[GALAXY.c.name])
+                    build_fits_image(
+                        feature,
+                        layer,
+                        rad_output,
+                        galaxy_group,
+                        pixel_group.attrs['dimension_x'],
+                        pixel_group.attrs['dimension_y'],
+                        pixel_group, galaxy[GALAXY.c.name]
+                    )
 
     if len(int_file_names) > 0:
         file_names.append(int_flux_output)
 
     if len(rad_file_names) > 0:
         file_names.append(rad_output)
-
 
     zip_up_files(galaxy[GALAXY.c.name], file_names, output_dir)
 

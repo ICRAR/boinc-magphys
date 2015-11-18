@@ -60,6 +60,7 @@ class S3Helper:
         """
         Add file to a bucket
 
+        :param reduced_redundancy:
         :param bucket_name:
         :param key_name:
         :param filename:
@@ -132,9 +133,10 @@ class S3Helper:
 
         return key.ongoing_restore
 
-    def restore_archived_file(self, bucket_name, key_name):
+    def restore_archived_file(self, bucket_name, key_name, days=S3_FILE_RESTORE_TIME):
         """
         Restores a file that has been archived to glacier back to s3. Can take up to 4 hours
+        :param days:
         :param bucket_name:
         :param key_name:
         :return:
@@ -143,4 +145,4 @@ class S3Helper:
         key = Key(bucket)
         key.key = key_name
 
-        key.restore(days=S3_FILE_RESTORE_TIME)
+        key.restore(days=days)

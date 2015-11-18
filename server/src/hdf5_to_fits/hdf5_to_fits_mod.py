@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012-2013
+#    Copyright by UWA, 2012-2015
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -177,10 +177,24 @@ def get_features_layers_galaxies_pixeltypes(connection, request_id):
     for galaxy_request in connection.execute(select([HDF5_REQUEST_GALAXY], distinct=True).where(HDF5_REQUEST_GALAXY.c.hdf5_request_id == request_id)):
         state = galaxy_request[HDF5_REQUEST_GALAXY.c.state]
         if state == 0:
-            hdf5_request_galaxy_ids.append(HDF5RequestDetails(galaxy_request[HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id], galaxy_request[HDF5_REQUEST_GALAXY.c.galaxy_id]))
+            hdf5_request_galaxy_ids.append(
+                HDF5RequestDetails(
+                    galaxy_request[HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id],
+                    galaxy_request[HDF5_REQUEST_GALAXY.c.galaxy_id]
+                )
+            )
 
     pixel_types = []
-    for pixel_type in connection.execute(select([HDF5_PIXEL_TYPE], distinct=True).select_from(HDF5_PIXEL_TYPE.join(HDF5_REQUEST_PIXEL_TYPE)).where(HDF5_REQUEST_PIXEL_TYPE.c.hdf5_request_id == request_id)):
+    for pixel_type in connection.execute(
+            select(
+                [HDF5_PIXEL_TYPE],
+                distinct=True
+            ).select_from(
+                HDF5_PIXEL_TYPE.join(HDF5_REQUEST_PIXEL_TYPE)
+            ).where(
+                HDF5_REQUEST_PIXEL_TYPE.c.hdf5_request_id == request_id
+            )
+    ):
         LOG.info('Layer: {0}'.format(pixel_type[HDF5_PIXEL_TYPE.c.argument_name]))
         if pixel_type[HDF5_PIXEL_TYPE.c.argument_name] == 't0':
             pixel_types.append(TYPE_NORMAL)
@@ -271,6 +285,8 @@ def get_hdf5_file(s3_helper, output_dir, galaxy_name, run_id, galaxy_id):
     """
     Get the HDF file
 
+    :param s3_helper: The S3 helper
+    :param output_dir: where to write the file
     :param galaxy_name: the name of the galaxy
     :param run_id: the run id
     :param galaxy_id: the galaxy id
@@ -287,6 +303,9 @@ def get_hdf5_file(s3_helper, output_dir, galaxy_name, run_id, galaxy_id):
 def get_temp_file(extension, file_name, output_dir):
     """
     Get a temporary file
+    :param extension:
+    :param file_name:
+    :param output_dir:
     """
     tmp = tempfile.mkstemp(extension, file_name, output_dir, False)
     tmp_file = tmp[0]
@@ -298,6 +317,8 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
     """
     Get the FITS files for this request
 
+    :type connection: The database connection
+    :param pixel_types:
     :param hdf5_request_galaxy_ids: the galaxy id
     :param email:
     :param features:
@@ -341,9 +362,11 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
     total_request_galaxies = len(hdf5_request_galaxy_ids)
     LOG.info('Need to have {0} galaxies available ({1} currently available)'.format(total_request_galaxies * GALAXY_EMAIL_THRESHOLD, len(available_galaxies)))
     if len(available_galaxies) >= total_request_galaxies * GALAXY_EMAIL_THRESHOLD:  # Only proceed if more than the threshold of galaxies are available
-        LOG.info('{0}/{1} (> {2}%) galaxies are available. Email will be sent'.format(len(available_galaxies),
-                                                                                      total_request_galaxies,
-                                                                                      GALAXY_EMAIL_THRESHOLD * 100))
+        LOG.info('{0}/{1} (> {2}%) galaxies are available. Email will be sent'.format(
+            len(available_galaxies),
+            total_request_galaxies,
+            GALAXY_EMAIL_THRESHOLD * 100)
+        )
         remaining_galaxies = total_request_galaxies - len(available_galaxies)
 
         for hdf5_request_galaxy in available_galaxies:
@@ -391,24 +414,46 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                                             if pixel_type == TYPE_NORMAL:
                                                 pixel_group = galaxy_group['pixel']
 
-                                                file_names.append(build_fits_image(feature, layer, output_dir, galaxy_group,
-                                                                                          galaxy_group.attrs['dimension_x'], galaxy_group.attrs['dimension_y'],
-                                                                                          pixel_group, galaxy[GALAXY.c.name]))
+                                                file_names.append(
+                                                    build_fits_image(
+                                                        feature,
+                                                        layer,
+                                                        output_dir,
+                                                        galaxy_group,
+                                                        galaxy_group.attrs['dimension_x'],
+                                                        galaxy_group.attrs['dimension_y'],
+                                                        pixel_group, galaxy[GALAXY.c.name]
+                                                    )
+                                                )
 
                                             elif pixel_type == TYPE_INT:
-                                                pixel_group = galaxy_group['pixel']['special_pixels']['int_flux'] # galaxy/pixel/special_pixels/int_flux
+                                                pixel_group = galaxy_group['pixel']['special_pixels']['int_flux']  # galaxy/pixel/special_pixels/int_flux
 
-                                                build_fits_image(feature, layer, int_flux_output, galaxy_group,
-                                                                 pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
-                                                                 pixel_group, galaxy[GALAXY.c.name])
+                                                build_fits_image(
+                                                    feature,
+                                                    layer,
+                                                    int_flux_output,
+                                                    galaxy_group,
+                                                    pixel_group.attrs['dimension_x'],
+                                                    pixel_group.attrs['dimension_y'],
+                                                    pixel_group,
+                                                    galaxy[GALAXY.c.name]
+                                                )
                                                 int_folder_added = True
 
                                             elif pixel_type == TYPE_RAD:
-                                                pixel_group = galaxy_group['pixel']['special_pixels']['rad'] # galaxy/pixel/special_pixels/rad
+                                                pixel_group = galaxy_group['pixel']['special_pixels']['rad']  # galaxy/pixel/special_pixels/rad
 
-                                                build_fits_image(feature, layer, rad_output, galaxy_group,
-                                                                 pixel_group.attrs['dimension_x'], pixel_group.attrs['dimension_y'],
-                                                                 pixel_group, galaxy[GALAXY.c.name])
+                                                build_fits_image(
+                                                    feature,
+                                                    layer,
+                                                    rad_output,
+                                                    galaxy_group,
+                                                    pixel_group.attrs['dimension_x'],
+                                                    pixel_group.attrs['dimension_y'],
+                                                    pixel_group,
+                                                    galaxy[GALAXY.c.name]
+                                                )
                                                 rad_folder_added = True
 
                                         except KeyError as e:
@@ -422,12 +467,19 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             if rad_folder_added:
                                 file_names.append(rad_output)
 
-                            url = zip_files(s3_helper, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]), uuid_string, file_names, output_dir)
+                            url = zip_files(
+                                s3_helper,
+                                get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id]),
+                                uuid_string,
+                                file_names,
+                                output_dir
+                            )
 
                             h5_file.close()
-                            connection.execute(HDF5_REQUEST_GALAXY.update().
-                                               where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
-                                               values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))
+                            connection.execute(
+                                HDF5_REQUEST_GALAXY.update().
+                                where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
+                                values(state=2, link=url, link_expires_at=datetime.now() + timedelta(days=10)))
 
                             result.error = None
                             result.link = url
@@ -464,6 +516,8 @@ def zip_files(s3_helper, galaxy_name, uuid_string, file_names, output_dir):
     """
     Zip the files and send the email
 
+    :param output_dir:
+    :param uuid_string:
     :param s3_helper: the S3 helper
     :param galaxy_name: the galaxy to process
     :param file_names: the fits files to be bundled
@@ -484,6 +538,7 @@ def zip_files(s3_helper, galaxy_name, uuid_string, file_names, output_dir):
 def send_email(email, results, features, layers, pixel_types, remaining_galaxies):
     """
     Send and email to the user with a message
+    :param remaining_galaxies:
     :param email: the users email address
     :param results: the results
     :param features: the features
@@ -537,6 +592,8 @@ def get_final_message(results, features, layers, pixel_types, remaining_galaxies
     """
     Build the email message to send
 
+    :param remaining_galaxies:
+    :param pixel_types:
     :param results: the UUID string
     :param features: the features
     :param layers: the layers
@@ -612,9 +669,9 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, dimension_x
     """
     Extract a feature from the HDF5 file into a FITS file
 
+    :param galaxy_name:
     :param feature: the feature we want
     :param layer: the layer we want
-    :param pixel_type: the pixel type we want (int, rad, normal)
     :param output_directory: where to write the result
     :param dimension_x: x dimension of the hdf5 pixel array
     :param dimension_y: y dimension of the hdf5 pixel array
@@ -631,7 +688,7 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, dimension_x
 
     output_format = galaxy_group.attrs['output_format']
 
-    if output_format == OUTPUT_FORMAT_1_04:
+    if output_format == OUTPUT_FORMAT_1_04 or output_format == OUTPUT_FORMAT_1_03:
         # If we only have one block then quickly copy it
         if dimension_x <= MAX_X_Y_BLOCK and dimension_y <= MAX_X_Y_BLOCK:
             pixel_data = pixel_group['pixels_0_0']

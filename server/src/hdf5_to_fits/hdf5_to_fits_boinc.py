@@ -49,19 +49,26 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 engine = create_engine(DB_LOGIN)
 connection = engine.connect()
 
-for request in connection.execute(select([HDF5_REQUEST], distinct=True, from_obj=HDF5_REQUEST.join(HDF5_REQUEST_GALAXY)).where(HDF5_REQUEST_GALAXY.c.state == 0)):
+for request in connection.execute(
+        select(
+            [HDF5_REQUEST],
+            distinct=True,
+            from_obj=HDF5_REQUEST.join(HDF5_REQUEST_GALAXY)).where(HDF5_REQUEST_GALAXY.c.state == 0)
+):
     # Mark the request as being processed
     request_id = request[HDF5_REQUEST.c.hdf5_request_id]
     features, layers, hdf5_request_galaxy_ids, pixel_types = get_features_layers_galaxies_pixeltypes(connection, request_id)
     if len(features) > 0 and len(layers) > 0 and len(hdf5_request_galaxy_ids) > 0:
         LOG.info('Processing request from profile id: {0}, request made at {1}'.format(request[HDF5_REQUEST.c.profile_id], request[HDF5_REQUEST.c.created_at]))
         LOG.info('{0} features, {1} layers {2} galaxies'.format(len(features), len(layers), len(hdf5_request_galaxy_ids)))
-        generate_files(connection=connection,
-                       hdf5_request_galaxy_ids=hdf5_request_galaxy_ids,
-                       email=request[HDF5_REQUEST.c.email],
-                       features=features,
-                       layers=layers,
-                       pixel_types=pixel_types)
+        generate_files(
+            connection=connection,
+            hdf5_request_galaxy_ids=hdf5_request_galaxy_ids,
+            email=request[HDF5_REQUEST.c.email],
+            features=features,
+            layers=layers,
+            pixel_types=pixel_types
+        )
         connection.execute(HDF5_REQUEST.update().where(HDF5_REQUEST.c.hdf5_request_id == request_id).values(updated_at=datetime.datetime.now()))
     else:
         LOG.info('Nothing to do')
