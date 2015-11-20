@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012-2015
+#    Copyright by UWA, 2012-2016
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -33,68 +33,17 @@ import math
 import numpy
 import os
 import time
+
+import config
+from archive.archive_common import get_chunks, get_size, pixel_in_block
 from utils.logging_helper import config_logger
 from sqlalchemy.sql.expression import select, func
-from config import MIN_HIST_VALUE, ARCHIVED, PROCESSED, HDF5_OUTPUT_DIRECTORY, POGS_TMP
 from database.database_support_core import FITS_HEADER, AREA, IMAGE_FILTERS_USED, AREA_USER, PIXEL_RESULT, PARAMETER_NAME, GALAXY, RUN_FILTER
 from utils.name_builder import get_sed_files_bucket, get_galaxy_file_name
 from utils.s3_helper import S3Helper
 from utils.shutdown_detection import shutdown
 
 LOG = config_logger(__name__)
-
-OUTPUT_FORMAT_1_00 = 'Version 1.00'
-OUTPUT_FORMAT_1_01 = 'Version 1.01'
-OUTPUT_FORMAT_1_02 = 'Version 1.02'
-OUTPUT_FORMAT_1_03 = 'Version 1.03'
-OUTPUT_FORMAT_1_04 = 'Version 1.04'
-
-PARAMETER_TYPES = ['f_mu (SFH)',
-                   'f_mu (IR)',
-                   'mu parameter',
-                   'tau_V',
-                   'sSFR_0.1Gyr',
-                   'M(stars)',
-                   'Ldust',
-                   'T_C^ISM',
-                   'T_W^BC',
-                   'xi_C^tot',
-                   'xi_PAH^tot',
-                   'xi_MIR^tot',
-                   'xi_W^tot',
-                   'tau_V^ISM',
-                   'M(dust)',
-                   'SFR_0.1Gyr']
-
-NUMBER_PARAMETERS = 16
-NUMBER_IMAGES = 7
-HISTOGRAM_BLOCK_SIZE = 1000000
-MAX_X_Y_BLOCK = 1024
-
-INDEX_BEST_FIT = 0
-INDEX_PERCENTILE_50 = 1
-INDEX_HIGHEST_PROB_BIN = 2
-INDEX_PERCENTILE_2_5 = 3
-INDEX_PERCENTILE_16 = 4
-INDEX_PERCENTILE_84 = 5
-INDEX_PERCENTILE_97_5 = 6
-
-INDEX_F_MU_SFH = 0
-INDEX_F_MU_IR = 1
-INDEX_MU_PARAMETER = 2
-INDEX_TAU_V = 3
-INDEX_SSFR_0_1GYR = 4
-INDEX_M_STARS = 5
-INDEX_L_DUST = 6
-INDEX_T_C_ISM = 7
-INDEX_T_W_BC = 8
-INDEX_XI_C_TOT = 9
-INDEX_XI_PAH_TOT = 10
-INDEX_XI_MIR_TOT = 11
-INDEX_XI_W_TOT = 12
-INDEX_TAU_V_ISM = 13
-INDEX_M_DUST = 14
-INDEX_SFR_0_1GYR = 15
 
 data_type_area = numpy.dtype([
     ('area_id',     long),
@@ -161,6 +110,9 @@ data_type_pixel_filter = numpy.dtype([
 def store_area(connection, galaxy_id, group):
     """
     Store the areas associated with a galaxy
+    :param group:
+    :param galaxy_id: the galaxy id
+    :param connection:
     """
     LOG.info('Storing the areas')
     count = connection.execute(select([func.count(AREA.c.area_id)]).where(AREA.c.galaxy_id == galaxy_id).where(AREA.c.top_x >= 0)).first()[0]
@@ -231,6 +183,11 @@ def store_area(connection, galaxy_id, group):
 def store_area_user(connection, galaxy_id, group):
     """
     Store the areas associated with a galaxy
+
+    :param connection:
+    :param galaxy_id:
+    :param group:
+    :return:
     """
     LOG.info('Storing the area_users')
     count = connection.execute(select([func.count(AREA_USER.c.areauser_id)], from_obj=AREA_USER.join(AREA)).where(AREA.c.galaxy_id == galaxy_id)).first()[0]
@@ -249,6 +206,11 @@ def store_area_user(connection, galaxy_id, group):
 def store_fits_header(connection, galaxy_id, group):
     """
     Store the fits header data for a galaxy in the HDF5 file
+
+    :param connection:
+    :param galaxy_id:
+    :param group:
+    :return:
     """
     LOG.info('Storing the fits headers')
     count = connection.execute(select([func.count(FITS_HEADER.c.fitsheader_id)]).where(FITS_HEADER.c.galaxy_id == galaxy_id)).first()[0]
@@ -267,6 +229,11 @@ def store_fits_header(connection, galaxy_id, group):
 def store_image_filters(connection, galaxy_id, group):
     """
     Store the image filters used
+
+    :param connection:
+    :param galaxy_id:
+    :param group:
+    :return:
     """
     LOG.info('Storing the image filters')
     count = connection.execute(select([func.count(IMAGE_FILTERS_USED.c.image_filters_used_id)]).where(IMAGE_FILTERS_USED.c.galaxy_id == galaxy_id)).first()[0]
@@ -279,60 +246,6 @@ def store_image_filters(connection, galaxy_id, group):
                        image_filters_used[IMAGE_FILTERS_USED.c.filter_id_blue], )
         count += 1
     group.create_dataset('image_filters', data=data, compression='gzip')
-
-
-def get_chunks(dimension):
-    """
-    Break the dimension up into chunks
-    :param dimension:
-    :return: a list with the number of chunks
-
-    >>> get_chunks(1)
-    [0]
-    >>> get_chunks(10)
-    [0]
-    >>> get_chunks(1023)
-    [0]
-    >>> get_chunks(1024)
-    [0]
-    >>> get_chunks(1025)
-    [0, 1]
-    >>> get_chunks(2047)
-    [0, 1]
-    >>> get_chunks(2048)
-    [0, 1]
-    >>> get_chunks(2049)
-    [0, 1, 2]
-
-    """
-    return range(((dimension - 1) / MAX_X_Y_BLOCK) + 1)
-
-
-def get_size(block, dimension):
-    """
-    How big is this axis
-    :param block:
-    :param dimension:
-    :return:
-
-    >>> get_size(0, 50)
-    50
-    >>> get_size(0, 1024)
-    1024
-    >>> get_size(0, 2244)
-    1024
-    >>> get_size(1, 2244)
-    1024
-    >>> get_size(2, 2244)
-    196
-    """
-    elements = get_chunks(dimension)
-    if len(elements) == 1:
-        return dimension
-    elif block < len(elements) - 1:
-        return MAX_X_Y_BLOCK
-
-    return dimension - (block * MAX_X_Y_BLOCK)
 
 
 def area_intersects_block1(block_x, block_y, area_details):
@@ -365,10 +278,10 @@ def area_intersects_block1(block_x, block_y, area_details):
     y1 = area_details[1]
     x2 = area_details[2]
     y2 = area_details[3]
-    block_top_x = block_x * MAX_X_Y_BLOCK
-    block_top_y = block_y * MAX_X_Y_BLOCK
-    block_bottom_x = block_top_x + MAX_X_Y_BLOCK - 1
-    block_bottom_y = block_top_y + MAX_X_Y_BLOCK - 1
+    block_top_x = block_x * config.MAX_X_Y_BLOCK
+    block_top_y = block_y * config.MAX_X_Y_BLOCK
+    block_bottom_x = block_top_x + config.MAX_X_Y_BLOCK - 1
+    block_bottom_y = block_top_y + config.MAX_X_Y_BLOCK - 1
     LOG.info('x1: {0}, y1: {1}, x2: {2}, y2: {3} - btx: {4}, bty: {5}, bbx: {6}, bby: {7}'.format(x1, y1, x2, y2, block_top_x, block_top_y, block_bottom_x, block_bottom_y))
 
     separate = x2 < block_top_x or x1 > block_bottom_x or y1 > block_bottom_y or y2 < block_top_y
@@ -378,6 +291,7 @@ def area_intersects_block1(block_x, block_y, area_details):
 def area_intersects_block(connection, key, block_x, block_y, map_area_ids):
     """
     Is this area in the block we're working on?
+    :param map_area_ids:
     :param connection:
     :param key: the number before the
     :param block_x:
@@ -413,71 +327,48 @@ def load_map_areas(connection, map_areas, galaxy_id):
     LOG.info('Loaded the area details')
 
 
-def pixel_in_block(raw_x, raw_y, block_x, block_y):
-    """
-    Is the pixel inside the block we're processing
-
-    :param raw_x:
-    :param raw_y:
-    :param block_x:
-    :param block_y:
-    :return:
-    >>> pixel_in_block(0, 0, 0, 0)
-    True
-    >>> pixel_in_block(0, 0, 0, 1)
-    False
-    >>> pixel_in_block(0,0,1,0)
-    False
-    >>> pixel_in_block(1023,0,0,0)
-    True
-    >>> pixel_in_block(1024,0,0,0)
-    False
-    >>> pixel_in_block(1024,0,1,0)
-    True
-    >>> pixel_in_block(0,1024,0,1)
-    True
-    >>> pixel_in_block(1024,1024,0,1)
-    False
-    >>> pixel_in_block(1024,1024,1,0)
-    False
-    """
-    block_top_x = block_x * MAX_X_Y_BLOCK
-    block_top_y = block_y * MAX_X_Y_BLOCK
-    block_bottom_x = block_top_x + MAX_X_Y_BLOCK - 1
-    block_bottom_y = block_top_y + MAX_X_Y_BLOCK - 1
-    return block_top_x <= raw_x <= block_bottom_x and block_top_y <= raw_y <= block_bottom_y
-
-
 def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, number_filters, area_total, rad_area_total, int_flux_area_total, galaxy_id, map_parameter_name):
     """
     Store the pixel data
+    :param connection:
+    :param galaxy_file_name:
+    :param group:
+    :param dimension_x:
+    :param dimension_y:
+    :param number_filters:
+    :param area_total:
+    :param rad_area_total:
+    :param int_flux_area_total:
+    :param galaxy_id:
+    :param map_parameter_name:
+    :return:
     """
     LOG.info('Storing the pixel data for {0} - {1} areas to process'.format(galaxy_file_name, area_total))
-    group.attrs['PIXELS_MAX_X_Y_BLOCK'] = MAX_X_Y_BLOCK
-    group.attrs['PIXELS_DIM3_F_MU_SFH'] = INDEX_F_MU_SFH
-    group.attrs['PIXELS_DIM3_F_MU_IR'] = INDEX_F_MU_IR
-    group.attrs['PIXELS_DIM3_MU_PARAMETER'] = INDEX_MU_PARAMETER
-    group.attrs['PIXELS_DIM3_TAU_V'] = INDEX_TAU_V
-    group.attrs['PIXELS_DIM3_SSFR_0_1GYR'] = INDEX_SSFR_0_1GYR
-    group.attrs['PIXELS_DIM3_M_STARS'] = INDEX_M_STARS
-    group.attrs['PIXELS_DIM3_L_DUST'] = INDEX_L_DUST
-    group.attrs['PIXELS_DIM3_T_C_ISM'] = INDEX_T_C_ISM
-    group.attrs['PIXELS_DIM3_T_W_BC'] = INDEX_T_W_BC
-    group.attrs['PIXELS_DIM3_XI_C_TOT'] = INDEX_XI_C_TOT
-    group.attrs['PIXELS_DIM3_XI_PAH_TOT'] = INDEX_XI_PAH_TOT
-    group.attrs['PIXELS_DIM3_XI_MIR_TOT'] = INDEX_XI_MIR_TOT
-    group.attrs['PIXELS_DIM3_XI_W_TOT'] = INDEX_XI_W_TOT
-    group.attrs['PIXELS_DIM3_TAU_V_ISM'] = INDEX_TAU_V_ISM
-    group.attrs['PIXELS_DIM3_M_DUST'] = INDEX_M_DUST
-    group.attrs['PIXELS_DIM3_SFR_0_1GYR'] = INDEX_SFR_0_1GYR
+    group.attrs['PIXELS_MAX_X_Y_BLOCK'] = config.MAX_X_Y_BLOCK
+    group.attrs['PIXELS_DIM3_F_MU_SFH'] = config.INDEX_F_MU_SFH
+    group.attrs['PIXELS_DIM3_F_MU_IR'] = config.INDEX_F_MU_IR
+    group.attrs['PIXELS_DIM3_MU_PARAMETER'] = config.INDEX_MU_PARAMETER
+    group.attrs['PIXELS_DIM3_TAU_V'] = config.INDEX_TAU_V
+    group.attrs['PIXELS_DIM3_SSFR_0_1GYR'] = config.INDEX_SSFR_0_1GYR
+    group.attrs['PIXELS_DIM3_M_STARS'] = config.INDEX_M_STARS
+    group.attrs['PIXELS_DIM3_L_DUST'] = config.INDEX_L_DUST
+    group.attrs['PIXELS_DIM3_T_C_ISM'] = config.INDEX_T_C_ISM
+    group.attrs['PIXELS_DIM3_T_W_BC'] = config.INDEX_T_W_BC
+    group.attrs['PIXELS_DIM3_XI_C_TOT'] = config.INDEX_XI_C_TOT
+    group.attrs['PIXELS_DIM3_XI_PAH_TOT'] = config.INDEX_XI_PAH_TOT
+    group.attrs['PIXELS_DIM3_XI_MIR_TOT'] = config.INDEX_XI_MIR_TOT
+    group.attrs['PIXELS_DIM3_XI_W_TOT'] = config.INDEX_XI_W_TOT
+    group.attrs['PIXELS_DIM3_TAU_V_ISM'] = config.INDEX_TAU_V_ISM
+    group.attrs['PIXELS_DIM3_M_DUST'] = config.INDEX_M_DUST
+    group.attrs['PIXELS_DIM3_SFR_0_1GYR'] = config.INDEX_SFR_0_1GYR
 
-    group.attrs['PIXELS_DIM4_BEST_FIT'] = INDEX_BEST_FIT
-    group.attrs['PIXELS_DIM4_PERCENTILE_50'] = INDEX_PERCENTILE_50
-    group.attrs['PIXELS_DIM4_HIGHEST_PROB_BIN'] = INDEX_HIGHEST_PROB_BIN
-    group.attrs['PIXELS_DIM4_PERCENTILE_2_5'] = INDEX_PERCENTILE_2_5
-    group.attrs['PIXELS_DIM4_PERCENTILE_16'] = INDEX_PERCENTILE_16
-    group.attrs['PIXELS_DIM4_PERCENTILE_84'] = INDEX_PERCENTILE_84
-    group.attrs['PIXELS_DIM4_PERCENTILE_97_5'] = INDEX_PERCENTILE_97_5
+    group.attrs['PIXELS_DIM4_BEST_FIT'] = config.INDEX_BEST_FIT
+    group.attrs['PIXELS_DIM4_PERCENTILE_50'] = config.INDEX_PERCENTILE_50
+    group.attrs['PIXELS_DIM4_HIGHEST_PROB_BIN'] = config.INDEX_HIGHEST_PROB_BIN
+    group.attrs['PIXELS_DIM4_PERCENTILE_2_5'] = config.INDEX_PERCENTILE_2_5
+    group.attrs['PIXELS_DIM4_PERCENTILE_16'] = config.INDEX_PERCENTILE_16
+    group.attrs['PIXELS_DIM4_PERCENTILE_84'] = config.INDEX_PERCENTILE_84
+    group.attrs['PIXELS_DIM4_PERCENTILE_97_5'] = config.INDEX_PERCENTILE_97_5
 
     histogram_list = []
     keys = []
@@ -486,7 +377,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
     pixel_type = 0
     rad_pixel_count = 0
     int_flux_pixel_count = 0
-    
+
     area_count = 0
 
     special_group = None
@@ -498,9 +389,9 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
         # Get the number of radial pixels for this galaxy
         rad_pixels = connection.execute(select([func.count(PIXEL_RESULT.c.pxresult_id)]).where(PIXEL_RESULT.c.galaxy_id == galaxy_id).where(PIXEL_RESULT.c.x == -2)).first()[0]
 
-        rad_data = numpy.empty((1, rad_pixels, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
+        rad_data = numpy.empty((1, rad_pixels, config.NUMBER_PARAMETERS, config.NUMBER_IMAGES), dtype=numpy.float)
         rad_data.fill(numpy.NaN)
-    
+
         if special_group is None:
             special_group = group.create_group('special_pixels')
 
@@ -510,31 +401,31 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
         rad_pixel_details = rad_group.create_dataset(
             'pixel_details_0_0',
-            (1,rad_pixels,),
+            (1, rad_pixels,),
             dtype=data_type_pixel,
             compression='gzip')
 
         rad_pixel_parameters = rad_group.create_dataset(
             'pixel_parameters_0_0',
-            (1,rad_pixels, NUMBER_PARAMETERS),
+            (1, rad_pixels, config.NUMBER_PARAMETERS),
             dtype=data_type_pixel_parameter,
             compression='gzip')
 
         # We can't use the z dimension as blank layers show up in the SED file
         rad_pixel_filter = rad_group.create_dataset(
             'pixel_filters_0_0',
-            (1,rad_pixels, number_filters),
+            (1, rad_pixels, number_filters),
             dtype=data_type_pixel_filter,
             compression='gzip')
 
         rad_pixel_histograms_grid = rad_group.create_dataset(
             'pixel_histograms_0_0',
-            (1,rad_pixels, NUMBER_PARAMETERS),
+            (1, rad_pixels, config.NUMBER_PARAMETERS),
             dtype=data_type_block_details,
             compression='gzip')
-            
+
         rad_histogram_group = rad_group.create_group('histrogram_blocks')
-        rad_histogram_data = rad_histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
+        rad_histogram_data = rad_histogram_group.create_dataset('block_1', (config.HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
 
         rad_histogram_block_id = 1
         rad_histogram_block_index = 0
@@ -551,37 +442,41 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
         int_group.attrs['dimension_x'] = 1
         int_group.attrs['dimension_y'] = 1
 
-        int_flux_data = numpy.empty((1, 1, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
+        int_flux_data = numpy.empty((1, 1, config.NUMBER_PARAMETERS, config.NUMBER_IMAGES), dtype=numpy.float)
         int_flux_data.fill(numpy.NaN)
 
         int_flux_pixel_details = int_group.create_dataset(
             'pixel_details_0_0',
-            (1,1,),
+            (1, 1,),
             dtype=data_type_pixel,
             compression='gzip')
 
         int_flux_pixel_parameters = int_group.create_dataset(
             'pixel_parameters_0_0',
-            (1,1, NUMBER_PARAMETERS),
+            (1, 1, config.NUMBER_PARAMETERS),
             dtype=data_type_pixel_parameter,
             compression='gzip')
 
         # We can't use the z dimension as blank layers show up in the SED file
         int_flux_pixel_filter = int_group.create_dataset(
             'pixel_filters_0_0',
-            (1,1, number_filters),
+            (1, 1, number_filters),
             dtype=data_type_pixel_filter,
             compression='gzip')
 
         int_flux_pixel_histograms_grid = int_group.create_dataset(
             'pixel_histograms_0_0',
-            (1,1, NUMBER_PARAMETERS),
+            (1, 1, config.NUMBER_PARAMETERS),
             dtype=data_type_block_details,
             compression='gzip')
 
         # A single pixel histogram?
         int_flux_histogram_group = int_group.create_group('histrogram_blocks')
-        int_flux_histogram_data = int_flux_histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
+        int_flux_histogram_data = int_flux_histogram_group.create_dataset(
+            'block_1',
+            (config.HISTOGRAM_BLOCK_SIZE,),
+            dtype=data_type_pixel_histogram,
+            compression='gzip')
 
         int_flux_histogram_block_id = 1
         int_flux_histogram_block_index = 0
@@ -601,7 +496,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
         keys.append(key)
 
     histogram_group = group.create_group('histogram_blocks')
-    histogram_data = histogram_group.create_dataset('block_1', (HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
+    histogram_data = histogram_group.create_dataset('block_1', (config.HISTOGRAM_BLOCK_SIZE,), dtype=data_type_pixel_histogram, compression='gzip')
     # At this point, the containers for all histograms have been built
     for block_x in get_chunks(dimension_x):  # Loop all pixels in the block.
         for block_y in get_chunks(dimension_y):
@@ -613,7 +508,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
             size_y = get_size(block_y, dimension_y)
 
             # Create the arrays for this block
-            data = numpy.empty((size_x, size_y, NUMBER_PARAMETERS, NUMBER_IMAGES), dtype=numpy.float)
+            data = numpy.empty((size_x, size_y, config.NUMBER_PARAMETERS, config.NUMBER_IMAGES), dtype=numpy.float)
             data.fill(numpy.NaN)
 
             data_pixel_details = group.create_dataset(
@@ -624,7 +519,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
             data_pixel_parameters = group.create_dataset(
                 'pixel_parameters_{0}_{1}'.format(block_x, block_y),
-                (size_x, size_y, NUMBER_PARAMETERS),
+                (size_x, size_y, config.NUMBER_PARAMETERS),
                 dtype=data_type_pixel_parameter,
                 compression='gzip')
 
@@ -637,7 +532,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
             data_pixel_histograms_grid = group.create_dataset(
                 'pixel_histograms_grid_{0}_{1}'.format(block_x, block_y),
-                (size_x, size_y, NUMBER_PARAMETERS),
+                (size_x, size_y, config.NUMBER_PARAMETERS),
                 dtype=data_type_block_details,
                 compression='gzip')
 
@@ -653,7 +548,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                 # Now process the file
                 start_time = time.time()
                 LOG.info('Processing file {0} / {1}'.format(key.key, len(keys)))
-                temp_file = os.path.join(POGS_TMP, 'temp.sed')
+                temp_file = os.path.join(config.POGS_TMP, 'temp.sed')
                 key.get_contents_to_filename(temp_file)
 
                 # .sed files are usually compressed even though they don't have the .gz extention
@@ -689,26 +584,26 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                             pxresult_id = point_name[3:].rstrip()
                             (raw_x, raw_y, area_id) = get_pixel_result(connection, pxresult_id)
                             # LOG.info('rawx = {0} rawy = {1}'.format(raw_x, raw_y))
-                            
+
                             if raw_x == -1:
                                 # this pixel is for integrated flux
                                 pixel_type = 1
                                 LOG.info('Int flux {0}:{1}'.format(raw_x, raw_y))
                             elif raw_x == -2:
-                                # this pixel is for radial 
+                                # this pixel is for radial
                                 pixel_type = 2
                                 LOG.info('Radial pixel {0}:{1}'.format(raw_x, raw_y))
                             else:
                                 # just a standard pixel
                                 pixel_type = 0
-                              
+
                             if pixel_type == 0:  # Only standard pixels are in blocks
                                 # The pixel could be out of this block as the cutting up is not uniform
                                 if pixel_in_block(raw_x, raw_y, block_x, block_y):
                                     # correct x & y for this block
-                                    x = raw_x - (block_x * MAX_X_Y_BLOCK)
-                                    y = raw_y - (block_y * MAX_X_Y_BLOCK)
-                                    #LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
+                                    x = raw_x - (block_x * config.MAX_X_Y_BLOCK)
+                                    y = raw_y - (block_y * config.MAX_X_Y_BLOCK)
+                                    # LOG.info('Processing pixel {0}:{1} or {2}:{3} - {4}:{5}'.format(raw_x, raw_y, x, y, block_x, block_y))
                                     line_number = 0
                                     percentiles_next = False
                                     histogram_next = False
@@ -716,12 +611,12 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                     skynet_next2 = False
                                     skip_this_pixel = False
                                     pixel_count += 1
-                                
+
                                 else:
                                     # TODO next line commented out
                                     LOG.info('Skipping pixel {0}:{1} - {2}:{3}'.format(raw_x, raw_y, block_x, block_y))
                                     skip_this_pixel = True
-                                    
+
                             else:
                                 # Still need these set for non-standard pixels
                                 x = 0
@@ -732,7 +627,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 skynet_next1 = False
                                 skynet_next2 = False
                                 skip_this_pixel = False
-                                
+
                                 if pixel_type == 1:
                                     # There should only ever be one int flux pixel. If there is more than one, it's either an error or a new system has been implemented
                                     if int_flux_pixel_count > 0:
@@ -742,7 +637,7 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                         int_flux_pixel_count += 1
                                 elif pixel_type == 2:
                                     rad_pixel_count += 1
-                                    
+
                         elif skip_this_pixel:
                             # Do nothing as we're skipping this pixel
                             pass
@@ -787,58 +682,58 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                 # Work out where this data needs to go.
                                 # A lot of code copy-paste, but it's the smoothest and quickest way of doing this.
                                 if pixel_type == 0:
-                                    data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
-                                    data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
-                                    data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
-                                    data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
-                                    data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
-                                    data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
-                                    data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
-                                    data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
-                                    data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
-                                    data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
-                                    data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
-                                    data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
-                                    data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
-                                    data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
-                                    data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
-                                    data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
+                                    data[x, y, config.INDEX_F_MU_SFH, config.INDEX_BEST_FIT] = float(values[0])
+                                    data[x, y, config.INDEX_F_MU_IR, config.INDEX_BEST_FIT] = float(values[1])
+                                    data[x, y, config.INDEX_MU_PARAMETER, config.INDEX_BEST_FIT] = float(values[2])
+                                    data[x, y, config.INDEX_TAU_V, config.INDEX_BEST_FIT] = float(values[3])
+                                    data[x, y, config.INDEX_SSFR_0_1GYR, config.INDEX_BEST_FIT] = float(values[4])
+                                    data[x, y, config.INDEX_M_STARS, config.INDEX_BEST_FIT] = float(values[5])
+                                    data[x, y, config.INDEX_L_DUST, config.INDEX_BEST_FIT] = float(values[6])
+                                    data[x, y, config.INDEX_T_W_BC, config.INDEX_BEST_FIT] = float(values[7])
+                                    data[x, y, config.INDEX_T_C_ISM, config.INDEX_BEST_FIT] = float(values[8])
+                                    data[x, y, config.INDEX_XI_C_TOT, config.INDEX_BEST_FIT] = float(values[9])
+                                    data[x, y, config.INDEX_XI_PAH_TOT, config.INDEX_BEST_FIT] = float(values[10])
+                                    data[x, y, config.INDEX_XI_MIR_TOT, config.INDEX_BEST_FIT] = float(values[11])
+                                    data[x, y, config.INDEX_XI_W_TOT, config.INDEX_BEST_FIT] = float(values[12])
+                                    data[x, y, config.INDEX_TAU_V_ISM, config.INDEX_BEST_FIT] = float(values[13])
+                                    data[x, y, config.INDEX_M_DUST, config.INDEX_BEST_FIT] = float(values[14])
+                                    data[x, y, config.INDEX_SFR_0_1GYR, config.INDEX_BEST_FIT] = float(values[15])
 
                                 elif pixel_type == 2:
-                                    rad_data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
-                                    rad_data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
-                                    rad_data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
-                                    rad_data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
-                                    rad_data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
-                                    rad_data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
-                                    rad_data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
-                                    rad_data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
-                                    rad_data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
-                                    rad_data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
-                                    rad_data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
-                                    rad_data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
-                                    rad_data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
-                                    rad_data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
-                                    rad_data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
-                                    rad_data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
+                                    rad_data[x, y, config.INDEX_F_MU_SFH, config.INDEX_BEST_FIT] = float(values[0])
+                                    rad_data[x, y, config.INDEX_F_MU_IR, config.INDEX_BEST_FIT] = float(values[1])
+                                    rad_data[x, y, config.INDEX_MU_PARAMETER, config.INDEX_BEST_FIT] = float(values[2])
+                                    rad_data[x, y, config.INDEX_TAU_V, config.INDEX_BEST_FIT] = float(values[3])
+                                    rad_data[x, y, config.INDEX_SSFR_0_1GYR, config.INDEX_BEST_FIT] = float(values[4])
+                                    rad_data[x, y, config.INDEX_M_STARS, config.INDEX_BEST_FIT] = float(values[5])
+                                    rad_data[x, y, config.INDEX_L_DUST, config.INDEX_BEST_FIT] = float(values[6])
+                                    rad_data[x, y, config.INDEX_T_W_BC, config.INDEX_BEST_FIT] = float(values[7])
+                                    rad_data[x, y, config.INDEX_T_C_ISM, config.INDEX_BEST_FIT] = float(values[8])
+                                    rad_data[x, y, config.INDEX_XI_C_TOT, config.INDEX_BEST_FIT] = float(values[9])
+                                    rad_data[x, y, config.INDEX_XI_PAH_TOT, config.INDEX_BEST_FIT] = float(values[10])
+                                    rad_data[x, y, config.INDEX_XI_MIR_TOT, config.INDEX_BEST_FIT] = float(values[11])
+                                    rad_data[x, y, config.INDEX_XI_W_TOT, config.INDEX_BEST_FIT] = float(values[12])
+                                    rad_data[x, y, config.INDEX_TAU_V_ISM, config.INDEX_BEST_FIT] = float(values[13])
+                                    rad_data[x, y, config.INDEX_M_DUST, config.INDEX_BEST_FIT] = float(values[14])
+                                    rad_data[x, y, config.INDEX_SFR_0_1GYR, config.INDEX_BEST_FIT] = float(values[15])
 
                                 elif pixel_type == 1:
-                                    int_flux_data[x, y, INDEX_F_MU_SFH, INDEX_BEST_FIT] = float(values[0])
-                                    int_flux_data[x, y, INDEX_F_MU_IR, INDEX_BEST_FIT] = float(values[1])
-                                    int_flux_data[x, y, INDEX_MU_PARAMETER, INDEX_BEST_FIT] = float(values[2])
-                                    int_flux_data[x, y, INDEX_TAU_V, INDEX_BEST_FIT] = float(values[3])
-                                    int_flux_data[x, y, INDEX_SSFR_0_1GYR, INDEX_BEST_FIT] = float(values[4])
-                                    int_flux_data[x, y, INDEX_M_STARS, INDEX_BEST_FIT] = float(values[5])
-                                    int_flux_data[x, y, INDEX_L_DUST, INDEX_BEST_FIT] = float(values[6])
-                                    int_flux_data[x, y, INDEX_T_W_BC, INDEX_BEST_FIT] = float(values[7])
-                                    int_flux_data[x, y, INDEX_T_C_ISM, INDEX_BEST_FIT] = float(values[8])
-                                    int_flux_data[x, y, INDEX_XI_C_TOT, INDEX_BEST_FIT] = float(values[9])
-                                    int_flux_data[x, y, INDEX_XI_PAH_TOT, INDEX_BEST_FIT] = float(values[10])
-                                    int_flux_data[x, y, INDEX_XI_MIR_TOT, INDEX_BEST_FIT] = float(values[11])
-                                    int_flux_data[x, y, INDEX_XI_W_TOT, INDEX_BEST_FIT] = float(values[12])
-                                    int_flux_data[x, y, INDEX_TAU_V_ISM, INDEX_BEST_FIT] = float(values[13])
-                                    int_flux_data[x, y, INDEX_M_DUST, INDEX_BEST_FIT] = float(values[14])
-                                    int_flux_data[x, y, INDEX_SFR_0_1GYR, INDEX_BEST_FIT] = float(values[15])
+                                    int_flux_data[x, y, config.INDEX_F_MU_SFH, config.INDEX_BEST_FIT] = float(values[0])
+                                    int_flux_data[x, y, config.INDEX_F_MU_IR, config.INDEX_BEST_FIT] = float(values[1])
+                                    int_flux_data[x, y, config.INDEX_MU_PARAMETER, config.INDEX_BEST_FIT] = float(values[2])
+                                    int_flux_data[x, y, config.INDEX_TAU_V, config.INDEX_BEST_FIT] = float(values[3])
+                                    int_flux_data[x, y, config.INDEX_SSFR_0_1GYR, config.INDEX_BEST_FIT] = float(values[4])
+                                    int_flux_data[x, y, config.INDEX_M_STARS, config.INDEX_BEST_FIT] = float(values[5])
+                                    int_flux_data[x, y, config.INDEX_L_DUST, config.INDEX_BEST_FIT] = float(values[6])
+                                    int_flux_data[x, y, config.INDEX_T_W_BC, config.INDEX_BEST_FIT] = float(values[7])
+                                    int_flux_data[x, y, config.INDEX_T_C_ISM, config.INDEX_BEST_FIT] = float(values[8])
+                                    int_flux_data[x, y, config.INDEX_XI_C_TOT, config.INDEX_BEST_FIT] = float(values[9])
+                                    int_flux_data[x, y, config.INDEX_XI_PAH_TOT, config.INDEX_BEST_FIT] = float(values[10])
+                                    int_flux_data[x, y, config.INDEX_XI_MIR_TOT, config.INDEX_BEST_FIT] = float(values[11])
+                                    int_flux_data[x, y, config.INDEX_XI_W_TOT, config.INDEX_BEST_FIT] = float(values[12])
+                                    int_flux_data[x, y, config.INDEX_TAU_V_ISM, config.INDEX_BEST_FIT] = float(values[13])
+                                    int_flux_data[x, y, config.INDEX_M_DUST, config.INDEX_BEST_FIT] = float(values[14])
+                                    int_flux_data[x, y, config.INDEX_SFR_0_1GYR, config.INDEX_BEST_FIT] = float(values[15])
 
                             elif line_number == 13:
                                 filter_layer = 0
@@ -895,13 +790,13 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                         data_pixel_histograms_grid[x, y, parameter_name_id - 1] = (histogram_block_id, histogram_block_index, len(histogram_list))
                                         for pixel_histogram_item in histogram_list:
                                             # Need a new histogram container as the current one is full.
-                                            if histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
+                                            if histogram_block_index >= config.HISTOGRAM_BLOCK_SIZE:
 
                                                 histogram_block_id += 1
                                                 histogram_block_index = 0
                                                 histogram_data = histogram_group.create_dataset(
                                                     'block_{0}'.format(histogram_block_id),
-                                                    (HISTOGRAM_BLOCK_SIZE,),
+                                                    (config.HISTOGRAM_BLOCK_SIZE,),
                                                     dtype=data_type_pixel_histogram,
                                                     compression='gzip')
 
@@ -918,13 +813,13 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                         rad_pixel_histograms_grid[x, y, parameter_name_id - 1] = (rad_histogram_block_id, rad_histogram_block_index, len(rad_histogram_list))
                                         for rad_pixel_histogram_item in rad_histogram_list:
                                             # On the off chance we have a lot of radial pixels, we might need another histogram block.
-                                            if rad_histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
+                                            if rad_histogram_block_index >= config.HISTOGRAM_BLOCK_SIZE:
 
                                                 rad_histogram_block_id += 1
                                                 rad_histogram_block_index = 0
                                                 rad_histogram_data = rad_histogram_group.create_dataset(
                                                     'block_{0}'.format(rad_histogram_block_id),
-                                                    (HISTOGRAM_BLOCK_SIZE,),
+                                                    (config.HISTOGRAM_BLOCK_SIZE,),
                                                     dtype=data_type_pixel_histogram,
                                                     compression='gzip')
 
@@ -940,13 +835,13 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
                                         int_flux_pixel_histograms_grid[x, y, parameter_name_id - 1] = (int_flux_histogram_block_id, int_flux_histogram_block_index, len(int_flux_histogram_list))
                                         for int_flux_pixel_histogram_item in int_flux_histogram_list:
                                             # We should literally never need more than one histogram for the int flux pixel, but it never hurts to be careful.
-                                            if int_flux_histogram_block_index >= HISTOGRAM_BLOCK_SIZE:
+                                            if int_flux_histogram_block_index >= config.HISTOGRAM_BLOCK_SIZE:
 
                                                 int_flux_histogram_block_id += 1
                                                 int_flux_histogram_block_index = 0
                                                 int_flux_histogram_data = int_flux_histogram_group.create_dataset(
                                                     'block_{0}'.format(int_flux_histogram_block_id),
-                                                    (HISTOGRAM_BLOCK_SIZE,),
+                                                    (config.HISTOGRAM_BLOCK_SIZE,),
                                                     dtype=data_type_pixel_histogram,
                                                     compression='gzip')
 
@@ -974,31 +869,31 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                                     # Work out where this stuff needs to go.
                                     if pixel_type == 0:
-                                        data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
-                                        data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
-                                        data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
-                                        data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
-                                        data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+                                        data[x, y, z, config.INDEX_PERCENTILE_2_5] = float(values[0])
+                                        data[x, y, z, config.INDEX_PERCENTILE_16] = float(values[1])
+                                        data[x, y, z, config.INDEX_PERCENTILE_50] = float(values[2])
+                                        data[x, y, z, config.INDEX_PERCENTILE_84] = float(values[3])
+                                        data[x, y, z, config.INDEX_PERCENTILE_97_5] = float(values[4])
                                     elif pixel_type == 2:
 
-                                        rad_data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
-                                        rad_data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
-                                        rad_data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
-                                        rad_data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
-                                        rad_data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+                                        rad_data[x, y, z, config.INDEX_PERCENTILE_2_5] = float(values[0])
+                                        rad_data[x, y, z, config.INDEX_PERCENTILE_16] = float(values[1])
+                                        rad_data[x, y, z, config.INDEX_PERCENTILE_50] = float(values[2])
+                                        rad_data[x, y, z, config.INDEX_PERCENTILE_84] = float(values[3])
+                                        rad_data[x, y, z, config.INDEX_PERCENTILE_97_5] = float(values[4])
                                     elif pixel_type == 1:
 
-                                        int_flux_data[x, y, z, INDEX_PERCENTILE_2_5] = float(values[0])
-                                        int_flux_data[x, y, z, INDEX_PERCENTILE_16] = float(values[1])
-                                        int_flux_data[x, y, z, INDEX_PERCENTILE_50] = float(values[2])
-                                        int_flux_data[x, y, z, INDEX_PERCENTILE_84] = float(values[3])
-                                        int_flux_data[x, y, z, INDEX_PERCENTILE_97_5] = float(values[4])
+                                        int_flux_data[x, y, z, config.INDEX_PERCENTILE_2_5] = float(values[0])
+                                        int_flux_data[x, y, z, config.INDEX_PERCENTILE_16] = float(values[1])
+                                        int_flux_data[x, y, z, config.INDEX_PERCENTILE_50] = float(values[2])
+                                        int_flux_data[x, y, z, config.INDEX_PERCENTILE_84] = float(values[3])
+                                        int_flux_data[x, y, z, config.INDEX_PERCENTILE_97_5] = float(values[4])
 
                                     percentiles_next = False
                                 elif histogram_next:
                                     values = line.split()
                                     hist_value = float(values[1])
-                                    if hist_value > MIN_HIST_VALUE and not math.isnan(hist_value):
+                                    if hist_value > config.MIN_HIST_VALUE and not math.isnan(hist_value):
                                         if pixel_type == 0:
                                             histogram_list.append((float(values[0]), hist_value))
                                         elif pixel_type == 2:
@@ -1061,21 +956,21 @@ def store_pixels(connection, galaxy_file_name, group, dimension_x, dimension_y, 
 
                                     # Work out where this stuff needs to go.
                                     if pixel_type == 0:
-                                        data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
+                                        data[x, y, z, config.INDEX_HIGHEST_PROB_BIN] = high_prob_bin
                                         data_pixel_parameters[x, y, z] = (
                                             first_prob_bin,
                                             last_prob_bin,
                                             bin_step,
                                         )
                                     elif pixel_type == 2:
-                                        rad_data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
+                                        rad_data[x, y, z, config.INDEX_HIGHEST_PROB_BIN] = high_prob_bin
                                         rad_pixel_parameters[x, y, z] = (
                                             first_prob_bin,
                                             last_prob_bin,
                                             bin_step,
                                         )
                                     elif pixel_type == 1:
-                                        int_flux_data[x, y, z, INDEX_HIGHEST_PROB_BIN] = high_prob_bin
+                                        int_flux_data[x, y, z, config.INDEX_HIGHEST_PROB_BIN] = high_prob_bin
                                         int_flux_pixel_parameters[x, y, z] = (
                                             first_prob_bin,
                                             last_prob_bin,
@@ -1109,6 +1004,9 @@ def is_gzip(file_to_check):
     """
     Test if the file is a gzip file by opening it and reading the magic number
 
+    :param file_to_check:
+    :return:
+
     >>> is_gzip('/Users/kevinvinsen/Downloads/boinc-magphys/NGC1209__wu719/NGC1209__wu719_0_0.gzip')
     True
     >>> is_gzip('/Users/kevinvinsen/Downloads/boinc-magphys/NGC1209__wu719/NGC1209__wu719_1_0.gzip')
@@ -1139,6 +1037,9 @@ def is_gzip(file_to_check):
 def get_pixel_result(connection, pxresult_id):
     """
     Get the pixel result row from the database
+    :param connection:
+    :param pxresult_id:
+    :return:
     """
     pixel_result = connection.execute(select([PIXEL_RESULT]).where(PIXEL_RESULT.c.pxresult_id == pxresult_id)).first()
 
@@ -1170,6 +1071,8 @@ def archive_to_hdf5(connection, modulus, remainder):
     Archive data to an HDF5 file
 
     :param connection:
+    :param modulus:
+    :param remainder:
     :return:
     """
     # Load the parameter name map
@@ -1179,7 +1082,7 @@ def archive_to_hdf5(connection, modulus, remainder):
 
     # Look in the database for the galaxies
     galaxy_ids = []
-    for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == PROCESSED).order_by(GALAXY.c.galaxy_id)):
+    for galaxy in connection.execute(select([GALAXY]).where(GALAXY.c.status_id == config.PROCESSED).order_by(GALAXY.c.galaxy_id)):
         if modulus is None or int(galaxy[GALAXY.c.galaxy_id]) % modulus == remainder:
             galaxy_ids.append(galaxy[GALAXY.c.galaxy_id])
 
@@ -1199,7 +1102,7 @@ def archive_to_hdf5(connection, modulus, remainder):
 
             # Copy the galaxy details
             galaxy_file_name = get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])
-            filename = os.path.join(HDF5_OUTPUT_DIRECTORY, '{0}.hdf5'.format(galaxy_file_name))
+            filename = os.path.join(config.HDF5_OUTPUT_DIRECTORY, '{0}.hdf5'.format(galaxy_file_name))
 
             h5_file = h5py.File(filename, 'w')
 
@@ -1224,7 +1127,7 @@ def archive_to_hdf5(connection, modulus, remainder):
             galaxy_group.attrs['sigma'] = float(galaxy[GALAXY.c.sigma])
             galaxy_group.attrs['pixel_count'] = galaxy[GALAXY.c.pixel_count]
             galaxy_group.attrs['pixels_processed'] = galaxy[GALAXY.c.pixels_processed]
-            galaxy_group.attrs['output_format'] = OUTPUT_FORMAT_1_04
+            galaxy_group.attrs['output_format'] = config.OUTPUT_FORMAT_1_04
 
             galaxy_id_aws = galaxy[GALAXY.c.galaxy_id]
 
@@ -1256,7 +1159,7 @@ def archive_to_hdf5(connection, modulus, remainder):
             h5_file.close()
 
             # Move the file
-            to_store = os.path.join(HDF5_OUTPUT_DIRECTORY, 'to_store')
+            to_store = os.path.join(config.HDF5_OUTPUT_DIRECTORY, 'to_store')
             LOG.info('Moving the file %s to %s', filename, to_store)
             if not os.path.exists(to_store):
                 os.makedirs(to_store)
@@ -1270,7 +1173,7 @@ def archive_to_hdf5(connection, modulus, remainder):
 
             shutil.move(filename, to_store)
 
-            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=ARCHIVED, status_time=datetime.datetime.now()))
+            connection.execute(GALAXY.update().where(GALAXY.c.galaxy_id == galaxy_id1).values(status_id=config.ARCHIVED, status_time=datetime.datetime.now()))
 
             end_time = time.time()
             LOG.info('Galaxy with galaxy_id of %d was archived.', galaxy_id1)

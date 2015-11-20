@@ -5,7 +5,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012-2013
+#    Copyright by UWA, 2012-2016
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -50,15 +50,22 @@ def get_hdf5_from_s3(galaxy, directory):
             # file is archived
             if s3_helper.file_restoring(bucket_name, key):
                 # if file is restoring, just need to wait for it
-                LOG.info('Galaxy {0} is still restoring from glacier'.format(galaxy[GALAXY.c.name]))
+                LOG.info(
+                    'Galaxy {0} ({1}) is still restoring from glacier'.format(
+                        galaxy[GALAXY.c.name],
+                        galaxy[GALAXY.c.run_id]
+                    )
+                )
             else:
                 # if file is not restoring, need to request.
-                LOG.info('Making request for archived galaxy {0}'.format(galaxy[GALAXY.c.name]))
+                LOG.info('Making request for archived galaxy {0} ({1})'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id]))
                 s3_helper.restore_archived_file(bucket_name, key, days=10)
         else:
             # file is not archived
-            LOG.info('Galaxy {0} is available in s3'.format(galaxy[GALAXY.c.name]))
-            filename = os.path.join(directory, get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])) + '.hdf5'
+            LOG.info('Galaxy {0} ({1}) is available in s3'.format(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id]))
+            filename = os.path.join(
+                directory,
+                get_galaxy_file_name(galaxy[GALAXY.c.name], galaxy[GALAXY.c.run_id], galaxy[GALAXY.c.galaxy_id])) + '.hdf5'
             s3_helper.get_file_from_bucket(bucket_name=bucket_name, key_name=key, file_name=filename)
 
     else:
@@ -102,6 +109,7 @@ def main():
 
     if os.path.exists(args.directory) and os.path.isdir(args.directory):
         process_galaxies(args)
+        LOG.info('All done')
     else:
         LOG.error('The directory {0} does not exist'.format(args.directory))
 

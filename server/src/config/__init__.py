@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012-2013
+#    Copyright by UWA, 2012-2016
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -113,6 +113,58 @@ if exists(config_file_name):
 
 # Any probability in the pixel histogram less than this is considered to be 0 and ignored
 MIN_HIST_VALUE = 0.01
+OUTPUT_FORMAT_1_00 = 'Version 1.00'
+OUTPUT_FORMAT_1_01 = 'Version 1.01'
+OUTPUT_FORMAT_1_02 = 'Version 1.02'
+OUTPUT_FORMAT_1_03 = 'Version 1.03'
+OUTPUT_FORMAT_1_04 = 'Version 1.04'
+
+PARAMETER_TYPES = ['f_mu (SFH)',
+                   'f_mu (IR)',
+                   'mu parameter',
+                   'tau_V',
+                   'sSFR_0.1Gyr',
+                   'M(stars)',
+                   'Ldust',
+                   'T_C^ISM',
+                   'T_W^BC',
+                   'xi_C^tot',
+                   'xi_PAH^tot',
+                   'xi_MIR^tot',
+                   'xi_W^tot',
+                   'tau_V^ISM',
+                   'M(dust)',
+                   'SFR_0.1Gyr']
+
+NUMBER_PARAMETERS = 16
+NUMBER_IMAGES = 7
+HISTOGRAM_BLOCK_SIZE = 1000000
+MAX_X_Y_BLOCK = 1024
+
+INDEX_BEST_FIT = 0
+INDEX_PERCENTILE_50 = 1
+INDEX_HIGHEST_PROB_BIN = 2
+INDEX_PERCENTILE_2_5 = 3
+INDEX_PERCENTILE_16 = 4
+INDEX_PERCENTILE_84 = 5
+INDEX_PERCENTILE_97_5 = 6
+
+INDEX_F_MU_SFH = 0
+INDEX_F_MU_IR = 1
+INDEX_MU_PARAMETER = 2
+INDEX_TAU_V = 3
+INDEX_SSFR_0_1GYR = 4
+INDEX_M_STARS = 5
+INDEX_L_DUST = 6
+INDEX_T_C_ISM = 7
+INDEX_T_W_BC = 8
+INDEX_XI_C_TOT = 9
+INDEX_XI_PAH_TOT = 10
+INDEX_XI_MIR_TOT = 11
+INDEX_XI_W_TOT = 12
+INDEX_TAU_V_ISM = 13
+INDEX_M_DUST = 14
+INDEX_SFR_0_1GYR = 15
 
 ############### DB Settings ###############
 COMPUTING = 0

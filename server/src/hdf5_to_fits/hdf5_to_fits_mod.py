@@ -4,7 +4,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012-2015
+#    Copyright by UWA, 2012-2016
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -38,9 +38,8 @@ import uuid
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from sqlalchemy import select
-from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_03, get_chunks, OUTPUT_FORMAT_1_00, get_size, MAX_X_Y_BLOCK
-from archive.archive_hdf5_mod import OUTPUT_FORMAT_1_04 # TODO move to normal hdf5_to_fits_mod.py file
-from config import DELETED, STORED, GALAXY_EMAIL_THRESHOLD
+from archive.archive_common import get_chunks, get_size
+from config import DELETED, STORED, GALAXY_EMAIL_THRESHOLD, OUTPUT_FORMAT_1_04, OUTPUT_FORMAT_1_03, OUTPUT_FORMAT_1_00, MAX_X_Y_BLOCK
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY, HDF5_REQUEST_PIXEL_TYPE, HDF5_PIXEL_TYPE
 from utils.logging_helper import config_logger
 from utils.name_builder import get_key_hdf5, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url, get_galaxy_file_name, get_saved_files_bucket
@@ -373,6 +372,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
             result = HDF5ToFitsResult()
             results.append(result)
             connection.execute(HDF5_REQUEST_GALAXY.update().where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).values(state=1))
+            # noinspection PyBroadException
             try:
                 galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
                 result.galaxy_name = galaxy[GALAXY.c.name]
@@ -398,74 +398,18 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                             if not os.path.exists(rad_output):
                                 os.mkdir(rad_output)
 
-                            h5_file = h5py.File(tmp_file, 'r')
-                            galaxy_group = h5_file['galaxy']
-
-                            file_names = []
-                            int_folder_added = False
-                            rad_folder_added = False
-
-                            # Get each feature, then each layer and finally each pixel type.
-                            for feature in features:
-                                for layer in layers:
-                                    for pixel_type in pixel_types:
-                                        LOG.info('Feature: {0}. Layer: {1}. Pixel Type: {2}'.format(feature, layer, pixel_type))
-                                        try:
-                                            if pixel_type == TYPE_NORMAL:
-                                                pixel_group = galaxy_group['pixel']
-
-                                                file_names.append(
-                                                    build_fits_image(
-                                                        feature,
-                                                        layer,
-                                                        output_dir,
-                                                        galaxy_group,
-                                                        galaxy_group.attrs['dimension_x'],
-                                                        galaxy_group.attrs['dimension_y'],
-                                                        pixel_group, galaxy[GALAXY.c.name]
-                                                    )
-                                                )
-
-                                            elif pixel_type == TYPE_INT:
-                                                pixel_group = galaxy_group['pixel']['special_pixels']['int_flux']  # galaxy/pixel/special_pixels/int_flux
-
-                                                build_fits_image(
-                                                    feature,
-                                                    layer,
-                                                    int_flux_output,
-                                                    galaxy_group,
-                                                    pixel_group.attrs['dimension_x'],
-                                                    pixel_group.attrs['dimension_y'],
-                                                    pixel_group,
-                                                    galaxy[GALAXY.c.name]
-                                                )
-                                                int_folder_added = True
-
-                                            elif pixel_type == TYPE_RAD:
-                                                pixel_group = galaxy_group['pixel']['special_pixels']['rad']  # galaxy/pixel/special_pixels/rad
-
-                                                build_fits_image(
-                                                    feature,
-                                                    layer,
-                                                    rad_output,
-                                                    galaxy_group,
-                                                    pixel_group.attrs['dimension_x'],
-                                                    pixel_group.attrs['dimension_y'],
-                                                    pixel_group,
-                                                    galaxy[GALAXY.c.name]
-                                                )
-                                                rad_folder_added = True
-
-                                        except KeyError as e:
-                                            LOG.error('Request for pixel type that this galaxy does not have!')
-                                            LOG.error('{0}'.format(str(e)))
-                                            result.error = 'Cannot find pixel type {0} for galaxy {0}'.format(pixel_type, galaxy[GALAXY.c.galaxy_id])
-
-                            if int_folder_added:
-                                file_names.append(int_flux_output)
-
-                            if rad_folder_added:
-                                file_names.append(rad_output)
+                            file_names = process_hdf5_file(
+                                tmp_file,
+                                galaxy[GALAXY.c.name],
+                                galaxy[GALAXY.c.galaxy_id],
+                                pixel_types,
+                                features,
+                                result,
+                                layers,
+                                output_dir,
+                                rad_output,
+                                int_flux_output,
+                            )
 
                             url = zip_files(
                                 s3_helper,
@@ -475,7 +419,6 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                                 output_dir
                             )
 
-                            h5_file.close()
                             connection.execute(
                                 HDF5_REQUEST_GALAXY.update().
                                 where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id).
@@ -510,6 +453,79 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                                    values(state=3))
 
         send_email(email, results, features, layers, pixel_types, remaining_galaxies)
+
+
+def process_hdf5_file(hdf5_filename, galaxy_name, galaxy_id, pixel_types, features, result, layers, output_dir, rad_output, int_flux_output):
+    h5_file = h5py.File(hdf5_filename, 'r')
+    galaxy_group = h5_file['galaxy']
+    file_names = []
+    int_folder_added = False
+    rad_folder_added = False
+    # Get each feature, then each layer and finally each pixel type.
+    for feature in features:
+        for layer in layers:
+            for pixel_type in pixel_types:
+                LOG.info('Feature: {0}. Layer: {1}. Pixel Type: {2}'.format(feature, layer, pixel_type))
+                try:
+                    if pixel_type == TYPE_NORMAL:
+                        pixel_group = galaxy_group['pixel']
+
+                        file_names.append(
+                            build_fits_image(
+                                feature,
+                                layer,
+                                output_dir,
+                                galaxy_group,
+                                galaxy_group.attrs['dimension_x'],
+                                galaxy_group.attrs['dimension_y'],
+                                pixel_group,
+                                galaxy_name
+                            )
+                        )
+
+                    elif pixel_type == TYPE_INT:
+                        pixel_group = galaxy_group['pixel']['special_pixels']['int_flux']  # galaxy/pixel/special_pixels/int_flux
+
+                        build_fits_image(
+                            feature,
+                            layer,
+                            int_flux_output,
+                            galaxy_group,
+                            pixel_group.attrs['dimension_x'],
+                            pixel_group.attrs['dimension_y'],
+                            pixel_group,
+                            galaxy_name
+                        )
+                        int_folder_added = True
+
+                    elif pixel_type == TYPE_RAD:
+                        pixel_group = galaxy_group['pixel']['special_pixels']['rad']  # galaxy/pixel/special_pixels/rad
+
+                        build_fits_image(
+                            feature,
+                            layer,
+                            rad_output,
+                            galaxy_group,
+                            pixel_group.attrs['dimension_x'],
+                            pixel_group.attrs['dimension_y'],
+                            pixel_group,
+                            galaxy_name
+                        )
+                        rad_folder_added = True
+
+                except KeyError:
+                    LOG.exception('Request for pixel type that this galaxy does not have!')
+                    result.error = 'Cannot find pixel type {0} for galaxy {1}'.format(pixel_type, galaxy_id)
+
+    if int_folder_added:
+        file_names.append(int_flux_output)
+
+    if rad_folder_added:
+        file_names.append(rad_output)
+
+    h5_file.close()
+
+    return file_names
 
 
 def zip_files(s3_helper, galaxy_name, uuid_string, file_names, output_dir):
@@ -718,20 +734,20 @@ def build_fits_image(feature, layer, output_directory, galaxy_group, dimension_x
     hdu_list = pyfits.HDUList([hdu])
 
     # Write our details first in the header
-    hdu_list[0].header.update('MAGPHYST', layer, 'MAGPHYS Parameter')
-    hdu_list[0].header.update('DATE', utc_now, 'Creation UTC (CCCC-MM-DD) date of FITS header')
-    hdu_list[0].header.update('GALAXYID', galaxy_group.attrs['galaxy_id'], 'The POGS Galaxy Id')
-    hdu_list[0].header.update('REDSHIFT', str(galaxy_group.attrs['redshift']), 'The POGS Galaxy redshift')
-    hdu_list[0].header.update('SIGMA', str(galaxy_group.attrs['sigma']), 'The POGS Galaxy sigma')
-    hdu_list[0].header.update('RUNID', galaxy_group.attrs['run_id'], 'The POGS run id')
+    hdu_list[0].header['MAGPHYST'] = (layer, 'MAGPHYS Parameter')
+    hdu_list[0].header['DATE'] = (utc_now, 'Creation UTC (CCCC-MM-DD) date of FITS header')
+    hdu_list[0].header['GALAXYID'] = (galaxy_group.attrs['galaxy_id'], 'The POGS Galaxy Id')
+    hdu_list[0].header['REDSHIFT'] = (str(galaxy_group.attrs['redshift']), 'The POGS Galaxy redshift')
+    hdu_list[0].header['SIGMA'] = (str(galaxy_group.attrs['sigma']), 'The POGS Galaxy sigma')
+    hdu_list[0].header['RUNID'] = (galaxy_group.attrs['run_id'], 'The POGS run id')
 
     for fits_header in galaxy_group['fits_header']:
         keyword = fits_header[0]
         if keyword not in HEADER_KEYWORDS_TO_IGNORE:
             if output_format == OUTPUT_FORMAT_1_00 or keyword == 'COMMENT' or keyword == 'HISTORY':
-                hdu_list[0].header.append((keyword, fits_header[1]))
+                hdu_list[0].header[keyword] = fits_header[1]
             else:
-                hdu_list[0].header.append((keyword, fits_header[1], fits_header[2]))
+                hdu_list[0].header[keyword] = (fits_header[1], fits_header[2])
 
     # Write the file
     file_name = os.path.join(output_directory, '{0}.{1}.{2}.fits'.format(galaxy_name, feature, layer))

@@ -5,7 +5,7 @@
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012-2013
+#    Copyright by UWA, 2012-2016
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -35,7 +35,6 @@ import shutil
 import math
 import pyfits
 import py_boinc
-import multiprocessing
 
 import time
 
