@@ -1,11 +1,10 @@
 #! /usr/bin/env python2.7
 #
-# (c) UWA, The University of Western Australia
+#    Copyright (c) UWA, The University of Western Australia
 #    M468/35 Stirling Hwy
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012-2016
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or

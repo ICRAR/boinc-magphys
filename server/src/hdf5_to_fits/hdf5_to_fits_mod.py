@@ -1,10 +1,9 @@
 #
-#    (c) UWA, The University of Western Australia
+#    Copyright (c) UWA, The University of Western Australia
 #    M468/35 Stirling Hwy
 #    Perth WA 6009
 #    Australia
 #
-#    Copyright by UWA, 2012-2016
 #    All rights reserved
 #
 #    This library is free software; you can redistribute it and/or
@@ -651,22 +650,24 @@ def get_final_message(results, features, layers, pixel_types, remaining_galaxies
 These files have been put in one or more gzip files, one per galaxy. The files will be available for 10 days and will then be deleted. The links are as follows:
 '''
     errors = False
+    stuff_to_download = False
     for result in results:
         if result.error is None:
             string += '   * {0} http://{1}\n'.format(result.galaxy_name, result.link)
+            stuff_to_download = True
         else:
             errors = True
 
     if remaining_galaxies == 1:
         string += '''
     You also requested 1 additional galaxy that is currently in long term storage.
-    It will be made available within the next 4 hours and one follow up email will be sent containing this galaxy.\n
+    It will be made available within the next 4-8 hours and one follow up email will be sent containing this galaxy.\n
     '''
 
     if remaining_galaxies > 1:
         string += '''
     You also requested {0} additional galaxies that are currently in long term storage.
-    These will be made available within the next 4 hours and one or more follow up emails will be sent containing these galaxies.\n
+    These will be made available within the next 4-8 hours and one or more follow up emails will be sent containing these galaxies.\n
     '''.format(remaining_galaxies)
 
     if errors:
@@ -678,6 +679,20 @@ The following errors occurred:
                 string += '''-- {0} --
 {1}
 '''.format(result.galaxy_name, result.error)
+
+    if stuff_to_download:
+        string += '''
+The following is bash script to download the files.
+
+---- cut here ----
+#!/bin/bash
+
+'''
+        for result in results:
+            if result.error is None:
+                string += 'wget http://{0}\n'.format(result.link)
+        string += '\n\n'
+
     return subject, string
 
 
