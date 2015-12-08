@@ -171,6 +171,9 @@ def extract_tar_file(tar_file, location):
             if f.name.startswith('POGS_'):
                 galaxy_name = f.name[5:-8]
                 galaxy_names.add(galaxy_name)
+            elif f.name.startswith('./POGS_'):
+                galaxy_name = f.name[7:-8]
+                galaxy_names.add(galaxy_name)
 
     galaxy_archive.close()
     return num_files_extracted, galaxy_names
@@ -305,7 +308,7 @@ def clean_unused_fits(location, galaxy_names):
                 files_to_delete.append(item)
 
     if len(files_to_delete) > 0:
-        LOG.info('The following fits files do not have entries in the txt file. Deleting...')
+        LOG.info('The following fits files do not have correct entries. Deleting...')
         for item in files_to_delete:
             LOG.info('Deleting {0}'.format(item))
             os.remove(location + '/' + item)
