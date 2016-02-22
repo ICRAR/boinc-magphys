@@ -185,7 +185,7 @@ def noext(filename):
     :param filename:
     :return:
     """
-    ext_start = filename.find('.')
+    ext_start = filename.rfind('.')
     return filename[:ext_start]
 
 

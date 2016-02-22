@@ -88,7 +88,6 @@ def main():
     num_files_decompressed = decompress_gz_files(tar_extract_location)
 
     # Delete any fits files that do not have an entry
-    LOG.info('Galaxy names: {0}'.format(galaxy_names))
     num_unused_fits = clean_unused_fits(tar_extract_location, galaxy_names)
 
     # Move all of the fits files into the working directory
