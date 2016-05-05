@@ -24,6 +24,7 @@ Remove old snapshots
 """
 import argparse
 import logging
+import os
 from datetime import datetime, timedelta
 
 import boto
@@ -53,7 +54,11 @@ def remove_snapshots(args):
     deletion_counter = 0
     size_counter = 0
 
-    ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    if os.path.exists(os.path.join(os.path.expanduser('~'), '.aws/credentials')):
+        ec2_connection = boto.connect_ec2(profile_name='theSkyNet')
+    else:
+        ec2_connection = boto.connect_ec2()
+
     for snapshot in ec2_connection.get_all_snapshots(owner='self'):
 
         start_time = datetime.strptime(
