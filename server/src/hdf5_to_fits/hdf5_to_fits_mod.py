@@ -574,6 +574,11 @@ def send_email(email, results, features, layers, pixel_types, remaining_galaxies
     # Send it - connect to the server
     smtp = smtplib.SMTP(SMTP_SERVER, PORT)
 
+    # Set up the TLS connection
+    smtp.ehlo()
+    smtp.starttls()
+    smtp.ehlo()
+
     # Do we have a username / password
     if EMAIL_USERNAME is not None and EMAIL_PASSWORD is not None:
         smtp.login(EMAIL_USERNAME, EMAIL_PASSWORD)
