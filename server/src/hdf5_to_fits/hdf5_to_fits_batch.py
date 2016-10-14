@@ -60,7 +60,7 @@ def load_galaxy_file(filename):
     :return: A list of galaxy names.
     """
 
-    print filename
+    LOG.info("Loading from file: {0}".format(filename))
 
     with open(filename, "r") as f:
         galaxies = f.readlines()
@@ -240,12 +240,14 @@ def main():
 
     args = parse_args()
 
+    LOG.info("Args: {0}".format(args))
+
     if check_args(args):
         LOG.info("Arguments are missing feature, layer or pixel type!")
         return
 
     # Grab the galaxy names
-    galaxy_names = load_galaxy_file(args['galaxy_ids'])
+    galaxy_names = load_galaxy_file(args['galaxy_ids'][0])
 
     if not galaxy_names:
         LOG.info("Failed to open file, or no galaxies requested!")
