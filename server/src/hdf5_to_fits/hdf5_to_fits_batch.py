@@ -133,7 +133,7 @@ def check_galaxy_names(connection, names):
     for gal_name in names:
         # Open the db, do a 'like' match on this galaxy. If it succeeds, place this galaxy in the good list. If it
         # fails, put it in the bad list.
-        result = connection.execute(select(GALAXY).where(gal_name == GALAXY.c.name)).first()
+        result = connection.execute(select([GALAXY]).where(gal_name == GALAXY.c.name)).first()
 
         if not result:
             bad.append(gal_name)
@@ -182,7 +182,7 @@ def insert_features_layers_pixel_types_db_ids(connection, request_id, features, 
     """
 
     for feature in features:
-        entry = connection.execute(select(HDF5_FEATURE).where(HDF5_FEATURE.c.argument_name == feature)).first()
+        entry = connection.execute(select([HDF5_FEATURE]).where(HDF5_FEATURE.c.argument_name == feature)).first()
 
         if not entry:
             LOG.info("Bad feature. Feature does not exist: {0}".format(feature))
@@ -191,7 +191,7 @@ def insert_features_layers_pixel_types_db_ids(connection, request_id, features, 
                                hdf5_feature_id=entry['hdf5_feature_id'])
 
     for layer in layers:
-        entry = connection.execute(select(HDF5_LAYER).where(HDF5_LAYER.c.argument_name == layer)).first()
+        entry = connection.execute(select([HDF5_LAYER]).where(HDF5_LAYER.c.argument_name == layer)).first()
 
         if not entry:
             LOG.info("Bad layer. Layer does not exist: {0}".format(layer))
@@ -200,7 +200,7 @@ def insert_features_layers_pixel_types_db_ids(connection, request_id, features, 
                                hdf5_layer_id=entry['hdf5_layer_id'])
 
     for pixel_type in pixel_types:
-        entry = connection.execute(select(HDF5_PIXEL_TYPE)
+        entry = connection.execute(select([HDF5_PIXEL_TYPE])
                                    .where(HDF5_PIXEL_TYPE.c.argument_name == pixel_type)).first()
 
         if not entry:
