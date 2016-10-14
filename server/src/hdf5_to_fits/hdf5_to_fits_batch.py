@@ -32,7 +32,7 @@ The requests are read in from a text document and regex matches to galaxy names 
 import os
 import sys
 import argparse
-import time
+import datetime
 
 base_path = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(base_path, '..')))
@@ -242,7 +242,8 @@ def make_request(connection, email_address, galaxy_ids, features, layers, pixel_
     try:
 
         LOG.info("Making HDF5_REQUEST entry...")
-        result = connection.execute(HDF5_REQUEST.insert(), profile_id=0, email=email_address, created_at=time.time())
+        result = connection.execute(HDF5_REQUEST.insert(), profile_id=0, email=email_address,
+                                    created_at=datetime.datetime.utcnow())
 
         LOG.info("Making features, layers, pixel types entries...")
         insert_features_layers_pixel_types_db_ids(connection, result.inserted_primary_key, features, layers, pixel_types)
