@@ -133,7 +133,7 @@ def check_galaxy_names(connection, names):
     for gal_name in names:
         # Open the db, do a 'like' match on this galaxy. If it succeeds, place this galaxy in the good list. If it
         # fails, put it in the bad list.
-        result = connection.execute(select([GALAXY]).where(gal_name == GALAXY.c.name)).first()
+        result = connection.execute(select([GALAXY]).where(gal_name.strip() == GALAXY.c.name)).first()
 
         if not result:
             bad.append(gal_name)
