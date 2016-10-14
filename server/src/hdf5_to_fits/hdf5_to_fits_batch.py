@@ -265,7 +265,7 @@ def main():
         LOG.info("Failed to open file, or no galaxies requested!")
         return
     else:
-        LOG.info("Loaded {0} galaxy names from {1}".format(len(galaxy_names)), filename)
+        LOG.info("Loaded {0} galaxy names from {1}".format(len(galaxy_names), filename))
 
     # Get a DB connection
     connection = engine.connect()
