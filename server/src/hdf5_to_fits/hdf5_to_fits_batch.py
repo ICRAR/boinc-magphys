@@ -51,6 +51,14 @@ from config import DB_LOGIN
 
 engine = create_engine(DB_LOGIN)
 
+# all_features = ['--best_fit', 'percentile_50', 'highest_prob_bin', 'percentile_2_5', 'percentile_16', 'percentile_84',
+#                 'percentile_97_5']
+#
+# all_layers = ['f_mu_sfh', 'f_mu_ir', 'mu_parameter', 'tau_v', 'ssfr_0_1gyr', 'm_stars', 'l_dust', 't_c_ism', 't_w_bc',
+#               'xi_c_tot', 'xi_pah_tot', 'xi_mir_tot', 'xi_w_tot', 'tau_v_ism', 'm_dust', 'sfr_0_1gyr']
+#
+# all_pixel_types = ['normal', 'int_flux', 'rad']
+
 
 def load_galaxy_file(filename):
     """
@@ -59,8 +67,6 @@ def load_galaxy_file(filename):
     :param filename: The filename to load from
     :return: A list of galaxy names.
     """
-
-    LOG.info("Loading from file: {0}".format(filename))
 
     with open(filename, "r") as f:
         galaxies = f.readlines()
@@ -80,34 +86,34 @@ def parse_args():
     parser.add_argument('email', nargs=1, help='Email address to send galaxy data to.')
     parser.add_argument('galaxy_ids', nargs=1, help='The name of the file to load galaxy names from.')
 
-    parser.add_argument('-f0', '--best_fit', action='store_true', help='extract best fit')
-    parser.add_argument('-f1', '--percentile_50', action='store_true', help='extract percentile 50')
-    parser.add_argument('-f2', '--highest_prob_bin', action='store_true', help='extract highest probability bin')
-    parser.add_argument('-f3', '--percentile_2_5', action='store_true', help='extract percentile 2.5')
-    parser.add_argument('-f4', '--percentile_16', action='store_true', help='extract percentile 16')
-    parser.add_argument('-f5', '--percentile_84', action='store_true', help='extract percentile 84')
-    parser.add_argument('-f6', '--percentile_97_5', action='store_true', help='extract percentile 97.5')
+    parser.add_argument('-f0', action='store_true', help='extract best fit')
+    parser.add_argument('-f1', action='store_true', help='extract percentile 50')
+    parser.add_argument('-f2', action='store_true', help='extract highest probability bin')
+    parser.add_argument('-f3', action='store_true', help='extract percentile 2.5')
+    parser.add_argument('-f4', action='store_true', help='extract percentile 16')
+    parser.add_argument('-f5', action='store_true', help='extract percentile 84')
+    parser.add_argument('-f6', action='store_true', help='extract percentile 97.5')
 
-    parser.add_argument('-l0',  '--f_mu_sfh', action='store_true', help='extract f_mu (SFH)')
-    parser.add_argument('-l1',  '--f_mu_ir', action='store_true', help='extract f_mu (IR)')
-    parser.add_argument('-l2',  '--mu_parameter', action='store_true', help='extract mu parameter')
-    parser.add_argument('-l3',  '--tau_v', action='store_true', help='extract tau_V')
-    parser.add_argument('-l4',  '--ssfr_0_1gyr', action='store_true', help='extract sSFR_0.1Gyr')
-    parser.add_argument('-l5',  '--m_stars', action='store_true', help='extract M(stars)')
-    parser.add_argument('-l6',  '--l_dust', action='store_true', help='extract Ldust')
-    parser.add_argument('-l7',  '--t_c_ism', action='store_true', help='extract T_C^ISM')
-    parser.add_argument('-l8',  '--t_w_bc', action='store_true', help='extract T_W^BC')
-    parser.add_argument('-l9',  '--xi_c_tot', action='store_true', help='extract xi_C^tot')
-    parser.add_argument('-l10', '--xi_pah_tot', action='store_true', help='extract xi_PAH^tot')
-    parser.add_argument('-l11', '--xi_mir_tot', action='store_true', help='extract xi_MIR^tot')
-    parser.add_argument('-l12', '--xi_w_tot', action='store_true', help='extract xi_W^tot')
-    parser.add_argument('-l13', '--tau_v_ism', action='store_true', help='extract tau_V^ISM')
-    parser.add_argument('-l14', '--m_dust', action='store_true', help='extract M(dust)')
-    parser.add_argument('-l15', '--sfr_0_1gyr', action='store_true', help='extract SFR_0.1Gyr')
+    parser.add_argument('-l0', action='store_true', help='extract f_mu (SFH)')
+    parser.add_argument('-l1', action='store_true', help='extract f_mu (IR)')
+    parser.add_argument('-l2', action='store_true', help='extract mu parameter')
+    parser.add_argument('-l3', action='store_true', help='extract tau_V')
+    parser.add_argument('-l4', action='store_true', help='extract sSFR_0.1Gyr')
+    parser.add_argument('-l5', action='store_true', help='extract M(stars)')
+    parser.add_argument('-l6', action='store_true', help='extract Ldust')
+    parser.add_argument('-l7', action='store_true', help='extract T_C^ISM')
+    parser.add_argument('-l8', action='store_true', help='extract T_W^BC')
+    parser.add_argument('-l9', action='store_true', help='extract xi_C^tot')
+    parser.add_argument('-l10', action='store_true', help='extract xi_PAH^tot')
+    parser.add_argument('-l11', action='store_true', help='extract xi_MIR^tot')
+    parser.add_argument('-l12', action='store_true', help='extract xi_W^tot')
+    parser.add_argument('-l13', action='store_true', help='extract tau_V^ISM')
+    parser.add_argument('-l14', action='store_true', help='extract M(dust)')
+    parser.add_argument('-l15', action='store_true', help='extract SFR_0.1Gyr')
 
-    parser.add_argument('-t0', '--normal', action='store_true', help='get normal pixels')
-    parser.add_argument('-t1', '--int_flux', action='store_true', help='get integrated flux pixels)')
-    parser.add_argument('-t2', '--rad', action='store_true', help='get radial pixels')
+    parser.add_argument('-t0', action='store_true', help='get normal pixels')
+    parser.add_argument('-t1', action='store_true', help='get integrated flux pixels)')
+    parser.add_argument('-t2', action='store_true', help='get radial pixels')
 
     return vars(parser.parse_args())
 
@@ -148,14 +154,14 @@ def check_args(args):
     has_layer = False
     has_pixel = False
 
-    for k in args:
-        if k.startswith('-f'):
-            has_layer = True
-
-        if k.startswith('-l'):
+    for k, v in args.iteritems():
+        if k.startswith('-f') and v is True:
             has_feature = True
 
-        if k.startswith('-t'):
+        if k.startswith('-l') and v is True:
+            has_layer = True
+
+        if k.startswith('-t') and v is True:
             has_pixel = True
 
         if has_feature and has_layer and has_pixel:
@@ -237,21 +243,29 @@ def make_request(connection, email_address, galaxy_ids, features, layers, pixel_
 
 
 def main():
+    """
+    Main program entry point
+    :return:
+    """
 
     args = parse_args()
 
     LOG.info("Args: {0}".format(args))
 
-    if check_args(args):
+    if not check_args(args):
         LOG.info("Arguments are missing feature, layer or pixel type!")
         return
 
     # Grab the galaxy names
-    galaxy_names = load_galaxy_file(args['galaxy_ids'][0])
+    filename = args['galaxy_ids'][0]
+    LOG.info("Loading from file: {0}".format(filename))
+    galaxy_names = load_galaxy_file(filename)
 
     if not galaxy_names:
         LOG.info("Failed to open file, or no galaxies requested!")
         return
+    else:
+        LOG.info("Loaded {0} galaxy names from {1}".format(len(galaxy_names)), filename)
 
     # Get a DB connection
     connection = engine.connect()
@@ -272,7 +286,7 @@ def main():
 
     features, layers, pixel_types = get_features_and_layers_pixeltypes_cmd_line(args)
 
-    make_request(connection, args['email'], galaxy_ids, features, layers, pixel_types)
+    make_request(connection, args['email'][0], galaxy_ids, features, layers, pixel_types)
 
 if __name__ == "__main__":
     main()
