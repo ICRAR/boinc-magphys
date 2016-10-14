@@ -60,6 +60,8 @@ def load_galaxy_file(filename):
     :return: A list of galaxy names.
     """
 
+    print filename
+
     with open(filename, "r") as f:
         galaxies = f.readlines()
 
