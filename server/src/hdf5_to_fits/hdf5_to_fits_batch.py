@@ -241,16 +241,19 @@ def make_request(connection, email_address, galaxy_ids, features, layers, pixel_
 
     try:
 
+        LOG.info("Making HDF5_REQUEST entry...")
         result = connection.execute(HDF5_REQUEST.insert(), profile_id=0, email=email_address, created_at=time.time())
 
+        LOG.info("Making features, layers, pixel types entries...")
         insert_features_layers_pixel_types_db_ids(connection, result.inserted_primary_key, features, layers, pixel_types)
 
+        LOG.info("Making galaxy entries...")
         for galaxy in galaxy_ids:
             # We already checked to ensure these are valid, so throw em in.
             connection.execute(HDF5_REQUEST_GALAXY.insert(), hdf5_request_id=result.inserted_primary_key,
                                galaxy_id=galaxy)
 
-            transaction.commit()
+        transaction.commit()
     except:
         transaction.rollback()
         raise
@@ -285,6 +288,7 @@ def main():
     connection = engine.connect()
 
     # Compare the galaxy names against the database to find valid and invalid names.
+    LOG.info("Checking galaxy names...")
     galaxy_ids, invalid_names = check_galaxy_names(connection, galaxy_names)
 
     if len(invalid_names) > 0:
@@ -298,9 +302,19 @@ def main():
         LOG.info("No valid galaxies in request!")
         return
 
-    features, layers, pixel_types = split_flp(args)
+    if len(galaxy_ids) != 0 and len(invalid_names) == 0:
+        LOG.info("Galaxies OK.")
 
+    LOG.info("Getting features, layers and pixel types...")
+    features, layers, pixel_types = split_flp(args)
+    LOG.info("The following features, layers and pixel types were found")
+    LOG.info("Features: {0}".format(features))
+    LOG.info("Layers: {0}".format(layers))
+    LOG.info("Pixel Types: {0}".format(pixel_types))
+
+    LOG.info("Starting database insertion...")
     make_request(connection, args['email'][0], galaxy_ids, features, layers, pixel_types)
+    LOG.info("All done!")
 
 if __name__ == "__main__":
     main()
