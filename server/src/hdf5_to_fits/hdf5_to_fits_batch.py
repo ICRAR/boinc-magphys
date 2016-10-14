@@ -155,13 +155,13 @@ def check_args(args):
     has_pixel = False
 
     for k, v in args.iteritems():
-        if k.startswith('-f') and v is True:
+        if k.startswith('f') and v is True:
             has_feature = True
 
-        if k.startswith('-l') and v is True:
+        if k.startswith('l') and v is True:
             has_layer = True
 
-        if k.startswith('-t') and v is True:
+        if k.startswith('t') and v is True:
             has_pixel = True
 
         if has_feature and has_layer and has_pixel:
