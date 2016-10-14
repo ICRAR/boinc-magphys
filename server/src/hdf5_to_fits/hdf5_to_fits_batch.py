@@ -238,7 +238,7 @@ def main():
 
     args = parse_args()
 
-    if not check_args(args):
+    if check_args(args):
         LOG.info("Arguments are missing feature, layer or pixel type!")
         return
 
