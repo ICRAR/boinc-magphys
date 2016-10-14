@@ -46,18 +46,9 @@ LOG.info('PYTHONPATH = {0}'.format(sys.path))
 from sqlalchemy import select, create_engine
 from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, \
     HDF5_REQUEST_GALAXY, HDF5_REQUEST_PIXEL_TYPE, HDF5_PIXEL_TYPE, HDF5_REQUEST
-from hdf5_to_fits_mod import get_features_and_layers_pixeltypes_cmd_line
 from config import DB_LOGIN
 
 engine = create_engine(DB_LOGIN)
-
-# all_features = ['--best_fit', 'percentile_50', 'highest_prob_bin', 'percentile_2_5', 'percentile_16', 'percentile_84',
-#                 'percentile_97_5']
-#
-# all_layers = ['f_mu_sfh', 'f_mu_ir', 'mu_parameter', 'tau_v', 'ssfr_0_1gyr', 'm_stars', 'l_dust', 't_c_ism', 't_w_bc',
-#               'xi_c_tot', 'xi_pah_tot', 'xi_mir_tot', 'xi_w_tot', 'tau_v_ism', 'm_dust', 'sfr_0_1gyr']
-#
-# all_pixel_types = ['normal', 'int_flux', 'rad']
 
 
 def load_galaxy_file(filename):
@@ -72,6 +63,29 @@ def load_galaxy_file(filename):
         galaxies = f.readlines()
 
     return galaxies
+
+
+def split_flp(flp):
+    """
+    Splits the command line args up in to separate lists for features, layers and pixel types
+    :param flp: The args containing features, layers and pixel types
+    :return: Three lists. 1 Containing features, 2 Containing layers, 3 Containing pixel types
+    """
+    features = []
+    layers = []
+    pixel_types = []
+
+    for k, v in flp.iteritems():
+        if k.startswith('f') and v is True:
+            features.append(k)
+
+        if k.startswith('l') and v is True:
+            layers.append(k)
+
+        if k.startswith('t') and v is True:
+            pixel_types.append(k)
+
+    return features, layers, pixel_types
 
 
 def parse_args():
@@ -284,7 +298,7 @@ def main():
         LOG.info("No valid galaxies in request!")
         return
 
-    features, layers, pixel_types = get_features_and_layers_pixeltypes_cmd_line(args)
+    features, layers, pixel_types = split_flp(args)
 
     make_request(connection, args['email'][0], galaxy_ids, features, layers, pixel_types)
 
