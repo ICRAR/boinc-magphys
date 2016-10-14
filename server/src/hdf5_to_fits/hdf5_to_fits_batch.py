@@ -151,7 +151,7 @@ def check_args(args):
             has_layer = True
 
         if k.startswith('-l'):
-            has_layer = True
+            has_feature = True
 
         if k.startswith('-t'):
             has_pixel = True
