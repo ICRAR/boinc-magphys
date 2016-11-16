@@ -237,6 +237,21 @@ HDF5_REQUEST_GALAXY = Table('hdf5_request_galaxy',
                             Column('link_expires_at', TIMESTAMP)
                             )
 
+HDF5_GLACIER_STORAGE_SIZE = Table("hdf5_glacier_storage_size",
+                                  MAGPHYS_METADATA,
+                                  Column("hdf5_glacier_storage_size_id", BigInteger, primary_key=True, autoincrement=True),
+                                  Column("size", BigInteger),
+                                  Column("count_time", BigInteger)  # Timestamp
+                                  )
+
+HDF5_REQUEST_GALAXY_SIZE = Table("hdf5_request_galaxy_size",
+                                 MAGPHYS_METADATA,
+                                 Column("hdf5_request_galaxy_size_id", BigInteger, primary_key=True, autoincrement=True),
+                                 Column("hdf5_request_galaxy_id", BigInteger, ForeignKey('hdf5_request_galaxy.hdf5_request_galaxy_id')),  # Will be foreign key
+                                 Column("size", BigInteger),
+                                 Column("request_time", BigInteger)  # Timestamp
+                                 )
+
 HDF5_REQUEST_FEATURE = Table('hdf5_request_feature',
                              MAGPHYS_METADATA,
                              Column('hdf5_request_feature_id', BigInteger, primary_key=True),

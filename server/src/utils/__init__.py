@@ -22,6 +22,24 @@
 #    MA 02111-1307  USA
 #
 """
-
+Common helpers
 """
+
+
+def static_vars(**kwargs):
+    """
+    Decorates function to have 'static' variables
+    :param kwargs: Static variable assignments (e.g. some_var = 5
+    :return: Decorator function
+    """
+    def decorate(func):
+        """
+        Performs the decoration
+        :param func: The function to decorate
+        :return: Decorated function
+        """
+        for k in kwargs:
+            setattr(func, k, kwargs[k])
+        return func
+    return decorate
 

@@ -37,12 +37,15 @@ import uuid
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from sqlalchemy import select
+from sqlalchemy.sql.functions import max
 from archive.archive_common import get_chunks, get_size
 from config import DELETED, STORED, GALAXY_EMAIL_THRESHOLD, OUTPUT_FORMAT_1_04, OUTPUT_FORMAT_1_03, OUTPUT_FORMAT_1_00, MAX_X_Y_BLOCK
-from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, HDF5_REQUEST_GALAXY, HDF5_REQUEST_PIXEL_TYPE, HDF5_PIXEL_TYPE
+from database.database_support_core import HDF5_FEATURE, HDF5_REQUEST_FEATURE, HDF5_REQUEST_LAYER, HDF5_LAYER, GALAXY, \
+    HDF5_REQUEST_GALAXY, HDF5_REQUEST_PIXEL_TYPE, HDF5_PIXEL_TYPE, HDF5_REQUEST_GALAXY_SIZE, HDF5_GLACIER_STORAGE_SIZE
 from utils.logging_helper import config_logger
 from utils.name_builder import get_key_hdf5, get_downloads_bucket, get_hdf5_to_fits_key, get_downloads_url, get_galaxy_file_name, get_saved_files_bucket
 from utils.s3_helper import S3Helper
+from utils.time_helper import get_start_of_day, seconds_since_epoch, get_month_days, get_hours_ago
 from boto.exception import S3ResponseError
 from os.path import dirname, exists
 from configobj import ConfigObj
@@ -311,6 +314,86 @@ def get_temp_file(extension, file_name, output_dir):
     return tmp[1]
 
 
+def get_glacier_data_size(connection, bucket_name):
+    """
+    Returns the total number of bytes that we have stored in glacier.
+    Checks with the database first for a cached copy of this info to not have to keep re-requesting it.
+    :param bucket_name:
+    :return:
+    """
+
+    # Load most recent entry from database
+    # if timestamp on most recent entry is < 24 hours from now, use it
+    # if not, do the full check and add a new entry in the db specifying the glacier size.
+
+    day_ago = seconds_since_epoch(get_hours_ago(24))
+    result = connection.execute(select([HDF5_GLACIER_STORAGE_SIZE])
+                                .where(HDF5_GLACIER_STORAGE_SIZE.c.count_time > day_ago))
+
+    latest_time = 0
+    latest_size = 0
+    for row in result:
+        if row['count_time'] > latest_time:
+            latest_size = row['size']
+            latest_time = row['count_time']
+
+    if latest_time == 0 or latest_size == 0:
+        # Need to re-count
+        s3helper = S3Helper()
+        LOG.info("Glacier data size expired, recounting...")
+        size = s3helper.glacier_data_size(bucket_name)
+        LOG.info("Glacier data size counted: {0} bytes".format(size))
+
+        connection.execute(HDF5_GLACIER_STORAGE_SIZE.insert(),
+                           size=size, count_time=seconds_since_epoch(datetime.now()))
+    else:
+        size = latest_size
+
+    return size
+
+
+def get_day_start_request_size(connection):
+    """
+    Get the volume of data that has been received from glacier since the start of the day.
+    :param connection: Database connection.
+    :return: amount of data, in bytes, that has been requested since the start of the day.
+    """
+    # for each row in the db where request time + 4 hours is > now - 24 hours
+    # add up the size of the requests
+
+    start_time = seconds_since_epoch(get_start_of_day())
+
+    result = connection.execute(select([HDF5_REQUEST_GALAXY_SIZE]).where(HDF5_REQUEST_GALAXY_SIZE.c.request_time > start_time))
+
+    size = 0
+    for line in result:
+        # Add up the sizes
+        size += line['size']
+
+    return size
+
+
+def restore_file_size_check(connection, bucket_name, key):
+    """
+    Check to see if we can restore the specified file today, or if that would push us over our restore budget
+    :param bucket_name: Name of tbe bucket to restore from
+    :param key: Key to the file we wish to restore
+    :return: True if restoring would not push us over, False if it would
+    """
+
+    # First, get the size of data we have stored in glacier
+    size = get_glacier_data_size(connection, bucket_name)
+
+    # Now, work out if we can upload a file without hitting our free data limit
+    recent_request_size = get_day_start_request_size(connection)
+
+    # "(12 terabytes x 5% / 30 days = 20.5 gigabytes, assuming it is a 30 day month)" from glacier faq
+    # This means amazon does count days in the month and doesn't use a uniform 30
+    can_request_up_to = size * (0.05 / get_month_days())
+
+    return can_request_up_to + key.size < recent_request_size
+
+
 def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers, pixel_types):
     """
     Get the FITS files for this request
@@ -332,7 +415,9 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
     # Check whether all the requested galaxies are available or not.
     for hdf5_request_galaxy in hdf5_request_galaxy_ids:
         galaxy = connection.execute(select([GALAXY]).where(GALAXY.c.galaxy_id == hdf5_request_galaxy.galaxy_id)).first()
-        state = connection.execute(select([HDF5_REQUEST_GALAXY]).where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id)).first().state
+        hdf5_request_galaxy = connection.execute(select([HDF5_REQUEST_GALAXY])
+                                                 .where(HDF5_REQUEST_GALAXY.c.hdf5_request_galaxy_id == hdf5_request_galaxy.hdf5_request_galaxy_id)).first()
+        state = hdf5_request_galaxy.state
 
         if state is not 0:
             LOG.info('Skipping {0}, state is {1}'.format(galaxy[GALAXY.c.name], state))
@@ -348,8 +433,19 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                     LOG.info('Galaxy {0} is still restoring from glacier'.format(galaxy[GALAXY.c.name]))
                 else:
                     # if file is not restoring, need to request.
-                    LOG.info('Making request for archived galaxy {0}'.format(galaxy[GALAXY.c.name]))
-                    s3_helper.restore_archived_file(bucket_name, key)
+
+                    if restore_file_size_check(connection, bucket_name, key):
+                        # We're good to restore
+                        LOG.info('Making request for archived galaxy {0}'.format(galaxy[GALAXY.c.name]))
+                        s3_helper.restore_archived_file(bucket_name, key)
+
+                        connection.execute(HDF5_REQUEST_GALAXY_SIZE.insert(),
+                                           hdf5_request_galaxy_id=hdf5_request_galaxy['hdf5_request_galaxy_id'],
+                                           size=key.size,
+                                           request_time=seconds_since_epoch(datetime.datetime.now()))
+                    else:
+                        # Don't restore or we risk spending a lot of money
+                        LOG.info('Daily galaxy restore size hit. Cannot request archived galaxy.')
             else:
                 # file is not archived
                 LOG.info('Galaxy {0} is available in s3'.format(galaxy[GALAXY.c.name]))

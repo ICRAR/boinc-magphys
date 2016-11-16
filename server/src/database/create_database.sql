@@ -253,6 +253,10 @@ CREATE TABLE image_filters_used (
   INDEX (galaxy_id, image_number)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
+# =============================================
+# HDF5 to FITS requests
+# =============================================
+
 CREATE TABLE hdf5_request (
   hdf5_request_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   profile_id      BIGINT UNSIGNED NOT NULL,
@@ -294,6 +298,26 @@ CREATE TABLE hdf5_request_galaxy (
   FOREIGN KEY (galaxy_id) REFERENCES galaxy(galaxy_id),
 
   INDEX (state)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+# Stores the size of each galaxy request
+CREATE TABLE hdf5_request_galaxy_size (
+  hdf5_request_galaxy_size_id BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  hdf5_request_galaxy_id      BIGINT UNSIGNED NOT NULL,
+  size                        BIGINT UNSIGNED NOT NULL,
+  request_time                BIGINT UNSIGNED NOT NULL, # Technically stored as a timestamp
+
+  FOREIGN KEY (hdf5_request_galaxy_id) REFERENCES hdf5_request_galaxy(hdf5_request_galaxy_id),
+  INDEX (request_time)
+) CHARACTER SET utf8 ENGINE=InnoDB;
+
+# Stores the amount of data we have stored in glacier. Updated once per day.
+CREATE TABLE hdf5_glacier_storage_size (
+  hdf5_glacier_storage_size_id  BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  size                          BIGINT UNSIGNED NOT NULL,
+  count_time                    BIGINT UNSIGNED NOT NULL,
+
+  INDEX (count_time)
 ) CHARACTER SET utf8 ENGINE=InnoDB;
 
 CREATE TABLE hdf5_request_feature (

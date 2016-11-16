@@ -145,3 +145,23 @@ class S3Helper:
         key.key = key_name
 
         key.restore(days=days)
+
+    def glacier_data_size(self, bucket_name):
+        """
+        Determine how much glacier archived data is stored in a bucket
+        :param bucket_name: The name of the bucket
+        :return: Number of bytes of archived data stored in the bucket
+        """
+        bucket = self.get_bucket(bucket_name)
+
+        # Need to iterate over all the keys (yes, all of them) and count the size of them
+        # I wish amazon had better book-keeping for this stuff.
+
+        counted = 0
+        bucket_size = 0
+        for key in bucket.list():
+            if key.storage_class == "GLACIER":
+                bucket_size += key.size
+                counted += 1
+
+        return counted
