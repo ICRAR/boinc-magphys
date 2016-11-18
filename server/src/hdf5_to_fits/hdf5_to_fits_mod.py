@@ -374,26 +374,26 @@ def get_day_start_request_size(connection):
     return size
 
 
-def restore_file_size_check(connection, bucket_name, key):
+def restore_file_size_check(connection, bucket_name, size):
     """
     Check to see if we can restore the specified file today, or if that would push us over our restore budget
     :param connection: The database connection.
     :param bucket_name: Name of the bucket to restore from
-    :param key: Key to the file we wish to restore
+    :param size: The size of the data we want to restore
     :return: True if restoring would not push us over, False if it would
     """
 
     # First, get the size of data we have stored in glacier
-    size = get_glacier_data_size(connection, bucket_name)
+    glacier_total_size = get_glacier_data_size(connection, bucket_name)
 
     # Now, work out if we can upload a file without hitting our free data limit
     recent_request_size = get_day_start_request_size(connection)
 
     # "(12 terabytes x 5% / 30 days = 20.5 gigabytes, assuming it is a 30 day month)" from glacier faq
     # This means amazon does count days in the month and doesn't use a uniform 30
-    can_request_up_to = size * (0.05 / get_month_days())
+    can_request_up_to = glacier_total_size * (0.05 / get_month_days())
 
-    return can_request_up_to + key.size < recent_request_size
+    return can_request_up_to + size < recent_request_size
 
 
 def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers, pixel_types):
@@ -436,7 +436,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                 else:
                     # if file is not restoring, need to request.
 
-                    if restore_file_size_check(connection, bucket_name, key):
+                    if restore_file_size_check(connection, bucket_name, s3_helper.file_size(bucket_name, key)):
                         # We're good to restore
                         LOG.info('Making request for archived galaxy {0}'.format(galaxy[GALAXY.c.name]))
                         s3_helper.restore_archived_file(bucket_name, key)

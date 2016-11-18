@@ -132,6 +132,18 @@ class S3Helper:
 
         return key.ongoing_restore
 
+    def file_size(self, bucket_name, key_name):
+        """
+        Get the file size, in bytes, of a particular key
+        :param bucket_name: Name of the bucket to search in
+        :param key_name: Name of the key to use
+        :return: File size of that key, in bytes
+        """
+
+        bucket = self.get_bucket(bucket_name)
+        key = bucket.get_key(key_name)
+        return key.size
+
     def restore_archived_file(self, bucket_name, key_name, days=S3_FILE_RESTORE_TIME):
         """
         Restores a file that has been archived to glacier back to s3. Can take up to 4 hours
