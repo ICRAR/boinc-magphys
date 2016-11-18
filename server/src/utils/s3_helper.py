@@ -176,4 +176,4 @@ class S3Helper:
                 bucket_size += key.size
                 counted += 1
 
-        return counted
+        return bucket_size
