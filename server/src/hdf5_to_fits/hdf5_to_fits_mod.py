@@ -438,15 +438,16 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                     LOG.info('Galaxy {0} is still restoring from glacier'.format(galaxy[GALAXY.c.name]))
                 else:
                     # if file is not restoring, need to request.
+                    file_size = s3_helper.file_size(bucket_name, key)
 
-                    if restore_file_size_check(connection, bucket_name, s3_helper.file_size(bucket_name, key)):
+                    if restore_file_size_check(connection, bucket_name, file_size):
                         # We're good to restore
                         LOG.info('Making request for archived galaxy {0}'.format(galaxy[GALAXY.c.name]))
                         s3_helper.restore_archived_file(bucket_name, key)
 
                         connection.execute(HDF5_REQUEST_GALAXY_SIZE.insert(),
                                            hdf5_request_galaxy_id=hdf5_request_galaxy['hdf5_request_galaxy_id'],
-                                           size=key.size,
+                                           size=file_size,
                                            request_time=seconds_since_epoch(datetime.datetime.now()))
                     else:
                         # Don't restore or we risk spending a lot of money
