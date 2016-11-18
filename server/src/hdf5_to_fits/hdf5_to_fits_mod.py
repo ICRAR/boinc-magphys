@@ -393,7 +393,10 @@ def restore_file_size_check(connection, bucket_name, size):
     # This means amazon does count days in the month and doesn't use a uniform 30
     can_request_up_to = glacier_total_size * (0.05 / get_month_days())
 
-    return can_request_up_to + size < recent_request_size
+    LOG.info("{0}/{1} bytes restored recently".format(recent_request_size, can_request_up_to))
+    LOG.info("{0} request size, {1} glacier total data size".format(size, glacier_total_size))
+
+    return recent_request_size + size < can_request_up_to
 
 
 def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers, pixel_types):
