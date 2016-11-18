@@ -448,7 +448,7 @@ def generate_files(connection, hdf5_request_galaxy_ids, email, features, layers,
                         connection.execute(HDF5_REQUEST_GALAXY_SIZE.insert(),
                                            hdf5_request_galaxy_id=hdf5_request_galaxy['hdf5_request_galaxy_id'],
                                            size=file_size,
-                                           request_time=seconds_since_epoch(datetime.datetime.now()))
+                                           request_time=seconds_since_epoch(datetime.now()))
                     else:
                         # Don't restore or we risk spending a lot of money
                         LOG.info('Daily galaxy restore size hit. Cannot request archived galaxy.')
