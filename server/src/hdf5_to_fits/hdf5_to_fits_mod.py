@@ -318,7 +318,8 @@ def get_glacier_data_size(connection, bucket_name):
     """
     Returns the total number of bytes that we have stored in glacier.
     Checks with the database first for a cached copy of this info to not have to keep re-requesting it.
-    :param bucket_name:
+    :param connection: The database connection.
+    :param bucket_name: Name of the bucket to count.
     :return:
     """
 
@@ -376,7 +377,8 @@ def get_day_start_request_size(connection):
 def restore_file_size_check(connection, bucket_name, key):
     """
     Check to see if we can restore the specified file today, or if that would push us over our restore budget
-    :param bucket_name: Name of tbe bucket to restore from
+    :param connection: The database connection.
+    :param bucket_name: Name of the bucket to restore from
     :param key: Key to the file we wish to restore
     :return: True if restoring would not push us over, False if it would
     """

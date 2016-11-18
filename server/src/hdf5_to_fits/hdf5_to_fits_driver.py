@@ -21,6 +21,11 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 #    MA 02111-1307  USA
 #
+
+"""
+This seems to be an old test file. Pay it no mind.
+"""
+
 from sqlalchemy import create_engine, select
 from database.database_support_core import GALAXY
 from hdf5_to_fits_mod import build_fits_image, zip_up_files

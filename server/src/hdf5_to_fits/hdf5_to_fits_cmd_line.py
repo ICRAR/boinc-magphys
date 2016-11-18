@@ -97,7 +97,7 @@ if len(features) == 0 or len(layers) == 0:
 # HDF5_request_layer
 # HDF5_request_pixel
 transaction = connection.begin()
-result = connection.execute(HDF5_REQUEST.insert(), profile_id=47016, email='sam6321@live.com.au', created_at=time.time())
+result = connection.execute(HDF5_REQUEST.insert(), profile_id=47016, email=args['email'], created_at=time.time())
 
 connection.execute(HDF5_REQUEST_GALAXY.insert(), hdf5_request_id=result.inserted_primary_key, galaxy_id=args['galaxy_id'])
 
